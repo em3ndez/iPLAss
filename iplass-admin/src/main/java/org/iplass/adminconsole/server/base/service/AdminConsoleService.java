@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,10 +21,13 @@
 package org.iplass.adminconsole.server.base.service;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.iplass.adminconsole.server.base.service.screen.ScreenModuleBasedClassFactoryGenerator;
+import org.iplass.adminconsole.server.base.service.screen.ScreenModuleBasedClassFactoryHolder;
 import org.iplass.mtp.impl.core.ExecuteContext;
 import org.iplass.mtp.spi.Config;
 import org.iplass.mtp.spi.Service;
@@ -55,6 +58,9 @@ public class AdminConsoleService implements Service {
 	/** ログ設定情報 */
 	private LogConfig logDownloadConfig;
 
+	/** 画面モジュールに依存した実装クラスを生成するFactoryのGenerator */
+	private ScreenModuleBasedClassFactoryGenerator screenBasedFactoryGenerator;
+
 	/** ファイルアップロード時のMAXファイルサイズ(Byte) */
 	private long maxUploadFileSize;
 
@@ -64,6 +70,9 @@ public class AdminConsoleService implements Service {
 		showServerInfo = config.getValue("showServerInfo", Boolean.class, false);
 		logDownloadConfig = config.getValue("logDownloadConfig", LogConfig.class);
 		maxUploadFileSize = config.getValue("maxUploadFileSize", Long.class, DEFAULT_MAX_FILE_SIZE);
+		screenBasedFactoryGenerator = config.getValue("screenBasedFactoryGenerator",
+				ScreenModuleBasedClassFactoryGenerator.class);
+		ScreenModuleBasedClassFactoryHolder.init(screenBasedFactoryGenerator.generate());
 	}
 
 	@Override
@@ -101,48 +110,50 @@ public class AdminConsoleService implements Service {
 	/**
 	 * テナントでダウンロード可能なログファイルのパスを返します。
 	 * service-configで指定していない場合は、引数で渡されたパス(web.xml指定を想定)を返します。
-	 * テナントID、テナント名はログイン情報で置き換えます。
-	 * 引数でも未指定の場合は、内部で定義されたデフォルトのパスを返します。
+	 * テナントID、テナント名はログイン情報で置き換えます。 引数でも未指定の場合は、内部で定義されたデフォルトのパスを返します。
 	 *
 	 * @param webSpecifiedPath web.xmlで指定された場合のパス
-	 * @return  ダウンロード可能なログファイルのパス
+	 * @return ダウンロード可能なログファイルのパス
 	 */
 	public List<String> getTenantLogHomes(String webSpecifiedPath) {
 		List<String> logHomes = getLogDownloadConfig().getLogHome();
 		if (logHomes == null || logHomes.isEmpty()) {
 			String initPath = convLogTenantPath(webSpecifiedPath != null ? webSpecifiedPath : DEFAULT_LOG_HOME);
-			//最後に/を追加
+			// 最後に/を追加
 			if (!initPath.endsWith("/")) {
 				initPath += "/";
 			}
 			return Arrays.asList(initPath);
 		}
 
-		return logHomes.stream().map(logHome -> {
-			String path = convLogTenantPath(logHome);
-			//最後に/を追加
-			if (!path.endsWith("/")) {
-				path += "/";
-			}
-			return path;
-		}).collect(Collectors.toList());
+		return logHomes.stream()
+				.map(logHome -> {
+					String path = convLogTenantPath(logHome);
+					// 最後に/を追加
+					if (!path.endsWith("/")) {
+						path += "/";
+					}
+					return path;
+				})
+				.collect(Collectors.toList());
 	}
 
 	/**
-	 * テナントでダウンロード可能なログファイル名に対するフィルターを返します。
-	 * テナントID、テナント名はログイン情報で置き換えます。
+	 * テナントでダウンロード可能なログファイル名に対するフィルターを返します。 テナントID、テナント名はログイン情報で置き換えます。
 	 *
 	 * @return ダウンロード可能なログファイル名に対するフィルター
 	 */
 	public List<String> getTenantLogFileFilters() {
 		List<String> filters = getLogDownloadConfig().getFileFilter();
 		if (filters == null || filters.isEmpty()) {
-			return null;
+			return Collections.emptyList();
 		}
 
-		return filters.stream().map(filter -> {
-			return convLogTenantPath(filter);
-		}).collect(Collectors.toList());
+		return filters.stream()
+				.map(filter -> {
+					return convLogTenantPath(filter);
+				})
+				.collect(Collectors.toList());
 	}
 
 	private String convLogTenantPath(String path) {
@@ -151,12 +162,16 @@ public class AdminConsoleService implements Service {
 		}
 		String ret = path;
 		if (path.contains(LOG_TENANT_ID_FILTER_KEY)) {
-			Tenant tenant = ExecuteContext.getCurrentContext().getCurrentTenant();
-			ret = logTenantIdPattern.matcher(path).replaceAll(String.valueOf(tenant.getId()));
+			Tenant tenant = ExecuteContext.getCurrentContext()
+					.getCurrentTenant();
+			ret = logTenantIdPattern.matcher(path)
+					.replaceAll(String.valueOf(tenant.getId()));
 		}
 		if (path.contains(LOG_TENANT_NAME_FILTER_KEY)) {
-			Tenant tenant = ExecuteContext.getCurrentContext().getCurrentTenant();
-			ret = logTenantNamePattern.matcher(path).replaceAll(String.valueOf(tenant.getName()));
+			Tenant tenant = ExecuteContext.getCurrentContext()
+					.getCurrentTenant();
+			ret = logTenantNamePattern.matcher(path)
+					.replaceAll(String.valueOf(tenant.getName()));
 		}
 		return ret;
 	}
@@ -167,6 +182,10 @@ public class AdminConsoleService implements Service {
 
 	public long getMaxUploadFileSize() {
 		return maxUploadFileSize;
+	}
+
+	public ScreenModuleBasedClassFactoryGenerator getScreenBasedFactoryGenerator() {
+		return screenBasedFactoryGenerator;
 	}
 
 }

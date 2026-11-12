@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,17 +23,17 @@ package org.iplass.mtp.impl.view.top.parts;
 import java.io.IOException;
 import java.util.Map;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.PageContext;
-
 import org.iplass.mtp.impl.metadata.MetaData;
 import org.iplass.mtp.impl.util.ObjectUtil;
 import org.iplass.mtp.impl.view.top.TopViewHandler;
 import org.iplass.mtp.view.top.parts.FulltextSearchViewParts;
 import org.iplass.mtp.view.top.parts.TopViewParts;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.jsp.PageContext;
 
 public class MetaFulltextSearchViewParts extends MetaTopViewParts {
 
@@ -55,12 +55,22 @@ public class MetaFulltextSearchViewParts extends MetaTopViewParts {
 
 	private boolean dispSearchWindow;
 
+	private boolean showUserNameWithPrivilegedValue;
+
 	public boolean isDispSearchWindow() {
 		return dispSearchWindow;
 	}
 
 	public void setDispSearchWindow(boolean dispSearchWindow) {
 		this.dispSearchWindow = dispSearchWindow;
+	}
+
+	public boolean isShowUserNameWithPrivilegedValue() {
+		return showUserNameWithPrivilegedValue;
+	}
+
+	public void setShowUserNameWithPrivilegedValue(boolean showUserNameWithPrivilegedValue) {
+		this.showUserNameWithPrivilegedValue = showUserNameWithPrivilegedValue;
 	}
 
 	public Map<String, Boolean> getDispEntities() {
@@ -91,6 +101,7 @@ public class MetaFulltextSearchViewParts extends MetaTopViewParts {
 		viewNames = fsvp.getViewNames();
 		dispEntities = fsvp.getDispEntities();
 		dispSearchWindow = fsvp.isDispSearchWindow();
+		showUserNameWithPrivilegedValue = fsvp.isShowUserNameWithPrivilegedValue();
 	}
 
 	@Override
@@ -100,6 +111,7 @@ public class MetaFulltextSearchViewParts extends MetaTopViewParts {
 		parts.setViewNames(viewNames);
 		parts.setDispEntities(dispEntities);
 		parts.setDispSearchWindow(dispSearchWindow);
+		parts.setShowUserNameWithPrivilegedValue(showUserNameWithPrivilegedValue);
 
 		return parts;
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -34,6 +34,8 @@ public class EntityImportParameter {
 	public static final String PROP_ENTITY_NAME = "entityName";
 	/** インポートファイル */
 	public static final String PROP_IMPORT_FILE = "importFile";
+	/** BinaryデータをImportするか */
+	public static final String PROP_IMPORT_BINARY_DATA = "importBinaryData";
 
 	/** Silentモード Entityデータ Truncate */
 	public static final String PROP_ENTITY_TRUNCATE = "entity.truncate";
@@ -47,9 +49,9 @@ public class EntityImportParameter {
 	public static final String PROP_ENTITY_UPDATE_DISUPDATABLE = "entity.updateDisupdatableProperty";
 	/** Silentモード Entityデータ InsertするEntityにcreateBy,createDate,updateBy,updateDateの値を指定 */
 	public static final String PROP_ENTITY_INSERT_AUDIT_PROPERTY_SPECIFICATION = "entity.insertEnableAuditPropertySpecification";
-	/** Silentモード Entityデータ InsertするEntityにcreateBy,createDate,updateBy,updateDateの値を指定時に実行するユーザID */
+	/** Silentモード Entityデータ InsertするEntityにcreateBy,createDate,updateBy,updateDateの値を指定時に実行するユーザーID */
 	public static final String PROP_ENTITY_INSERT_AUDIT_PROPERTY_SPECIFICATION_EXEC_USER_ID = "entity.insertEnableAuditPropertySpecificationUserId";
-	/** Silentモード Entityデータ InsertするEntityにcreateBy,createDate,updateBy,updateDateの値を指定時に実行するユーザPW */
+	/** Silentモード Entityデータ InsertするEntityにcreateBy,createDate,updateBy,updateDateの値を指定時に実行するユーザーPW */
 	public static final String PROP_ENTITY_INSERT_AUDIT_PROPERTY_SPECIFICATION_EXEC_USER_PW = "entity.insertEnableAuditPropertySpecificationUserPW";
 	/** Silentモード Entityデータ 強制更新 */
 	public static final String PROP_ENTITY_FORCE_UPDATE = "entity.forceUpdate";
@@ -82,6 +84,9 @@ public class EntityImportParameter {
 
 	//Importファイル(内部用)
 	private File importFile;
+
+	//BinaryデータをImportするか
+	private boolean isImportBinaryData;
 
 	//EntityImport用条件
 	private EntityDataImportCondition entityImportCondition;
@@ -121,6 +126,14 @@ public class EntityImportParameter {
 
 	public void setImportFilePath(String importFilePath) {
 		this.importFilePath = importFilePath;
+	}
+
+	public boolean isImportBinaryData() {
+		return isImportBinaryData;
+	}
+
+	public void setImportBinaryData(boolean isImportBinaryData) {
+		this.isImportBinaryData = isImportBinaryData;
 	}
 
 	public String getLocale() {

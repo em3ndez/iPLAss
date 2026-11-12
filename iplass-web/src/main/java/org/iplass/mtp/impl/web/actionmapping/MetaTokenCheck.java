@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,7 +35,6 @@ public class MetaTokenCheck implements MetaData {
 
 	public MetaTokenCheck() {
 	}
-	
 
 	public MetaTokenCheck(boolean consume, boolean exceptionRollback,
 			boolean useFixedToken) {
@@ -43,7 +42,6 @@ public class MetaTokenCheck implements MetaData {
 		this.exceptionRollback = exceptionRollback;
 		this.useFixedToken = useFixedToken;
 	}
-
 
 	public boolean isUseFixedToken() {
 		return useFixedToken;

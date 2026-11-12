@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,14 +22,12 @@ package org.iplass.mtp.entity.definition;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
-
 import org.iplass.mtp.entity.definition.listeners.JavaClassEventListenerDefinition;
 import org.iplass.mtp.entity.definition.listeners.ScriptingEventListenerDefinition;
 import org.iplass.mtp.entity.definition.listeners.SendNotificationEventListenerDefinition;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
+import jakarta.xml.bind.annotation.XmlSeeAlso;
 
 /**
  * <p>
@@ -45,12 +43,13 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * @author K.Higuchi
  *
  */
-@XmlSeeAlso (value = {
-		JavaClassEventListenerDefinition.class,
-		ScriptingEventListenerDefinition.class,
-		SendNotificationEventListenerDefinition.class
-})
-@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS)
+@XmlSeeAlso(
+		value = {
+				JavaClassEventListenerDefinition.class,
+				ScriptingEventListenerDefinition.class,
+				SendNotificationEventListenerDefinition.class
+		})
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 public abstract class EventListenerDefinition implements Serializable {
 	private static final long serialVersionUID = -643271790982890174L;
 
@@ -70,7 +69,5 @@ public abstract class EventListenerDefinition implements Serializable {
 	public void setWithoutMappedByReference(boolean withoutMappedByReference) {
 		this.withoutMappedByReference = withoutMappedByReference;
 	}
-
-
 
 }

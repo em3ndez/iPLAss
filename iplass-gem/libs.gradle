@@ -1,22 +1,33 @@
 configurations {
 	wjRuntime
 	jasper
+	jasper.extendsFrom jakartaImplJSP
+	jasper.extendsFrom jakartaImplJstl
 
-	// ビルドパスが競合してエラーになるのでnpmとbowerのものは除外
-	all*.exclude group: 'org.webjars.npm', module: 'jquery'
-	all*.exclude group: 'org.webjars.bower', module: 'jquery'
-	all*.exclude group: 'org.webjars.bower', module: 'moment'
+	compileOnly.extendsFrom(jeecoreapis)
+	compileOnly.extendsFrom(jeewebapis)
+	runtimeOnly.extendsFrom(wjRuntime)
+}
+
+configurations.configureEach {
+	// jqueryはorg.webjars:jqueryを利用。
+	// それ以外は除外
+	exclude group: 'org.webjars.npm', module: 'jquery'
+	exclude group: 'org.webjars.bower', module: 'jquery'
+	exclude group: 'org.webjars.bowergithub.jquery', module: 'jquery-dist'
 	
-	// jquery-uiはbowerを利用。ビルドパスが競合してエラーになるのでそれ以外のものは除外(Timepicker-Addonで参照)
-	all*.exclude group: 'org.webjars', module: 'jquery-ui'
+	// jquery-uiはorg.webjars.npm:jquery-uiを利用。
+	// org.webjars:jquery-uiは除外(org.webjars:jQuery-Timepicker-Addonで参照)
+	exclude group: 'org.webjars', module: 'jquery-ui'
+
+	// momentはorg.webjars.npm:momentを利用。
+	// org.webjars.bower:momentは除外(org.webjars.bower:fullcalendarで参照)
+	exclude group: 'org.webjars.bower', module: 'moment'
 }
 
 dependencies {
-	compileOnly configurations.jeecoreapis
-	compileOnly configurations.jeewebapis
-
 	implementation sharedLib('org.apache.commons:commons-text')
-	implementation 'org.codehaus.groovy:groovy'
+	implementation 'org.apache.groovy:groovy'
 
 	//jackson
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
@@ -27,23 +38,21 @@ dependencies {
 	wjRuntime sharedLib('org.webjars:ckeditor')
 	wjRuntime sharedLib('org.webjars:jquery-blockui')
 	wjRuntime sharedLib('org.webjars:jQuery-Timepicker-Addon')
-	wjRuntime sharedLib('org.webjars:momentjs')
+	wjRuntime sharedLib('org.webjars.npm:moment')
 
 	wjRuntime sharedLib('org.webjars.npm:free-jqgrid')
 	wjRuntime sharedLib('org.webjars.npm:jqtree')
 	wjRuntime sharedLib('org.webjars.npm:viewerjs')
 
-	wjRuntime sharedLib('org.webjars.bower:jquery-ui')
-	wjRuntime sharedLib('org.webjars.bower:blueimp-file-upload')
-	wjRuntime sharedLib('org.webjars.bower:fullcalendar')
-	wjRuntime sharedLib('org.webjars.bower:mediaelement')
+	wjRuntime sharedLib('org.webjars.npm:blueimp-file-upload')
+	wjRuntime sharedLib('org.webjars.npm:fullcalendar')
+	wjRuntime sharedLib('org.webjars.npm:mediaelement')
+
+	wjRuntime sharedLib('org.webjars.npm:jquery-ui')
+	wjRuntime sharedLib('org.webjars.npm:quill')
 
 	//css
 	wjRuntime sharedLib('org.webjars:font-awesome')
 
-	runtimeOnly configurations.wjRuntime
-
-	//jsp
-	jasper sharedLib('org.apache.tomcat:tomcat-jasper')
-	jasper sharedLib('org.glassfish.web:jakarta.servlet.jsp.jstl')
+	//jsp ⇒ configurations.jasper
 }

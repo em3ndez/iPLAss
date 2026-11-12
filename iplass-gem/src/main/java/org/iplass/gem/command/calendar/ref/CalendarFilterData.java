@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,9 +26,6 @@ import java.util.List;
 import org.iplass.mtp.entity.definition.EntityDefinition;
 import org.iplass.mtp.view.filter.EntityFilterItem;
 
-
-
-
 /**
  * カレンダーエンティティフィルター情報
  * @author lis7zi
@@ -37,10 +34,10 @@ public class CalendarFilterData {
 
 	/** エンティティ定義 */
 	private EntityDefinition entityDefinition;
-	
+
 	/** エンティティフィルター情報 */
 	private List<EntityFilterItem> entityFilterIteList;
-	
+
 	/** 検索画面表示用データ情報 */
 	private List<CalendarFilterPropertyItem> calendarFilterPropertyItemList;
 

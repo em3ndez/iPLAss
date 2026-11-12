@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,8 +21,6 @@ package org.iplass.mtp.impl.core.config;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 
 import org.iplass.mtp.spi.ServiceConfigrationException;
@@ -30,13 +28,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DecodePreprocessor implements ConfigPreprocessor {
-	
+
 	private static Logger logger = LoggerFactory.getLogger(DecodePreprocessor.class);
-	
+
 	private PropertyValueCoder coder;
-	
+
 	public DecodePreprocessor() {
-		String cryptConfigFileName = BootstrapProps.getInstance().getProperty(BootstrapProps.CRYPT_CONFIG_FILE_NAME);
+		String cryptConfigFileName = BootstrapProps.getInstance()
+				.getProperty(BootstrapProps.CRYPT_CONFIG_FILE_NAME);
 		if (cryptConfigFileName != null) {
 			coder = getPropertyValueCoder(cryptConfigFileName);
 		}
@@ -45,21 +44,21 @@ public class DecodePreprocessor implements ConfigPreprocessor {
 	@Override
 	public ServiceDefinition preprocess(ServiceDefinition serviceDefinition) {
 		if (coder != null && serviceDefinition.getService() != null) {
-			for (ServiceConfig sc: serviceDefinition.getService()) {
+			for (ServiceConfig sc : serviceDefinition.getService()) {
 				decode(sc, coder);
 			}
 		}
 		return serviceDefinition;
 	}
-	
+
 	private void decode(ServiceConfig sc, PropertyValueCoder coder) {
 		if (sc.getProperty() != null) {
-			for (NameValue p: sc.getProperty()) {
+			for (NameValue p : sc.getProperty()) {
 				decode(p, coder);
 			}
 		}
 	}
-	
+
 	public void decode(NameValue nv, PropertyValueCoder coder) {
 		if (nv.isEncrypted()) {
 			if (nv.getValue() != null) {
@@ -70,19 +69,18 @@ public class DecodePreprocessor implements ConfigPreprocessor {
 			}
 		}
 		if (nv.getProperty() != null) {
-			for (NameValue p: nv.getProperty()) {
+			for (NameValue p : nv.getProperty()) {
 				decode(p, coder);
 			}
 		}
 		if (nv.getArg() != null) {
-			for (NameValue p: nv.getArg()) {
+			for (NameValue p : nv.getArg()) {
 				decode(p, coder);
 			}
 		}
 	}
-	
-	private PropertyValueCoder getPropertyValueCoder(String fileName) {
 
+	private PropertyValueCoder getPropertyValueCoder(String fileName) {
 		Properties prop = new Properties();
 		try {
 			String content = FileUtil.readContent(fileName);
@@ -94,42 +92,15 @@ public class DecodePreprocessor implements ConfigPreprocessor {
 		} catch (IOException e) {
 			throw new ServiceConfigrationException("can not load CryptConfigFile", e);
 		}
-		
+
 		try {
-
-			String passphraseSupplierName = prop.getProperty(PropertyValueCoder.PASSPHRASE_SUPPLIER, PropertyFilePassphraseSupplier.class.getName());
-			try (PassphraseSupplier passphraseSupplier = (PassphraseSupplier) Class.forName(passphraseSupplierName).newInstance()) {
-				passphraseSupplier.open(prop);
-				String keySalt = prop.getProperty(PropertyValueCoder.KEY_SALT);
-				byte[] saltByte = null;
-				if (keySalt != null) {
-					saltByte = MessageDigest.getInstance("SHA-256").digest(keySalt.getBytes("utf-8"));
-				}
-
-				PropertyValueCoder coder = new PropertyValueCoder(
-						prop.getProperty(PropertyValueCoder.KEY_ALGORITHM),
-						toInt(prop.getProperty(PropertyValueCoder.KEY_LENGTH)),
-						prop.getProperty(PropertyValueCoder.CIPHER_ALGORITHM),
-						saltByte,
-						toInt(prop.getProperty(PropertyValueCoder.KEY_STRETCH)),
-						passphraseSupplier
-						);
-				return coder;
-			}
-
-
-		} catch (IOException | NoSuchAlgorithmException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+			String propertyValueCoderName = prop.getProperty(PropertyValueCoder.PROPERTY_VALUE_CODER, DefaultPropertyValueCoder.class.getName());
+			PropertyValueCoder coder = (PropertyValueCoder) Class.forName(propertyValueCoderName)
+					.newInstance();
+			coder.open(prop);
+			return coder;
+		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
 			throw new ServiceConfigrationException(e);
 		}
 	}
-
-	private int toInt(String val) {
-		if (val == null) {
-			return -1;
-		} else {
-			return Integer.parseInt(val);
-		}
-	}
-
-
 }

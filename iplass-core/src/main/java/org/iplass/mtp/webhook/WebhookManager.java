@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,11 +20,12 @@
 package org.iplass.mtp.webhook;
 
 import java.util.Map;
+
 import org.iplass.mtp.Manager;
 import org.iplass.mtp.webhook.endpoint.WebhookEndpoint;
 
 public interface WebhookManager extends Manager {
-	
+
 	/**
 	 * <% if (doclang == "ja") {%>
 	 * 定義からWebhookを作る。

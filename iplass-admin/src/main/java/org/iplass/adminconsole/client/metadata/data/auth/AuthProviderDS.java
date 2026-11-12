@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -56,7 +56,6 @@ public class AuthProviderDS extends AbstractAdminDataSource {
 		nameField.setTitle("Provider Name");
 		grid.setFields(nameField);
 	}
-
 
 	public static AuthProviderDS getInstance() {
 		if (instance == null) {

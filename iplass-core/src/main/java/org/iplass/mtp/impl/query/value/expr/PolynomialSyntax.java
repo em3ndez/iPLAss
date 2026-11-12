@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,13 +31,12 @@ import org.iplass.mtp.impl.parser.Syntax;
 import org.iplass.mtp.impl.parser.SyntaxContext;
 import org.iplass.mtp.impl.query.QueryConstants;
 
-
 public class PolynomialSyntax implements Syntax<ValueExpression>, QueryConstants {
-	
+
 	private static final int TYPE_PLUS = 1;
 	private static final int TYPE_MINUS = 2;
 	private static final int TYPE_OTHER = 3;
-	
+
 	private TermSyntax term;
 
 	private int checkOp(ParseContext str) {
@@ -51,10 +50,10 @@ public class PolynomialSyntax implements Syntax<ValueExpression>, QueryConstants
 	}
 
 	public ValueExpression parse(ParseContext str) throws ParseException {
-		
+
 		//first expression
 		ValueExpression firstExp = term.parse(str);
-		
+
 		//2項目以降の処理
 		List<ValueExpression> addExp = null;
 		List<ValueExpression> subExp = null;
@@ -81,22 +80,22 @@ public class PolynomialSyntax implements Syntax<ValueExpression>, QueryConstants
 				break;
 			}
 		}
-		
+
 		if (addExp == null && subExp == null) {
 			return firstExp;
 		}
-		
+
 		if (addExp == null) {
 			addExp = new ArrayList<ValueExpression>();
 			addExp.add(firstExp);
 		}
-		
+
 		Polynomial pol = new Polynomial();
 		pol.setAddValues(addExp);
 		pol.setSubValues(subExp);
-		
+
 		return pol;
-		
+
 	}
 
 	public void init(SyntaxContext context) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,7 +33,7 @@ public class SendNotificationEventListenerDefinition extends EventListenerDefini
 	private List<EventType> listenEvent;
 	private List<String> destinationList;
 	private boolean sendTogether;
-	
+
 	/**ウェッブフックだけの設定項目*/
 	private boolean synchronous;
 	private String responseHandler;

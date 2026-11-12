@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright 2014 DENTSU SOKEN INC. All Rights Reserved.
  */
 
 package org.iplass.mtp.tools.batch.cleaner;
@@ -11,6 +11,7 @@ import org.iplass.mtp.impl.core.ExecuteContext;
 import org.iplass.mtp.impl.core.TenantContextService;
 import org.iplass.mtp.impl.tools.tenant.TenantInfo;
 import org.iplass.mtp.spi.ServiceRegistry;
+import org.iplass.mtp.tools.batch.MtpBatchResourceDisposer;
 import org.iplass.mtp.tools.batch.MtpSilentBatch;
 import org.iplass.mtp.transaction.Transaction;
 import org.iplass.mtp.util.StringUtil;
@@ -26,8 +27,10 @@ public class AsyncTaskCleaner extends MtpSilentBatch {
 
 	private static Logger logger = LoggerFactory.getLogger(AsyncTaskCleaner.class);
 
-	private static TenantContextService tenantContextService = ServiceRegistry.getRegistry().getService(TenantContextService.class);
-	private static RdbQueueService rdbQueueService = ServiceRegistry.getRegistry().getService(RdbQueueService.class);
+	private static TenantContextService tenantContextService = ServiceRegistry.getRegistry()
+			.getService(TenantContextService.class);
+	private static RdbQueueService rdbQueueService = ServiceRegistry.getRegistry()
+			.getService(RdbQueueService.class);
 
 	private int tenantId;
 
@@ -46,16 +49,22 @@ public class AsyncTaskCleaner extends MtpSilentBatch {
 		if (args != null && args.length > 0 && StringUtil.isNotEmpty(args[0])) {
 			tenantId = Integer.parseInt(args[0]);
 		}
-		if (tenantId >= 0) {
-			(new AsyncTaskCleaner(tenantId)).clean();
-		} else {
-			//全テナントを対象
-			List<TenantInfo> tenants = getValidTenantInfoList();
-			if (tenants != null) {
-				for (TenantInfo t: tenants) {
-					(new AsyncTaskCleaner(t.getId())).clean();
+
+		try {
+			if (tenantId >= 0) {
+				(new AsyncTaskCleaner(tenantId)).clean();
+			} else {
+				//全テナントを対象
+				List<TenantInfo> tenants = getValidTenantInfoList();
+				if (tenants != null) {
+					for (TenantInfo t : tenants) {
+						(new AsyncTaskCleaner(t.getId())).clean();
+					}
 				}
 			}
+		} finally {
+			// リソース破棄
+			MtpBatchResourceDisposer.disposeResource();
 		}
 	}
 
@@ -88,8 +97,7 @@ public class AsyncTaskCleaner extends MtpSilentBatch {
 				Transaction.required(t -> {
 
 					/*
-					 * QueueConfigのresultRemainingTime設定及びStatus.RETURNED(タスク実行完了し、
-					 * 結果が取得されるのを待っている。)のままのタスクの履歴への移動
+					 * QueueConfigのresultRemainingTime設定及びStatus.RETURNED(タスク実行完了し、 結果が取得されるのを待っている。)のままのタスクの履歴への移動
 					 */
 					rdbQueueService.moveNoGetResultTaskToHistory();
 
@@ -119,13 +127,12 @@ public class AsyncTaskCleaner extends MtpSilentBatch {
 		logInfo("");
 	}
 
-
 	/**
 	 * tenantIdを取得します。
 	 * @return tenantId
 	 */
 	public int getTenantId() {
-	    return tenantId;
+		return tenantId;
 	}
 
 	/**
@@ -133,7 +140,7 @@ public class AsyncTaskCleaner extends MtpSilentBatch {
 	 * @param tenantId tenantId
 	 */
 	public void setTenantId(int tenantId) {
-	    this.tenantId = tenantId;
+		this.tenantId = tenantId;
 	}
 
 	@Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,7 +31,7 @@ public class PermissionSearchResult implements Serializable {
 
 	private List<PermissionInfo> wildCardPermissionList;
 
-	public PermissionSearchResult(){
+	public PermissionSearchResult() {
 	}
 
 	public List<PermissionInfo> getPermissionList() {
@@ -49,6 +49,5 @@ public class PermissionSearchResult implements Serializable {
 	public void setWildCardPermissionList(List<PermissionInfo> wildCardPermissionList) {
 		this.wildCardPermissionList = wildCardPermissionList;
 	}
-
 
 }

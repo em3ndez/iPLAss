@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -36,8 +36,6 @@ import org.iplass.mtp.entity.bulkupdate.BulkUpdateEntity;
 import org.iplass.mtp.entity.fulltextsearch.FulltextSearchOption;
 import org.iplass.mtp.entity.query.Query;
 
-
-
 /**
  * <p>
  * Entityを管理するクラスのインタフェースです。
@@ -58,6 +56,7 @@ public interface EntityManager extends Manager {
 
 	/**
 	 * 指定のEntityの検証を行います。
+	 * 検証の前に、プロパティの値は正規化されます。
 	 *
 	 * @param entity 検証対象のEntity
 	 * @return 検証結果
@@ -66,12 +65,28 @@ public interface EntityManager extends Manager {
 
 	/**
 	 * 指定のEntityの指定のプロパティの検証を行います。
+	 * 検証の前に、プロパティの値は正規化されます。
 	 *
 	 * @param entity 検証対象のEntity
 	 * @param properties 検証対象のプロパティ名のリスト
 	 * @return 検証結果
 	 */
 	public ValidateResult validate(Entity entity, List<String> properties);
+
+	/**
+	 * 指定のEntityのプロパティの値を正規化します。
+	 * 
+	 * @param entity 正規化対象のEntity
+	 */
+	public void normalize(Entity entity);
+
+	/**
+	 * 指定のEntityの指定のプロパティの値を正規化します。
+	 * 
+	 * @param entity  正規化対象のEntity
+	 * @param properties 正規化対象のプロパティ名のリスト
+	 */
+	public void normalize(Entity entity, List<String> properties);
 
 	/**
 	 * 指定の条件で検索します。
@@ -236,6 +251,31 @@ public interface EntityManager extends Manager {
 	public Entity loadAndLock(String oid, String definitionName, LoadOption option);
 
 	/**
+	 * 指定のEntityキー情報で特定されるデータを取得します。
+	 * 取得するプロパティは、Entityに定義されているもの全てを取得します。
+	 * ReferencePropertyが定義されている場合は、
+	 * 当該プロパティにはoidとnameが格納されたEntityのインスタンスが格納されます。
+	 * ReferencePropertyが指定されている場合で、そのプロパティが複数可の場合は、
+	 * 当該プロパティはEntity[]の形で取得されます。
+	 *
+	 * @param keys Entityキー情報
+	 * @param definitionName Entity定義名
+	 * @return キー情報で指定されるデータ
+	 */
+	public List<Entity> batchLoad(List<EntityKey> keys, String definitionName);
+
+	/**
+	 * 指定のEntityキー情報で特定されるデータを取得します。
+	 * 取得するプロパティは、optionにて指定されたものです。
+	 *
+	 * @param keys Entityキー情報
+	 * @param definitionName Entity定義名
+	 * @param option 読込オプション、読み込むプロパティを指定可能
+	 * @return キー情報で指定されるデータ
+	 */
+	public List<Entity> batchLoad(List<EntityKey> keys, String definitionName, LoadOption option);
+
+	/**
 	 * 指定の引数のentityを追加します。
 	 * entityにoid（オブジェクトID）が設定されていても必ず新しいIDで採番されます。
 	 *
@@ -303,7 +343,8 @@ public interface EntityManager extends Manager {
 	 * 更新処理の際は、EntityEventListenerの呼び出しや、Validation、タイムスタンプチェック、CascadeDelete処理などは実行されません。
 	 * 外部のマスタデータの取り込み、初期データImportなどの用途での利用を想定しています。
 	 * bulkUpdatableのclose()は処理後（もしくは例外発生後）、当メソッド内で呼び出されます。<br>
-	 * bulkUpdate()を呼び出す実行ユーザは当該Entityに対して登録、更新、削除権限を範囲条件なしに保有している必要があります。<br>
+	 * bulkUpdate()を呼び出す実行ユーザーは当該Entityに対して登録、更新、削除権限を範囲条件なしに保有している必要があります。<br>
+	 * 更新、削除時には対象とするEntityのoidを指定してください。また、バージョン管理が有効の場合はversionの値も明示的に指定する必要があります。<br>
 	 *
 	 * <b>注意</b><br>
 	 * Binary型、LongText型、AutoNumber型を利用している場合、bulkUpdate利用によっても高速化は望めない場合があります。<br>
@@ -335,15 +376,15 @@ public interface EntityManager extends Manager {
 	 * @return
 	 */
 	public BinaryReference createBinaryReference(String name, String type, InputStream is);
-	
+
 	/**
 	 * BinaryReferenceを新規に作成します。
 	 * 引数のfileのデータを同時にバイナリデータとして書き込みます。<br>
 	 * 作成されたBinaryReferenceはまだEntityに紐付いていない状態です。<br>
 	 * nameが未指定の場合は、fileの名前がnameに指定されます。
 	 * typeが未指定の場合は、fileの拡張子からmimetypeが解決されます。
-	 * 
-	 * @param file 
+	 *
+	 * @param file
 	 * @param name
 	 * @param type
 	 * @return
@@ -367,11 +408,11 @@ public interface EntityManager extends Manager {
 	 */
 	public OutputStream getOutputStream(BinaryReference binaryReference);
 
-//全てのユーザのロックができてしまってよいか（インタフェースとしてユーザIDを開放すべきか）
-//⇒apiレベルでは自身のユーザIDでロック＆開放。管理者は誰のIDのものでも開放できる
+//全てのユーザーのロックができてしまってよいか（インタフェースとしてユーザーIDを開放すべきか）
+//⇒apiレベルでは自身のユーザーIDでロック＆開放。管理者は誰のIDのものでも開放できる
 	/**
-	 * 現在、当該メソッドを呼び出しているユーザにて、 指定のEntityをデータをロックします。
-	 * ユーザによるロックはunlockByUser()メソッドにて明示的に開放しない限り、
+	 * 現在、当該メソッドを呼び出しているユーザーにて、 指定のEntityをデータをロックします。
+	 * ユーザーによるロックはunlockByUser()メソッドにて明示的に開放しない限り、
 	 * トランザクションを終了してもロックは保持されます。
 	 *
 	 * @param oid オブジェクトID
@@ -381,7 +422,7 @@ public interface EntityManager extends Manager {
 	public boolean lockByUser(String oid, String definitionName);
 
 	/**
-	 * ユーザにてロックされているEntityのデータのロックを解除します。
+	 * ユーザーにてロックされているEntityのデータのロックを解除します。
 	 *
 	 *
 	 * @param oid オブジェクトID
@@ -390,11 +431,10 @@ public interface EntityManager extends Manager {
 	 */
 	public boolean unlockByUser(String oid, String definitionName);
 
-
 	/**
 	 * ごみ箱から、削除します。
 	 * recycleBinIdは、ごみ箱内のデータを一意に特定するidです（oidは重複する可能性があるため）。<br>
-	 * purge()を呼び出す実行ユーザは当該Entityに対して削除権限を範囲条件なしに保有している必要があります。<br>
+	 * purge()を呼び出す実行ユーザーは当該Entityに対して削除権限を範囲条件なしに保有している必要があります。<br>
 	 *
 	 * @param recycleBinId ごみ箱内のデータを一意に特定するid
 	 * @param definitionName Entity定義名
@@ -403,7 +443,7 @@ public interface EntityManager extends Manager {
 
 	/**
 	 * ごみ箱から復活します。<br>
-	 * restore()を呼び出す実行ユーザは当該Entityに対して削除権限を範囲条件なしに保有しているか、
+	 * restore()を呼び出す実行ユーザーは当該Entityに対して削除権限を範囲条件なしに保有しているか、
 	 * もしくは自身がごみ箱に格納したEntityである必要があります。<br>
 	 *
 	 * @param recycleBinId ごみ箱内のデータを一意に特定するid
@@ -485,6 +525,16 @@ public interface EntityManager extends Manager {
 	public List<String> fulltextSearchOidList(String definitionName, String keyword);
 
 	/**
+	 * 指定のワードで全文検索し、対象Entity毎のoidリストのMapを取得します。
+	 * definitionNames、keywordは必須。未指定の場合は空のMapを返却します。
+	 *
+	 * @param definitionNames Entity定義名のリスト
+	 * @param keyword 全文検索用キーワード
+	 * @return 検索キーワードを含むエンティティデータのoidリストのMap
+	 */
+	public Map<String, List<String>> fulltextSearchOidList(List<String> definitionNames, String keyword);
+
+	/**
 	 * 指定のワードで全文検索し、指定プロパティのみを取得します。
 	 * entityPropertiesが未指定の場合は利用テナントの全エンティティに対して全文検索を実施します。
 	 *
@@ -498,7 +548,7 @@ public interface EntityManager extends Manager {
 	 * クエリ実行結果に対して、指定のワードで全文検索します。
 	 *<pre><b>メモリを大量消費する恐れがありますので、絞り込む条件とリミット条件を指定した上でご利用してください。</b></pre>
 	 *
-	 * @param Query クエリ、Entity.OIDを検索項目として設定する必要が有ります。 <pre>Entity.OIDを指定しないと、空のリストが返されます。</pre> 
+	 * @param Query クエリ、Entity.OIDを検索項目として設定する必要が有ります。 <pre>Entity.OIDを指定しないと、空のリストが返されます。</pre>
 	 * @param keyword 全文検索用キーワード
 	 * @return SearchOption 検索時のオプション、countTotal=trueの場合総件数を積み上げる
 	 */

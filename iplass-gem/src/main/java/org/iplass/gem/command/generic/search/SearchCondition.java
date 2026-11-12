@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -70,7 +70,8 @@ public class SearchCondition {
 	 * @return 詳細検索条件
 	 */
 	public List<SearchConditionDetail> getDetailConditonList() {
-		if (this.detailConditonList == null) this.detailConditonList = new ArrayList<SearchConditionDetail>();
+		if (this.detailConditonList == null)
+			this.detailConditonList = new ArrayList<SearchConditionDetail>();
 		return detailConditonList;
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,14 +20,18 @@
 package org.iplass.mtp.impl.webhook;
 
 import java.util.Map;
+
 import org.iplass.mtp.impl.definition.TypedMetaDataService;
 import org.iplass.mtp.impl.webhook.template.MetaWebhookTemplate;
 import org.iplass.mtp.impl.webhook.template.MetaWebhookTemplate.WebhookTemplateRuntime;
 import org.iplass.mtp.webhook.Webhook;
 
-public interface WebhookService extends TypedMetaDataService<MetaWebhookTemplate, WebhookTemplateRuntime>{
+public interface WebhookService extends TypedMetaDataService<MetaWebhookTemplate, WebhookTemplateRuntime> {
 	Webhook generateWebhook(String webhookDefinitionName, Map<String, Object> binding, String endpointDefinitionName);
+
 	Webhook getWebhookByName(String webhookDefinitionName, Map<String, Object> binding);
+
 	void sendWebhookAsync(Webhook webhook);
+
 	void sendWebhookSync(Webhook webhook);
 }

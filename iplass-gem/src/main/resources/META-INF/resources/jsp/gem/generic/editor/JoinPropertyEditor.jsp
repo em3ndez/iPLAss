@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 <%@ page import="java.util.List" %>
 <%@ page import="org.iplass.mtp.ManagerLocator"%>
@@ -131,4 +131,5 @@
 	request.removeAttribute(Constants.EDITOR_EDITOR);
 	request.removeAttribute(Constants.EDITOR_PROP_VALUE);
 	request.removeAttribute(Constants.EDITOR_PROPERTY_DEFINITION);
+	request.removeAttribute(Constants.EDITOR_DISPLAY_LABEL);
 %>

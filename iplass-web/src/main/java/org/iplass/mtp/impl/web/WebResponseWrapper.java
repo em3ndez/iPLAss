@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,8 +25,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponseWrapper;
 
 public class WebResponseWrapper extends HttpServletResponseWrapper {
 
@@ -43,12 +43,12 @@ public class WebResponseWrapper extends HttpServletResponseWrapper {
 	}
 
 	@Override
-    public PrintWriter getWriter() throws IOException {
-        return new PrintWriter(writer);
-    }
+	public PrintWriter getWriter() throws IOException {
+		return new PrintWriter(writer);
+	}
 
 	@Override
-    public String toString() {
-        return writer.toString();
-    }
+	public String toString() {
+		return writer.toString();
+	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -40,9 +40,13 @@ import org.iplass.mtp.web.template.definition.TemplateDefinition;
 @Target(ElementType.TYPE)
 public @interface Template {
 	String id() default "##default";
+
 	String name();
+
 	String displayName() default "##default";
+
 	LocalizedString[] localizedDisplayName() default {};
+
 	String description() default "##default";
 
 	/**

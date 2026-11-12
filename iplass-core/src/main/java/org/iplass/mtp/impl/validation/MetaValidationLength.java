@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,7 +33,6 @@ import org.iplass.mtp.impl.entity.MetaEntity;
 import org.iplass.mtp.impl.entity.property.MetaProperty;
 import org.iplass.mtp.impl.util.ObjectUtil;
 import org.iplass.mtp.spi.ServiceRegistry;
-
 
 public class MetaValidationLength extends MetaValidation {
 
@@ -90,8 +89,10 @@ public class MetaValidationLength extends MetaValidation {
 	@Override
 	public ValidationHandler createRuntime(MetaEntity entity, MetaProperty property) {
 
-		final String charset = ServiceRegistry.getRegistry().getService(StoreService.class).getCharset();
-		return new ValidationHandler(this) {
+		final String charset = ServiceRegistry.getRegistry()
+				.getService(StoreService.class)
+				.getCharset();
+		return new ValidationHandler(this, entity, property) {
 
 			@Override
 			public String generateErrorMessage(Object value,
@@ -101,10 +102,12 @@ public class MetaValidationLength extends MetaValidation {
 						entityDisplayName);
 				if (msg != null) {
 					if (msg.contains("${max}")) {
-						msg = maxPattern.matcher(msg).replaceAll(String.valueOf(max));
+						msg = maxPattern.matcher(msg)
+								.replaceAll(String.valueOf(max));
 					}
 					if (msg.contains("${min}")) {
-						msg = minPattern.matcher(msg).replaceAll(String.valueOf(min));
+						msg = minPattern.matcher(msg)
+								.replaceAll(String.valueOf(min));
 					}
 				}
 				return msg;
@@ -116,6 +119,9 @@ public class MetaValidationLength extends MetaValidation {
 
 			@Override
 			public boolean validate(Object value, ValidationContext context) {
+				if (validateSkipCheck(value, context)) {
+					return true;
+				}
 				if (value == null) {
 					return true;
 				}
@@ -158,9 +164,9 @@ public class MetaValidationLength extends MetaValidation {
 				throw new EntityRuntimeException("not support type:" + value.getClass());
 			}
 
-//			public MetaData getMetaData() {
-//				return MetaValidationLength.this;
-//			}
+			//			public MetaData getMetaData() {
+			//				return MetaValidationLength.this;
+			//			}
 		};
 	}
 

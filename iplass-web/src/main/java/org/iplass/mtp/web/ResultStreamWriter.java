@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,7 +32,7 @@ import java.io.OutputStream;
  *
  */
 public interface ResultStreamWriter {
-	
+
 	/**
 	 * 出力処理を記述。
 	 * 

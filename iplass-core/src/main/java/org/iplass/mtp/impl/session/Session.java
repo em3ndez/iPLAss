@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,13 +24,21 @@ import java.util.Iterator;
 
 public interface Session {
 	public String getId();
+
 	public Object getAttribute(String name);
+
 	public void setAttribute(String name, Object value);
+
 	public void removeAttribute(String name);
+
 	public Iterator<String> getAttributeNames();
+
 	public void invalidate();
-	
+
+	public void changeSessionId();
+
 	public Object getSessionMutexObject();
+
 	public long getCreationTime();
-	
+
 }

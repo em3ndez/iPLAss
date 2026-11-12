@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,14 +33,14 @@ public class GroovyTemplate {
 
 	private Script script;
 	private Closure<?> templateClosure;
-	
+
 	public GroovyTemplate(Script script) {
 		this.script = script;
 		GroovyObject object = script.createInstanceAs(GroovyObject.class, null);
 		templateClosure = (Closure<?>) object.invokeMethod("getTemplate", null);
 		templateClosure.setResolveStrategy(Closure.DELEGATE_FIRST);
 	}
-	
+
 	public void doTemplate(GroovyTemplateBinding binding) throws IOException {
 		Closure<?> template = (Closure<?>) templateClosure.clone();
 		template.setDelegate(binding);

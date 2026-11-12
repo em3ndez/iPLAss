@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -40,7 +40,6 @@ public class PermissionInfo implements Serializable {
 	// EntityPermission, WorkflowPermission, CubePermissionで利用
 	private List<RolePermissionInfo> rolePermissionList;
 
-
 //	/**
 //	 * permissionValue
 //	 * key : roleCode
@@ -56,6 +55,7 @@ public class PermissionInfo implements Serializable {
 	public String getDefinitionName() {
 		return definitionName;
 	}
+
 	public void setDefinitionName(String definitionName) {
 		this.definitionName = definitionName;
 	}
@@ -63,6 +63,7 @@ public class PermissionInfo implements Serializable {
 	public String getDisplayName() {
 		return displayName;
 	}
+
 	public void setDisplayName(String displayName) {
 		this.displayName = displayName;
 	}
@@ -77,9 +78,11 @@ public class PermissionInfo implements Serializable {
 	public List<RolePermissionInfo> getRolePermissionList() {
 		return rolePermissionList;
 	}
+
 	public void setRolePermissionList(List<RolePermissionInfo> rolePermissionList) {
 		this.rolePermissionList = rolePermissionList;
 	}
+
 	public void addRolePermission(RolePermissionInfo rolePermission) {
 		if (rolePermissionList == null) {
 			rolePermissionList = new ArrayList<RolePermissionInfo>();

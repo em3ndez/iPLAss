@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -40,12 +40,15 @@ public class Name implements Serializable {
 	public String getName() {
 		return name;
 	}
+
 	public void setName(String name) {
 		this.name = name;
 	}
+
 	public String getDisplayName() {
 		return displayName;
 	}
+
 	public void setDisplayName(String displayName) {
 		this.displayName = displayName;
 	}

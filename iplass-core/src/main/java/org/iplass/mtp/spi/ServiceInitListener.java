@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,7 +29,7 @@ package org.iplass.mtp.spi;
  * @param <T>
  */
 public interface ServiceInitListener<T extends Service> {
-	
+
 	/**
 	 * Service初期化時に呼び出されます。
 	 * 
@@ -37,7 +37,7 @@ public interface ServiceInitListener<T extends Service> {
 	 * @param config
 	 */
 	public void inited(T service, Config config);
-	
+
 	/**
 	 * Service破棄時に呼び出されます。
 	 * 

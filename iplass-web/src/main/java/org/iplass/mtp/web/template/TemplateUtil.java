@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,9 +29,6 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.TimeZone;
 
-import javax.servlet.ServletException;
-import javax.servlet.jsp.PageContext;
-
 import org.iplass.mtp.ManagerLocator;
 import org.iplass.mtp.command.RequestContext;
 import org.iplass.mtp.command.RequestContextWrapper;
@@ -50,8 +47,12 @@ import org.iplass.mtp.message.MessageItem;
 import org.iplass.mtp.message.MessageManager;
 import org.iplass.mtp.spi.ServiceRegistry;
 import org.iplass.mtp.tenant.Tenant;
+import org.iplass.mtp.util.CollectionUtil;
 import org.iplass.mtp.util.ResourceBundleUtil;
 import org.iplass.mtp.util.StringUtil;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.jsp.PageContext;
 
 /**
  * テンプレートを作成する際利用可能なユーティリティメソッド。
@@ -65,7 +66,8 @@ public class TemplateUtil {
 	//TODO HttpServletRequestとかは生で扱わせない
 	//TODO 階層的なRequestContextの保持も可能に。ネストされた呼び出しの場合、親のRequestContextを引き継ぐ、引き継がないを指定可能
 
-	private static MessageManager mm = ManagerLocator.getInstance().getManager(MessageManager.class);
+	private static MessageManager mm = ManagerLocator.getInstance()
+			.getManager(MessageManager.class);
 
 	/**
 	 * <p>静的コンテンツパスを返します。</p>
@@ -84,7 +86,7 @@ public class TemplateUtil {
 	 * <p>テナントコンテキストパスを返します。</p>
 	 *
 	 * <ul>
-	 * <li>通常は「{@link javax.servlet.http.HttpServletRequest#getContextPath() HttpServletRequest#getContextPath()} + テナントメタ#テナントURL」を返します。
+	 * <li>通常は「{@link jakarta.servlet.http.HttpServletRequest#getContextPath() HttpServletRequest#getContextPath()} + テナントメタ#テナントURL」を返します。
 	 * <li>テナントURLが「/」の場合は、最後に「/」は付与しません。
 	 * <li>テナントメタに「リクエストパス構築用テナントURL」を指定している場合はその値を返します。
 	 * <li>「リクエストパス構築用テナントURL」が「/」の場合は空を返します。
@@ -96,7 +98,8 @@ public class TemplateUtil {
 	 * </ul>
 	 */
 	public static String getTenantContextPath() {
-		return WebUtil.getTenantContextPath(WebRequestStack.getCurrent().getRequest());
+		return WebUtil.getTenantContextPath(WebRequestStack.getCurrent()
+				.getRequest());
 	}
 
 	/**
@@ -141,7 +144,8 @@ public class TemplateUtil {
 	}
 
 	public static Tenant getTenant() {
-		return ExecuteContext.getCurrentContext().getCurrentTenant();
+		return ExecuteContext.getCurrentContext()
+				.getCurrentTenant();
 	}
 
 	public static int getClientTenantId() {
@@ -250,7 +254,7 @@ public class TemplateUtil {
 	 * @param pageContext 呼び出し元がjspの場合、jspのPageContextを引数に渡す
 	 */
 	public static void renderContent(PageContext pageContext)
-		throws IOException, ServletException{
+			throws IOException, ServletException {
 
 		WebRequestStack current = WebRequestStack.getCurrent();
 		if (pageContext == null) {
@@ -265,7 +269,7 @@ public class TemplateUtil {
 	 * トランザクショントークン出力形式
 	 */
 	public static enum TokenOutputType {
-		URL,FORM_HTML,FORM_XHTML,VALUE
+		URL, FORM_HTML, FORM_XHTML, VALUE
 	}
 
 	/**
@@ -323,7 +327,8 @@ public class TemplateUtil {
 	}
 
 	public static Timestamp getCurrentTimestamp() {
-		return ExecuteContext.getCurrentContext().getCurrentTimestamp();
+		return ExecuteContext.getCurrentContext()
+				.getCurrentTimestamp();
 	}
 
 	/**
@@ -335,7 +340,7 @@ public class TemplateUtil {
 	 */
 	@Deprecated
 	public static String getString(String key) {
-		return getString(key, (Object[])null);
+		return getString(key, (Object[]) null);
 	}
 
 	/**
@@ -384,7 +389,8 @@ public class TemplateUtil {
 	}
 
 	public static Map<String, String> getEnableLanguages() {
-		I18nService i18n = ServiceRegistry.getRegistry().getService(I18nService.class);
+		I18nService i18n = ServiceRegistry.getRegistry()
+				.getService(I18nService.class);
 		return i18n.getEnableLanguagesMap();
 	}
 
@@ -455,25 +461,31 @@ public class TemplateUtil {
 	}
 
 	public static String getLanguage() {
-		return ExecuteContext.getCurrentContext().getLanguage();
+		return ExecuteContext.getCurrentContext()
+				.getLanguage();
 	}
 
 	public static Locale getLocale() {
-		return ExecuteContext.getCurrentContext().getLocale();
+		return ExecuteContext.getCurrentContext()
+				.getLocale();
 	}
 
 	public static TimeZone getTimeZone() {
-		return ExecuteContext.getCurrentContext().getTimeZone();
+		return ExecuteContext.getCurrentContext()
+				.getTimeZone();
 	}
 
 	public static LocaleFormat getLocaleFormat() {
-		return ExecuteContext.getCurrentContext().getLocaleFormat();
+		return ExecuteContext.getCurrentContext()
+				.getLocaleFormat();
 	}
 
 	public static String getLanguageFonts(String langage) {
-		I18nService i18n = ServiceRegistry.getRegistry().getService(I18nService.class);
+		I18nService i18n = ServiceRegistry.getRegistry()
+				.getService(I18nService.class);
 		for (LanguageFonts fonts : i18n.getLanguageFonts()) {
-			if (fonts.getLanguage().equals(langage)) {
+			if (fonts.getLanguage()
+					.equals(langage)) {
 				return getLangFont(fonts);
 			}
 		}
@@ -481,11 +493,33 @@ public class TemplateUtil {
 	}
 
 	private static String getLangFont(LanguageFonts fonts) {
+		List<String> genericFontFamilyList = ServiceRegistry.getRegistry()
+				.getService(I18nService.class)
+				.getGenericFontFamilyList();
+		boolean isNotEmptyGenericFontFamilyList = CollectionUtil.isNotEmpty(genericFontFamilyList);
+
+		String genericFontFamily = null;
+
 		StringBuilder sb = new StringBuilder();
 		for (String font : fonts.getFonts()) {
-			if (sb.length() != 0) sb.append(",");
-			sb.append("\"").append(font).append("\"");
+			if (isNotEmptyGenericFontFamilyList && genericFontFamilyList.contains(font)) {
+				genericFontFamily = font;
+				continue;
+			}
+
+			if (sb.length() != 0) {
+				sb.append(",");
+			}
+			sb.append("\"")
+					.append(font)
+					.append("\"");
 		}
+
+		if (genericFontFamily != null) {
+			sb.append(",")
+					.append(genericFontFamily);
+		}
+
 		return sb.toString();
 	}
 }

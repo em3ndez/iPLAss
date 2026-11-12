@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,16 +20,16 @@
 
 package org.iplass.mtp.impl.web;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletResponse;
-
 import org.iplass.mtp.util.StringUtil;
 import org.iplass.mtp.web.actionmapping.ResponseHeader;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+
 public class ResponseHeaderImpl implements ResponseHeader {
-	
+
 	private HttpServletResponse response;
-	
+
 	ResponseHeaderImpl() {
 		WebRequestStack stack = WebRequestStack.getCurrent();
 		if (stack != null) {

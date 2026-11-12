@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -34,21 +34,21 @@ public interface AuthTokenInfo {
 	 * @return
 	 */
 	public String getType();
-	
+
 	/**
 	 * トークンを一意に特定するためのキーです。
 	 * 
 	 * @return
 	 */
 	public String getKey();
-	
+
 	/**
 	 * トークンの内容を表現する説明文です。
 	 * 
 	 * @return
 	 */
 	public String getDescription();
-	
+
 	/**
 	 * トークンの発行日です。
 	 * 

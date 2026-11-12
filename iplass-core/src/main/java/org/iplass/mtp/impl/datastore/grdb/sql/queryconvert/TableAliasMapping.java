@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,21 +24,21 @@ import java.util.HashMap;
 
 public class TableAliasMapping {
 	private static final String PREFIX = "t";
-	
+
 	private HashMap<String, String> refNameTableAliasMap;
 	private String prefix;
 	private int count;
-	
+
 	public TableAliasMapping(String prefix) {
 		this.prefix = prefix;
 		refNameTableAliasMap = new HashMap<String, String>();
 	}
-	
+
 	public String getAlias(String refName) {
 		if (refName == null) {
 			return prefix;
 		}
-		
+
 		String alias = refNameTableAliasMap.get(refName);
 		if (alias == null) {
 			alias = prefix + PREFIX + count;

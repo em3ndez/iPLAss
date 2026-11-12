@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,10 +32,10 @@ public class RolePermissionInfo implements Serializable {
 	public static final String UPDATE = "U";
 	public static final String DELETE = "D";
 
-	private String status;	//blank・・変更なし、I・・Insert、U・・Update、D・・Delete
+	private String status; //blank・・変更なし、I・・Insert、U・・Update、D・・Delete
 	private Entity permission;
 
-	public RolePermissionInfo(){
+	public RolePermissionInfo() {
 	}
 
 	public String getStatus() {

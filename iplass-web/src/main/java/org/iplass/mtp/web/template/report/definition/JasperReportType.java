@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -19,7 +19,6 @@
  */
 
 package org.iplass.mtp.web.template.report.definition;
-
 
 /**
  * <% if (doclang == "ja") {%>
@@ -44,6 +43,9 @@ public class JasperReportType extends ReportType {
 	/** パスワードAttribute名 */
 	private String passwordAttributeName;
 
+	/** オーナーパスワードAttribute名 */
+	private String ownerPasswordAttributeName;
+
 	public ReportParamMapDefinition[] getParamMap() {
 		return paramMap;
 	}
@@ -66,6 +68,14 @@ public class JasperReportType extends ReportType {
 
 	public void setPasswordAttributeName(String passwordAttributeName) {
 		this.passwordAttributeName = passwordAttributeName;
+	}
+
+	public String getOwnerPasswordAttributeName() {
+		return ownerPasswordAttributeName;
+	}
+
+	public void setOwnerPasswordAttributeName(String ownerPasswordAttributeName) {
+		this.ownerPasswordAttributeName = ownerPasswordAttributeName;
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -119,7 +119,6 @@ public class LocaleFormat implements Serializable, Cloneable {
 	private String outputTimeHourFormat;
 
 	private boolean lastNameIsFirst;
-
 
 	public List<String> getLocale() {
 		return locale;
@@ -268,6 +267,5 @@ public class LocaleFormat implements Serializable, Cloneable {
 			throw new RuntimeException(e);
 		}
 	}
-
 
 }

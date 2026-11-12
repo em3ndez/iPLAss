@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -57,7 +57,7 @@ public class MetaTemplatePropertyEditor extends MetaCustomPropertyEditor {
 	 * @return 表示タイプ
 	 */
 	public TemplateDisplayType getDisplayType() {
-	    return displayType;
+		return displayType;
 	}
 
 	/**
@@ -65,7 +65,7 @@ public class MetaTemplatePropertyEditor extends MetaCustomPropertyEditor {
 	 * @param displayType 表示タイプ
 	 */
 	public void setDisplayType(TemplateDisplayType displayType) {
-	    this.displayType = displayType;
+		this.displayType = displayType;
 	}
 
 	/**

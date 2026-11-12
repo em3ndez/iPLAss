@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,9 +22,8 @@ package org.iplass.mtp.definition;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * 定義がもつ共通のインタフェースを定義。
@@ -33,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  *
  */
 @XmlRootElement
-@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 public interface Definition extends Serializable {
 
 	/**

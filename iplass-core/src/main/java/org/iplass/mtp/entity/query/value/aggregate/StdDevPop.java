@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -37,11 +37,11 @@ public class StdDevPop extends Aggregate {
 
 	public StdDevPop() {
 	}
-	
+
 	public StdDevPop(String propertyName) {
 		setValue(new EntityField(propertyName));
 	}
-	
+
 	public StdDevPop(ValueExpression value) {
 		setValue(value);
 	}

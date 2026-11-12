@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -31,8 +31,10 @@
 	String calendarName = request.getParameter(Constants.CALENDAR_NAME);
 	String modalTarget = request.getParameter(Constants.MODAL_TARGET);
 
+	calendarName = StringUtil.escapeJavaScript(calendarName);
+	
 	if (modalTarget == null) modalTarget = "";
-	else modalTarget = StringUtil.escapeHtml(modalTarget);
+	else modalTarget = StringUtil.escapeJavaScript(modalTarget);
 
 	String language = TemplateUtil.getLanguage();
 	if (StringUtil.isEmpty(language)) {
@@ -56,7 +58,7 @@ $(function() {
 
 	// 検索ボタン押下処理
 	var func = null;
-	var windowManager = document.rootWindow.scriptContext["windowManager"];
+	var windowManager = document.rootDocument.scriptContext["windowManager"];
 	if (modalTarget && windowManager && windowManager[document.targetName]) {
 		var win = windowManager[modalTarget];
 		func = win.scriptContext["editReferenceCallback"];

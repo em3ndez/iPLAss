@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -55,16 +55,19 @@ public class BinarySizeValidation extends ValidationDefinition {
 		this.min = min;
 		this.max = max;
 	}
-	
+
 	public Long getMax() {
 		return max;
 	}
+
 	public void setMax(Long max) {
 		this.max = max;
 	}
+
 	public Long getMin() {
 		return min;
 	}
+
 	public void setMin(Long min) {
 		this.min = min;
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -63,7 +63,7 @@ package org.iplass.mtp.command;
  *
  */
 public interface Command {
-	
+
 	/**
 	 * 実行するロジックを記述します。
 	 * 基本的にはexecute()呼び出し前にトランザクションは基盤側で自動的に開始されます。

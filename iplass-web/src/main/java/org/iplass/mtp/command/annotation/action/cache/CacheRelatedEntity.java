@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,5 +32,6 @@ import org.iplass.mtp.web.actionmapping.definition.cache.RelatedEntityType;
 public @interface CacheRelatedEntity {
 
 	String definitionName();
+
 	RelatedEntityType type() default RelatedEntityType.SPECIFIC_ID;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,6 +35,7 @@ import org.iplass.mtp.entity.DeepCopyOption;
 import org.iplass.mtp.entity.DeleteCondition;
 import org.iplass.mtp.entity.DeleteOption;
 import org.iplass.mtp.entity.Entity;
+import org.iplass.mtp.entity.EntityKey;
 import org.iplass.mtp.entity.EntityManager;
 import org.iplass.mtp.entity.InsertOption;
 import org.iplass.mtp.entity.LoadOption;
@@ -67,8 +68,10 @@ public class AdminEntityManager implements EntityManager {
 	private AdminAuditLoggingService aals;
 
 	private AdminEntityManager() {
-		em = ManagerLocator.getInstance().getManager(EntityManager.class);
-		aals = ServiceRegistry.getRegistry().getService(AdminAuditLoggingService.class);
+		em = ManagerLocator.getInstance()
+				.getManager(EntityManager.class);
+		aals = ServiceRegistry.getRegistry()
+				.getService(AdminAuditLoggingService.class);
 	}
 
 	public static EntityManager getInstance() {
@@ -173,6 +176,18 @@ public class AdminEntityManager implements EntityManager {
 	public Entity loadAndLock(String oid, String definitionName, LoadOption option) {
 		aals.logLoad(oid, null, definitionName, option);
 		return em.loadAndLock(oid, definitionName, option);
+	}
+
+	@Override
+	public List<Entity> batchLoad(List<EntityKey> keys, String definitionName) {
+		aals.logBatchLoad(keys, definitionName, null);
+		return em.batchLoad(keys, definitionName);
+	}
+
+	@Override
+	public List<Entity> batchLoad(List<EntityKey> keys, String definitionName, LoadOption option) {
+		aals.logBatchLoad(keys, definitionName, option);
+		return em.batchLoad(keys, definitionName, option);
 	}
 
 	@Override
@@ -305,6 +320,11 @@ public class AdminEntityManager implements EntityManager {
 	}
 
 	@Override
+	public Map<String, List<String>> fulltextSearchOidList(List<String> definitionNames, String keyword) {
+		return em.fulltextSearchOidList(definitionNames, keyword);
+	}
+
+	@Override
 	public <T extends Entity> SearchResult<T> fulltextSearchEntity(Query query, String keyword, SearchOption option) {
 		return em.fulltextSearchEntity(query, keyword, option);
 	}
@@ -318,6 +338,16 @@ public class AdminEntityManager implements EntityManager {
 	@Override
 	public <T extends Entity> SearchResult<T> fulltextSearchEntity(String keyword, FulltextSearchOption option) {
 		return em.fulltextSearchEntity(keyword, option);
+	}
+
+	@Override
+	public void normalize(Entity entity) {
+		em.normalize(entity);
+	}
+
+	@Override
+	public void normalize(Entity entity, List<String> properties) {
+		em.normalize(entity, properties);
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.commons.text.StrTokenizer;
+import org.apache.commons.text.StringTokenizer;
 import org.iplass.gem.command.Constants;
 import org.iplass.mtp.ManagerLocator;
 import org.iplass.mtp.command.Command;
@@ -51,6 +51,7 @@ import org.iplass.mtp.entity.definition.PropertyDefinitionType;
 import org.iplass.mtp.entity.definition.properties.DateProperty;
 import org.iplass.mtp.entity.definition.properties.DateTimeProperty;
 import org.iplass.mtp.entity.definition.properties.TimeProperty;
+import org.iplass.mtp.entity.permission.EntityPermission;
 import org.iplass.mtp.entity.query.PreparedQuery;
 import org.iplass.mtp.entity.query.Query;
 import org.iplass.mtp.entity.query.SortSpec;
@@ -72,6 +73,7 @@ import org.iplass.mtp.entity.query.condition.predicate.Lesser;
 import org.iplass.mtp.entity.query.condition.predicate.LesserEqual;
 import org.iplass.mtp.entity.query.condition.predicate.Like;
 import org.iplass.mtp.entity.query.condition.predicate.NotEquals;
+import org.iplass.mtp.impl.auth.AuthContextHolder;
 import org.iplass.mtp.impl.util.ConvertUtil;
 import org.iplass.mtp.util.CollectionUtil;
 import org.iplass.mtp.util.DateUtil;
@@ -92,15 +94,15 @@ import org.iplass.mtp.webapi.definition.RequestType;
  * @author lis3wg
  */
 @WebApi(
-	name=GetCalendarCommand.WEBAPI_NAME,
-	accepts=RequestType.REST_JSON,
-	methods=MethodType.POST,
-	restJson=@RestJson(parameterName="params"),
-	results="calendarData",
-	checkXRequestedWithHeader=true
+		name = GetCalendarCommand.WEBAPI_NAME,
+		accepts = RequestType.REST_JSON,
+		methods = MethodType.POST,
+		restJson = @RestJson(parameterName = "params"),
+		results = "calendarData",
+		checkXRequestedWithHeader = true
 )
-@Template(name="gem/calendar/calendarParts", displayName="カレンダー部品", path="/jsp/gem/calendar/calendarParts.jsp")
-@CommandClass(name="gem/calendar/GetCalendarCommand", displayName="カレンダー")
+@Template(name = "gem/calendar/calendarParts", displayName = "カレンダー部品", path = "/jsp/gem/calendar/calendarParts.jsp")
+@CommandClass(name = "gem/calendar/GetCalendarCommand", displayName = "カレンダー")
 public final class GetCalendarCommand implements Command {
 
 	public static final String WEBAPI_NAME = "gem/calendar/getCalendar";
@@ -154,27 +156,32 @@ public final class GetCalendarCommand implements Command {
 		/** is null */
 		NL;
 
-		private FilterCondition() {}
+		private FilterCondition() {
+		}
 	}
 
 	/**
 	 * コンストラクタ
 	 */
 	public GetCalendarCommand() {
-		ecm = ManagerLocator.getInstance().getManager(EntityCalendarManager.class);
-		edm = ManagerLocator.getInstance().getManager(EntityDefinitionManager.class);
-		em = ManagerLocator.getInstance().getManager(EntityManager.class);
-		efm = ManagerLocator.getInstance().getManager(EntityFilterManager.class);
+		ecm = ManagerLocator.getInstance()
+				.getManager(EntityCalendarManager.class);
+		edm = ManagerLocator.getInstance()
+				.getManager(EntityDefinitionManager.class);
+		em = ManagerLocator.getInstance()
+				.getManager(EntityManager.class);
+		efm = ManagerLocator.getInstance()
+				.getManager(EntityFilterManager.class);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public String execute(RequestContext request) {
-		Map<String, Object> json = (Map<String, Object>)request.getAttribute("params");
+		Map<String, Object> json = (Map<String, Object>) request.getAttribute("params");
 		String calendarName = (String) json.get(Constants.CALENDAR_NAME);
 		String calendarType = (String) json.get(Constants.CALENDAR_TYPE);
 		java.util.Date from = convDate((String) json.get(Constants.CALENDAR_FROM));
-		java.util.Date to = convDate((String)json.get(Constants.CALENDAR_TO));
+		java.util.Date to = convDate((String) json.get(Constants.CALENDAR_TO));
 
 		List<CalendarData> calendarList = new ArrayList<>();
 
@@ -186,15 +193,23 @@ public final class GetCalendarCommand implements Command {
 
 				Map<String, Object> entityFilter = (Map<String, Object>) json.get(item.getDefinitionName());
 				Boolean withoutEntityFlg = entityFilter != null
-												? (Boolean) entityFilter.get(Constants.CALENDAR_WITHOUT_ENTITY) : null;
-				if(withoutEntityFlg != null && withoutEntityFlg) {
+						? (Boolean) entityFilter.get(Constants.CALENDAR_WITHOUT_ENTITY)
+						: null;
+				if (withoutEntityFlg != null && withoutEntityFlg) {
 					continue;
 				}
 
-				if (item.getCalendarSearchType() == CalendarSearchType.DATE) {
-					searchDate(from, to, calendarList, item, calendarType, entityFilter, calendarName);
-				} else if (item.getCalendarSearchType() == CalendarSearchType.PERIOD) {
-					searchPeriod(from, to, calendarList, item, calendarType, entityFilter, calendarName);
+				//データ検索対象Entityに対して、参照権限が設定されているかチェック
+				//参照権限チェックが入れないと、複数カレンダーアイテムに対して、参照権限ない対象まで権限エラーExceptionで処理が中断され、
+				//後続参照権限ある対象のデータが取得できなくなる。
+				AuthContextHolder user = AuthContextHolder.getAuthContext();
+				EntityPermission rerPerm = new EntityPermission(item.getDefinitionName(), EntityPermission.Action.REFERENCE);
+				if (user.checkPermission(rerPerm)) {
+					if (item.getCalendarSearchType() == CalendarSearchType.DATE) {
+						searchDate(from, to, calendarList, item, calendarType, entityFilter, calendarName);
+					} else if (item.getCalendarSearchType() == CalendarSearchType.PERIOD) {
+						searchPeriod(from, to, calendarList, item, calendarType, entityFilter, calendarName);
+					}
 				}
 			}
 		}
@@ -248,7 +263,8 @@ public final class GetCalendarCommand implements Command {
 		} else {
 			q.limit(1000);
 		}
-		List<Entity> list = em.searchEntity(q).getList();
+		List<Entity> list = em.searchEntity(q)
+				.getList();
 
 		SimpleDateFormat format = DateUtil.getSimpleDateFormat("HH:mm", false);
 		for (Entity e : list) {
@@ -258,16 +274,16 @@ public final class GetCalendarCommand implements Command {
 
 			CalendarData calendarData = new CalendarData(type);
 			if (item.getDisplayTime()) {
-				calendarData.setTitle(createTitle(e.getName(),time));
+				calendarData.setTitle(createTitle(e.getName(), time));
 			} else {
 				calendarData.setTitle(e.getName());
 			}
 			calendarData.setStart(dateTimeToString(date));
 			calendarData.setCalendarEntityData(new CalendarEntityData(e, time, item));
-			calendarData.setTextColor(item.getEntityColor());
+			calendarData.setColor(item.getEntityColor());
 			if (StringUtil.isNotEmpty(item.getColorConfig())) {
 				String resultColor = ecm.getColorConfigResult(calendarName, e);
-				calendarData.setTextColor(resultColor);
+				calendarData.setColor(resultColor);
 			}
 
 			calendarlist.add(calendarData);
@@ -328,7 +344,6 @@ public final class GetCalendarCommand implements Command {
 			conditions.add(new GreaterEqual(toPropertyName, new Time(from.getTime())));
 		}
 
-
 		setFilter(item, entityFilter, conditions);
 
 		where.setCondition(new And(conditions));
@@ -342,7 +357,8 @@ public final class GetCalendarCommand implements Command {
 		} else {
 			q.limit(1000);
 		}
-		List<Entity> list = em.searchEntity(q).getList();
+		List<Entity> list = em.searchEntity(q)
+				.getList();
 		cal = DateUtil.getCalendar(true);
 
 		SimpleDateFormat format = DateUtil.getSimpleDateFormat("HH:mm", false);
@@ -359,10 +375,10 @@ public final class GetCalendarCommand implements Command {
 
 			calendarData.setTitle(e.getName());
 			calendarData.setStart(stoDate);
-			calendarData.setTextColor(item.getEntityColor());
+			calendarData.setColor(item.getEntityColor());
 			if (StringUtil.isNotEmpty(item.getColorConfig())) {
 				String resultColor = ecm.getColorConfigResult(calendarName, e);
-				calendarData.setTextColor(resultColor);
+				calendarData.setColor(resultColor);
 			}
 
 			if (isAllDayEvent(fromDate, toDate)) {
@@ -374,7 +390,7 @@ public final class GetCalendarCommand implements Command {
 				calendarData.setEnd(sfromDate);
 			}
 
-			if(item.getDisplayTime()) {
+			if (item.getDisplayTime()) {
 				calendarData.setTime(createTime(fromTime, toTime));
 			}
 
@@ -392,12 +408,12 @@ public final class GetCalendarCommand implements Command {
 	private java.util.Date convDate(String str) {
 		try {
 			SimpleDateFormat format = DateUtil.getSimpleDateFormat("yyyyMMdd", false);
-			return new java.util.Date(format.parse(str).getTime());
+			return new java.util.Date(format.parse(str)
+					.getTime());
 		} catch (ParseException e) {
 		}
 		return null;
 	}
-
 
 	/**
 	 * 日時を文字列に変換します。
@@ -430,7 +446,7 @@ public final class GetCalendarCommand implements Command {
 
 		if (time != null) {
 			sb.append(time)
-			  .append("-");
+					.append("-");
 		}
 
 		sb.append(name);
@@ -453,7 +469,7 @@ public final class GetCalendarCommand implements Command {
 
 		if (toTime != null && !toTime.equals(fromTime)) {
 			sb.append("-")
-			  .append(toTime);
+					.append(toTime);
 		}
 
 		return sb.toString();
@@ -471,7 +487,6 @@ public final class GetCalendarCommand implements Command {
 		if (toDate == null || formDate == null) {
 			return false;
 		}
-
 
 		Calendar toCal = Calendar.getInstance();
 		Calendar fromCal = Calendar.getInstance();
@@ -492,10 +507,10 @@ public final class GetCalendarCommand implements Command {
 	 */
 	private boolean isMinMinutesLesser(java.util.Date toDate, java.util.Date formDate, String type) {
 
-		if (toDate == null || formDate == null || CalendarType.MONTH.toString().equals(type)) {
+		if (toDate == null || formDate == null || CalendarType.MONTH.toString()
+				.equals(type)) {
 			return false;
 		}
-
 
 		Calendar toCal = Calendar.getInstance();
 		Calendar fromCal = Calendar.getInstance();
@@ -504,7 +519,8 @@ public final class GetCalendarCommand implements Command {
 		fromCal.setTime(formDate);
 
 		long minMinutes;
-		if (CalendarType.DAY.toString().equals(type)) {
+		if (CalendarType.DAY.toString()
+				.equals(type)) {
 			minMinutes = 30 * 60 * 1000;
 		} else {
 			minMinutes = 60 * 60 * 1000;
@@ -517,7 +533,8 @@ public final class GetCalendarCommand implements Command {
 	private void setFilter(EntityCalendarItem item, Map<String, Object> entityFilter, ArrayList<Condition> conditions) {
 
 		// カレンダーフィルタ条件（個別バインド変数未指定）
-		if (item.getFilterCondition() != null && !item.getFilterCondition().isEmpty()) {
+		if (item.getFilterCondition() != null && !item.getFilterCondition()
+				.isEmpty()) {
 			conditions.add(new PreparedQuery(item.getFilterCondition()).condition(null));
 		}
 
@@ -533,7 +550,6 @@ public final class GetCalendarCommand implements Command {
 			}
 		} else {
 			List<Map<String, Object>> filterList = (List<Map<String, Object>>) entityFilter.get(Constants.CALENDAR_VALUE_LIST);
-
 
 			// 個別フィルター条件
 			if (CollectionUtil.isNotEmpty(filterList)) {
@@ -567,7 +583,7 @@ public final class GetCalendarCommand implements Command {
 				}
 			}
 		}
-}
+	}
 
 	private String getEntityFilterCondition(String defname, String filterName) {
 
@@ -582,7 +598,6 @@ public final class GetCalendarCommand implements Command {
 		if (ef == null) {
 			return condition;
 		}
-
 
 		for (EntityFilterItem efi : ef.getItems()) {
 			if (filterName.equals(efi.getName())) {
@@ -605,75 +620,75 @@ public final class GetCalendarCommand implements Command {
 		}
 
 		switch (condition) {
-			case EQ:
-				filter = new Equals(property, convValue);
-				break;
-			case NE:
-				filter = new NotEquals(property, convValue);
-				break;
-			case SW:
+		case EQ:
+			filter = new Equals(property, convValue);
+			break;
+		case NE:
+			filter = new NotEquals(property, convValue);
+			break;
+		case SW:
 //				filter = new Like(property,  StringUtil.escapeEqlForLike((String) value) + "%");
-				filter = new Like(property,  (String) value, Like.MatchPattern.PREFIX);
-				break;
-			case LW:
+			filter = new Like(property, (String) value, Like.MatchPattern.PREFIX);
+			break;
+		case LW:
 //				filter = new Like(property, "%" + StringUtil.escapeEqlForLike((String) value) );
-				filter = new Like(property,  (String) value, Like.MatchPattern.POSTFIX);
-				break;
-			case IC:
+			filter = new Like(property, (String) value, Like.MatchPattern.POSTFIX);
+			break;
+		case IC:
 //				filter = new Like(property, "%" + StringUtil.escapeEqlForLike((String) value) + "%" );
-				filter = new Like(property,  (String) value, Like.MatchPattern.PARTIAL);
-				break;
-			case NIC:
+			filter = new Like(property, (String) value, Like.MatchPattern.PARTIAL);
+			break;
+		case NIC:
 //				filter =new Paren(new Not(new Like(property, "%" + StringUtil.escapeEqlForLike((String) value) + "%" )));
-				filter =new Paren(new Not(new Like(property, (String) value, Like.MatchPattern.PARTIAL)));
-				break;
-			case IN:
-				StrTokenizer st = StrTokenizer.getCSVInstance((String) value);
-				String[] values = st.getTokenArray();
-				Object[] ret = new Object[values.length];
-				for (int i = 0; i < values.length; i++) {
-					ret[i] = convertFilterValue(type, values[i]);
-				}
-				filter = new In(property, ret);
-				break;
-			case LT:
-				filter = new Lesser(property, convValue);
-				break;
-			case GT:
-				filter = new Greater(property, convValue);
-				break;
-			case LE:
-				filter = new LesserEqual(property, convValue);
-				break;
-			case GE:
-				filter = new GreaterEqual(property, convValue);
-				break;
-			case RG:
-				Condition fromCond = null;
-				Condition toCond = null;
-				Object to = convertFilterValue(type, keyword.get(Constants.CALENDAR_DATA_RANGE_TO));
-				if (convValue != null) {
-					fromCond = new GreaterEqual(property, convValue);
-				}
-				if (to != null) {
-					toCond = new LesserEqual(property, to);
-				}
-				if (fromCond != null && toCond != null) {
-					filter = new And(fromCond, toCond);
-				} else if (fromCond != null && toCond == null) {
-					filter = fromCond;
-				} else if (fromCond == null && toCond != null) {
-					filter = toCond;
-				}
-				break;
-			case NNL:
-				filter = new IsNotNull(property);
-				break;
-			case NL:
-				filter = new IsNull(property);
-				break;
-			default:
-				break;
+			filter = new Paren(new Not(new Like(property, (String) value, Like.MatchPattern.PARTIAL)));
+			break;
+		case IN:
+			StringTokenizer st = StringTokenizer.getCSVInstance((String) value);
+			String[] values = st.getTokenArray();
+			Object[] ret = new Object[values.length];
+			for (int i = 0; i < values.length; i++) {
+				ret[i] = convertFilterValue(type, values[i]);
+			}
+			filter = new In(property, ret);
+			break;
+		case LT:
+			filter = new Lesser(property, convValue);
+			break;
+		case GT:
+			filter = new Greater(property, convValue);
+			break;
+		case LE:
+			filter = new LesserEqual(property, convValue);
+			break;
+		case GE:
+			filter = new GreaterEqual(property, convValue);
+			break;
+		case RG:
+			Condition fromCond = null;
+			Condition toCond = null;
+			Object to = convertFilterValue(type, keyword.get(Constants.CALENDAR_DATA_RANGE_TO));
+			if (convValue != null) {
+				fromCond = new GreaterEqual(property, convValue);
+			}
+			if (to != null) {
+				toCond = new LesserEqual(property, to);
+			}
+			if (fromCond != null && toCond != null) {
+				filter = new And(fromCond, toCond);
+			} else if (fromCond != null && toCond == null) {
+				filter = fromCond;
+			} else if (fromCond == null && toCond != null) {
+				filter = toCond;
+			}
+			break;
+		case NNL:
+			filter = new IsNotNull(property);
+			break;
+		case NL:
+			filter = new IsNull(property);
+			break;
+		default:
+			break;
 
 		}
 
@@ -689,12 +704,11 @@ public final class GetCalendarCommand implements Command {
 			return val;
 		}
 		String s;
-		 if (val instanceof String) {
-			 s = (String) val;
-		 } else {
-			 return val;
-		 }
-
+		if (val instanceof String) {
+			s = (String) val;
+		} else {
+			return val;
+		}
 
 		switch (type) {
 		case BINARY:
@@ -716,8 +730,8 @@ public final class GetCalendarCommand implements Command {
 		case STRING:
 		case AUTONUMBER:
 		case SELECT:
-		case LONGTEXT:		//#8225
-		case REFERENCE:		//#7670
+		case LONGTEXT: //#8225
+		case REFERENCE: //#7670
 		default:
 			return val;
 		}

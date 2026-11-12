@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,9 +31,7 @@ import org.iplass.adminconsole.client.metadata.ui.top.PartsOperationHandler;
 import org.iplass.mtp.view.top.parts.FulltextSearchViewParts;
 
 import com.smartgwt.client.data.Record;
-import com.smartgwt.client.types.HeaderControls;
 import com.smartgwt.client.widgets.Canvas;
-import com.smartgwt.client.widgets.HeaderControl;
 import com.smartgwt.client.widgets.IButton;
 import com.smartgwt.client.widgets.events.ClickEvent;
 import com.smartgwt.client.widgets.events.ClickHandler;
@@ -68,19 +66,17 @@ public class FulltextSearchViewItem extends PartsItem {
 
 		setTitle("Fulltext Search");
 		setBackgroundColor("#A0A0A0");
-		setHeaderControls(HeaderControls.HEADER_LABEL, new HeaderControl(HeaderControl.SETTINGS, new ClickHandler() {
-
-			@Override
-			public void onClick(ClickEvent event) {
-				FulltextSearchViewItemSettingDialog dialog = new FulltextSearchViewItemSettingDialog();
-				dialog.show();
-			}
-		}), HeaderControls.CLOSE_BUTTON);
 	}
 
 	@Override
 	public FulltextSearchViewParts getParts() {
 		return parts;
+	}
+
+	@Override
+	protected void onOpen() {
+		FulltextSearchViewItemSettingDialog dialog = new FulltextSearchViewItemSettingDialog();
+		dialog.show();
 	}
 
 	@Override
@@ -112,7 +108,17 @@ public class FulltextSearchViewItem extends PartsItem {
 			} else {
 				isDispSearchWindow.setValue(parts.isDispSearchWindow());
 			}
-			form.setItems(isDispSearchWindow);
+
+			CheckboxItem isShowUserNameWithPrivilegedValue = new CheckboxItem();
+			isShowUserNameWithPrivilegedValue.setTitle("Display user name in privileged execution");
+			isShowUserNameWithPrivilegedValue.setName("showUserName");
+			if (isInitDrop) {
+				isShowUserNameWithPrivilegedValue.setValue(false);
+			} else {
+				isShowUserNameWithPrivilegedValue.setValue(parts.isShowUserNameWithPrivilegedValue());
+			}
+
+			form.setItems(isDispSearchWindow, isShowUserNameWithPrivilegedValue);
 
 			container.addMember(form);
 
@@ -121,6 +127,7 @@ public class FulltextSearchViewItem extends PartsItem {
 
 			IButton save = new IButton("OK");
 			save.addClickHandler(new ClickHandler() {
+				@Override
 				public void onClick(ClickEvent event) {
 					//入力情報をパーツに
 					Map<String, String> viewNamsMap = new HashMap<String, String>();
@@ -148,12 +155,16 @@ public class FulltextSearchViewItem extends PartsItem {
 					FormItem dispSearchWindow = form.getField("dispSearchWindow");
 					parts.setDispSearchWindow(SmartGWTUtil.getBooleanValue(dispSearchWindow));
 
+					FormItem showUserName = form.getField("showUserName");
+					parts.setShowUserNameWithPrivilegedValue(SmartGWTUtil.getBooleanValue(showUserName));
+
 					destroy();
 				}
 			});
 
 			IButton cancel = new IButton("Cancel");
 			cancel.addClickHandler(new ClickHandler() {
+				@Override
 				public void onClick(ClickEvent event) {
 					destroy();
 				}

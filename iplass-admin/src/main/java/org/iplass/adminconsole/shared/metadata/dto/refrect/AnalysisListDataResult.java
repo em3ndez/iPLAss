@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,15 +27,19 @@ public class AnalysisListDataResult implements Serializable {
 	private static final long serialVersionUID = 2500670746939804270L;
 	private FieldInfo[] fields;
 	private List<RefrectableInfo> refrectables;
+
 	public FieldInfo[] getFields() {
 		return fields;
 	}
+
 	public void setFields(FieldInfo[] fields) {
 		this.fields = fields;
 	}
+
 	public List<RefrectableInfo> getRefrectables() {
 		return refrectables;
 	}
+
 	public void setRefrectables(List<RefrectableInfo> refrectables) {
 		this.refrectables = refrectables;
 	}

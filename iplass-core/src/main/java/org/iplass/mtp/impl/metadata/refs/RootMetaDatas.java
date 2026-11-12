@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -19,8 +19,6 @@
  */
 package org.iplass.mtp.impl.metadata.refs;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
-
 import org.iplass.mtp.impl.auth.authenticate.builtin.policy.MetaAuthenticationPolicy;
 import org.iplass.mtp.impl.command.MetaInterceptorClass;
 import org.iplass.mtp.impl.command.MetaMetaCommand;
@@ -38,30 +36,18 @@ import org.iplass.mtp.impl.tenant.MetaTenant;
 import org.iplass.mtp.impl.tenant.MetaTenantAuthInfo;
 import org.iplass.mtp.impl.tenant.MetaTenantI18nInfo;
 import org.iplass.mtp.impl.tenant.MetaTenantMailInfo;
+import org.iplass.mtp.impl.view.filter.MetaEntityFilter;
 import org.iplass.mtp.impl.webhook.endpoint.MetaWebhookEndpoint;
 import org.iplass.mtp.impl.webhook.template.MetaWebhookTemplate;
 
-@XmlSeeAlso({
-	BaseRootMetaData.class
-	,MetaInterceptorClass.class
-	,MetaMetaCommand.class
-	,MetaEntity.class
-	,MetaMailTemplate.class
-	,MetaSmsMailTemplate.class
-	,MetaMessageCategory.class
-	,MetaSelectValue.class
-	,MetaUtilityClass.class
-	,MetaTenant.class
-	,MetaAsyncCommand.class
-	,MetaPreference.class
-	,MetaAuthenticationPolicy.class
-	,MetaPushNotificationTemplate.class
-	,MetaWebhookTemplate.class
-	,MetaWebhookEndpoint.class
+import jakarta.xml.bind.annotation.XmlSeeAlso;
 
-	,MetaTenantAuthInfo.class
-	,MetaTenantMailInfo.class
-	,MetaTenantI18nInfo.class
+@XmlSeeAlso({
+		BaseRootMetaData.class, MetaInterceptorClass.class, MetaMetaCommand.class, MetaEntity.class, MetaEntityFilter.class, MetaMailTemplate.class,
+		MetaSmsMailTemplate.class, MetaMessageCategory.class, MetaSelectValue.class, MetaUtilityClass.class, MetaTenant.class, MetaAsyncCommand.class,
+		MetaPreference.class, MetaAuthenticationPolicy.class, MetaPushNotificationTemplate.class, MetaWebhookTemplate.class, MetaWebhookEndpoint.class
+
+		, MetaTenantAuthInfo.class, MetaTenantMailInfo.class, MetaTenantI18nInfo.class
 })
 class RootMetaDatas {
 	//MetaDataへのXmlSeeAlsoを管理するためだけのクラス

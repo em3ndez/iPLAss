@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,12 +26,11 @@ import org.iplass.mtp.entity.interceptor.InvocationType;
 import org.iplass.mtp.impl.entity.EntityHandler;
 
 public class EntityLockByUserInvocationImpl extends EntityInvocationImpl<Boolean> implements EntityLockByUserInvocation {
-	
+
 	private String oid;
 	private String userId;
 	private boolean force;
-	
-	
+
 	public EntityLockByUserInvocationImpl(String oid, String userId, boolean force, EntityInterceptor[] entityInterceptors,
 			EntityHandler entityHandler) {
 		super(entityInterceptors, entityHandler);
@@ -39,15 +38,15 @@ public class EntityLockByUserInvocationImpl extends EntityInvocationImpl<Boolean
 		this.userId = userId;
 		this.force = force;
 	}
-	
+
 	public String getOid() {
 		return oid;
 	}
-	
+
 	public void setOid(String oid) {
 		this.oid = oid;
 	}
-	
+
 	@Override
 	protected Boolean callEntityHandler(EntityHandler eh) {
 		return eh.lockEntityByUser(oid, userId, force);
@@ -77,5 +76,5 @@ public class EntityLockByUserInvocationImpl extends EntityInvocationImpl<Boolean
 	public void setForce(boolean force) {
 		this.force = force;
 	}
-	
+
 }

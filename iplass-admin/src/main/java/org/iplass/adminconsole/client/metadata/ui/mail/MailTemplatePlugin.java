@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,7 +35,6 @@ import org.iplass.mtp.mail.template.definition.MailTemplateDefinition;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.smartgwt.client.util.SC;
-
 
 public class MailTemplatePlugin extends DefaultMetaDataPlugin {
 
@@ -103,23 +102,27 @@ public class MailTemplatePlugin extends DefaultMetaDataPlugin {
 	@Override
 	protected void itemDelete(final MetaDataItemMenuTreeNode itemNode) {
 		MetaDataServiceAsync service = MetaDataServiceFactory.get();
-		service.deleteDefinition(TenantInfoHolder.getId(), MailTemplateDefinition.class.getName(), itemNode.getDefName(), new AsyncCallback<AdminDefinitionModifyResult>() {
-			public void onFailure(Throwable caught) {
-				// 失敗時
-				SC.warn(AdminClientMessageUtil.getString("ui_metadata_mail_MailTemplatePluginManager_failedToDeleteMailTemplate") + caught.getMessage());
-			}
-			public void onSuccess(AdminDefinitionModifyResult result) {
-				if (result.isSuccess()) {
-					SC.say(AdminClientMessageUtil.getString("ui_metadata_mail_MailTemplatePluginManager_completion"),
-							AdminClientMessageUtil.getString("ui_metadata_mail_MailTemplatePluginManager_deleteMailTemplateComp"));
+		service.deleteDefinition(TenantInfoHolder.getId(), MailTemplateDefinition.class.getName(), itemNode.getDefName(),
+				new AsyncCallback<AdminDefinitionModifyResult>() {
+					public void onFailure(Throwable caught) {
+						// 失敗時
+						SC.warn(AdminClientMessageUtil.getString("ui_metadata_mail_MailTemplatePluginManager_failedToDeleteMailTemplate")
+								+ caught.getMessage());
+					}
 
-					refresh();
-					removeTab(itemNode);
-				} else {
-					SC.warn(AdminClientMessageUtil.getString("ui_metadata_mail_MailTemplatePluginManager_failedToDeleteMailTemplate") + result.getMessage());
-				}
-			}
-		});
+					public void onSuccess(AdminDefinitionModifyResult result) {
+						if (result.isSuccess()) {
+							SC.say(AdminClientMessageUtil.getString("ui_metadata_mail_MailTemplatePluginManager_completion"),
+									AdminClientMessageUtil.getString("ui_metadata_mail_MailTemplatePluginManager_deleteMailTemplateComp"));
+
+							refresh();
+							removeTab(itemNode);
+						} else {
+							SC.warn(AdminClientMessageUtil.getString("ui_metadata_mail_MailTemplatePluginManager_failedToDeleteMailTemplate")
+									+ result.getMessage());
+						}
+					}
+				});
 	}
 
 	@Override
@@ -129,6 +132,6 @@ public class MailTemplatePlugin extends DefaultMetaDataPlugin {
 
 	@Override
 	protected Class<?>[] workspaceContentsPaneClass() {
-		return new Class[]{MailTemplateEditPane.class};
+		return new Class[] { MailTemplateEditPane.class };
 	}
 }

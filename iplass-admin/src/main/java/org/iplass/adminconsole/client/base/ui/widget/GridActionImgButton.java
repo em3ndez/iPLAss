@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,17 +35,17 @@ public class GridActionImgButton extends HLayout {
 
 	/** アクションボタン */
 	private ImgButton actionBtn;
-	
+
 	/**
 	 * コンストラクタ
 	 */
 	public GridActionImgButton() {
-		
+
 		setMembersMargin(3);
 		setHeight100();
 		setWidth100();
 		setAlign(Alignment.CENTER);
-		
+
 		actionBtn = new ImgButton();
 		actionBtn.setShowDown(false);
 		actionBtn.setShowRollOver(false);
@@ -54,9 +54,9 @@ public class GridActionImgButton extends HLayout {
 		actionBtn.setWidth(16);
 
 		addMember(actionBtn);
-		
+
 	}
-	
+
 	/**
 	 * Actionボタンに対してClickHandlerを追加します。
 	 * 
@@ -65,7 +65,7 @@ public class GridActionImgButton extends HLayout {
 	public void addActionClickHandler(ClickHandler handler) {
 		actionBtn.addClickHandler(handler);
 	}
-	
+
 	/**
 	 * Actionボタンのアイコンを設定します。
 	 * 

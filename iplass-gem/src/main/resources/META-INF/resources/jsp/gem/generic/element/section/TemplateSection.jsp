@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,14 +18,16 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
+<%@ page import="org.iplass.mtp.util.StringUtil" %>
 <%@ page import="org.iplass.mtp.view.generic.*" %>
 <%@ page import="org.iplass.mtp.view.generic.element.*" %>
 <%@ page import="org.iplass.mtp.view.generic.element.section.*" %>
 <%@ page import="org.iplass.mtp.web.template.TemplateUtil" %>
 <%@ page import="org.iplass.gem.command.Constants" %>
+<%@ page import="org.iplass.gem.command.ViewUtil"%>
 
 <%
 	Element element = (Element) request.getAttribute(Constants.ELEMENT);
@@ -36,9 +38,16 @@
 			|| (type == OutputType.VIEW && section.isHideView())) return;
 
 	String id = "";
-	if (section.getId() != null) id = section.getId();
+	if (section.getId() != null) id = "id=\"" + StringUtil.escapeHtml(section.getId()) + "\"";
+
+	String style = "";
+	if (StringUtil.isNotBlank(section.getStyle())) {
+		style = section.getStyle();
+	}
+	
+	String styleAttr = ViewUtil.buildHeightStyleAttr(section.getSectionHeight());
 %>
-<div id="<c:out value="<%=id %>"/>">
+<div <%=id %> class="template-section <c:out value="<%=style %>"/>" style="<%= styleAttr %>">
 <%
 	TemplateUtil.includeTemplate(section.getTemplateName(), pageContext);
 %>

@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -19,7 +19,7 @@
  --%>
 
 <%@page import="org.iplass.mtp.view.top.parts.CalendarParts"%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -29,6 +29,7 @@
 <%@ page import="org.iplass.mtp.ManagerLocator" %>
 <%@ page import="org.iplass.gem.command.calendar.CalendarCommand"%>
 <%@ page import="org.iplass.gem.command.Constants"%>
+<%@ page import="org.iplass.gem.command.ViewUtil"%>
 
 <%
 	String calendarName = (String) request.getAttribute(Constants.CALENDAR_NAME);
@@ -43,6 +44,8 @@
 	
 	//設定情報取得
 	CalendarParts parts = (CalendarParts) request.getAttribute(Constants.CALENDAR_SETTING);
+	//パーツの高さスタイル属性
+	String styleAttr = ViewUtil.buildHeightStyleAttr(parts.getMaxHeight());
 	
 	//スタイルシートのクラス名
 	String style = "topview-parts";
@@ -59,7 +62,9 @@ ${calendarParts.iconTag}
 <%
 	request.setAttribute("isTop", true);
 %>
-<jsp:include page="calendarView.jsp"></jsp:include>
+<jsp:include page="calendarView.jsp">
+<jsp:param name="styleAttr" value="<%=styleAttr%>" />
+</jsp:include>
 <%
 	request.removeAttribute("isTop");
 

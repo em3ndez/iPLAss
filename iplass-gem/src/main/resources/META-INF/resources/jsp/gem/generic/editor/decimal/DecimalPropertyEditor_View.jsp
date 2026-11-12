@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 <%@ page import="java.math.BigDecimal" %>
 <%@ page import="java.text.DecimalFormat" %>
@@ -106,7 +106,7 @@
 		if (isMultiple) {
 			//複数
 %>
-<ul class="data-label<c:out value="<%=clsComma %>"/>" style="<c:out value="<%=customStyle %>"/>">
+<ul name="data-label-<c:out value="<%=propName %>"/>"  class="data-label<c:out value="<%=clsComma %>"/>" style="<c:out value="<%=customStyle %>"/>">
 <%
 			BigDecimal[] array = propValue instanceof BigDecimal[] ? (BigDecimal[]) propValue : null;
 			if (array != null) {
@@ -135,7 +135,7 @@
 			BigDecimal target = propValue instanceof BigDecimal ? (BigDecimal) propValue : null;
 			String str = format(editor.getNumberFormat(), target);
 %>
-<span class="data-label<c:out value="<%=clsComma %>"/>" style="<c:out value="<%=customStyle %>"/>">
+<span name="data-label-<c:out value="<%=propName %>"/>"  class="data-label<c:out value="<%=clsComma %>"/>" style="<c:out value="<%=customStyle %>"/>">
 <c:out value="<%=str %>"/>
 <%
 			if (outputHidden) {
@@ -153,15 +153,23 @@
 		
 		if (isMultiple) {
 			//複数
+%>
+<ul name="data-hidden-<c:out value="<%=propName %>"/>">
+<%
 			BigDecimal[] array = propValue instanceof BigDecimal[] ? (BigDecimal[]) propValue : null;
 			if (array != null) {
 				for (int i = 0; i < array.length; i++) {
 					String hiddenValue = array[i] instanceof BigDecimal ? ((BigDecimal)array[i]).toPlainString() : "";
 %>
+<li>
 <input type="hidden" name="<c:out value="<%=propName %>"/>" value="<c:out value="<%=hiddenValue %>"/>" />
+</li>
 <%
 				}
 			}
+%>
+</ul>
+<%
 		} else {
 			//単一
 			String hiddenValue = propValue instanceof BigDecimal ? ((BigDecimal)propValue).toPlainString() : "";

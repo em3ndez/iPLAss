@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -75,10 +75,11 @@ public class CommonAttributeParts3 extends PropertyCommonAttributeParts implemen
 	@Override
 	public void applyFrom(String defName, PropertyListGridRecord record, PropertyAttribute typeAttribute) {
 
-		CommonAttribute commonAttribute = (CommonAttribute)typeAttribute;
+		CommonAttribute commonAttribute = (CommonAttribute) typeAttribute;
 
-		if(commonAttribute.getIndexType() != null) {
-			selIndexType.setValue(commonAttribute.getIndexType().name());
+		if (commonAttribute.getIndexType() != null) {
+			selIndexType.setValue(commonAttribute.getIndexType()
+					.name());
 		}
 		if (commonAttribute.getStoreColumnMappingName() != null) {
 			txtStoreColName.setValue(commonAttribute.getStoreColumnMappingName());
@@ -92,7 +93,7 @@ public class CommonAttributeParts3 extends PropertyCommonAttributeParts implemen
 	@Override
 	public void applyTo(PropertyListGridRecord record) {
 
-		CommonAttribute commonAttribute = (CommonAttribute)record.getCommonAttribute();
+		CommonAttribute commonAttribute = (CommonAttribute) record.getCommonAttribute();
 
 		if (selIndexType.getValue() != null) {
 			commonAttribute.setIndexType(IndexType.valueOf(SmartGWTUtil.getStringValue(selIndexType)));

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,25 +26,25 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class EntityContentMap implements Serializable {
 	private static final long serialVersionUID = -3806165452908206540L;
-	
+
 	private final String entityName;//*指定もある。
 	private final String oid;
-	
+
 	//バージョン単位ではキャッシュしない。oid単位でのキャッシュ
-	
+
 	private long invalidationTime;
 	private HashSet<String> contentCacheKeys;
-	
+
 	/**
 	 * 使う方で、lockを適切に扱うように。
 	 */
 	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-	
+
 	public EntityContentMap(String entityName, String oid) {
 		this.entityName = entityName;
 		this.oid = oid;
 	}
-	
+
 	public long getInvalidationTime() {
 		return invalidationTime;
 	}
@@ -52,32 +52,32 @@ public class EntityContentMap implements Serializable {
 	public void setInvalidationTime(long invalidationTime) {
 		this.invalidationTime = invalidationTime;
 	}
-	
+
 	public ReentrantReadWriteLock getLock() {
 		return lock;
 	}
-	
+
 	public HashSet<String> getContentCacheKeys() {
 		return contentCacheKeys;
 	}
-	
+
 	public void addContentCacheKeys(String contentCacheKey) {
 		if (contentCacheKeys == null) {
 			contentCacheKeys = new HashSet<String>();
 		}
 		contentCacheKeys.add(contentCacheKey);
 	}
-	
+
 	public void setContentCacheKeys(HashSet<String> contentCacheKeys) {
 		this.contentCacheKeys = contentCacheKeys;
 	}
 
-
 	public String getEntityName() {
 		return entityName;
 	}
+
 	public String getOid() {
 		return oid;
 	}
-	
+
 }

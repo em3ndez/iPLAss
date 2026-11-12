@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,8 +32,11 @@ public interface EntityAuthContext extends AuthorizationContext {
 //	public boolean isPermit(EntityPermission.Action action, AuthContextHolder user);
 //	public boolean isPermit(String propertyName, EntityPropertyPermission.Action action, AuthContextHolder user);
 	public Condition addLimitingCondition(Condition orignal, EntityPermission.Action action, AuthContextHolder user);
+
 	public Query modifyQuery(Query orignal, EntityPermission.Action action, AuthContextHolder user);
+
 	public Query modifyQuery(Query orignal, EntityPermission.Action action, EntityPropertyPermission.Action propAction, AuthContextHolder user);
+
 	public boolean hasLimitCondition(EntityPermission permission, AuthContextHolder user);
 
 }

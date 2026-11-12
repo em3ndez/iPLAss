@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,23 +25,23 @@ import org.slf4j.LoggerFactory;
 
 public abstract class BaseMetaDataRuntime implements MetaDataRuntime {
 	private static final Logger logger = LoggerFactory.getLogger(BaseMetaDataRuntime.class);
-	
+
 	private RuntimeException illegalStateException;
-	
+
 	@Override
 	public void checkState() throws MetaDataIllegalStateException {
 		if (illegalStateException != null) {
 			throw new MetaDataIllegalStateException(illegalStateException.getMessage(), illegalStateException);
 		}
 	}
-	
+
 	protected void setIllegalStateException(RuntimeException illegalStateException) {
 		logger.error(illegalStateException.getMessage(), illegalStateException);
 		if (this.illegalStateException == null) {
 			this.illegalStateException = illegalStateException;
 		}
 	}
-	
+
 	protected boolean hasIllegalStateException() {
 		return illegalStateException != null;
 	}

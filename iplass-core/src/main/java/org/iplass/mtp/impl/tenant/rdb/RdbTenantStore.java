@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -38,7 +38,7 @@ public class RdbTenantStore implements TenantStore {
 
 	private String connectionFactoryName;
 	private String rdbAdapterName;
-	
+
 	private RdbAdapter rdb;
 	/** テナント検索SQL */
 	private TenantSelectSQL tenantSelect;
@@ -63,7 +63,9 @@ public class RdbTenantStore implements TenantStore {
 
 	@Override
 	public void inited(TenantService service, Config config) {
-		rdb = ServiceRegistry.getRegistry().getService(RdbAdapterService.class).getRdbAdapter(rdbAdapterName);
+		rdb = ServiceRegistry.getRegistry()
+				.getService(RdbAdapterService.class)
+				.getRdbAdapter(rdbAdapterName);
 		tenantSelect = rdb.getQuerySqlCreator(TenantSelectSQL.class);
 		tenantControl = rdb.getUpdateSqlCreator(TenantControlSQL.class);
 	}

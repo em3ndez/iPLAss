@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,13 +32,15 @@ import com.smartgwt.client.util.SC;
  *
  * @param <T> 結果のデータ型
  */
-public abstract class AdminAsyncCallback<T> implements AsyncCallback<T>{
+public abstract class AdminAsyncCallback<T> implements AsyncCallback<T> {
 
-	protected void beforeFailure(Throwable caught){};
+	protected void beforeFailure(Throwable caught) {
+	};
 
-	protected void afterFailure(Throwable caught){};
+	protected void afterFailure(Throwable caught) {
+	};
 
-	protected String failureMessage(Throwable caught){
+	protected String failureMessage(Throwable caught) {
 		return rs("common_AdminAsyncCallback_failedMessage") + caught.getMessage();
 	}
 

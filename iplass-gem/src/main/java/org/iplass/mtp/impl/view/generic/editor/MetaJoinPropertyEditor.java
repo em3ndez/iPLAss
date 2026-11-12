@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -67,8 +67,9 @@ public class MetaJoinPropertyEditor extends MetaCustomPropertyEditor implements 
 	 * オブジェクトIDを取得します。
 	 * @return オブジェクトID
 	 */
+	@Override
 	public String getObjectId() {
-	    return objectId;
+		return objectId;
 	}
 
 	/**
@@ -76,7 +77,7 @@ public class MetaJoinPropertyEditor extends MetaCustomPropertyEditor implements 
 	 * @param objectId オブジェクトID
 	 */
 	public void setObjectId(String objectId) {
-	    this.objectId = objectId;
+		this.objectId = objectId;
 	}
 
 	/**
@@ -84,7 +85,7 @@ public class MetaJoinPropertyEditor extends MetaCustomPropertyEditor implements 
 	 * @return フォーマット
 	 */
 	public String getFormat() {
-	    return format;
+		return format;
 	}
 
 	/**
@@ -92,7 +93,7 @@ public class MetaJoinPropertyEditor extends MetaCustomPropertyEditor implements 
 	 * @param format フォーマット
 	 */
 	public void setFormat(String format) {
-	    this.format = format;
+		this.format = format;
 	}
 
 	/**
@@ -100,7 +101,7 @@ public class MetaJoinPropertyEditor extends MetaCustomPropertyEditor implements 
 	 * @return プロパティエディタ
 	 */
 	public MetaPropertyEditor getEditor() {
-	    return editor;
+		return editor;
 	}
 
 	/**
@@ -108,7 +109,7 @@ public class MetaJoinPropertyEditor extends MetaCustomPropertyEditor implements 
 	 * @param editor プロパティエディタ
 	 */
 	public void setEditor(MetaPropertyEditor editor) {
-	    this.editor = editor;
+		this.editor = editor;
 	}
 
 	/**
@@ -116,8 +117,9 @@ public class MetaJoinPropertyEditor extends MetaCustomPropertyEditor implements 
 	 * @return プロパティ
 	 */
 	public List<MetaNestProperty> getProperties() {
-		if (properties == null) properties = new ArrayList<>();
-	    return properties;
+		if (properties == null)
+			properties = new ArrayList<>();
+		return properties;
 	}
 
 	/**
@@ -125,7 +127,7 @@ public class MetaJoinPropertyEditor extends MetaCustomPropertyEditor implements 
 	 * @param properties プロパティ
 	 */
 	public void setProperties(List<MetaNestProperty> properties) {
-	    this.properties = properties;
+		this.properties = properties;
 	}
 
 	public void addProperty(MetaNestProperty property) {
@@ -154,7 +156,8 @@ public class MetaJoinPropertyEditor extends MetaCustomPropertyEditor implements 
 		EntityContext metaContext = EntityContext.getCurrentContext();
 		EntityHandler entity = metaContext.getHandlerByName(e.getObjectName());
 
-		objectId = entity.getMetaData().getId();
+		objectId = entity.getMetaData()
+				.getId();
 		format = e.getFormat();
 		showNestPropertyErrors = e.isShowNestPropertyErrors();
 		editor = MetaPropertyEditor.createInstance(e.getEditor());
@@ -164,18 +167,22 @@ public class MetaJoinPropertyEditor extends MetaCustomPropertyEditor implements 
 		}
 		for (NestProperty nest : e.getProperties()) {
 			MetaNestProperty mnp = new MetaNestProperty();
-			mnp.applyConfig(nest, entity, null);
-			if (mnp.getPropertyId() != null) addProperty(mnp);
+			mnp.applyConfig(nest, entity, null, null);
+			if (mnp.getPropertyId() != null)
+				addProperty(mnp);
 		}
 	}
 
 	private void fillCustomPropertyEditor(PropertyEditor editor, String propName, EntityContext context, EntityHandler entity) {
 		PropertyHandler ph = entity.getProperty(propName, context);
-		if (ph == null) return;
+		if (ph == null)
+			return;
 
 		if (editor instanceof ReferencePropertyEditor) {
 			if (ph instanceof ReferencePropertyHandler) {
-				String objName = ((ReferencePropertyHandler) ph).getReferenceEntityHandler(context).getMetaData().getName();
+				String objName = ((ReferencePropertyHandler) ph).getReferenceEntityHandler(context)
+						.getMetaData()
+						.getName();
 				((ReferencePropertyEditor) editor).setObjectName(objName);
 			}
 		}
@@ -192,15 +199,17 @@ public class MetaJoinPropertyEditor extends MetaCustomPropertyEditor implements 
 		JoinPropertyEditor _editor = new JoinPropertyEditor();
 		super.fillTo(_editor);
 
-		_editor.setObjectName(entity.getMetaData().getName());
+		_editor.setObjectName(entity.getMetaData()
+				.getName());
 		_editor.setFormat(format);
 		_editor.setShowNestPropertyErrors(showNestPropertyErrors);
 		if (editor != null) {
 			_editor.setEditor(editor.currentConfig(propertyName));
 		}
 		for (MetaNestProperty nest : getProperties()) {
-			NestProperty np = nest.currentConfig(entity, null);
-			if (np != null && np.getPropertyName() != null) _editor.addProperty(np);
+			NestProperty np = nest.currentConfig(entity, null, null);
+			if (np != null && np.getPropertyName() != null)
+				_editor.addProperty(np);
 		}
 		return _editor;
 	}

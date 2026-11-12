@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,12 +31,14 @@ import org.iplass.mtp.spi.ServiceRegistry;
 /**
  * SmsMailTemplateDefinitionManagerの実装.
  */
-public class SmsMailTemplateDefinitionManagerImpl extends AbstractTypedDefinitionManager<SmsMailTemplateDefinition> implements SmsMailTemplateDefinitionManager {
+public class SmsMailTemplateDefinitionManagerImpl extends AbstractTypedDefinitionManager<SmsMailTemplateDefinition>
+		implements SmsMailTemplateDefinitionManager {
 
 	private SmsService service;
 
 	public SmsMailTemplateDefinitionManagerImpl() {
-		service = ServiceRegistry.getRegistry().getService(SmsService.class);
+		service = ServiceRegistry.getRegistry()
+				.getService(SmsService.class);
 	}
 
 	@Override

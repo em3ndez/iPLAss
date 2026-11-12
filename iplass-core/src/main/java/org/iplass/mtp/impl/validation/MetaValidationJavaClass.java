@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -52,7 +52,6 @@ public class MetaValidationJavaClass extends MetaValidation {
 	public void setAsArray(boolean asArray) {
 		this.asArray = asArray;
 	}
-
 
 	@Override
 	public void applyConfig(ValidationDefinition definition) {
@@ -114,10 +113,11 @@ public class MetaValidationJavaClass extends MetaValidation {
 		private PropertyValidator validator;
 
 		ValidationHandlerJavaClass(MetaEntity entity, MetaProperty property) {
-			super(MetaValidationJavaClass.this);
+			super(MetaValidationJavaClass.this, entity, property);
 
 			try {
-				validator = (PropertyValidator) Class.forName(className).newInstance();
+				validator = (PropertyValidator) Class.forName(className)
+						.newInstance();
 			} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
 				throw new IllegalStateException("can not instantiate " + className, e);
 			}
@@ -140,6 +140,9 @@ public class MetaValidationJavaClass extends MetaValidation {
 
 		@Override
 		public boolean validate(Object value, ValidationContext context) {
+			if (validateSkipCheck(value, context)) {
+				return true;
+			}
 			return validator.validate(value, context);
 		}
 

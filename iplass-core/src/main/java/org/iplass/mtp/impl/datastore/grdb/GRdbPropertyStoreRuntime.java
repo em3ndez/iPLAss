@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,14 +29,21 @@ import org.iplass.mtp.impl.entity.property.PrimitivePropertyHandler;
 import org.iplass.mtp.impl.rdb.adapter.BaseRdbTypeAdapter;
 
 public interface GRdbPropertyStoreRuntime {
-	
+
 	public BaseRdbTypeAdapter getSingleColumnRdbTypeAdapter();
+
 	public int getColCount();
+
 	public boolean isNative();
+
 	public boolean isExternalIndex();
+
 	public PrimitivePropertyHandler getPropertyRuntime();
+
 	public Object fromDataStore(ResultSet rs, int colNum) throws SQLException;
+
 	public boolean isMulti();
+
 	public List<GRdbPropertyStoreHandler> asList();
 
 }

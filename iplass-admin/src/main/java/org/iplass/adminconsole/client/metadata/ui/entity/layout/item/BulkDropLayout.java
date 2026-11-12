@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,7 +22,6 @@ package org.iplass.adminconsole.client.metadata.ui.entity.layout.item;
 
 import org.iplass.adminconsole.client.base.i18n.AdminClientMessageUtil;
 import org.iplass.adminconsole.client.metadata.ui.entity.layout.EntityViewDragPane;
-import org.iplass.adminconsole.client.metadata.ui.entity.layout.MultiColumnDropLayout;
 import org.iplass.adminconsole.client.metadata.ui.entity.layout.item.element.ElementControl;
 import org.iplass.adminconsole.client.metadata.ui.entity.layout.item.element.VirtualPropertyControl;
 import org.iplass.adminconsole.client.metadata.ui.entity.layout.item.element.property.PropertyControl;
@@ -46,7 +45,7 @@ import com.smartgwt.client.widgets.events.DropHandler;
 import com.smartgwt.client.widgets.grid.ListGrid;
 import com.smartgwt.client.widgets.grid.ListGridRecord;
 
-public class BulkDropLayout extends MultiColumnDropLayout {
+public class BulkDropLayout extends EntityViewItemDropLayout {
 
 	private String defName;
 
@@ -71,6 +70,7 @@ public class BulkDropLayout extends MultiColumnDropLayout {
 		this.defName = defName;
 	}
 
+	@Override
 	public void setEntityDefinition(EntityDefinition ed) {
 		this.ed = ed;
 	}
@@ -107,7 +107,7 @@ public class BulkDropLayout extends MultiColumnDropLayout {
 						@Override
 						public void onCreated(ItemControl window) {
 							if (window instanceof DefaultSectionControl) {
-								DefaultSectionControl dsChild = (DefaultSectionControl)window;
+								DefaultSectionControl dsChild = (DefaultSectionControl) window;
 								dsChild.setEntityDefinition(ed);
 								dsChild.restoreMember();
 							}
@@ -122,7 +122,8 @@ public class BulkDropLayout extends MultiColumnDropLayout {
 				} else if (EntityViewDragPane.DRAG_TYPE_ELEMENT.equals(dragTarget.getDragType())) {
 					ListGridRecord record = ((ListGrid) dragTarget).getSelectedRecord();
 					String name = record.getAttribute("name");
-					if (VirtualPropertyItem.class.getName().equals(name)) {
+					if (VirtualPropertyItem.class.getName()
+							.equals(name)) {
 						final VirtualPropertyDialog dialog = new VirtualPropertyDialog();
 						dialog.addOKClickHandler(new ClickHandler() {
 
@@ -130,7 +131,8 @@ public class BulkDropLayout extends MultiColumnDropLayout {
 							public void onClick(ClickEvent event) {
 								//OK押下時はウィンドウ追加
 
-								if (!dialog.validate()) return;
+								if (!dialog.validate())
+									return;
 
 								final String name = dialog.getPropertyName();
 								if (ed.getProperty(name) != null) {

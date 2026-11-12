@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -68,7 +68,10 @@ public enum ResultType {
 	public static ResultType valueOf(ResultDefinition definition) {
 		for (ResultType type : values()) {
 			//if (definition.getClass().isAssignableFrom(type.definitionClass)) {
-			if (definition.getClass().getName().equals(type.definitionClass().getName())) {
+			if (definition.getClass()
+					.getName()
+					.equals(type.definitionClass()
+							.getName())) {
 				return type;
 			}
 		}
@@ -79,30 +82,40 @@ public enum ResultType {
 //		return type.definitionClass().newInstance();
 //	}
 	public static ResultDefinition typeOfDefinition(ResultType type) {
-		if (type.definitionClass().equals(DynamicTemplateResultDefinition.class)) {
+		if (type.definitionClass()
+				.equals(DynamicTemplateResultDefinition.class)) {
 			return new DynamicTemplateResultDefinition();
-		} else if (type.definitionClass().equals(RedirectResultDefinition.class)) {
+		} else if (type.definitionClass()
+				.equals(RedirectResultDefinition.class)) {
 			return new RedirectResultDefinition();
-		} else if (type.definitionClass().equals(StaticResourceResultDefinition.class)) {
+		} else if (type.definitionClass()
+				.equals(StaticResourceResultDefinition.class)) {
 			return new StaticResourceResultDefinition();
-		} else if (type.definitionClass().equals(StreamResultDefinition.class)) {
+		} else if (type.definitionClass()
+				.equals(StreamResultDefinition.class)) {
 			return new StreamResultDefinition();
-		} else if (type.definitionClass().equals(TemplateResultDefinition.class)) {
+		} else if (type.definitionClass()
+				.equals(TemplateResultDefinition.class)) {
 			return new TemplateResultDefinition();
 		}
 		return null;
 	}
 
 	public static ResultTypeEditPane typeOfEditPane(ResultType type) {
-		if (type.definitionClass().equals(DynamicTemplateResultDefinition.class)) {
+		if (type.definitionClass()
+				.equals(DynamicTemplateResultDefinition.class)) {
 			return new DynamicTemplateResultEditPane();
-		} else if (type.definitionClass().equals(RedirectResultDefinition.class)) {
+		} else if (type.definitionClass()
+				.equals(RedirectResultDefinition.class)) {
 			return new RedirectResultEditPane();
-		} else if (type.definitionClass().equals(StaticResourceResultDefinition.class)) {
+		} else if (type.definitionClass()
+				.equals(StaticResourceResultDefinition.class)) {
 			return new StaticResourceResultEditPane();
-		} else if (type.definitionClass().equals(StreamResultDefinition.class)) {
+		} else if (type.definitionClass()
+				.equals(StreamResultDefinition.class)) {
 			return new StreamResultEditPane();
-		} else if (type.definitionClass().equals(TemplateResultDefinition.class)) {
+		} else if (type.definitionClass()
+				.equals(TemplateResultDefinition.class)) {
 			return new TemplateResultEditPane();
 		}
 		return null;

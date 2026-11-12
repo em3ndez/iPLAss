@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -19,7 +19,7 @@
  --%>
 
 <%@page import="org.apache.commons.lang3.StringUtils"%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -84,7 +84,6 @@ if ("SUCCESS".equals(request.getAttribute(WebRequestConstants.COMMAND_RESULT))) 
 <c:out value="<%=errorMessage%>"/>
 </div>
 <form id="resetSpecificPassForm" method="POST" action="${m:tcPath()}/<%=ResetSpecificPasswordCommand.ACTION_RESET_SPECIFIC_PASSWORD%>">
-${m:outputToken('FORM_XHTML', true)}
 <% if (oid != null) {%>
 <input type="hidden" name="oid" value="<%=oid%>" />
 <% }%>
@@ -120,6 +119,7 @@ ${m:outputToken('FORM_XHTML', true)}
 <li class="mt05 cancel-link"><a href="javascript:void(0)" onclick="cancel();return false;">${m:rs("mtp-gem-messages", "auth.SpecificPassword.cancel")}</a></li>
 </ul>
 </div>
+${m:outputToken('FORM_XHTML', true)}
 </form>
 </div>
 <script type="text/javascript">

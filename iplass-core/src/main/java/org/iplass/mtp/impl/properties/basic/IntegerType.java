@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 public class IntegerType extends BasicType {
 	private static final long serialVersionUID = 7889923978274416939L;
 	private static final int hash = 23;
-	
+
 	private static Logger logger = LoggerFactory.getLogger(IntegerType.class);
 
 	@Override
@@ -58,7 +58,7 @@ public class IntegerType extends BasicType {
 	public Class<?> storeType() {
 		return Long.class;
 	}
-	
+
 	@Override
 	public PropertyDefinitionType getEnumType() {
 		return PropertyDefinitionType.INTEGER;
@@ -79,5 +79,5 @@ public class IntegerType extends BasicType {
 		}
 
 	}
-	
+
 }

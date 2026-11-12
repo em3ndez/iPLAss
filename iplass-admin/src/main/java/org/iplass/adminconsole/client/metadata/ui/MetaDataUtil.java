@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -48,7 +48,7 @@ public final class MetaDataUtil {
 		if (isShared) {
 			return "Shared";
 		} else if (isSharedOverwrite) {
-				return "Shared Overwrite";
+			return "Shared Overwrite";
 		} else {
 			return "Local";
 		}
@@ -61,7 +61,7 @@ public final class MetaDataUtil {
 			if (!isOverwritable) {
 				typeName += " , Not Overwrite";
 			}
-		} else if (isSharedOverwrite){
+		} else if (isSharedOverwrite) {
 			typeName = "Tenant Local (Shared Overwrite)";
 		} else {
 			typeName = "Tenant Local";
@@ -92,4 +92,14 @@ public final class MetaDataUtil {
 		window.show();
 	}
 
+	/**
+	 * スクリプト編集ダイアログを表示します。（オーバーロード）
+	 * @param cond
+	 * @param handler
+	 */
+	public static final void showScriptEditDialog(final ScriptEditorDialogCondition cond,
+			final ScriptEditorDialogHandler handler) {
+		ScriptEditorDialog window = new ScriptEditorDialog(cond, handler);
+		window.show();
+	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -45,7 +45,7 @@ public class MetaVersionSection extends MetaSection {
 	 * @return リンクを表示するか
 	 */
 	public boolean isShowLink() {
-	    return showLink;
+		return showLink;
 	}
 
 	/**
@@ -53,7 +53,7 @@ public class MetaVersionSection extends MetaSection {
 	 * @param showLink リンクを表示するか
 	 */
 	public void setShowLink(boolean showLink) {
-	    this.showLink = showLink;
+		this.showLink = showLink;
 	}
 
 	@Override
@@ -70,6 +70,7 @@ public class MetaVersionSection extends MetaSection {
 		super.fillTo(section, definitionId);
 
 		section.setShowLink(showLink);
+
 		return section;
 	}
 

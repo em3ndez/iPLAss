@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -64,7 +64,7 @@ public class UnicodeNormalizerAttributePane extends NormalizerAttributePane {
 	@Override
 	public void setDefinition(NormalizerDefinition definition) {
 		if (definition instanceof UnicodeNormalizer) {
-			String form = ((UnicodeNormalizer)definition).getForm();
+			String form = ((UnicodeNormalizer) definition).getForm();
 			if (SmartGWTUtil.isNotEmpty(form)) {
 				cboForm.setValue(form);
 			} else {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -91,7 +91,6 @@ public class MetaSchemalessRdbStoreMapping extends MetaStoreMapping {
 		return true;
 	}
 
-	
 	@Override
 	public void applyConfig(StoreDefinition storeDefinition, MetaEntity metaEntity) {
 		SchemalessRdbStore srs = (SchemalessRdbStore) storeDefinition;
@@ -100,7 +99,7 @@ public class MetaSchemalessRdbStoreMapping extends MetaStoreMapping {
 			columnMappingList = null;
 		} else {
 			ArrayList<MetaRdbColumnMapping> list = new ArrayList<>();
-			for (ColumnMapping cm: srs.getColumnMappingList()) {
+			for (ColumnMapping cm : srs.getColumnMappingList()) {
 				MetaProperty p = metaEntity.getDeclaredProperty(cm.getPropertyName());
 				if (p == null) {
 					throw new EntityRuntimeException("ColumnMapping's property not found:" + cm.getPropertyName());
@@ -110,6 +109,7 @@ public class MetaSchemalessRdbStoreMapping extends MetaStoreMapping {
 			columnMappingList = list;
 		}
 	}
+
 	@Override
 	public StoreDefinition currentConfig(MetaEntity metaEntity) {
 		SchemalessRdbStore srs = new SchemalessRdbStore();
@@ -118,7 +118,7 @@ public class MetaSchemalessRdbStoreMapping extends MetaStoreMapping {
 		}
 		if (columnMappingList != null) {
 			ArrayList<ColumnMapping> list = new ArrayList<>();
-			for (MetaRdbColumnMapping cm: columnMappingList) {
+			for (MetaRdbColumnMapping cm : columnMappingList) {
 				MetaProperty p = metaEntity.getDeclaredPropertyById(cm.getPropertyId());
 				if (p != null) {
 					list.add(new ColumnMapping(p.getName(), cm.getColumnName()));

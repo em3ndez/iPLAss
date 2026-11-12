@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -102,7 +102,8 @@ public class CacheRelatedEntityEditDialog extends MtpDialog {
 	public void setDefinition(CacheRelatedEntityDefinition definition) {
 		if (definition != null) {
 			entityNameField.setValue(definition.getDefinitionName());
-			relatedEntityTypeField.setValue(definition.getType().name());
+			relatedEntityTypeField.setValue(definition.getType()
+					.name());
 		} else {
 			entityNameField.setValue("");
 			relatedEntityTypeField.setValue("");
@@ -150,5 +151,3 @@ public class CacheRelatedEntityEditDialog extends MtpDialog {
 		}
 	}
 }
-
-

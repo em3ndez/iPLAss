@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,24 +25,29 @@ import org.iplass.mtp.command.RequestContext;
 import org.iplass.mtp.impl.web.RequestPath;
 
 public interface RequestInvocation {
-	
+
 	public void proceedRequest();
+
 	public void proceedResult();
-	
+
 	public void redirectAction(String actionName, RequestContext requestContext);
-	
+
 	public RequestContext getRequest();
+
 	public Command getCommand();
+
 	public String getStatus();
+
 	public Throwable getException();
-	
+
 	public void getStatus(String status);
+
 	public void setException(Throwable exception);
-	
+
 	public boolean isInclude();
-	
+
 	public String getActionName();
-	
+
 	public RequestPath getRequestPath();
 
 }

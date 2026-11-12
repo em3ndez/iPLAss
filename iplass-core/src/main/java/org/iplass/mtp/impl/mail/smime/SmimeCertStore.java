@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,10 +22,13 @@ package org.iplass.mtp.impl.mail.smime;
 import java.security.cert.X509Certificate;
 
 public interface SmimeCertStore {
-	
+
 	public X509Certificate getCertificate(String mailAddress);
+
 	public CertificateKeyPair getCertificateKeyPair(String mailAddress, String keyPass);
+
 	public void inited();
+
 	public void destroyed();
 
 }

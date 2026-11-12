@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -110,7 +110,8 @@ public class TopViewDragPane extends VLayout {
 		nm.setNode(tree, root);
 
 		grid.setData(tree);
-		grid.getData().openAll();
+		grid.getData()
+				.openAll();
 	}
 
 	private class TopViewItemGrid extends MtpTreeGrid {

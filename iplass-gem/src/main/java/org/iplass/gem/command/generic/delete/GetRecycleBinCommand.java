@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -38,24 +38,24 @@ import org.iplass.mtp.spi.ServiceRegistry;
 import org.iplass.mtp.view.generic.EntityView;
 import org.iplass.mtp.view.generic.EntityViewManager;
 import org.iplass.mtp.view.generic.SearchFormView;
-import org.iplass.mtp.webapi.definition.RequestType;
 import org.iplass.mtp.webapi.definition.MethodType;
+import org.iplass.mtp.webapi.definition.RequestType;
 
 /**
  * 削除データ取得
  * @author lis3wg
  */
 @WebApi(
-	name=GetRecycleBinCommand.WEBAPI_NAME,
-	displayName="削除データ取得",
-	accepts=RequestType.REST_JSON,
-	methods=MethodType.POST,
-	restJson=@RestJson(parameterName="param"),
-	results={Constants.DATA_ENTITY},
-	checkXRequestedWithHeader=true
+		name = GetRecycleBinCommand.WEBAPI_NAME,
+		displayName = "削除データ取得",
+		accepts = RequestType.REST_JSON,
+		methods = MethodType.POST,
+		restJson = @RestJson(parameterName = "param"),
+		results = { Constants.DATA_ENTITY },
+		checkXRequestedWithHeader = true
 )
-@CommandClass(name="gem/generic/delete/GetRecycleBinCommand", displayName="削除データ取得")
-public final class GetRecycleBinCommand implements Command{
+@CommandClass(name = "gem/generic/delete/GetRecycleBinCommand", displayName = "削除データ取得")
+public final class GetRecycleBinCommand implements Command {
 
 	public static final String WEBAPI_NAME = "gem/generic/delete/getRecycleBin";
 
@@ -64,9 +64,12 @@ public final class GetRecycleBinCommand implements Command{
 	private GemConfigService gcs = null;
 
 	public GetRecycleBinCommand() {
-		em = ManagerLocator.getInstance().getManager(EntityManager.class);
-		evm = ManagerLocator.getInstance().getManager(EntityViewManager.class);
-		gcs = ServiceRegistry.getRegistry().getService(GemConfigService.class);
+		em = ManagerLocator.getInstance()
+				.getManager(EntityManager.class);
+		evm = ManagerLocator.getInstance()
+				.getManager(EntityViewManager.class);
+		gcs = ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class);
 	}
 
 	@Override
@@ -75,12 +78,14 @@ public final class GetRecycleBinCommand implements Command{
 		String viewName = request.getParam(Constants.VIEW_NAME);
 
 		final boolean isAllowTrashOperationToRecycleBy = isAllowTrashOperationToRecycleBy(defName, viewName);
-		final String userOid = AuthContext.getCurrentContext().getUser().getOid();
+		final String userOid = AuthContext.getCurrentContext()
+				.getUser()
+				.getOid();
 
 		final List<Entity> list = new ArrayList<Entity>();
 		em.getRecycleBin(defName, entity -> {
 			if (isAllowTrashOperationToRecycleBy) {
-				// ユーザ自身が削除したデータのみ
+				// ユーザー自身が削除したデータのみ
 				if (userOid.equals(entity.getUpdateBy())) {
 					list.add(entity);
 				}
@@ -118,4 +123,3 @@ public final class GetRecycleBinCommand implements Command{
 	}
 
 }
-

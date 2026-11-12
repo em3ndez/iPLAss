@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,7 +31,7 @@ import com.smartgwt.client.widgets.events.ClickHandler;
 import com.smartgwt.client.widgets.form.DynamicForm;
 import com.smartgwt.client.widgets.form.fields.TextAreaItem;
 
-public final class CredentialResultDialog  extends MtpDialog {
+public final class CredentialResultDialog extends MtpDialog {
 
 	public CredentialResultDialog(String secret) {
 

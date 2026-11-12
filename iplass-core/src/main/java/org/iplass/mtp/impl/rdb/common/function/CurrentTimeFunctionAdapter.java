@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -34,7 +34,7 @@ import org.iplass.mtp.impl.rdb.adapter.function.FunctionAdapter;
  * @author K.Higuchi
  *
  */
-public class CurrentTimeFunctionAdapter implements FunctionAdapter {
+public class CurrentTimeFunctionAdapter implements FunctionAdapter<Function> {
 
 	@Override
 	public String getFunctionName() {
@@ -48,13 +48,15 @@ public class CurrentTimeFunctionAdapter implements FunctionAdapter {
 
 	@Override
 	public void toSQL(FunctionContext context, Function function, RdbAdapter rdb) {
-		context.append(rdb.toTimeExpression(ExecuteContext.getCurrentContext().getCurrentLocalTime()));
+		context.append(rdb.toTimeExpression(ExecuteContext.getCurrentContext()
+				.getCurrentLocalTime()));
 	}
 
 	@Override
 	public void toSQL(StringBuilder context, List<CharSequence> args,
 			RdbAdapter rdb) {
-		context.append(rdb.toTimeExpression(ExecuteContext.getCurrentContext().getCurrentLocalTime()));
+		context.append(rdb.toTimeExpression(ExecuteContext.getCurrentContext()
+				.getCurrentLocalTime()));
 	}
 
 }

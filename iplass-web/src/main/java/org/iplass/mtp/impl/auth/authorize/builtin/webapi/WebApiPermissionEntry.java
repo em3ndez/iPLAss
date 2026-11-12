@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,6 +22,7 @@ package org.iplass.mtp.impl.auth.authorize.builtin.webapi;
 
 import org.iplass.mtp.impl.auth.AuthContextHolder;
 import org.iplass.mtp.impl.auth.authorize.builtin.TenantAuthorizeContext;
+import org.iplass.mtp.impl.command.RequestContextBinding;
 import org.iplass.mtp.impl.command.SessionBinding;
 import org.iplass.mtp.impl.core.ExecuteContext;
 import org.iplass.mtp.impl.script.Script;
@@ -44,7 +45,9 @@ class WebApiPermissionEntry {
 	WebApiPermissionEntry(String role, String oid, String parameterConditionExp) {
 		this.role = role;
 		if (parameterConditionExp != null) {
-			ScriptEngine se = ExecuteContext.getCurrentContext().getTenantContext().getScriptEngine();
+			ScriptEngine se = ExecuteContext.getCurrentContext()
+					.getTenantContext()
+					.getScriptEngine();
 			try {
 				parameterCondition = se.createScript(parameterConditionExp, SCRIPT_PREFIX + "_" + oid);
 			} catch (RuntimeException e) {
@@ -71,12 +74,15 @@ class WebApiPermissionEntry {
 			return true;
 		}
 
-		ScriptEngine se = ExecuteContext.getCurrentContext().getTenantContext().getScriptEngine();
+		ScriptEngine se = ExecuteContext.getCurrentContext()
+				.getTenantContext()
+				.getScriptEngine();
 		ScriptContext sc = se.newScriptContext();
 		sc.setAttribute("user", userContext.newUserBinding(authContext));
 		sc.setAttribute("session", SessionBinding.newSessionBinding());
 		sc.setAttribute("webApi", webApiName);
 		sc.setAttribute("parameter", new WebApiParameterBinding(param));
+		sc.setAttribute("request", RequestContextBinding.newRequestContextBinding());
 		Boolean ret;
 		try {
 			ret = (Boolean) parameterCondition.eval(sc);

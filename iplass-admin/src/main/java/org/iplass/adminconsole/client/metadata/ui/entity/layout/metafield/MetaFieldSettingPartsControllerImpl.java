@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,6 +28,7 @@ import org.iplass.adminconsole.client.base.ui.widget.MetaDataSelectItem;
 import org.iplass.adminconsole.client.base.ui.widget.MetaDataSelectItem.ItemOption;
 import org.iplass.adminconsole.client.base.ui.widget.form.MtpIntegerItem;
 import org.iplass.adminconsole.client.base.ui.widget.form.MtpSelectItem;
+import org.iplass.adminconsole.client.base.ui.widget.form.MtpTextAreaItem;
 import org.iplass.adminconsole.client.base.ui.widget.form.MtpTextItem;
 import org.iplass.adminconsole.client.base.util.SmartGWTUtil;
 import org.iplass.adminconsole.shared.metadata.dto.refrect.FieldInfo;
@@ -61,6 +62,14 @@ public class MetaFieldSettingPartsControllerImpl implements MetaFieldSettingPart
 			}
 		} else if (info.getInputType() == InputType.MULTI_TEXT) {
 			item = new MetaDataMultiTextGridItem(pane, info);
+		} else if (info.getInputType() == InputType.TEXT_AREA) {
+			item = new MtpTextAreaItem();
+			if (info.isRequired()) {
+				SmartGWTUtil.setRequired(item);
+			}
+			if (pane.getValue(info.getName()) != null) {
+				item.setValue(pane.getValueAs(String.class, info.getName()));
+			}
 		} else if (info.getInputType() == InputType.NUMBER) {
 			item = new MtpIntegerItem();
 			if (info.isRequired()) {
@@ -84,7 +93,7 @@ public class MetaFieldSettingPartsControllerImpl implements MetaFieldSettingPart
 			for (int i = 0; i < info.getEnumValues().length; i++) {
 				enms.add(info.getEnumValues()[i].toString());
 			}
-			item.setValueMap(enms.toArray(new String[]{}));
+			item.setValueMap(enms.toArray(new String[] {}));
 			((SelectItem) item).setMultiple(info.isMultiple());
 			((SelectItem) item).setMultipleAppearance(MultipleAppearance.GRID);
 			if (info.isRequired()) {
@@ -92,14 +101,15 @@ public class MetaFieldSettingPartsControllerImpl implements MetaFieldSettingPart
 			}
 			if (pane.getValue(info.getName()) != null) {
 				if (info.isMultiple()) {
-					List<Object> values = (List<Object>)pane.getValue(info.getName());
+					List<Object> values = (List<Object>) pane.getValue(info.getName());
 					List<String> strValues = new ArrayList<>();
 					for (Object value : values) {
 						strValues.add(value.toString());
 					}
 					((SelectItem) item).setValues(strValues.toArray(new String[0]));
 				} else {
-					item.setValue(pane.getValue(info.getName()).toString());
+					item.setValue(pane.getValue(info.getName())
+							.toString());
 				}
 			}
 		} else if (info.getInputType() == InputType.ACTION) {

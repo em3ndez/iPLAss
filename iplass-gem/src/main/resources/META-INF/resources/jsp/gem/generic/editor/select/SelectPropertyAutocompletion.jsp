@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,8 +18,15 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
+<%@ page import="java.util.ArrayList" %>
+<%@ page import="java.util.List" %>
+<%@ page import="java.util.Map" %>
+<%@ page import="java.util.HashMap" %>
+<%@ page import="org.iplass.mtp.entity.SelectValue" %>
+<%@ page import="org.iplass.mtp.entity.definition.LocalizedSelectValueDefinition" %>
+<%@ page import="org.iplass.mtp.view.generic.editor.EditorValue" %>
 
 <%@ page import="org.iplass.mtp.util.StringUtil"%>
 <%@ page import="org.iplass.mtp.view.generic.editor.SelectPropertyEditor" %>
@@ -33,41 +40,64 @@ Integer multiplicity = (Integer) request.getAttribute(Constants.AUTOCOMPLETION_M
 if (multiplicity == null) multiplicity = 1;
 //呼び出し元は/common/Autocompletion.jsp、以降はWebApiの結果を反映する部分のJavascript、結果の変数はvalue
 if (Constants.VIEW_TYPE_DETAIL.equals(viewType)) {
-	// 詳細画面
+	//編集画面
 %>
-var multiplicity = <%=multiplicity%>;
-if (multiplicity == 1) {
-	if (value instanceof Array) {
-		value = value.length > 0 ? value[0] : "";
-	}
-} else {
-	if (value instanceof Array) {
-		if (value.length > multiplicity) {
-			value = value.slice(0, multiplicity);
-		}
-	} else {
-		value = [value];
-	}
-}
+const multiplicity = <%=multiplicity%>;
+const inputLength = $("[name='" + propName + "']").length;
+value = normalizedDetailAutoCompletionValue(value, multiplicity, inputLength, "");
 <%
 	if (editor.getDisplayType() == SelectDisplayType.SELECT) {
 %>
 $("[name='" + propName + "']").val(value);
 <%
+	} else if (editor.getDisplayType() == SelectDisplayType.LABEL) {
+		List<EditorValue> autocompletionEditorValues = (List<EditorValue>) request.getAttribute(Constants.AUTOCOMPLETION_EDITOR_VALUES);
+		//表示ラベルと値をセット
+%>
+var editorValueMap = new Map();
+<c:forEach items="<%=autocompletionEditorValues%>" var="editorValue">
+	editorValueMap.set('${editorValue.value}', {label:'${editorValue.label}', style:'${editorValue.style}'});
+</c:forEach>
+renderDetailAutoCompletionLabelTypeEditorValueFormat(value, multiplicity, propName, editorValueMap);
+<%
+	} else if(editor.getDisplayType() == SelectDisplayType.HIDDEN) {
+		List<EditorValue> autocompletionEditorValues = (List<EditorValue>) request.getAttribute(Constants.AUTOCOMPLETION_EDITOR_VALUES);
+%>
+var editorValueMap = new Map();
+<c:forEach items="<%=autocompletionEditorValues%>" var="editorValue">
+	editorValueMap.set('${editorValue.value}', {label:'${editorValue.label}', style:'${editorValue.style}'});
+</c:forEach>
+renderDetailAutoCompletionHiddenType(value, multiplicity, propName, 
+	function(value) {
+		if (value && editorValueMap.has(String(value))) {
+			return value;
+		}
+		return "";
+	}
+);
+<%
 	} else {
 		if (multiplicity == 1) {
 			//radio
 %>
+// クリック状態を解除する
+$("[name='" + propName + "']:checked").each(function() {
+	$(this).click();
+	return false;
+});
+
 $("[name='" + propName + "'][value='" + value + "']").click();
 <%
 		} else  {
 			//checkbox
 %>
+// クリック状態を解除する
+$("[name='" + propName + "']:checked").each(function() {
+	$(this).click();
+});
+
 for (var i = 0; i < value.length; i++) {
-	var isChecked = $("[name='" + propName + "'][value='" + value[i] + "']").is(":checked");
-	if (!isChecked) {
-		$("[name='" + propName + "'][value='" + value[i] + "']").click();
-	}
+	$("[name='" + propName + "'][value='" + value[i] + "']").click();
 }
 <%
 		}
@@ -81,16 +111,29 @@ if (!(value instanceof Array)) {
 <%
 	if (editor.getDisplayType() == SelectDisplayType.CHECKBOX) {
 %>
+// クリック状態を解除する
+$("[name='sc_" + propName + "']:checked").each(function() {
+	$(this).click();
+});
+
 for (var i = 0; i < value.length; i++) {
-	var isChecked = $("[name='sc_" + propName + "'][value='" + value[i] + "']").is(":checked");
-	if (!isChecked) {
-		$("[name='sc_" + propName + "'][value='" + value[i] + "']").click();
-	}
+	$("[name='sc_" + propName + "'][value='" + value[i] + "']").click();
 }
 <%
 	} else if (editor.getDisplayType() == SelectDisplayType.RADIO) {
 %>
-$("[name='sc_" + propName + "'][value='" + value[0] + "']").click();
+// クリック状態を解除する
+$("[name='sc_" + propName + "']:checked").each(function() {
+	$(this).click();
+	return false;
+});
+
+if (!value[0]) {
+	// 未指定をクリック
+	$("[name='sc_" + propName + "']:last").click();
+} else {
+	$("[name='sc_" + propName + "'][value='" + value[0] + "']").click();
+}
 <%
 	} else if (editor.getDisplayType() == SelectDisplayType.SELECT) {
 %>

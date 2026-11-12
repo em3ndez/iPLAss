@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -49,14 +49,14 @@ public class BuiltinAuthExplorerPlugin extends DefaultAdminPlugin {
 
 	@Override
 	public void onNodeDoubleClick(final AdminMenuTreeNode node) {
-		if (NODE_TYPE.equals(node.getType())){
+		if (NODE_TYPE.equals(node.getType())) {
 			addTab(node);
 		}
 	}
 
 	@Override
 	public void onNodeContextClick(final AdminMenuTreeNode node) {
-		if (NODE_TYPE.equals(node.getType())){
+		if (NODE_TYPE.equals(node.getType())) {
 
 			if (contextMenu == null) {
 				contextMenu = new Menu();

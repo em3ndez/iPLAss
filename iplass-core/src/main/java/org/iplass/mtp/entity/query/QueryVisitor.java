@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,19 +25,29 @@ import org.iplass.mtp.entity.query.hint.HintVisitor;
 import org.iplass.mtp.entity.query.value.ValueExpressionVisitor;
 
 public interface QueryVisitor extends ConditionVisitor, ValueExpressionVisitor, HintVisitor {
-	
+
 	public boolean visit(Query query);
+
 	public boolean visit(Select select);
+
 	public boolean visit(Where where);
+
 	public boolean visit(From from);
+
 	public boolean visit(AsOf asOf);
+
 	public boolean visit(GroupBy groupBy);
+
 	public boolean visit(Having having);
+
 	public boolean visit(OrderBy orderBy);
+
 	public boolean visit(SortSpec order);
+
 	public boolean visit(Limit limit);
+
 	public boolean visit(Refer refer);
-	
+
 	public boolean visit(SubQuery subQuery);
 
 }

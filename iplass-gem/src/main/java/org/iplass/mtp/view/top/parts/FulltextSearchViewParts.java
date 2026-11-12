@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,12 +33,22 @@ public class FulltextSearchViewParts extends TopViewParts {
 
 	private boolean dispSearchWindow;
 
+	private boolean showUserNameWithPrivilegedValue;
+
 	public boolean isDispSearchWindow() {
 		return dispSearchWindow;
 	}
 
 	public void setDispSearchWindow(boolean dispSearchWindow) {
 		this.dispSearchWindow = dispSearchWindow;
+	}
+
+	public boolean isShowUserNameWithPrivilegedValue() {
+		return showUserNameWithPrivilegedValue;
+	}
+
+	public void setShowUserNameWithPrivilegedValue(boolean showUserNameWithPrivilegedValue) {
+		this.showUserNameWithPrivilegedValue = showUserNameWithPrivilegedValue;
 	}
 
 	public Map<String, String> getViewNames() {

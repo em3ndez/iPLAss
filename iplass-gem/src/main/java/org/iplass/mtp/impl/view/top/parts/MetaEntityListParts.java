@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,8 +23,6 @@ package org.iplass.mtp.impl.view.top.parts;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.iplass.mtp.ManagerLocator;
 import org.iplass.mtp.command.RequestContext;
 import org.iplass.mtp.entity.definition.EntityDefinition;
@@ -44,6 +42,8 @@ import org.iplass.mtp.view.generic.SearchFormView;
 import org.iplass.mtp.view.top.parts.EntityListParts;
 import org.iplass.mtp.view.top.parts.TopViewParts;
 import org.iplass.mtp.web.template.TemplateUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * お知らせ一覧パーツ
@@ -75,6 +75,9 @@ public class MetaEntityListParts extends MetaTemplateParts {
 	/** 高さ */
 	private Integer height;
 
+	/** 非同期検索するか */
+	private boolean searchAsync;
+
 	/** 多言語設定情報 */
 	private List<MetaLocalizedString> localizedTitleList = new ArrayList<>();
 
@@ -95,7 +98,7 @@ public class MetaEntityListParts extends MetaTemplateParts {
 	 * @return ID
 	 */
 	public String getDefinitionId() {
-	    return definitionId;
+		return definitionId;
 	}
 
 	/**
@@ -103,7 +106,7 @@ public class MetaEntityListParts extends MetaTemplateParts {
 	 * @param definitionId ID
 	 */
 	public void setDefinitionId(String definitionId) {
-	    this.definitionId = definitionId;
+		this.definitionId = definitionId;
 	}
 
 	/**
@@ -111,7 +114,7 @@ public class MetaEntityListParts extends MetaTemplateParts {
 	 * @return View名
 	 */
 	public String getViewName() {
-	    return viewName;
+		return viewName;
 	}
 
 	/**
@@ -119,7 +122,7 @@ public class MetaEntityListParts extends MetaTemplateParts {
 	 * @param viewName View名
 	 */
 	public void setViewName(String viewName) {
-	    this.viewName = viewName;
+		this.viewName = viewName;
 	}
 
 	/**
@@ -127,7 +130,7 @@ public class MetaEntityListParts extends MetaTemplateParts {
 	 * @return 検索リンク用のView名
 	 */
 	public String getViewNameForLink() {
-	    return viewNameForLink;
+		return viewNameForLink;
 	}
 
 	/**
@@ -135,7 +138,7 @@ public class MetaEntityListParts extends MetaTemplateParts {
 	 * @param viewNameForLink 検索リンク用のView名
 	 */
 	public void setViewNameForLink(String viewNameForLink) {
-	    this.viewNameForLink = viewNameForLink;
+		this.viewNameForLink = viewNameForLink;
 	}
 
 	/**
@@ -143,7 +146,7 @@ public class MetaEntityListParts extends MetaTemplateParts {
 	 * @return 詳細リンク用のView名
 	 */
 	public String getViewNameForDetail() {
-	    return viewNameForDetail;
+		return viewNameForDetail;
 	}
 
 	/**
@@ -151,7 +154,7 @@ public class MetaEntityListParts extends MetaTemplateParts {
 	 * @param viewNameForDetail 詳細リンク用のView名
 	 */
 	public void setViewNameForDetail(String viewNameForDetail) {
-	    this.viewNameForDetail = viewNameForDetail;
+		this.viewNameForDetail = viewNameForDetail;
 	}
 
 	/**
@@ -159,7 +162,7 @@ public class MetaEntityListParts extends MetaTemplateParts {
 	 * @return フィルタ名
 	 */
 	public String getFilterName() {
-	    return filterName;
+		return filterName;
 	}
 
 	/**
@@ -167,7 +170,7 @@ public class MetaEntityListParts extends MetaTemplateParts {
 	 * @param filterName フィルタ名
 	 */
 	public void setFilterName(String filterName) {
-	    this.filterName = filterName;
+		this.filterName = filterName;
 	}
 
 	/**
@@ -175,7 +178,7 @@ public class MetaEntityListParts extends MetaTemplateParts {
 	 * @return タイトル
 	 */
 	public String getTitle() {
-	    return title;
+		return title;
 	}
 
 	/**
@@ -183,7 +186,7 @@ public class MetaEntityListParts extends MetaTemplateParts {
 	 * @param title タイトル
 	 */
 	public void setTitle(String title) {
-	    this.title = title;
+		this.title = title;
 	}
 
 	/**
@@ -191,7 +194,7 @@ public class MetaEntityListParts extends MetaTemplateParts {
 	 * @return 高さ
 	 */
 	public Integer getHeight() {
-	    return height;
+		return height;
 	}
 
 	/**
@@ -199,7 +202,23 @@ public class MetaEntityListParts extends MetaTemplateParts {
 	 * @param height 高さ
 	 */
 	public void setHeight(Integer height) {
-	    this.height = height;
+		this.height = height;
+	}
+
+	/**
+	 * 非同期検索するかを取得します。
+	 * @return 非同期検索するか
+	 */
+	public boolean isSearchAsync() {
+		return searchAsync;
+	}
+
+	/**
+	 * 非同期検索するかを設定します。
+	 * @param searchAsync 
+	 */
+	public void setSearchAsync(boolean searchAsync) {
+		this.searchAsync = searchAsync;
 	}
 
 	/**
@@ -223,7 +242,7 @@ public class MetaEntityListParts extends MetaTemplateParts {
 	 * @return アイコンタグ
 	 */
 	public String getIconTag() {
-	    return iconTag;
+		return iconTag;
 	}
 
 	/**
@@ -231,7 +250,7 @@ public class MetaEntityListParts extends MetaTemplateParts {
 	 * @param iconTag アイコンタグ
 	 */
 	public void setIconTag(String iconTag) {
-	    this.iconTag = iconTag;
+		this.iconTag = iconTag;
 	}
 
 	@Override
@@ -241,14 +260,17 @@ public class MetaEntityListParts extends MetaTemplateParts {
 		EntityHandler entity = context.getHandlerByName(e.getDefName());
 		fillFrom(e);
 
-		if (entity == null) return;
-		definitionId = entity.getMetaData().getId();
+		if (entity == null)
+			return;
+		definitionId = entity.getMetaData()
+				.getId();
 		viewName = e.getViewName();
 		viewNameForLink = e.getViewNameForLink();
 		viewNameForDetail = e.getViewNameForDetail();
 		filterName = e.getFilterName();
 		title = e.getTitle();
 		height = e.getHeight();
+		searchAsync = e.isSearchAsync();
 
 		// 言語毎の文字情報設定
 		localizedTitleList = I18nUtil.toMeta(e.getLocalizedTitleList());
@@ -266,7 +288,8 @@ public class MetaEntityListParts extends MetaTemplateParts {
 		if (definitionId != null) {
 			entity = context.getHandlerById(definitionId);
 			if (entity != null) {
-				parts.setDefName(entity.getMetaData().getName());
+				parts.setDefName(entity.getMetaData()
+						.getName());
 			}
 		}
 
@@ -276,6 +299,7 @@ public class MetaEntityListParts extends MetaTemplateParts {
 		parts.setFilterName(filterName);
 		parts.setTitle(title);
 		parts.setHeight(height);
+		parts.setSearchAsync(searchAsync);
 		parts.setLocalizedTitleList(I18nUtil.toDef(localizedTitleList));
 		parts.setIconTag(iconTag);
 
@@ -316,7 +340,8 @@ public class MetaEntityListParts extends MetaTemplateParts {
 			@Override
 			public void setAttribute(HttpServletRequest req) {
 				EntityContext context = EntityContext.getCurrentContext();
-				if (definitionId == null) return;
+				if (definitionId == null)
+					return;
 
 				RequestContext request = WebUtil.getRequestContext();
 
@@ -326,7 +351,8 @@ public class MetaEntityListParts extends MetaTemplateParts {
 				String title = I18nUtil.stringMeta(MetaEntityListParts.this.title, MetaEntityListParts.this.localizedTitleList);
 				EntityHandler handler = context.getHandlerById(definitionId);
 				if (handler != null) {
-					EntityDefinition ed = handler.getMetaData().currentConfig();
+					EntityDefinition ed = handler.getMetaData()
+							.currentConfig();
 					EntityViewManager evm = ManagerLocator.manager(EntityViewManager.class);
 					EntityView ev = evm.get(ed.getName());
 					if (ev != null) {
@@ -349,39 +375,52 @@ public class MetaEntityListParts extends MetaTemplateParts {
 						form = FormViewUtil.createDefaultSearchFormView(ed);
 					}
 
-					if(StringUtil.isEmpty(title)) {
+					if (StringUtil.isEmpty(title)) {
 						title = TemplateUtil.getMultilingualString(form.getTitle(), form.getLocalizedTitleList());
 					}
-					if(StringUtil.isEmpty(title)) {
+					if (StringUtil.isEmpty(title)) {
 						title = TemplateUtil.getMultilingualString(
 								ed.getDisplayName(), ed.getLocalizedDisplayNameList());
 					}
 				}
 
-				request.setAttribute("entityListParts", currentConfig());
-				request.setAttribute("searchFormView", form);
-				request.setAttribute("title", title);
+				request.setAttribute("MetaEntityListParts_entityListParts", currentConfig());
+				request.setAttribute("MetaEntityListParts_searchFormView", form);
+				request.setAttribute("MetaEntityListParts_title", title);
 			}
 
 			@Override
 			public void clearAttribute(HttpServletRequest req) {
+				RequestContext request = WebUtil.getRequestContext();
+				request.removeAttribute("MetaEntityListParts_entityListParts");
+				request.removeAttribute("MetaEntityListParts_searchFormView");
+				request.removeAttribute("MetaEntityListParts_title");
+				// partsCnt は削除NG（∵ 呼び出し元 TopViewHandler.loadParts() がHttpServletRequest 経由で参照するため）
+				// TODO: とは言え、この対応は「その場しのぎ」に見える（∵ clearAttribute() の本来の責務は setAttribute() でセットした属性のクリーンアップのはず）
+				// 使われる側が呼び出し元の実装に依存するのは、設計上好ましくない
+				// partsCnt を管理する責務を負うのは HttpServletRequest？RequestContext？設計が曖昧な可能性あり
 			}
 
 			private boolean checkEntity() {
-				if (definitionId == null) return false;
+				if (definitionId == null)
+					return false;
 
 				EntityContext context = EntityContext.getCurrentContext();
 				EntityHandler entity = context.getHandlerById(definitionId);
 
 				//Entity定義が取れなければ表示しない
-				if (entity == null) return false;
+				if (entity == null)
+					return false;
 
 				if (viewName != null && !viewName.isEmpty()) {
-					EntityViewManager em = ManagerLocator.getInstance().getManager(EntityViewManager.class);
-					EntityView ev = em.get(entity.getMetaData().getName());
+					EntityViewManager em = ManagerLocator.getInstance()
+							.getManager(EntityViewManager.class);
+					EntityView ev = em.get(entity.getMetaData()
+							.getName());
 
 					//画面定義が取れなければ表示しない
-					if (ev == null || ev.getSearchFormView(viewName)  == null) return false;
+					if (ev == null || ev.getSearchFormView(viewName) == null)
+						return false;
 				}
 				return true;
 			}

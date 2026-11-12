@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -38,6 +38,7 @@ import org.iplass.mtp.impl.query.hint.HintCommentSyntax;
 import org.iplass.mtp.impl.query.hint.HintSyntax;
 import org.iplass.mtp.impl.query.value.RowValueListSyntax;
 import org.iplass.mtp.impl.query.value.aggregate.AggregateSyntax;
+import org.iplass.mtp.impl.query.value.aggregate.WithinGroupSyntax;
 import org.iplass.mtp.impl.query.value.controlflow.CaseSyntax;
 import org.iplass.mtp.impl.query.value.controlflow.ElseSyntax;
 import org.iplass.mtp.impl.query.value.controlflow.WhenSyntax;
@@ -55,12 +56,10 @@ import org.iplass.mtp.impl.query.value.subquery.ScalarSubQuerySyntax;
 import org.iplass.mtp.impl.query.value.window.PartitionBySyntax;
 import org.iplass.mtp.impl.query.value.window.WindowFunctionSyntax;
 import org.iplass.mtp.impl.query.value.window.WindowOrderBySyntax;
-import org.iplass.mtp.impl.query.value.window.WindowSortSpecSyntax;
 
 public class QuerySyntaxRegister implements SyntaxRegister {
 
 	public static String QUERY_CONTEXT = "query";
-
 
 	public String getContextName() {
 		return QUERY_CONTEXT;
@@ -68,58 +67,58 @@ public class QuerySyntaxRegister implements SyntaxRegister {
 
 	public Syntax<?>[] getSyntax() {
 		return new Syntax[] {
-			new QuerySyntax(),
-			new SelectSyntax(),
-			new FromSyntax(),
-			new ReferSyntax(),
-			new AsOfSyntax(),
-			new WhereSyntax(),
-			new GroupBySyntax(),
-			new HavingSyntax(),
-			new OrderBySyntax(),
-			new SortSpecSyntax(),
-			new LimitSyntax(),
-			new SubQuerySyntax(),
+				new QuerySyntax(),
+				new SelectSyntax(),
+				new FromSyntax(),
+				new ReferSyntax(),
+				new AsOfSyntax(),
+				new WhereSyntax(),
+				new GroupBySyntax(),
+				new HavingSyntax(),
+				new OrderBySyntax(),
+				new SortSpecSyntax(),
+				new LimitSyntax(),
+				new SubQuerySyntax(),
 
-			//ValueExpression
-			new MinusSignSyntax(),
-			new PolynomialSyntax(),
-			new TermSyntax(),
-			new PrimaryValueSyntax(),
-			new AggregateSyntax(),
-			new ScalarSubQuerySyntax(),
-			new FunctionSyntax(),
-			new CastSyntax(),
-			new ParenValueSyntax(),
-			new EntityFieldSyntax(),
-			new LiteralSyntax(),
-			new ArrayValueSyntax(),
-			new CaseSyntax(),
-			new WhenSyntax(),
-			new ElseSyntax(),
-			new WindowFunctionSyntax(),
-			new PartitionBySyntax(),
-			new WindowOrderBySyntax(),
-			new WindowSortSpecSyntax(),
-			new RowValueListSyntax(),
+				//ValueExpression
+				new MinusSignSyntax(),
+				new PolynomialSyntax(),
+				new TermSyntax(),
+				new PrimaryValueSyntax(),
+				new AggregateSyntax(),
+				new WithinGroupSyntax(),
+				new ScalarSubQuerySyntax(),
+				new FunctionSyntax(),
+				new CastSyntax(),
+				new ParenValueSyntax(),
+				new EntityFieldSyntax(),
+				new LiteralSyntax(),
+				new ArrayValueSyntax(),
+				new CaseSyntax(),
+				new WhenSyntax(),
+				new ElseSyntax(),
+				new WindowFunctionSyntax(),
+				new PartitionBySyntax(),
+				new WindowOrderBySyntax(),
+				new RowValueListSyntax(),
 
-			//Condition
-			new AndSyntax(),
-			new ParenSyntax(),
-			new NotSyntax(),
-			new OrSyntax(),
-			new BetweenSyntax(),
-			new ComparisonPredicateSyntax(),
-			new InSyntax(),
-			new IsNotNullSyntax(),
-			new IsNullSyntax(),
-			new LikeSyntax(),
-			new ContainsSyntax(),
-			new PredicateSyntax(),
-			
-			//Hint
-			new HintCommentSyntax(),
-			new HintSyntax()
+				//Condition
+				new AndSyntax(),
+				new ParenSyntax(),
+				new NotSyntax(),
+				new OrSyntax(),
+				new BetweenSyntax(),
+				new ComparisonPredicateSyntax(),
+				new InSyntax(),
+				new IsNotNullSyntax(),
+				new IsNullSyntax(),
+				new LikeSyntax(),
+				new ContainsSyntax(),
+				new PredicateSyntax(),
+
+				//Hint
+				new HintCommentSyntax(),
+				new HintSyntax()
 		};
 
 	}

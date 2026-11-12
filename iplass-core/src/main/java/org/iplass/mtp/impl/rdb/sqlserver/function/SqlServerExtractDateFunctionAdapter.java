@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,7 +27,7 @@ import org.iplass.mtp.entity.query.value.primary.Function;
 import org.iplass.mtp.impl.rdb.adapter.RdbAdapter;
 import org.iplass.mtp.impl.rdb.adapter.function.FunctionAdapter;
 
-public class SqlServerExtractDateFunctionAdapter implements FunctionAdapter {
+public class SqlServerExtractDateFunctionAdapter implements FunctionAdapter<Function> {
 
 	private String field;
 
@@ -40,10 +40,12 @@ public class SqlServerExtractDateFunctionAdapter implements FunctionAdapter {
 		context.append("DATEPART(");
 		context.append(field);
 		context.append(" , ");
-		if (function.getArguments() == null || function.getArguments().size() != 1) {
+		if (function.getArguments() == null || function.getArguments()
+				.size() != 1) {
 			throw new QueryException(function.getName() + " must have only one arguments.");
 		}
-		context.appendArgument(function.getArguments().get(0));
+		context.appendArgument(function.getArguments()
+				.get(0));
 		context.append(")");
 	}
 

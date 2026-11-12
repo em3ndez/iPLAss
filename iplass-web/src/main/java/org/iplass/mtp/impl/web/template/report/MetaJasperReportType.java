@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -41,6 +41,9 @@ public class MetaJasperReportType extends MetaReportType {
 	/** パスワードAttribute名 */
 	private String passwordAttributeName;
 
+	/** オーナーパスワードAttribute名 */
+	private String ownerPasswordAttributeName;
+
 	public MetaReportParamMap[] getParamMap() {
 		return paramMap;
 	}
@@ -65,9 +68,17 @@ public class MetaJasperReportType extends MetaReportType {
 		this.passwordAttributeName = passwordAttributeName;
 	}
 
+	public String getOwnerPasswordAttributeName() {
+		return ownerPasswordAttributeName;
+	}
+
+	public void setOwnerPasswordAttributeName(String ownerPasswordAttributeName) {
+		this.ownerPasswordAttributeName = ownerPasswordAttributeName;
+	}
+
 	@Override
 	public void applyConfig(ReportType reportType) {
-		JasperReportType def = (JasperReportType)reportType;
+		JasperReportType def = (JasperReportType) reportType;
 		fillFrom(def);
 
 		if (def.getParamMap() != null) {
@@ -85,6 +96,7 @@ public class MetaJasperReportType extends MetaReportType {
 		dataSourceAttributeName = def.getDataSourceAttributeName();
 
 		passwordAttributeName = def.getPasswordAttributeName();
+		ownerPasswordAttributeName = def.getOwnerPasswordAttributeName();
 	}
 
 	@Override
@@ -104,6 +116,7 @@ public class MetaJasperReportType extends MetaReportType {
 
 		definition.setDataSourceAttributeName(dataSourceAttributeName);
 		definition.setPasswordAttributeName(passwordAttributeName);
+		definition.setOwnerPasswordAttributeName(ownerPasswordAttributeName);
 
 		return definition;
 	}
@@ -117,11 +130,11 @@ public class MetaJasperReportType extends MetaReportType {
 	public ReportTypeRuntime createRuntime() {
 		return new JasperReportTypeRuntime();
 	}
-	
+
 	public class JasperReportTypeRuntime extends ReportTypeRuntime {
 		public JasperReportTypeRuntime() {
 		}
-		
+
 		@Override
 		public MetaJasperReportType getMetaData() {
 			return MetaJasperReportType.this;
@@ -130,12 +143,13 @@ public class MetaJasperReportType extends MetaReportType {
 		@Override
 		public void setParam(ReportingOutputModel createOutputModel) {
 			JasperReportingOutputModel model = (JasperReportingOutputModel) createOutputModel;
-			
+
 			model.setDataSourceAttributeName(dataSourceAttributeName);
 			if (paramMap != null) {
 				model.setMaps(paramMap);
 			}
 			model.setPasswordAttributeName(passwordAttributeName);
+			model.setOwnerPasswordAttributeName(ownerPasswordAttributeName);
 		}
 	}
 }

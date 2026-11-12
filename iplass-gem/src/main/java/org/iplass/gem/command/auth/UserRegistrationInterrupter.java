@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,7 +27,7 @@ public class UserRegistrationInterrupter implements RegistrationInterrupter {
 
 	@Override
 	public String[] getAdditionalProperties() {
-		return new String[]{Entity.NAME};
+		return new String[] { Entity.NAME };
 	}
 
 }

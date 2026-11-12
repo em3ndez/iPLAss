@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,7 +23,7 @@ package org.iplass.mtp.impl.web.auth;
 import org.iplass.mtp.impl.auth.authorize.AuthorizationContext;
 
 public interface ActionAuthContext extends AuthorizationContext {
-	
+
 //	public boolean isPermit(AuthContextHolder userAuthContext, String actionName, ActionParameter parameter);
 
 }

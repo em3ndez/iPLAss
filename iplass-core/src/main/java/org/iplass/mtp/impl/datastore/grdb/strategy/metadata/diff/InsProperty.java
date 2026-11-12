@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,30 +24,31 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.iplass.mtp.entity.definition.IndexType;
+import org.iplass.mtp.impl.datastore.grdb.GRdbDataStore;
 import org.iplass.mtp.impl.datastore.grdb.strategy.metadata.ColResolver;
 import org.iplass.mtp.impl.entity.MetaEntity;
 import org.iplass.mtp.impl.entity.property.MetaPrimitiveProperty;
 import org.iplass.mtp.impl.rdb.adapter.RdbAdapter;
 
-
 public class InsProperty extends Diff {
-	
+
 	private InsPropertyIndexType insPropertyIndexType;
-	
+
 	private MetaPrimitiveProperty insertProperty;
-	
+
 	private ColResolver colResolver;
 	private MetaEntity entity;
 
-	public InsProperty(MetaPrimitiveProperty insertProperty, MetaEntity entity, ColResolver colResolver) {
+	public InsProperty(MetaPrimitiveProperty insertProperty, MetaEntity entity, ColResolver colResolver, GRdbDataStore dataStore) {
 		this.insertProperty = insertProperty;
 		this.colResolver = colResolver;
 		this.entity = entity;
-		
+
 		if (insertProperty.getIndexType() != null
 				&& insertProperty.getIndexType() != IndexType.NON_INDEXED
-				&& !insertProperty.getType().isVirtual()) {
-			insPropertyIndexType = new InsPropertyIndexType(insertProperty, entity);
+				&& !insertProperty.getType()
+						.isVirtual()) {
+			insPropertyIndexType = new InsPropertyIndexType(insertProperty, entity, dataStore);
 		}
 	}
 

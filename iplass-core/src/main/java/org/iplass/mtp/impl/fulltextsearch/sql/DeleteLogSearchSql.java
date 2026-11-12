@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,11 +24,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 
-import org.iplass.mtp.impl.fulltextsearch.AbstractFulltextSeachService.RestoreDto;
+import org.iplass.mtp.impl.fulltextsearch.AbstractFulltextSearchService.RestoreDto;
 import org.iplass.mtp.impl.fulltextsearch.sql.DeleteLogTable.Status;
 import org.iplass.mtp.impl.rdb.adapter.QuerySqlHandler;
 import org.iplass.mtp.impl.rdb.adapter.RdbAdapter;
-
 
 public class DeleteLogSearchSql extends QuerySqlHandler {
 

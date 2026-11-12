@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright 2013 DENTSU SOKEN INC. All Rights Reserved.
  */
 
 package org.iplass.mtp.tools.batch.pack;
@@ -33,9 +33,9 @@ public class PackageImportParameter {
 	public static final String PROP_ENTITY_UPDATE_DISUPDATABLE = "entity.updateDisupdatableProperty";
 	/** Silentモード Entityデータ InsertするEntityにcreateBy,createDate,updateBy,updateDateの値を指定 */
 	public static final String PROP_ENTITY_INSERT_AUDIT_PROPERTY_SPECIFICATION = "entity.insertEnableAuditPropertySpecification";
-	/** Silentモード Entityデータ InsertするEntityにcreateBy,createDate,updateBy,updateDateの値を指定時に実行するユーザID */
+	/** Silentモード Entityデータ InsertするEntityにcreateBy,createDate,updateBy,updateDateの値を指定時に実行するユーザーID */
 	public static final String PROP_ENTITY_INSERT_AUDIT_PROPERTY_SPECIFICATION_EXEC_USER_ID = "entity.insertEnableAuditPropertySpecificationUserId";
-	/** Silentモード Entityデータ InsertするEntityにcreateBy,createDate,updateBy,updateDateの値を指定時に実行するユーザPW */
+	/** Silentモード Entityデータ InsertするEntityにcreateBy,createDate,updateBy,updateDateの値を指定時に実行するユーザーPW */
 	public static final String PROP_ENTITY_INSERT_AUDIT_PROPERTY_SPECIFICATION_EXEC_USER_PW = "entity.insertEnableAuditPropertySpecificationUserPW";
 	/** Silentモード Entityデータ 強制更新 */
 	public static final String PROP_ENTITY_FORCE_UPDATE = "entity.forceUpdate";
@@ -49,6 +49,8 @@ public class PackageImportParameter {
 	public static final String PROP_ENTITY_COMMIT_LIMIT = "entity.commitLimit";
 	/** Silentモード Packageを保存するか */
 	public static final String PROP_SAVE_PACKAGE = "savePackage";
+	/** Silentモード Entityメタデータのプロパティ整合性チェック時の確認メッセージを出すかどうか */
+	public static final String PROP_META_OUTPUT_CHECK_RESULT_CONFIRM = "meta.outputCheckResultConfirm";
 
 	// テナントID
 	private int tenantId;
@@ -70,6 +72,9 @@ public class PackageImportParameter {
 
 	//Packageを保存するか
 	private boolean savePackage = true;
+
+	// Entityメタデータのプロパティ整合性チェック時の確認メッセージを出すかどうか
+	private boolean outputCheckResultConfirm;
 
 	//Importファイル(内部用)
 	private File importFile;
@@ -160,6 +165,14 @@ public class PackageImportParameter {
 
 	public void setPackInfo(PackageInfo packInfo) {
 		this.packInfo = packInfo;
+	}
+
+	public boolean isOutputCheckResultConfirm() {
+		return this.outputCheckResultConfirm;
+	}
+
+	public void setOutputCheckResultConfirm(boolean outputCheckResultConfirm) {
+		this.outputCheckResultConfirm = outputCheckResultConfirm;
 	}
 
 	public EntityDataImportCondition getEntityImportCondition() {

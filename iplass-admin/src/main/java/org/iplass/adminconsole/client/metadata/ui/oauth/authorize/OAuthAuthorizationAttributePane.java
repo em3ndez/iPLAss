@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -108,7 +108,7 @@ public class OAuthAuthorizationAttributePane extends VLayout implements Editable
 		//入力部分
 		form = new DynamicForm();
 		form.setWidth100();
-		form.setNumCols(5);	//間延びしないように最後に１つ余分に作成
+		form.setNumCols(5); //間延びしないように最後に１つ余分に作成
 		form.setColWidths(100, 300, 100, 300, "*");
 		form.setMargin(5);
 
@@ -119,7 +119,8 @@ public class OAuthAuthorizationAttributePane extends VLayout implements Editable
 		txaAvailableRoles.setBrowserSpellCheck(false);
 		txaAvailableRoles.setColSpan(3);
 		txaAvailableRoles.setStartRow(true);
-		txaAvailableRoles.setTooltip(SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_metadata_oauth_authorize_OAuthAuthorizationAttributePane_availableRoles")));
+		txaAvailableRoles.setTooltip(SmartGWTUtil
+				.getHoverString(AdminClientMessageUtil.getString("ui_metadata_oauth_authorize_OAuthAuthorizationAttributePane_availableRoles")));
 
 		gridScopes = new ScopeGridPane();
 		CanvasItem canvasScopes = new CanvasItem();

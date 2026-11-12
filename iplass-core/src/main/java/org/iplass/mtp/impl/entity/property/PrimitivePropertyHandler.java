@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,14 +26,14 @@ import org.iplass.mtp.entity.definition.PropertyDefinitionType;
 import org.iplass.mtp.impl.entity.EntityContext;
 import org.iplass.mtp.impl.entity.MetaEntity;
 
-
 public class PrimitivePropertyHandler extends PropertyHandler {
 
 	private Object typeSpecificRuntime;
 
 	public PrimitivePropertyHandler(MetaPrimitiveProperty metaData, MetaEntity metaEntity) {
 		super(metaData, metaEntity);
-		typeSpecificRuntime = metaData.getType().createRuntime(metaData, metaEntity);
+		typeSpecificRuntime = metaData.getType()
+				.createRuntime(metaData, metaEntity);
 	}
 
 	@Override
@@ -47,12 +47,15 @@ public class PrimitivePropertyHandler extends PropertyHandler {
 
 	@Override
 	public PropertyDefinitionType getEnumType() {
-		return getMetaData().getType().getEnumType();
+		return getMetaData().getType()
+				.getEnumType();
 	}
 
 	@Override
 	public Object[] newArrayInstance(int size, EntityContext ec) {
-		return (Object[]) Array.newInstance(getMetaData().getType().storeType(), size);
+		return (Object[]) Array.newInstance(getMetaData().getType()
+				.getEnumType()
+				.getJavaType(), size);
 	}
 
 }

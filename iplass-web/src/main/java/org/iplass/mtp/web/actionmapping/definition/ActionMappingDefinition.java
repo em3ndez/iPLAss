@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,14 +23,14 @@ package org.iplass.mtp.web.actionmapping.definition;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.iplass.adminconsole.annotation.MultiLang;
 import org.iplass.mtp.command.definition.config.CommandConfig;
 import org.iplass.mtp.definition.Definition;
 import org.iplass.mtp.definition.LocalizedStringDefinition;
 import org.iplass.mtp.web.actionmapping.definition.cache.CacheCriteriaDefinition;
 import org.iplass.mtp.web.actionmapping.definition.result.ResultDefinition;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * ActionMappingの定義です。
@@ -46,7 +46,13 @@ public class ActionMappingDefinition implements Definition {
 	private static final long serialVersionUID = -8553251729036721789L;
 
 	private String name;
-	@MultiLang(itemNameGetter = "getName", itemKey = "displayName", itemGetter = "getDisplayName", itemSetter = "setDisplayName", multiLangGetter = "getLocalizedDisplayNameList", multiLangSetter = "setLocalizedDisplayNameList")
+	@MultiLang(
+			itemNameGetter = "getName",
+			itemKey = "displayName",
+			itemGetter = "getDisplayName",
+			itemSetter = "setDisplayName",
+			multiLangGetter = "getLocalizedDisplayNameList",
+			multiLangSetter = "setLocalizedDisplayNameList")
 	private String displayName;
 	private List<LocalizedStringDefinition> localizedDisplayNameList;
 	private String description;
@@ -67,9 +73,9 @@ public class ActionMappingDefinition implements Definition {
 	private boolean isParts;
 
 	/** このActionMappingで処理されるCommand,Templateを特権（セキュリティ制約を受けない）にて処理するかどうか。デフォルトはfalse。 */
-	private boolean isPrivilaged;
-	
-	/** このActionの呼び出しをセキュリティ設定によらず呼び出し可能にする場合は、trueを設定。 isPrivilagedとの違いは、Entityの操作などにおいては、セキュリティ制約を受ける。デフォルトはfalse。*/
+	private boolean isPrivileged;
+
+	/** このActionの呼び出しをセキュリティ設定によらず呼び出し可能にする場合は、trueを設定。 isPrivilegedとの違いは、Entityの操作などにおいては、セキュリティ制約を受ける。デフォルトはfalse。*/
 	private boolean isPublicAction;
 
 	/**
@@ -98,7 +104,7 @@ public class ActionMappingDefinition implements Definition {
 
 	/** sessionにて同期を行うか否か */
 	private boolean synchronizeOnSession;
-	
+
 	/** 許可するHTTP Method。未指定の場合は、すべて許可。 */
 	private HttpMethodType[] allowMethod;
 
@@ -167,7 +173,7 @@ public class ActionMappingDefinition implements Definition {
 	public void setNeedTrustedAuthenticate(boolean needTrustedAuthenticate) {
 		this.needTrustedAuthenticate = needTrustedAuthenticate;
 	}
-	
+
 	/**
 	 * @see #setAllowMethod(HttpMethodType[])
 	 * @return
@@ -195,7 +201,7 @@ public class ActionMappingDefinition implements Definition {
 
 	/**
 	 * このActionの呼び出しをセキュリティ設定によらず呼び出し可能にする場合は、trueを設定。
-	 * isPrivilagedとの違いは、Entityの操作などにおいては、セキュリティ制約を受ける。
+	 * isPrivilegedとの違いは、Entityの操作などにおいては、セキュリティ制約を受ける。
 	 * デフォルトはfalse。
 	 * 
 	 * @param isPublicAction
@@ -348,21 +354,42 @@ public class ActionMappingDefinition implements Definition {
 	/**
 	 * @see #setPrivilaged(boolean)
 	 * @return
+	 * @deprecated {@link #isPrivileged()} を使用してください。
 	 */
+	@Deprecated
 	public boolean isPrivilaged() {
-		return isPrivilaged;
+		return isPrivileged;
 	}
 
 	/**
 	 * このActionMappingで処理されるCommand,Templateを特権（セキュリティ制約を受けない）にて処理するかどうかを設定。
 	 * デフォルトはfalse。
 	 *
-	 * @param isPrivilaged
+	 * @param isPrivileged
+	 * @deprecated {@link #setPrivileged(boolean)} を使用してください。 
 	 */
-	public void setPrivilaged(boolean isPrivilaged) {
-		this.isPrivilaged = isPrivilaged;
+	@Deprecated
+	public void setPrivilaged(boolean isPrivileged) {
+		this.isPrivileged = isPrivileged;
 	}
 
+	/**
+	 * @see #setPrivileged(boolean)
+	 * @return
+	 */
+	public boolean isPrivileged() {
+		return isPrivileged;
+	}
+
+	/**
+	 * このActionMappingで処理されるCommand,Templateを特権（セキュリティ制約を受けない）にて処理するかどうかを設定。
+	 * デフォルトはfalse。
+	 *
+	 * @param isPrivileged
+	 */
+	public void setPrivileged(boolean isPrivileged) {
+		this.isPrivileged = isPrivileged;
+	}
 
 	/**
 	 * @return commandConfig

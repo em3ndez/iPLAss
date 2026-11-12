@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -19,15 +19,15 @@
  */
 package org.iplass.mtp.impl.validation.bean;
 
-import javax.validation.MessageInterpolator;
-
 import org.iplass.mtp.impl.core.TenantContext;
 import org.iplass.mtp.impl.core.TenantResource;
 import org.iplass.mtp.impl.validation.ValidationService;
 import org.iplass.mtp.spi.ServiceRegistry;
 
+import jakarta.validation.MessageInterpolator;
+
 public class BeanValidationResource implements TenantResource {
-	
+
 	private MessageInterpolator messageInterpolator;
 
 	public MessageInterpolator getMessageInterpolator() {
@@ -36,7 +36,8 @@ public class BeanValidationResource implements TenantResource {
 
 	@Override
 	public void init(TenantContext tenantContext) {
-		ValidationService vs = ServiceRegistry.getRegistry().getService(ValidationService.class);
+		ValidationService vs = ServiceRegistry.getRegistry()
+				.getService(ValidationService.class);
 		BeanValidationConfig bvConfig = vs.getBeanValidation();
 		if (bvConfig != null) {
 			MessageInterpolator mi = bvConfig.getMessageInterpolator();

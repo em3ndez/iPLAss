@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright 2011 DENTSU SOKEN INC. All Rights Reserved.
  */
 
 package org.iplass.mtp.tools.batch.cleaner;
@@ -11,6 +11,7 @@ import org.iplass.mtp.impl.core.TenantContextService;
 import org.iplass.mtp.impl.lob.LobHandler;
 import org.iplass.mtp.impl.tools.tenant.TenantInfo;
 import org.iplass.mtp.spi.ServiceRegistry;
+import org.iplass.mtp.tools.batch.MtpBatchResourceDisposer;
 import org.iplass.mtp.tools.batch.MtpSilentBatch;
 import org.iplass.mtp.transaction.Transaction;
 import org.iplass.mtp.util.StringUtil;
@@ -21,7 +22,8 @@ public class TempLobCleaner extends MtpSilentBatch {
 
 	private static Logger logger = LoggerFactory.getLogger(TempLobCleaner.class);
 
-	private static TenantContextService tenantContextService = ServiceRegistry.getRegistry().getService(TenantContextService.class);
+	private static TenantContextService tenantContextService = ServiceRegistry.getRegistry()
+			.getService(TenantContextService.class);
 
 	private int tenantId;
 
@@ -39,15 +41,21 @@ public class TempLobCleaner extends MtpSilentBatch {
 		if (args != null && args.length > 0 && StringUtil.isNotEmpty(args[0])) {
 			tenantId = Integer.parseInt(args[0]);
 		}
-		if (tenantId >= 0) {
-			(new TempLobCleaner(tenantId)).clean();
-		} else {
-			List<TenantInfo> tenants = getValidTenantInfoList();
-			if (tenants != null) {
-				for (TenantInfo t: tenants) {
-					(new TempLobCleaner(t.getId())).clean();
+
+		try {
+			if (tenantId >= 0) {
+				(new TempLobCleaner(tenantId)).clean();
+			} else {
+				List<TenantInfo> tenants = getValidTenantInfoList();
+				if (tenants != null) {
+					for (TenantInfo t : tenants) {
+						(new TempLobCleaner(t.getId())).clean();
+					}
 				}
 			}
+		} finally {
+			// リソース破棄
+			MtpBatchResourceDisposer.disposeResource();
 		}
 	}
 
@@ -80,12 +88,12 @@ public class TempLobCleaner extends MtpSilentBatch {
 
 				//テンポラリのBinaryReference削除
 				Transaction.required(t -> {
-						LobHandler.cleanTemporaryBinaryData();
+					LobHandler.cleanTemporaryBinaryData();
 				});
 
 				//参照カウント0のバイナリデータ削除
 				Transaction.required(t -> {
-						LobHandler.cleanLobData();
+					LobHandler.cleanLobData();
 				});
 
 				setSuccess(true);
@@ -109,7 +117,7 @@ public class TempLobCleaner extends MtpSilentBatch {
 	 * @return tenantId
 	 */
 	public int getTenantId() {
-	    return tenantId;
+		return tenantId;
 	}
 
 	/**
@@ -117,7 +125,7 @@ public class TempLobCleaner extends MtpSilentBatch {
 	 * @param tenantId tenantId
 	 */
 	public void setTenantId(int tenantId) {
-	    this.tenantId = tenantId;
+		this.tenantId = tenantId;
 	}
 
 	@Override

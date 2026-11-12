@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -38,33 +38,33 @@ import org.slf4j.LoggerFactory;
 
 /**
  * LDAP使用時の認証プロバイダー<br>
- * LDAPで保持しているユーザ、パスワード情報を利用して認証する
+ * LDAPで保持しているユーザー、パスワード情報を利用して認証する
  *
  * @author 藤田　義弘
  *
  */
 public class LdapAuthenticationProvider extends AuthenticationProviderBase {
-	
+
 	public static final String USERNAME_TOKEN = "${userName}";
 	public static final String TENANTNAME_TOKEN = "${tenantName}";
 	public static final String USERDN_TOKEN = "${userDn}";
-    
+
 	private static Logger logger = LoggerFactory.getLogger(LdapAuthenticationProvider.class);
-	
+
 	private Map<String, Object> jndiEnv;
-	
+
 	private boolean getUser;
 	private boolean getGroup;
 	private boolean groupAsTenant;
-	
+
 	private String userBaseDn;
 	private String groupBaseDn;
-	
+
 	private String userDn;
 	private String userFilter;
 	private String uniqueKeyAttribute;
 	private String[] userAttribute;
-	
+
 	private String groupFilter;
 	private String groupCodeAttribute;
 	private String tenantGroupCode;
@@ -80,7 +80,7 @@ public class LdapAuthenticationProvider extends AuthenticationProviderBase {
 	public void logout(AccountHandle user) {
 		actual.logout(user);
 	}
-	
+
 	@Override
 	public Class<? extends Credential> getCredentialType() {
 		return IdPasswordCredential.class;
@@ -90,7 +90,7 @@ public class LdapAuthenticationProvider extends AuthenticationProviderBase {
 	public void destroyed() {
 		actual.destroyed();
 	}
-	
+
 	@Override
 	protected Class<? extends AccountHandle> getAccountHandleClassForTrust() {
 		return LdapAccountHandle.class;
@@ -99,23 +99,23 @@ public class LdapAuthenticationProvider extends AuthenticationProviderBase {
 	@Override
 	public void inited(AuthService s, Config config) {
 		boolean userEntityResolverIsNull = getUserEntityResolver() == null;
-		
+
 		super.inited(s, config);
-		
+
 		if (userEntityResolverIsNull) {
 			//DefaultUserEntityResolverのkeyをaccountIdに。
 			logger.warn("userEntityResolver not specified, so use DefaultUserEntityResolver and User's accountId as unmodifiableUniqueKeyProperty");
 			((DefaultUserEntityResolver) getUserEntityResolver()).setUnmodifiableUniqueKeyProperty(User.ACCOUNT_ID);
 		}
-		
+
 		if (jndiEnv != null) {
 			if (jndiEnv.get(Context.INITIAL_CONTEXT_FACTORY) == null) {
 				jndiEnv.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
 			}
 		}
-		
+
 		actual = new NeoLdapAuthStrategy(this);
-		
+
 	}
 
 	@Override
@@ -123,7 +123,7 @@ public class LdapAuthenticationProvider extends AuthenticationProviderBase {
 		return NO_UPDATABLE_AMM;
 	}
 
-    public Map<String, Object> getJndiEnv() {
+	public Map<String, Object> getJndiEnv() {
 		return jndiEnv;
 	}
 

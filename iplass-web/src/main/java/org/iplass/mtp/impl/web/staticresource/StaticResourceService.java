@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -38,9 +38,11 @@ public class StaticResourceService extends AbstractTypedMetaDataService<MetaStat
 		public TypeMap() {
 			super(getFixedPath(), MetaStaticResource.class, StaticResourceDefinition.class);
 		}
+
 		@Override
 		public TypedDefinitionManager<StaticResourceDefinition> typedDefinitionManager() {
-			return ManagerLocator.getInstance().getManager(StaticResourceDefinitionManager.class);
+			return ManagerLocator.getInstance()
+					.getManager(StaticResourceDefinitionManager.class);
 		}
 	}
 

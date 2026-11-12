@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,7 +26,7 @@ package org.iplass.mtp.transaction;
  *
  */
 final class NoTransaction implements Transaction {
-	
+
 	NoTransaction() {
 	}
 
@@ -88,7 +88,8 @@ final class NoTransaction implements Transaction {
 
 	@Override
 	public int hashCode() {
-		return NoTransaction.class.getName().hashCode();
+		return NoTransaction.class.getName()
+				.hashCode();
 	}
 
 }

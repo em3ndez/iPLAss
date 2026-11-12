@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,7 +26,7 @@ import org.w3c.dom.Document;
 
 public class NoopDomHandler implements DomHandler {
 	private List<String> emptyRef = new ArrayList<String>();
-	
+
 	@Override
 	public void putUnescapedExtFiles(Document metaDataDoc) {
 	}

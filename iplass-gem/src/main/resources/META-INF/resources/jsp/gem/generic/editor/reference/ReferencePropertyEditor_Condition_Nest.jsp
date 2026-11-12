@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -59,7 +59,7 @@
 
 	Boolean showProperty = (Boolean) request.getAttribute(Constants.EDITOR_REF_SHOW_PROPERTY);
 	if (showProperty == null) showProperty = true;
-	
+
 	//HIDDENの場合は、UseNestConditionWithPropertyが指定されていても不可
 	boolean useNestCondition = editor.getDisplayType() != ReferenceDisplayType.HIDDEN && editor.isUseNestConditionWithProperty();
 
@@ -174,7 +174,7 @@ $(function() {
 	if (showNest || useNestCondition) {
 		int i = 0;
 		for (NestProperty np : editor.getNestProperties()) {
-			PropertyDefinition _pd = ed.getProperty(np.getPropertyName());
+			PropertyDefinition _pd = EntityViewUtil.getNestTablePropertyDefinition(np, ed);
 			if (isDispProperty(np)) {
 				String nestPropStyle = StringUtil.isNotBlank(nestStyle) ? nestStyle + "_cond" + i : "";
 				String displayLabel = TemplateUtil.getMultilingualString(np.getDisplayLabel(), np.getLocalizedDisplayLabelList());
@@ -200,7 +200,7 @@ $(function() {
 				}
 %>
 </th>
-<td id="id_td_<c:out value="<%=idName %>"/>_<c:out value="<%=np.getPropertyName() %>"/>" class="<c:out value="<%=nestStyle%>" />">
+<td id="id_td_<c:out value="<%=idName %>"/>_<c:out value="<%=np.getPropertyName() %>"/>" class="<c:out value="<%=nestStyle%>" /> property-data">
 <%
 				PropertyEditor npEditor = np.getEditor();
 				npEditor.setPropertyName(editor.getPropertyName() + "." + _pd.getName());
@@ -208,7 +208,8 @@ $(function() {
 				if (path != null) {
 					request.setAttribute(Constants.EDITOR_STYLE, nestPropStyle);
 					request.setAttribute(Constants.EDITOR_REQUIRED, np.isRequiredNormal());
-					request.setAttribute(Constants.EDITOR_DISPLAY_LABEL, np.getDisplayLabel());
+					request.setAttribute(Constants.EDITOR_DISPLAY_LABEL, displayLabel);
+					request.setAttribute(Constants.EDITOR_REF_NEST_PROP_NAME, propName);
 					request.setAttribute(Constants.EDITOR_EDITOR, npEditor);
 					request.setAttribute(Constants.EDITOR_PROPERTY_DEFINITION, _pd);
 					if (defaultSearchCond != null) {
@@ -226,6 +227,7 @@ $(function() {
 					request.removeAttribute(Constants.EDITOR_STYLE);
 					request.removeAttribute(Constants.EDITOR_REQUIRED);
 					request.removeAttribute(Constants.EDITOR_DISPLAY_LABEL);
+					request.removeAttribute(Constants.EDITOR_REF_NEST_PROP_NAME);
 					request.removeAttribute(Constants.EDITOR_EDITOR);
 					request.removeAttribute(Constants.EDITOR_PROPERTY_DEFINITION);
 					request.removeAttribute(Constants.EDITOR_PROP_VALUE);

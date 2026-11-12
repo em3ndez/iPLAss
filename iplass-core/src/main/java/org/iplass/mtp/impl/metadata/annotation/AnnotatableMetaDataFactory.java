@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,15 +23,14 @@ package org.iplass.mtp.impl.metadata.annotation;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-
 public interface AnnotatableMetaDataFactory<A extends Annotation, C> {
 	public static final String DEFAULT = "##default";
 
 	public Map<String, AnnotateMetaDataEntry> toMetaData(Class<C> annotatedClass);
-	
+
 	public Class<C> getAnnotatedClass();
-	
+
 	public Class<A> getAnnotationClass();
-	
+
 //	public String getContextPath();
 }

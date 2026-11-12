@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,24 +28,31 @@ public class MetaLocalizedNotification implements MetaData {
 	private String localeName;
 	private String title;
 	private String body;
+
 	public String getLocaleName() {
 		return localeName;
 	}
+
 	public void setLocaleName(String localeName) {
 		this.localeName = localeName;
 	}
+
 	public String getTitle() {
 		return title;
 	}
+
 	public void setTitle(String title) {
 		this.title = title;
 	}
+
 	public String getBody() {
 		return body;
 	}
+
 	public void setBody(String body) {
 		this.body = body;
 	}
+
 	@Override
 	public MetaLocalizedNotification copy() {
 		return ObjectUtil.deepCopy(this);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 
 import org.iplass.mtp.entity.Entity;
 import org.iplass.mtp.entity.query.GroupBy;
@@ -62,6 +63,19 @@ public class ObjStoreSearchSql extends QuerySqlHandler {
 	public ToSqlResult query(EntityHandler metaData,
 			EntityContext context,
 			Query query, boolean withLock, boolean treatBindHint, Integer stringTypeLengthOnQuery, RdbAdapter rdbAdaptor) {
+		return queryImpl(metaData, context, query, treatBindHint, stringTypeLengthOnQuery, rdbAdaptor,
+				sql -> {
+					if (withLock) {
+						return rdbAdaptor.createRowLockSql(sql.toString());
+					} else {
+						return sql;
+					}
+				});
+	}
+
+	private ToSqlResult queryImpl(EntityHandler metaData,
+			EntityContext context,
+			Query query, boolean treatBindHint, Integer stringTypeLengthOnQuery, RdbAdapter rdbAdaptor, UnaryOperator<CharSequence> modifiier) {
 
 		long time = 0;
 		if (logger.isTraceEnabled()) {
@@ -80,9 +94,14 @@ public class ObjStoreSearchSql extends QuerySqlHandler {
 				GroupByNoBinder noBinder = new GroupByNoBinder();
 				noBinder.modify(query);
 				boolean hasNoBindHint = false;
-				if (query.select().getHintComment() != null
-						&& query.select().getHintComment().getHintList() != null) {
-					for (Hint h: query.select().getHintComment().getHintList()) {
+				if (query.select()
+						.getHintComment() != null
+						&& query.select()
+								.getHintComment()
+								.getHintList() != null) {
+					for (Hint h : query.select()
+							.getHintComment()
+							.getHintList()) {
 						if (h instanceof NoBindHint) {
 							hasNoBindHint = true;
 							break;
@@ -90,19 +109,17 @@ public class ObjStoreSearchSql extends QuerySqlHandler {
 					}
 				}
 				if (!hasNoBindHint) {
-					query.select().hintComment().add(new BindHint());
+					query.select()
+							.hintComment()
+							.add(new BindHint());
 				}
 			}
 			query.accept(converter);
-			if (withLock) {
-				return new ToSqlResult(rdbAdaptor.createRowLockSql(sqlContext.toSelectSql()), sqlContext.toOrderedBindVariables(true));
-			} else {
-				return new ToSqlResult(sqlContext.toSelectSql(), sqlContext.toOrderedBindVariables(true));
-			}
+			return new ToSqlResult(sqlContext.sqlEnded(modifiier.apply(sqlContext.toSelectSql())), sqlContext.toOrderedBindVariables(true));
 
 		} finally {
 			if (logger.isTraceEnabled()) {
-				logger.trace("translate EQL to SQL:time=" + ((double) (System.nanoTime() - time)/1000000) + "ms.");
+				logger.trace("translate EQL to SQL:time=" + ((double) (System.nanoTime() - time) / 1000000) + "ms.");
 			}
 		}
 	}
@@ -120,7 +137,7 @@ public class ObjStoreSearchSql extends QuerySqlHandler {
 		public boolean visit(GroupBy groupBy) {
 			if (groupBy.getGroupingFieldList() != null) {
 				initSet();
-				for (ValueExpression ve: groupBy.getGroupingFieldList()) {
+				for (ValueExpression ve : groupBy.getGroupingFieldList()) {
 					groupBySet.add(ve);
 				}
 			}
@@ -137,7 +154,7 @@ public class ObjStoreSearchSql extends QuerySqlHandler {
 		public boolean visit(PartitionBy partitionBy) {
 			if (partitionBy.getPartitionFieldList() != null) {
 				initSet();
-				for (ValueExpression ve: partitionBy.getPartitionFieldList()) {
+				for (ValueExpression ve : partitionBy.getPartitionFieldList()) {
 					groupBySet.add(ve);
 				}
 			}
@@ -163,7 +180,7 @@ public class ObjStoreSearchSql extends QuerySqlHandler {
 		public void modify(Query query) {
 			target = new ArrayList<>();
 			query.accept(this);
-			for (Literal l: target) {
+			for (Literal l : target) {
 				l.setBindable(false);
 			}
 		}
@@ -180,10 +197,12 @@ public class ObjStoreSearchSql extends QuerySqlHandler {
 
 			GroupByCollector prevCollector = collector;
 
-			subQuery.getQuery().accept(this);
+			subQuery.getQuery()
+					.accept(this);
 
 			if (subQuery.getOn() != null) {
-				subQuery.getOn().accept(this);
+				subQuery.getOn()
+						.accept(this);
 			}
 
 			collector = prevCollector;
@@ -193,13 +212,14 @@ public class ObjStoreSearchSql extends QuerySqlHandler {
 
 		@Override
 		public boolean visit(OrderBy orderBy) {
-			for (SortSpec ss: orderBy.getSortSpecList()) {
+			for (SortSpec ss : orderBy.getSortSpecList()) {
 				boolean prevNoBind = noBind;
 				if (collector.groupBySet != null
 						&& collector.groupBySet.contains(ss.getSortKey())) {
 					noBind = true;
 				}
-				ss.getSortKey().accept(this);
+				ss.getSortKey()
+						.accept(this);
 				noBind = prevNoBind;
 			}
 			return false;
@@ -211,7 +231,8 @@ public class ObjStoreSearchSql extends QuerySqlHandler {
 			noBind = true;
 
 			if (having.getCondition() != null) {
-				having.getCondition().accept(this);
+				having.getCondition()
+						.accept(this);
 			}
 
 			noBind = prevNoBind;
@@ -220,7 +241,7 @@ public class ObjStoreSearchSql extends QuerySqlHandler {
 
 		@Override
 		public boolean visit(Select select) {
-			for (ValueExpression ve: select.getSelectValues()) {
+			for (ValueExpression ve : select.getSelectValues()) {
 				boolean prevNoBind = noBind;
 				if (collector.groupBySet != null
 						&& collector.groupBySet.contains(ve)) {
@@ -238,7 +259,7 @@ public class ObjStoreSearchSql extends QuerySqlHandler {
 			noBind = true;
 
 			if (groupBy.getGroupingFieldList() != null) {
-				for (ValueExpression ve: groupBy.getGroupingFieldList()) {
+				for (ValueExpression ve : groupBy.getGroupingFieldList()) {
 					ve.accept(this);
 				}
 			}
@@ -254,7 +275,7 @@ public class ObjStoreSearchSql extends QuerySqlHandler {
 			noBind = true;
 
 			if (partitionBy.getPartitionFieldList() != null) {
-				for (ValueExpression ve: partitionBy.getPartitionFieldList()) {
+				for (ValueExpression ve : partitionBy.getPartitionFieldList()) {
 					ve.accept(this);
 				}
 			}
@@ -270,7 +291,7 @@ public class ObjStoreSearchSql extends QuerySqlHandler {
 			noBind = true;
 
 			if (orderBy.getSortSpecList() != null) {
-				for (WindowSortSpec wss: orderBy.getSortSpecList()) {
+				for (WindowSortSpec wss : orderBy.getSortSpecList()) {
 					wss.accept(this);
 				}
 			}
@@ -296,11 +317,11 @@ public class ObjStoreSearchSql extends QuerySqlHandler {
 		Query subQuery = query.copy();
 		subQuery.setOrderBy(null);
 
-		ToSqlResult res = query(metaData, context, subQuery, false, enableBindVariable, null, rdbAdaptor);
-		res.sql = "SELECT COUNT(*) FROM (" + res.sql + ") CT";
+		UnaryOperator<CharSequence> sqlModifiier = rdbAdaptor.countQuery(subQuery);
+
+		ToSqlResult res = queryImpl(metaData, context, subQuery, enableBindVariable, null, rdbAdaptor, sqlModifiier);
 		return res;
 	}
-
 
 	public String checkExistsSql(int tenantId, EntityHandler eh, Entity entity, RdbAdapter rdbAdaptor) {
 		StringBuilder sb = new StringBuilder();
@@ -313,7 +334,8 @@ public class ObjStoreSearchSql extends QuerySqlHandler {
 
 	public void checkExistsParameter(PreparedStatement stmt, int tenantId, EntityHandler eh, Entity entity) throws SQLException {
 		stmt.setInt(1, tenantId);
-		stmt.setString(2, eh.getMetaData().getId());
+		stmt.setString(2, eh.getMetaData()
+				.getId());
 		stmt.setString(3, entity.getOid());
 		if (entity.getVersion() != null) {
 			stmt.setLong(4, entity.getVersion());
@@ -326,31 +348,46 @@ public class ObjStoreSearchSql extends QuerySqlHandler {
 		StringBuilder sb = new StringBuilder();
 		sb.append("SELECT " + ObjStoreTable.OBJ_ID + "," + ObjStoreTable.OBJ_VER + " FROM ");
 		sb.append(((GRdbEntityStoreRuntime) eh.getEntityStoreRuntime()).OBJ_STORE());
-		sb.append(" WHERE " + ObjStoreTable.TENANT_ID + "=").append(tenantId);
-		sb.append(" AND " + ObjStoreTable.OBJ_DEF_ID + "='").append(rdbAdaptor.sanitize(eh.getMetaData().getId())).append("'");
+		sb.append(" WHERE " + ObjStoreTable.TENANT_ID + "=")
+				.append(tenantId);
+		sb.append(" AND " + ObjStoreTable.OBJ_DEF_ID + "='")
+				.append(rdbAdaptor.sanitize(eh.getMetaData()
+						.getId()))
+				.append("'");
 		if (rdbAdaptor.isSupportRowValueConstructor()) {
 			sb.append(" AND (" + ObjStoreTable.OBJ_ID + "," + ObjStoreTable.OBJ_VER + "," + ObjStoreTable.PG_NO + ") IN (");
 			for (int i = 0; i < keys.size(); i++) {
 				if (i != 0) {
 					sb.append(",");
 				}
-				sb.append("('").append(rdbAdaptor.sanitize((String) keys.get(i)[0])).append("',").append(keys.get(i)[1]).append(",0)");
+				sb.append("('")
+						.append(rdbAdaptor.sanitize((String) keys.get(i)[0]))
+						.append("',")
+						.append(keys.get(i)[1])
+						.append(",0)");
 			}
 			sb.append(")");
 		} else {
-			sb.append(" AND ");
+			sb.append(" AND (");
 			for (int i = 0; i < keys.size(); i++) {
 				if (i != 0) {
 					sb.append(" OR ");
 				}
 				sb.append("(");
-				sb.append(ObjStoreTable.OBJ_ID).append("='").append(rdbAdaptor.sanitize((String) keys.get(i)[0])).append("'");
-				sb.append(" OR ");
-				sb.append(ObjStoreTable.OBJ_VER).append("=").append(keys.get(i)[1]);
-				sb.append(" OR ");
-				sb.append(ObjStoreTable.PG_NO).append("=0");
+				sb.append(ObjStoreTable.OBJ_ID)
+						.append("='")
+						.append(rdbAdaptor.sanitize((String) keys.get(i)[0]))
+						.append("'");
+				sb.append(" AND ");
+				sb.append(ObjStoreTable.OBJ_VER)
+						.append("=")
+						.append(keys.get(i)[1]);
+				sb.append(" AND ");
+				sb.append(ObjStoreTable.PG_NO)
+						.append("=0");
 				sb.append(")");
 			}
+			sb.append(")");
 		}
 
 		return sb.toString();

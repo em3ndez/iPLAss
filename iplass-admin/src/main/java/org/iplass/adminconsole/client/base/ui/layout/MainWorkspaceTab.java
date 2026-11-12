@@ -1,19 +1,19 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
- * 
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
+ *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
@@ -85,6 +85,7 @@ public class MainWorkspaceTab extends TabSet {
 		// メニュー項目1(選択タブ削除)
 		MenuItem singleDelItem = new MenuItem(AdminClientMessageUtil.getString("ui_MainPane_close"), "");
 		singleDelItem.addClickHandler(new ClickHandler() {
+			@Override
 			public void onClick(MenuItemClickEvent event) {
 				removeTab(getSelectedTab());
 			}
@@ -93,6 +94,7 @@ public class MainWorkspaceTab extends TabSet {
 		// メニュー項目2(選択タブ以外のタブを削除)
 		MenuItem atherDelItem = new MenuItem(AdminClientMessageUtil.getString("ui_MainPane_closeOther"), "");
 		atherDelItem.addClickHandler(new ClickHandler() {
+			@Override
 			public void onClick(MenuItemClickEvent event) {
 				String tabId = getSelectedTab().getID();
 				for (Tab tab : getTabs()) {
@@ -106,6 +108,7 @@ public class MainWorkspaceTab extends TabSet {
 		// メニュー項目3(全タブ削除)
 		MenuItem allDelItem = new MenuItem(AdminClientMessageUtil.getString("ui_MainPane_closeAll"), "");
 		allDelItem.addClickHandler(new ClickHandler() {
+			@Override
 			public void onClick(MenuItemClickEvent event) {
 				for (Tab tab : getTabs()) {
 					removeTab(tab);
@@ -152,6 +155,18 @@ public class MainWorkspaceTab extends TabSet {
 	}
 
 	/**
+	 * <p>タブを選択します。</p>
+	 * @param name
+	 * @param tabSubName
+	 */
+	public void selectTab(String name, String tabSubName) {
+		Tab tab = getTab(getTabID(name, tabSubName));
+		if (tab != null) {
+			selectTab(tab);
+		}
+	}
+
+	/**
 	 * <p>指定の位置にタブを追加します。</p>
 	 *
 	 * @param name        名前
@@ -186,16 +201,16 @@ public class MainWorkspaceTab extends TabSet {
 	 */
 	public void removeTab(String name, String tabSubName) {
 		Tab tab = getTab(getTabID(name, tabSubName));
-		if(tab != null) {
+		if (tab != null) {
 			removeTab(tab);
 		}
 	}
 
-    @Override
+	@Override
 	public void removeTab(final Tab tab) {
 		if (fireContentsClosed(tab)) {
 
-			SC.ask(AdminClientMessageUtil.getString("ui_MainPane_closeConfirm") , new BooleanCallback() {
+			SC.ask(AdminClientMessageUtil.getString("ui_MainPane_closeConfirm"), new BooleanCallback() {
 				@Override
 				public void execute(Boolean value) {
 					if (value) {
@@ -205,13 +220,13 @@ public class MainWorkspaceTab extends TabSet {
 			});
 
 		} else {
-	    	super.removeTab(tab);
+			super.removeTab(tab);
 		}
-    }
+	}
 
-    private void confirmRemoveTab(Tab tab) {
-    	super.removeTab(tab);
-    }
+	private void confirmRemoveTab(Tab tab) {
+		super.removeTab(tab);
+	}
 
 	/**
 	 * タブの生成
@@ -284,7 +299,9 @@ public class MainWorkspaceTab extends TabSet {
 	 * @return タブID
 	 */
 	public String getTabID(String defName, String tabSubName) {
-		return (SmartGWTUtil.isNotEmpty(tabSubName) ? defName + tabSubName : defName).replace(".", "_").replace("/", "_").replace("-", "_");
+		return (SmartGWTUtil.isNotEmpty(tabSubName) ? defName + tabSubName : defName).replace(".", "_")
+				.replace("/", "_")
+				.replace("-", "_");
 	}
 
 	/**
@@ -316,7 +333,7 @@ public class MainWorkspaceTab extends TabSet {
 	 */
 	public void addWorkspaceContentsStateChangeHandler(ContentStateChangeHandler handler) {
 		if (handlers == null) {
-			handlers = new ArrayList<ContentStateChangeHandler>();
+			handlers = new ArrayList<>();
 		}
 		handlers.add(handler);
 	}

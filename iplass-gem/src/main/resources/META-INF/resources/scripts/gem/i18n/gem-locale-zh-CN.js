@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,6 +24,11 @@ scriptContext.gem.locale.common.name = "名称";
 scriptContext.gem.locale.common.numcheckMsg = "请输入数值。";
 scriptContext.gem.locale.common.pleaseSelect = "请选择";
 scriptContext.gem.locale.common.requiredMsg = "请输入{0}。";
+scriptContext.gem.locale.common.numFormatErrorMsg = "请输入一个数字 {0}。";
+scriptContext.gem.locale.common.dateFormatErrorMsg = "请输入正确的日期 {0}。 ({1})";
+scriptContext.gem.locale.common.timeFormatErrorMsg = "请输入正确的时间 {0}。 ({1})";
+scriptContext.gem.locale.common.timestampFormatErrorMsg = "请输入正确的日期或时间 {0}。 ({1})";
+scriptContext.gem.locale.common.maxOfDetailSearchItemsWarningMsg = "搜索条件已达到最大数量，无法再添加。";
 
 scriptContext.gem.locale.apendCategory("binary");
 scriptContext.gem.locale.binary.deleteLink = "删除";
@@ -34,6 +39,7 @@ scriptContext.gem.locale.binary.notVewFlash = "不能显示Flash。";
 scriptContext.gem.locale.apendCategory("date");
 scriptContext.gem.locale.date.datepickerBtn = "从日历输入";
 scriptContext.gem.locale.date.timepickerBtn = "从滑动条输入";
+scriptContext.gem.locale.date.pickerClearBtn = "清除";
 scriptContext.gem.locale.date.validateDateErrMsg = "请输入正确的日期。 ({0})";
 scriptContext.gem.locale.date.validateTimeErrMsg = "请输入正确的时间。 ({0})";
 scriptContext.gem.locale.date.validateTimestampErrMsg = "请输入正确的日期或时间。 ({0})";
@@ -43,6 +49,7 @@ scriptContext.gem.locale.reference.deleteBtn = "删除";
 scriptContext.gem.locale.reference.deleteLabel = "删除";
 scriptContext.gem.locale.reference.detail = "详细";
 scriptContext.gem.locale.reference.duplicateData = "重复的数据。";
+scriptContext.gem.locale.reference.notSelectedData = "未选择目标数据。";
 scriptContext.gem.locale.reference.edit = "编辑";
 scriptContext.gem.locale.reference.noResult = "没找到数据。";
 scriptContext.gem.locale.reference.pleaseSelectAny = "请选择 {0}";

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -42,7 +42,7 @@ public interface TenantManager extends TypedDefinitionManager<Tenant> {
 	 * @param tenant {@link Tenant}
 	 */
 	public DefinitionModifyResult updateTenant(Tenant tenant);
-	public DefinitionModifyResult updateTenant(Tenant tenant, final boolean forceUpdate);
 
+	public DefinitionModifyResult updateTenant(Tenant tenant, final boolean forceUpdate);
 
 }

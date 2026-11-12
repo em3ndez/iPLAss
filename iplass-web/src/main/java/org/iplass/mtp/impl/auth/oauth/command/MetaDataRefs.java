@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,13 +22,13 @@ package org.iplass.mtp.impl.auth.oauth.command;
 import org.iplass.mtp.command.annotation.MetaDataSeeAlso;
 
 @MetaDataSeeAlso({
-	ConsentCommand.class,
-	AuthorizeCommand.class,
-	IntrospectCommand.class,
-	RevokeCommand.class,
-	TokenCommand.class,
-	UserInfoCommand.class,
-	JwksCommand.class
+		ConsentCommand.class,
+		AuthorizeCommand.class,
+		IntrospectCommand.class,
+		RevokeCommand.class,
+		TokenCommand.class,
+		UserInfoCommand.class,
+		JwksCommand.class
 })
 public class MetaDataRefs {
 }

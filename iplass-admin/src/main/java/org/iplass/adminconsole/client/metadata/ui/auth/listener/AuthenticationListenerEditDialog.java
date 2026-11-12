@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -114,7 +114,8 @@ public class AuthenticationListenerEditDialog extends MtpDialog {
 	public void setDefinition(AccountNotificationListenerDefinition definition) {
 		this.curDefinition = definition;
 
-		slctTypeField.setValue(AuthenticationListenerType.valueOf(definition).name());
+		slctTypeField.setValue(AuthenticationListenerType.valueOf(definition)
+				.name());
 
 		if (typeEditPane != null) {
 			if (container.contains(typeEditPane)) {

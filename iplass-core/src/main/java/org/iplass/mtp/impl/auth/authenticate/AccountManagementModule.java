@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,8 +26,6 @@ import org.iplass.mtp.auth.User;
 import org.iplass.mtp.auth.login.Credential;
 import org.iplass.mtp.auth.login.CredentialUpdateException;
 
-
-
 /**
  * アカウント情報の更新を行うためのインタフェース。
  *
@@ -36,29 +34,48 @@ import org.iplass.mtp.auth.login.CredentialUpdateException;
  */
 public interface AccountManagementModule {
 
-	/** ユーザアクティベーション 仮パスワード設定方式*/
+	/** ユーザーアクティベーション 仮パスワード設定方式*/
 	public static final String USER_ACTIVATION_PUBLISH = "publish";
 
-	/** ユーザアクティベーション パスワード指定方式(未指定の場合は仮パスワード方式)*/
+	/** ユーザーアクティベーション パスワード指定方式(未指定の場合は仮パスワード方式)*/
 	public static final String USER_ACTIVATION_SPECIFY_OR_PUBLISH = "specifyOrPublish";
 
 	public boolean canCreate();
+
 	public boolean canUpdate();
+
 	public boolean canRemove();
+
 	public boolean canRestore();
+
 	public boolean canPurge();
+
 	public boolean canUpdateCredential();
+
 	public boolean canResetCredential();
+
 	public boolean canResetLockoutStatus();
-	
+
 	public void create(User user);
+
 	public void afterCreate(User user);
+
 	public void update(User user, List<String> updateProperties);
+
+	//既存のカスタム実装への影響考慮してdefaultとする
+	public default void afterUpdate(User user, String policyName, List<String> updateProperties) {
+	}
+
 	public void remove(User user);
+
 	public void restore(User user);
+
 	public void purge(User user);
+
 	public void updateCredential(Credential oldCredential, Credential newCredential) throws CredentialUpdateException;
+
 	public void resetCredential(Credential credential) throws CredentialUpdateException;
+
 	public void resetLockoutStatus(String accountId);
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,8 +22,9 @@ package org.iplass.mtp.entity.interceptor;
 import org.iplass.mtp.entity.bulkupdate.BulkUpdatable;
 
 public interface EntityBulkUpdateInvocation extends EntityInvocation<Void> {
-	
+
 	public BulkUpdatable getBulkUpdatable();
+
 	public void setBulkUpdatable(BulkUpdatable bulkUpdatable);
-	
+
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -41,14 +41,14 @@ public class RememberMeTokenCredential implements Credential, Serializable {
 	private String token;
 
 	private Map<String, Object> additionalAuthenticationFactor;
-	
+
 	public RememberMeTokenCredential() {
 	}
-	
+
 	public RememberMeTokenCredential(String token) {
 		this.token = token;
 	}
-	
+
 	public void setId(String id) {
 		this.id = id;
 	}
@@ -65,7 +65,7 @@ public class RememberMeTokenCredential implements Credential, Serializable {
 	public void setToken(String token) {
 		this.token = token;
 	}
-	
+
 	@Override
 	public Object getAuthenticationFactor(String name) {
 		if (additionalAuthenticationFactor == null) {

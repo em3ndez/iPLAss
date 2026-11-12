@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,23 +27,24 @@ import org.iplass.mtp.entity.query.SubQuery;
 import org.iplass.mtp.entity.query.value.primary.EntityField;
 
 class HasReferencePropertyChecker extends QueryVisitorSupport {
-	
+
 	private boolean hasReferenceProperty = false;
 
 	@Override
 	public boolean visit(EntityField entityField) {
-		if (!hasReferenceProperty && entityField.getPropertyName().contains(".")) {
+		if (!hasReferenceProperty && entityField.getPropertyName()
+				.contains(".")) {
 			hasReferenceProperty = true;
 		}
 		return true;
 	}
-	
+
 	@Override
 	public boolean visit(SubQuery scalarSubQuery) {
 		//ScalarSubQuery内のEntityFieldは未評価でOK
 		return false;
 	}
-	
+
 	public boolean hasReferenceProperty() {
 		return hasReferenceProperty;
 	}
@@ -59,6 +60,5 @@ class HasReferencePropertyChecker extends QueryVisitorSupport {
 		//AsOf内のEntityFieldは未評価
 		return false;
 	}
-	
 
 }

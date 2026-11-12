@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,17 +26,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ListenerMap {
-	
+
 	private final ConcurrentHashMap<String, List<ClusterEventListener>> listenerMap;
-	
+
 	public ListenerMap() {
 		listenerMap = new ConcurrentHashMap<String, List<ClusterEventListener>>(16, 0.75f, 32);
 	}
-	
+
 	public void init() {
 		listenerMap.clear();
 	}
-	
+
 	public List<ClusterEventListener> getListener(String eventName) {
 		List<ClusterEventListener> l = listenerMap.get(eventName);
 		if (l == null) {
@@ -45,12 +45,12 @@ public class ListenerMap {
 			return l;
 		}
 	}
-	
+
 	public void addListener(String eventName, ClusterEventListener listener) {
 		//CopyOnWrite
 		List<ClusterEventListener> currentList = listenerMap.get(eventName);
 		if (currentList == null) {
-			List<ClusterEventListener> newList = new CopyOnWriteArrayList<ClusterEventListener>(new ClusterEventListener[]{listener});
+			List<ClusterEventListener> newList = new CopyOnWriteArrayList<ClusterEventListener>(new ClusterEventListener[] { listener });
 			currentList = listenerMap.putIfAbsent(eventName, newList);
 			if (currentList == null) {
 				return;
@@ -65,6 +65,5 @@ public class ListenerMap {
 			currentList.remove(listener);
 		}
 	}
-	
 
 }

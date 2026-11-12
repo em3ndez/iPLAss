@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -50,7 +50,7 @@ public class MetaJavaClassCacheCriteria extends MetaCacheCriteria {
 	@Override
 	public void applyConfig(CacheCriteriaDefinition definition) {
 		fillFrom(definition);
-		JavaClassCacheCriteriaDefinition def = (JavaClassCacheCriteriaDefinition)definition;
+		JavaClassCacheCriteriaDefinition def = (JavaClassCacheCriteriaDefinition) definition;
 		className = def.getClassName();
 	}
 
@@ -66,14 +66,15 @@ public class MetaJavaClassCacheCriteria extends MetaCacheCriteria {
 	public JavaClassCacheCriteriaRuntime createRuntime(MetaActionMapping actionMapping) {
 		return new JavaClassCacheCriteriaRuntime();
 	}
-	
+
 	public class JavaClassCacheCriteriaRuntime extends CacheCriteriaRuntime {
 
 		private ActionCacheCriteria actionCacheCriteria;
 
 		public JavaClassCacheCriteriaRuntime() {
 			try {
-				actionCacheCriteria = (ActionCacheCriteria) Class.forName(className).newInstance();
+				actionCacheCriteria = (ActionCacheCriteria) Class.forName(className)
+						.newInstance();
 			} catch (InstantiationException e) {
 				throw new MetaDataRuntimeException("can not instantiate " + className, e);
 			} catch (IllegalAccessException e) {

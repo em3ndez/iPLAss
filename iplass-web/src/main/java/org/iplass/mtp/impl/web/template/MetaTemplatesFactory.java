@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,10 +27,8 @@ import org.iplass.mtp.command.annotation.template.Templates;
 import org.iplass.mtp.impl.metadata.annotation.AnnotatableMetaDataFactory;
 import org.iplass.mtp.impl.metadata.annotation.AnnotateMetaDataEntry;
 
-
 public class MetaTemplatesFactory implements
 		AnnotatableMetaDataFactory<Templates, Object> {
-
 
 	private MetaTemplateFactory metaTemplateFactory;
 
@@ -57,6 +55,5 @@ public class MetaTemplatesFactory implements
 		}
 		return map;
 	}
-
 
 }

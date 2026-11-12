@@ -101,6 +101,9 @@
 		width: 100%;
 		height: 24px;
 		margin: 2px 0;
+		&[multiple] {
+			height: 72px;
+		}
 	}
 	.submit-area {
 		th {
@@ -129,6 +132,16 @@
 			width: 100%;
 		}
 	}
+	.numeric-range {
+		input.inpbr {
+			width: 45%; //数値範囲検索の場合は長さを半分にする
+		}
+	}
+	.string-range {
+		input.inpbr {
+			width: 45%; //文字列範囲検索の場合は長さを半分にする
+		}
+	}
 	input[type=text] {
 		font-size: 1rem;
 		padding: 2px 5px;
@@ -148,6 +161,9 @@
 	&:not([colnum="1"]) td {
 		width: auto;
 	}
+	span.error {
+		padding-bottom: 0;
+	}
 }
 .result-block {
 	display: block;
@@ -156,6 +172,11 @@
 	.list-bin {
 		margin-bottom: 0;
 		width: 100%;
+	}
+}
+.hgroup-02 {
+	span.paginInputError {
+		color: $red;
 	}
 }
 .result-data {
@@ -173,7 +194,7 @@
 			margin-top: 20px;
 		}
 	}
-	
+
 	//jqgrid adjust borders
 	@extend %extend_jqgrid_border_adjust;
 }
@@ -223,9 +244,14 @@
 		}
 	}
 }
-#csv-download-dialog fieldset {
-	text-align: left;
-	width: 100%;
-	padding: 0 0 5px 5px;
+.ui-jqgrid > .loading {
+  font-size: 1rem;
+  font-weight: normal;
 }
-
+//FileDownloadダイアログ
+#file-download-dialog {
+	fieldset {
+		text-align: left;
+		padding: 0 0 5px 5px;
+	}
+}

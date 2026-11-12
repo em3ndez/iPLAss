@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,8 +27,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.iplass.mtp.definition.DefinitionSummary;
 import org.iplass.mtp.definition.TypedDefinitionManager;
 
-
-
 /**
  * Entity定義を管理するクラスのインタフェース。
  *
@@ -45,7 +43,6 @@ public interface EntityDefinitionManager extends TypedDefinitionManager<EntityDe
 	 */
 	@Override
 	public EntityDefinitionModifyResult create(EntityDefinition definition);
-
 
 	/**
 	 * 指定の定義名のEntity定義を取得する。

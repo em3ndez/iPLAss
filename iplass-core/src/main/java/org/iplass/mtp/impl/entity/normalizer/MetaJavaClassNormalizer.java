@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -103,18 +103,19 @@ public class MetaJavaClassNormalizer extends MetaNormalizer {
 	public NormalizerRuntime createRuntime(MetaEntity entity, MetaProperty property) {
 		return new JavaClassNormalizerRuntime(property);
 	}
-	
+
 	public class JavaClassNormalizerRuntime extends NormalizerRuntime {
-		
+
 		PropertyNormalizer<?> propertyNormalizer;
-		
+
 		public JavaClassNormalizerRuntime(MetaProperty property) {
 			if (className == null) {
 				throw new NullPointerException(property.getName() + "'s JavaClassNormalizer className must specified");
 			}
-			
+
 			try {
-				propertyNormalizer = (PropertyNormalizer<?>) Class.forName(className).newInstance();
+				propertyNormalizer = (PropertyNormalizer<?>) Class.forName(className)
+						.newInstance();
 			} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
 				throw new IllegalStateException("can not instantiate " + className + " of " + property.getName() + "'s JavaClassNormalizer", e);
 			}

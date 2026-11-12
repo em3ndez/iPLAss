@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,39 +31,45 @@ import org.iplass.mtp.impl.rdb.adapter.function.FunctionAdapter;
 import org.iplass.mtp.impl.rdb.common.function.DateTimeUnit;
 import org.iplass.mtp.impl.rdb.oracle.OracleRdbAdapter;
 
-public class OracleDateAddFunctionAdapter implements FunctionAdapter, DateTimeUnit {
-	
+public class OracleDateAddFunctionAdapter implements FunctionAdapter<Function>, DateTimeUnit {
+
 	//date + 1 * INTERVAL '1' DAY
 	//date + 1 * INTERVAL '1' HOUR
 	//date + 1 * INTERVAL '1' MINUTE
 	//ADD_MONTHS(date, 1)
 	//ADD_MONTHS(date, 1 * 12)
-	
+
 	@Override
 	public void toSQL(FunctionContext context, Function function, RdbAdapter rdb) {
-		if (function.getArguments() == null || function.getArguments().size() != 3) {
+		if (function.getArguments() == null || function.getArguments()
+				.size() != 3) {
 			throw new QueryException(function.getName() + " must have 3 arguments.");
 		}
-		
-		String unit = ((String) ((Literal) function.getArguments().get(2)).getValue()).toUpperCase();
-		
+
+		String unit = ((String) ((Literal) function.getArguments()
+				.get(2)).getValue()).toUpperCase();
+
 		switch (unit) {
 		case YEAR:
 			//ADD_MONTHS
 			context.append(((OracleRdbAdapter) rdb).getAddMonthsFunction());
 			context.append("(");
-			context.appendArgument(function.getArguments().get(0));
+			context.appendArgument(function.getArguments()
+					.get(0));
 			context.append(",");
-			context.appendArgument(function.getArguments().get(1));
+			context.appendArgument(function.getArguments()
+					.get(1));
 			context.append("*12)");
 			break;
 		case MONTH:
 			//ADD_MONTHS
 			context.append(((OracleRdbAdapter) rdb).getAddMonthsFunction());
 			context.append("(");
-			context.appendArgument(function.getArguments().get(0));
+			context.appendArgument(function.getArguments()
+					.get(0));
 			context.append(",");
-			context.appendArgument(function.getArguments().get(1));
+			context.appendArgument(function.getArguments()
+					.get(1));
 			context.append(")");
 			break;
 		case DAY:
@@ -72,55 +78,11 @@ public class OracleDateAddFunctionAdapter implements FunctionAdapter, DateTimeUn
 		case SECOND:
 			//INTERVALでの計算
 			context.append("((");
-			context.appendArgument(function.getArguments().get(0));
+			context.appendArgument(function.getArguments()
+					.get(0));
 			context.append(")+(");
-			context.appendArgument(function.getArguments().get(1));
-			context.append(")*INTERVAL '1' ");
-			context.append(unit);
-			context.append(")");
-			break;
-		default:
-			throw new QueryException("unknown interval unit:" + unit);
-		}
-	}
-	
-	@Override
-	public void toSQL(StringBuilder context, List<CharSequence> args,
-			RdbAdapter rdb) {
-		if (args == null || args.size() != 3) {
-			throw new QueryException(getFunctionName() + " must have 3 arguments.");
-		}
-		
-		String unit = args.get(2).toString().toUpperCase();
-		
-		switch (unit) {
-		case YEAR:
-			//ADD_MONTHS
-			context.append(((OracleRdbAdapter) rdb).getAddMonthsFunction());
-			context.append("(");
-			context.append(args.get(0));
-			context.append(",");
-			context.append(args.get(1));
-			context.append("*12)");
-			break;
-		case MONTH:
-			//ADD_MONTHS
-			context.append(((OracleRdbAdapter) rdb).getAddMonthsFunction());
-			context.append("(");
-			context.append(args.get(0));
-			context.append(",");
-			context.append(args.get(1));
-			context.append(")");
-			break;
-		case DAY:
-		case HOUR:
-		case MINUTE:
-		case SECOND:
-			//INTERVALでの計算
-			context.append("((");
-			context.append(args.get(0));
-			context.append(")+(");
-			context.append(args.get(1));
+			context.appendArgument(function.getArguments()
+					.get(1));
 			context.append(")*INTERVAL '1' ");
 			context.append(unit);
 			context.append(")");
@@ -130,6 +92,53 @@ public class OracleDateAddFunctionAdapter implements FunctionAdapter, DateTimeUn
 		}
 	}
 
+	@Override
+	public void toSQL(StringBuilder context, List<CharSequence> args,
+			RdbAdapter rdb) {
+		if (args == null || args.size() != 3) {
+			throw new QueryException(getFunctionName() + " must have 3 arguments.");
+		}
+
+		String unit = args.get(2)
+				.toString()
+				.toUpperCase();
+
+		switch (unit) {
+		case YEAR:
+			//ADD_MONTHS
+			context.append(((OracleRdbAdapter) rdb).getAddMonthsFunction());
+			context.append("(");
+			context.append(args.get(0));
+			context.append(",");
+			context.append(args.get(1));
+			context.append("*12)");
+			break;
+		case MONTH:
+			//ADD_MONTHS
+			context.append(((OracleRdbAdapter) rdb).getAddMonthsFunction());
+			context.append("(");
+			context.append(args.get(0));
+			context.append(",");
+			context.append(args.get(1));
+			context.append(")");
+			break;
+		case DAY:
+		case HOUR:
+		case MINUTE:
+		case SECOND:
+			//INTERVALでの計算
+			context.append("((");
+			context.append(args.get(0));
+			context.append(")+(");
+			context.append(args.get(1));
+			context.append(")*INTERVAL '1' ");
+			context.append(unit);
+			context.append(")");
+			break;
+		default:
+			throw new QueryException("unknown interval unit:" + unit);
+		}
+	}
 
 	@Override
 	public String getFunctionName() {
@@ -140,6 +149,5 @@ public class OracleDateAddFunctionAdapter implements FunctionAdapter, DateTimeUn
 	public Class<?> getType(Function function, ArgumentTypeResolver typeResolver) {
 		return Timestamp.class;
 	}
-
 
 }

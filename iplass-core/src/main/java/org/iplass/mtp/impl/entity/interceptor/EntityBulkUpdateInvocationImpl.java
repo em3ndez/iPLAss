@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,9 +26,9 @@ import org.iplass.mtp.entity.interceptor.InvocationType;
 import org.iplass.mtp.impl.entity.EntityHandler;
 
 public class EntityBulkUpdateInvocationImpl extends EntityInvocationImpl<Void> implements EntityBulkUpdateInvocation {
-	
+
 	private BulkUpdatable bulkUpdatable;
-	
+
 	public EntityBulkUpdateInvocationImpl(
 			BulkUpdatable bulkUpdatable,
 			EntityInterceptor[] entityInterceptors,
@@ -36,7 +36,7 @@ public class EntityBulkUpdateInvocationImpl extends EntityInvocationImpl<Void> i
 		super(entityInterceptors, entityHandler);
 		this.bulkUpdatable = bulkUpdatable;
 	}
-	
+
 	@Override
 	protected Void callEntityHandler(EntityHandler eh) {
 		eh.bulkUpdate(bulkUpdatable);
@@ -57,5 +57,5 @@ public class EntityBulkUpdateInvocationImpl extends EntityInvocationImpl<Void> i
 	public void setBulkUpdatable(BulkUpdatable bulkUpdatable) {
 		this.bulkUpdatable = bulkUpdatable;
 	}
-	
+
 }

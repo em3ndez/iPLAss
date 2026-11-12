@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,6 +28,7 @@ public enum RepositoryType {
 
 	private String typeName;
 	private String displayName;
+
 	private RepositoryType(String typeName, String displayName) {
 		this.typeName = typeName;
 		this.displayName = displayName;
@@ -36,6 +37,7 @@ public enum RepositoryType {
 	public String typeName() {
 		return typeName;
 	}
+
 	public String displayName() {
 		return displayName;
 	}

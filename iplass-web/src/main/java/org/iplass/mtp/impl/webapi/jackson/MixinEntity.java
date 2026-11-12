@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,7 +28,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
  * 
  * @author K.Higuchi
  */
-@JsonDeserialize(using=EntityDeserializer.class)
-@JsonSerialize(using=EntitySerializer.class)
+@JsonDeserialize(using = EntityDeserializer.class)
+@JsonSerialize(using = EntitySerializer.class)
 public interface MixinEntity {
 }

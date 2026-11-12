@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,6 +24,12 @@ scriptContext.gem.locale.common.name = "ชื่อ";
 scriptContext.gem.locale.common.numcheckMsg = "กรุณาระบุตัวเลข";
 scriptContext.gem.locale.common.pleaseSelect = "กรุณาเลือก";
 scriptContext.gem.locale.common.requiredMsg = "กรุณาใส่ {0}";
+scriptContext.gem.locale.common.numFormatErrorMsg = "โปรดป้อนหมายเลข {0}";
+scriptContext.gem.locale.common.stringFormatErrorMsg = "กรุณาป้อนสตริงที่ตรงกับเงื่อนไข {0}";
+scriptContext.gem.locale.common.dateFormatErrorMsg = "โปรดป้อนวันที่ {0} ให้ถูกต้อง ({1})";
+scriptContext.gem.locale.common.timeFormatErrorMsg = "โปรดป้อนเวลา {0} ให้ถูกต้อง ({1})";
+scriptContext.gem.locale.common.timestampFormatErrorMsg = "โปรดป้อนวันที่หรือเวลา {0} ให้ถูกต้อง ({1})";
+scriptContext.gem.locale.common.maxOfDetailSearchItemsWarningMsg = "เงื่อนไขการค้นหาถึงจำนวนสูงสุดแล้ว จึงไม่สามารถเพิ่มได้อีก";
 
 scriptContext.gem.locale.apendCategory("binary");
 scriptContext.gem.locale.binary.deleteLink = "ลบ";
@@ -34,6 +40,7 @@ scriptContext.gem.locale.binary.notVewFlash = "ไม่สามารถแส
 scriptContext.gem.locale.apendCategory("date");
 scriptContext.gem.locale.date.datepickerBtn = "ป้อนข้อมูลจากปฏิทิน";
 scriptContext.gem.locale.date.timepickerBtn = "ป้อนข้อมูลจากแถบเลื่อน";
+scriptContext.gem.locale.date.pickerClearBtn = "ชัดเจน";
 scriptContext.gem.locale.date.validateDateErrMsg = "กรุณาใส่วันที่ให้ถูกต้อง ({0})";
 scriptContext.gem.locale.date.validateTimeErrMsg = "กรุณาใส่เวลาให้ถูกต้อง ({0})";
 scriptContext.gem.locale.date.validateTimestampErrMsg = "กรุณาใส่วันที่หรือเวลาให้ถูกต้อง ({0})";
@@ -43,6 +50,7 @@ scriptContext.gem.locale.reference.deleteBtn = "ลบ";
 scriptContext.gem.locale.reference.deleteLabel = "ลบ";
 scriptContext.gem.locale.reference.detail = "รายละเอียด";
 scriptContext.gem.locale.reference.duplicateData = "ข้อมูลที่ซ้ำกัน";
+scriptContext.gem.locale.reference.notSelectedData = "ยังไม่ได้เลือกข้อมูลเป้าหมาย";
 scriptContext.gem.locale.reference.edit = "แก้ไข";
 scriptContext.gem.locale.reference.noResult = "ไม่พบข้อมูล";
 scriptContext.gem.locale.reference.pleaseSelectAny = "กรุณาเลือก {0}";

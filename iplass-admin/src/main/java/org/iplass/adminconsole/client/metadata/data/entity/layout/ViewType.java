@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,5 +21,5 @@
 package org.iplass.adminconsole.client.metadata.data.entity.layout;
 
 public enum ViewType {
-	DETAIL,SEARCH,BULK
+	DETAIL, SEARCH, BULK
 }

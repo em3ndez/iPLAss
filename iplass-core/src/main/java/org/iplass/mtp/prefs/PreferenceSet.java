@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * 複数のPreferenceを保持するPreference。
@@ -42,7 +42,6 @@ public class PreferenceSet extends Preference {
 	private List<Preference> subSet;
 
 	private transient Map<String, Preference[]> map;
-
 
 	public PreferenceSet() {
 	}
@@ -61,7 +60,7 @@ public class PreferenceSet extends Preference {
 		setRuntimeClassName(runtimeClassName);
 		subSet = new ArrayList<>();
 		if (prefs != null) {
-			for (Preference p: prefs) {
+			for (Preference p : prefs) {
 				subSet.add(p);
 			}
 		}
@@ -104,10 +103,10 @@ public class PreferenceSet extends Preference {
 				map = Collections.emptyMap();
 			} else {
 				map = new HashMap<>();
-				for (Preference p: subSet) {
+				for (Preference p : subSet) {
 					Preference[] pre = map.get(p.getName());
 					if (pre == null) {
-						map.put(p.getName(), new Preference[]{p});
+						map.put(p.getName(), new Preference[] { p });
 					} else {
 						Preference[] newPre = new Preference[pre.length + 1];
 						System.arraycopy(pre, 0, newPre, 0, pre.length);
@@ -180,7 +179,7 @@ public class PreferenceSet extends Preference {
 			return new Preference[0];
 		}
 		if (p instanceof Preference) {
-			return new Preference[]{(Preference) p};
+			return new Preference[] { (Preference) p };
 		}
 		return (Preference[]) p;
 	}

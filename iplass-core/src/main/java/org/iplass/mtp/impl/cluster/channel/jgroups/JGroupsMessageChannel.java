@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,7 +32,7 @@ import org.iplass.mtp.spi.Config;
 import org.iplass.mtp.spi.ServiceConfigrationException;
 import org.iplass.mtp.spi.ServiceInitListener;
 import org.jgroups.JChannel;
-import org.jgroups.ReceiverAdapter;
+import org.jgroups.Receiver;
 import org.jgroups.View;
 import org.jgroups.util.MessageBatch;
 import org.slf4j.Logger;
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * JGroupsベースのMessageChannel実装。
- * 
+ *
  * @author K.Higuchi
  *
  */
@@ -48,11 +48,11 @@ public class JGroupsMessageChannel implements MessageChannel, ServiceInitListene
 
 	private static Logger logger = LoggerFactory.getLogger(JGroupsMessageChannel.class);
 	private static Logger fatalLog = LoggerFactory.getLogger("mtp.fatal.cluster");
-	
+
 	private String configFilePath;
 	private String clusterName;
 	private MessageReceiver messageReceiver;
-	
+
 	public String getConfigFilePath() {
 		return configFilePath;
 	}
@@ -70,47 +70,49 @@ public class JGroupsMessageChannel implements MessageChannel, ServiceInitListene
 	}
 
 	private JChannel channel;
-	
+
 	@Override
 	public void inited(ClusterService service, Config config) {
-		
+
 		try (InputStream is = inputStreamFromFile();
 				BufferedInputStream bis = new BufferedInputStream(is)) {
 			channel = new JChannel(is);
 		} catch (Exception e) {
 			throw new ServiceConfigrationException("can't read JGroups configFile:" + configFilePath, e);
 		}
-		
-		channel.setReceiver(new ReceiverAdapter() {
-		    @Override
-		    public void receive(org.jgroups.Message msg) {
-		    	if (!channel.getAddress().equals(msg.getSrc())) {
-			    	Message m = msg.getObject();
-			    	messageReceiver.receiveMessage(m);
-			    	if (logger.isDebugEnabled()) {
-				    	logger.debug("receive message:" + m);
-			    	}
-		    	}
-		    }
-		    
-		    @Override
+
+		channel.setReceiver(new Receiver() {
+			@Override
+			public void receive(org.jgroups.Message msg) {
+				if (!channel.getAddress()
+						.equals(msg.getSrc())) {
+					Message m = msg.getObject();
+					messageReceiver.receiveMessage(m);
+					if (logger.isDebugEnabled()) {
+						logger.debug("receive message:" + m);
+					}
+				}
+			}
+
+			@Override
 			public void receive(MessageBatch batch) {
-				for (org.jgroups.Message msg: batch) {
+				for (org.jgroups.Message msg : batch) {
 					try {
 						receive(msg);
-					} catch(Throwable t) {
+					} catch (Throwable t) {
 						logger.error("exception occurred while handling MessageBatch: " + msg + ": " + t.getMessage(), t);
 					}
 				}
 			}
 
+			@Override
 			public void viewAccepted(View view) {
 				if (logger.isDebugEnabled()) {
 					logger.debug("JGroups view changed: " + view);
 				}
-		    }
+			}
 		});
-		
+
 		try {
 			channel.connect(clusterName);
 		} catch (Exception e) {
@@ -126,7 +128,7 @@ public class JGroupsMessageChannel implements MessageChannel, ServiceInitListene
 		}
 		return is;
 	}
-	
+
 	@Override
 	public void destroyed() {
 		if (channel != null) {
@@ -142,7 +144,7 @@ public class JGroupsMessageChannel implements MessageChannel, ServiceInitListene
 				if (logger.isDebugEnabled()) {
 					logger.debug("send message:" + message);
 				}
-				
+
 			} catch (Exception e) {
 				fatalLog.error("send message failed.JGroups cluster=" + clusterName + ", error=" + e + ", message=" + message, e);
 			}
@@ -150,7 +152,7 @@ public class JGroupsMessageChannel implements MessageChannel, ServiceInitListene
 			fatalLog.warn("can't send message because JGroups cluster not initialized.JGroups cluster=" + clusterName + ", message=" + message);
 		}
 	}
-	
+
 	public MessageReceiver getMessageReceiver() {
 		return messageReceiver;
 	}

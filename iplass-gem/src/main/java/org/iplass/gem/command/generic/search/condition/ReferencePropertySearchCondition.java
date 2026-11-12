@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,6 +23,7 @@ package org.iplass.gem.command.generic.search.condition;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.iplass.gem.GemConfigService;
 import org.iplass.gem.command.Constants;
 import org.iplass.gem.command.GemResourceBundleUtil;
 import org.iplass.gem.command.generic.search.SearchConditionDetail;
@@ -35,6 +36,7 @@ import org.iplass.mtp.entity.definition.PropertyDefinition;
 import org.iplass.mtp.entity.definition.properties.ReferenceProperty;
 import org.iplass.mtp.entity.query.condition.Condition;
 import org.iplass.mtp.entity.query.condition.expr.Not;
+import org.iplass.mtp.entity.query.condition.expr.Or;
 import org.iplass.mtp.entity.query.condition.expr.Paren;
 import org.iplass.mtp.entity.query.condition.predicate.Equals;
 import org.iplass.mtp.entity.query.condition.predicate.Greater;
@@ -46,7 +48,9 @@ import org.iplass.mtp.entity.query.condition.predicate.Lesser;
 import org.iplass.mtp.entity.query.condition.predicate.LesserEqual;
 import org.iplass.mtp.entity.query.condition.predicate.Like;
 import org.iplass.mtp.entity.query.condition.predicate.NotEquals;
+import org.iplass.mtp.spi.ServiceRegistry;
 import org.iplass.mtp.util.StringUtil;
+import org.iplass.mtp.view.generic.EntityViewUtil;
 import org.iplass.mtp.view.generic.editor.NestProperty;
 import org.iplass.mtp.view.generic.editor.PropertyEditor;
 import org.iplass.mtp.view.generic.editor.RangePropertyEditor;
@@ -88,26 +92,53 @@ public class ReferencePropertySearchCondition extends PropertySearchCondition {
 			if (editor.getDisplayType() == ReferenceDisplayType.SELECT) {
 				//選択型はOIDで一致検索
 				Entity entity = (Entity) value;
-				if (entity.getOid() != null && !entity.getOid().isEmpty()) {
-					conditions.add(new Equals(getPropertyName() + "." + Entity.OID, entity.getOid()));
+				if (entity.getOid() != null && !entity.getOid()
+						.isEmpty()) {
+					// 「値なし」を検索条件の選択肢に追加するか
+					if (editor.isIsNullSearchEnabled() && Constants.ISNULL_VALUE.equals(entity.getOid())) {
+						conditions.add(new IsNull(getPropertyName() + "." + Entity.OID));
+					} else {
+						conditions.add(new Equals(getPropertyName() + "." + Entity.OID, entity.getOid()));
+					}
 				}
 			} else if (editor.getDisplayType() == ReferenceDisplayType.CHECKBOX) {
 				Entity[] list = (Entity[]) value;
 				if (list != null) {
 					if (list.length == 1) {
-						conditions.add(new Equals(getPropertyName() + "." + Entity.OID, list[0].getOid()));
+						// 「値なし」を検索条件の選択肢に追加するか
+						if (editor.isIsNullSearchEnabled() && Constants.ISNULL_VALUE.equals(list[0].getOid())) {
+							conditions.add(new IsNull(getPropertyName() + "." + Entity.OID));
+						} else {
+							conditions.add(new Equals(getPropertyName() + "." + Entity.OID, list[0].getOid()));
+						}
+
 					} else if (list.length > 1) {
 						List<String> oidList = new ArrayList<>();
+						Boolean isIsNullSearchEnabled = Boolean.FALSE;
 						for (Entity tmp : list) {
-							oidList.add(tmp.getOid());
+							// 「値なし」を検索条件の選択肢に追加するか
+							if (editor.isIsNullSearchEnabled() &&
+									Constants.ISNULL_VALUE.equals(tmp.getOid())) {
+								isIsNullSearchEnabled = Boolean.TRUE;
+							} else {
+								oidList.add(tmp.getOid());
+							}
 						}
-						conditions.add(new In(getPropertyName() + "." + Entity.OID, oidList.toArray()));
+						if (isIsNullSearchEnabled) {
+							// 「値なし」を検索条件の選択肢に追加するの場合、「is null」を追加する
+							conditions.add(new Paren(new Or(
+									new IsNull(getPropertyName() + "." + Entity.OID),
+									new In(getPropertyName() + "." + Entity.OID, oidList.toArray()))));
+						} else {
+							conditions.add(new In(getPropertyName() + "." + Entity.OID, oidList.toArray()));
+						}
 					}
 				}
 			} else if (editor.getDisplayType() == ReferenceDisplayType.REFCOMBO) {
 				if (value instanceof Entity) {
 					Entity entity = (Entity) value;
-					if (entity.getOid() != null && !entity.getOid().isEmpty()) {
+					if (entity.getOid() != null && !entity.getOid()
+							.isEmpty()) {
 						conditions.add(new Equals(getPropertyName() + "." + Entity.OID, entity.getOid()));
 					}
 				} else if (value instanceof RefComboCondition) {
@@ -117,7 +148,7 @@ public class ReferencePropertySearchCondition extends PropertySearchCondition {
 					}
 				}
 			} else if ((editor.getDisplayType() == ReferenceDisplayType.LINK && editor.isUseSearchDialog())
-					 || (editor.getDisplayType() == ReferenceDisplayType.LABEL)){
+					|| (editor.getDisplayType() == ReferenceDisplayType.LABEL)) {
 				Entity[] list = (Entity[]) value;
 				if (list != null) {
 					if (list.length == 1) {
@@ -169,12 +200,34 @@ public class ReferencePropertySearchCondition extends PropertySearchCondition {
 						conditions.add(new In(getPropertyName() + "." + Entity.OID, oidList.toArray()));
 					}
 				}
+			} else if (editor.getDisplayType() == ReferenceDisplayType.SELECTFILTER) {
+				Entity[] list = (Entity[]) value;
+				if (list != null) {
+					if (list.length == 1) {
+						conditions.add(new Equals(getPropertyName() + "." + Entity.OID, list[0].getOid()));
+					} else if (list.length > 1) {
+						List<String> oidList = new ArrayList<>();
+						for (Entity tmp : list) {
+							oidList.add(tmp.getOid());
+						}
+						conditions.add(new In(getPropertyName() + "." + Entity.OID, oidList.toArray()));
+					}
+				}
 			} else {
-				//名前の部分一致
 				Entity entity = (Entity) value;
-				if (entity.getName() != null && !entity.getName().isEmpty()) {
-					//conditions.add(new Like(getPropertyName() + ".name", "%" + StringUtil.escapeEqlForLike(entity.getName()) + "%"));
-					conditions.add(new Like(getPropertyName() + "." + Entity.NAME, entity.getName(), Like.MatchPattern.PARTIAL));
+				if (entity.getName() != null && !entity.getName()
+						.isEmpty()) {
+					// 検索処理で表示ラベルとして扱うプロパティを検索条件に利用する
+					GemConfigService service = ServiceRegistry.getRegistry()
+							.getService(GemConfigService.class);
+					String displayLabelItem = getReferencePropertyEditor().getDisplayLabelItem();
+					if (service.isUseDisplayLabelItemInSearch() && StringUtil.isNotBlank(displayLabelItem)) {
+						//表示ラベルの部分一致
+						conditions.add(new Like(getPropertyName() + "." + displayLabelItem, entity.getName(), Like.MatchPattern.PARTIAL));
+					} else {
+						//名前の部分一致
+						conditions.add(new Like(getPropertyName() + "." + Entity.NAME, entity.getName(), Like.MatchPattern.PARTIAL));
+					}
 				}
 			}
 		}
@@ -182,13 +235,20 @@ public class ReferencePropertySearchCondition extends PropertySearchCondition {
 			//ネストの各項目を型にあわせて条件化
 			ReferenceProperty rp = getReferenceProperty();
 			if (rp != null) {
-				EntityDefinition ed = ManagerLocator.getInstance().getManager(EntityDefinitionManager.class).get(rp.getObjectDefinitionName());
+				EntityDefinition ed = ManagerLocator.getInstance()
+						.getManager(EntityDefinitionManager.class)
+						.get(rp.getObjectDefinitionName());
 				for (NestProperty np : editor.getNestProperties()) {
+					// 仮想プロパティは、検索条件から除く
+					if (np.isVirtual()) {
+						continue;
+					}
+
 					Object _value = nest.getValue(np.getPropertyName());
 					if (_value != null) {
 						PropertyDefinition definition = ed.getProperty(np.getPropertyName());
-						PropertySearchCondition nestPropertyCondition =
-							PropertySearchCondition.newInstance(definition, np.getEditor(), _value, getPropertyName());
+						PropertySearchCondition nestPropertyCondition = PropertySearchCondition.newInstance(definition, np.getEditor(), _value,
+								getPropertyName());
 						conditions.addAll(nestPropertyCondition.convertNormalCondition());
 					}
 				}
@@ -206,7 +266,16 @@ public class ReferencePropertySearchCondition extends PropertySearchCondition {
 			if (nestProperty == null || nestProperty instanceof ReferenceProperty) {
 				//nestPropertyがない(参照プロパティ自体)か参照のnestPropertyならnameで検索
 				Object conditionValue = convertDetailValue(detail);
-				propName = propName + "." + "name";
+
+				GemConfigService service = ServiceRegistry.getRegistry()
+						.getService(GemConfigService.class);
+				String displayLabelItem = getReferencePropertyEditor().getDisplayLabelItem();
+				if (service.isUseDisplayLabelItemInSearch() && StringUtil.isNotBlank(displayLabelItem)) {
+					//表示ラベルとして扱うプロパティが設定されたら検索条件に利用する
+					propName = propName + "." + displayLabelItem;
+				} else {
+					propName = propName + "." + Entity.NAME;
+				}
 
 				if (Constants.EQUALS.equals(detail.getPredicate())) {
 					conditions.add(new Equals(propName, conditionValue));
@@ -239,10 +308,11 @@ public class ReferencePropertySearchCondition extends PropertySearchCondition {
 					conditions.add(new IsNull(propName));
 				} else if (Constants.IN.equals(detail.getPredicate())) {
 					Object[] array = null;
-					if (conditionValue.getClass().isArray()) {
+					if (conditionValue.getClass()
+							.isArray()) {
 						array = (Object[]) conditionValue;
 					} else {
-						array = new Object[]{ conditionValue };
+						array = new Object[] { conditionValue };
 					}
 					conditions.add(new In(propName, array));
 				}
@@ -275,11 +345,14 @@ public class ReferencePropertySearchCondition extends PropertySearchCondition {
 	public boolean checkNormalParameter(PropertyItem property) {
 		//nestの項目をチェック
 		ReferenceNormalConditionValue nValue = (ReferenceNormalConditionValue) getValue();
-		if (nValue.getNest() == null) return true;
+		if (nValue.getNest() == null)
+			return true;
 		Entity nest = nValue.getNest();
 
 		ReferenceProperty rp = getReferenceProperty();
-		EntityDefinition ed = ManagerLocator.getInstance().getManager(EntityDefinitionManager.class).get(rp.getObjectDefinitionName());
+		EntityDefinition ed = ManagerLocator.getInstance()
+				.getManager(EntityDefinitionManager.class)
+				.get(rp.getObjectDefinitionName());
 		for (PropertyDefinition pd : ed.getPropertyList()) {
 			NestProperty np = getNestProperty(pd.getName());
 			Object value = nest.getValue(pd.getName());
@@ -287,8 +360,9 @@ public class ReferencePropertySearchCondition extends PropertySearchCondition {
 				//画面定義に設定されてないのに値があればエラー
 				//(NestPropertyがなければそもそもリクエストから値を取らないはず)
 				if (value != null) {
-					if (value.getClass().isArray()) {
-						if (((Object[])value).length != 0) {
+					if (value.getClass()
+							.isArray()) {
+						if (((Object[]) value).length != 0) {
 							return false;
 						}
 					} else {
@@ -299,9 +373,10 @@ public class ReferencePropertySearchCondition extends PropertySearchCondition {
 				if (pd instanceof ReferenceProperty) {
 					//参照の場合は直下のネスト項目をチェック
 					if (value != null) {
-						PropertySearchCondition nestPropertyCondition =
-								PropertySearchCondition.newInstance(pd, np.getEditor(), value, getPropertyName());
-						if (!nestPropertyCondition.checkNormalParameter(null)) return false;
+						PropertySearchCondition nestPropertyCondition = PropertySearchCondition.newInstance(pd, np.getEditor(), value,
+								getPropertyName());
+						if (!nestPropertyCondition.checkNormalParameter(null))
+							return false;
 					}
 				}
 			}
@@ -314,7 +389,8 @@ public class ReferencePropertySearchCondition extends PropertySearchCondition {
 		if (displayName == null) {
 			return new SearchConditionValidationException();
 		}
-		return new SearchConditionValidationException(resourceString("command.generic.search.condition.ReferencePropertySearchCondition.pleaseInput", displayName));
+		return new SearchConditionValidationException(
+				resourceString("command.generic.search.condition.ReferencePropertySearchCondition.pleaseInput", displayName));
 	}
 
 	public void validateNormalParameter(boolean validateEntity) {
@@ -341,7 +417,8 @@ public class ReferencePropertySearchCondition extends PropertySearchCondition {
 					throw createException(null);
 				}
 			} else if (editor.getDisplayType() == ReferenceDisplayType.REFCOMBO) {
-				if (validateEntity && value == null) throw createException(null);
+				if (validateEntity && value == null)
+					throw createException(null);
 
 				if (value instanceof Entity) {
 					Entity entity = (Entity) value;
@@ -355,7 +432,7 @@ public class ReferencePropertySearchCondition extends PropertySearchCondition {
 					}
 				}
 			} else if ((editor.getDisplayType() == ReferenceDisplayType.LINK && editor.isUseSearchDialog())
-					 || (editor.getDisplayType() == ReferenceDisplayType.LABEL)){
+					|| (editor.getDisplayType() == ReferenceDisplayType.LABEL)) {
 				Entity[] list = (Entity[]) value;
 				if (validateEntity && (value == null || list.length == 0)) {
 					createException(null);
@@ -375,11 +452,17 @@ public class ReferencePropertySearchCondition extends PropertySearchCondition {
 				if (validateEntity && (value == null || list.length == 0)) {
 					createException(null);
 				}
+			} else if (editor.getDisplayType() == ReferenceDisplayType.SELECTFILTER) {
+				Entity[] list = (Entity[]) value;
+				if (validateEntity && (value == null || list.length == 0)) {
+					createException(null);
+				}
 			} else {
 				//名前の部分一致
 				int rowNum = 0;
 				for (NestProperty np : editor.getNestProperties()) {
-					if (np.getEditor() != null) rowNum++;
+					if (np.getEditor() != null)
+						rowNum++;
 				}
 				validateNest = rowNum != 0;
 
@@ -398,16 +481,18 @@ public class ReferencePropertySearchCondition extends PropertySearchCondition {
 			ReferenceProperty rp = getReferenceProperty();
 			if (rp != null) {
 				//子要素のエラーメッセージはここで作成する
-				EntityDefinition ed = ManagerLocator.getInstance().getManager(EntityDefinitionManager.class).get(rp.getObjectDefinitionName());
+				EntityDefinition ed = ManagerLocator.getInstance()
+						.getManager(EntityDefinitionManager.class)
+						.get(rp.getObjectDefinitionName());
 				for (NestProperty np : editor.getNestProperties()) {
-					PropertyDefinition definition = ed.getProperty(np.getPropertyName());
+					PropertyDefinition definition = EntityViewUtil.getNestTablePropertyDefinition(np, ed);
 					String displayLabel = TemplateUtil.getMultilingualString(np.getDisplayLabel(),
 							np.getLocalizedDisplayLabelList(), definition.getDisplayName(), definition.getLocalizedDisplayNameList());
 					Object _value = nest != null ? nest.getValue(np.getPropertyName()) : null;
 					if (definition instanceof ReferenceProperty) {
 						try {
-							PropertySearchCondition nestPropertyCondition =
-								PropertySearchCondition.newInstance(definition, np.getEditor(), _value, getPropertyName());
+							PropertySearchCondition nestPropertyCondition = PropertySearchCondition.newInstance(definition, np.getEditor(), _value,
+									getPropertyName());
 							((ReferencePropertySearchCondition) nestPropertyCondition).validateNormalParameter(np.isRequiredNormal());
 						} catch (SearchConditionValidationException e) {
 							if (e.getMessage() == null) {
@@ -429,21 +514,27 @@ public class ReferencePropertySearchCondition extends PropertySearchCondition {
 
 	@Override
 	public boolean checkDetailParameter(PropertyItem property) {
-		if (!(getValue() instanceof SearchConditionDetail)) return false;
+		if (!(getValue() instanceof SearchConditionDetail))
+			return false;
 
 		//ネストじゃなければチェック済み
-		if (nestProperty == null) return true;
+		if (nestProperty == null)
+			return true;
 
 		//ネストのチェック
 		ReferencePropertyEditor editor = getReferencePropertyEditor();
 		SearchConditionDetail detail = (SearchConditionDetail) getValue();
-		int firstDotIndex = detail.getPropertyName().indexOf('.');
+		int firstDotIndex = detail.getPropertyName()
+				.indexOf('.');
 		if (firstDotIndex > 0) {
-			String topPropName = detail.getPropertyName().substring(0, firstDotIndex);
-			String subPropName = detail.getPropertyName().substring(firstDotIndex + 1);
+			String topPropName = detail.getPropertyName()
+					.substring(0, firstDotIndex);
+			String subPropName = detail.getPropertyName()
+					.substring(firstDotIndex + 1);
 			if (topPropName.equals(property.getPropertyName())) {
 				for (NestProperty nest : editor.getNestProperties()) {
-					if (checkNestProperty(nest, subPropName)) return true;
+					if (checkNestProperty(nest, subPropName))
+						return true;
 				}
 			}
 		}
@@ -454,20 +545,23 @@ public class ReferencePropertySearchCondition extends PropertySearchCondition {
 		int firstDotIndex = propName.indexOf('.');
 		if (firstDotIndex > 0) {
 			if (nest.getEditor() instanceof ReferencePropertyEditor
-					&& !((ReferencePropertyEditor) nest.getEditor()).getNestProperties().isEmpty()) {
+					&& !((ReferencePropertyEditor) nest.getEditor()).getNestProperties()
+							.isEmpty()) {
 				ReferencePropertyEditor editor = (ReferencePropertyEditor) nest.getEditor();
 				String topPropName = propName.substring(0, firstDotIndex);
 				String subPropName = propName.substring(firstDotIndex + 1);
 				if (topPropName.equals(nest.getPropertyName())) {
 					for (NestProperty child : editor.getNestProperties()) {
-						if (checkNestProperty(child, subPropName)) return true;
+						if (checkNestProperty(child, subPropName))
+							return true;
 					}
 				}
 			}
 		} else if (nest.getEditor() instanceof RangePropertyEditor) {
 			return (((RangePropertyEditor) nest.getEditor()).getToPropertyName()).equals(propName);
 		} else {
-			return nest.getPropertyName().equals(propName);
+			return nest.getPropertyName()
+					.equals(propName);
 		}
 		return false;
 	}
@@ -476,13 +570,15 @@ public class ReferencePropertySearchCondition extends PropertySearchCondition {
 		int firstDotIndex = propName.indexOf('.');
 		if (firstDotIndex > 0) {
 			if (nest.getEditor() instanceof ReferencePropertyEditor
-					&& !((ReferencePropertyEditor) nest.getEditor()).getNestProperties().isEmpty()) {
+					&& !((ReferencePropertyEditor) nest.getEditor()).getNestProperties()
+							.isEmpty()) {
 				ReferencePropertyEditor editor = (ReferencePropertyEditor) nest.getEditor();
 				String topPropName = propName.substring(0, firstDotIndex);
 				String subPropName = propName.substring(firstDotIndex + 1);
 				if (topPropName.equals(nest.getPropertyName())) {
 					for (NestProperty child : editor.getNestProperties()) {
-						if (checkNestProperty(child, subPropName)) return child.getEditor();
+						if (checkNestProperty(child, subPropName))
+							return child.getEditor();
 					}
 				}
 			}
@@ -494,9 +590,12 @@ public class ReferencePropertySearchCondition extends PropertySearchCondition {
 
 	private NestProperty getNestProperty(String name) {
 		ReferencePropertyEditor editor = getReferencePropertyEditor();
-		if (editor == null || editor.getNestProperties().isEmpty()) return null;
+		if (editor == null || editor.getNestProperties()
+				.isEmpty())
+			return null;
 		for (NestProperty np : editor.getNestProperties()) {
-			if (np.getPropertyName().equals(name)) {
+			if (np.getPropertyName()
+					.equals(name)) {
 				return np;
 			} else if (np.getEditor() instanceof RangePropertyEditor) {
 				return np;
@@ -522,18 +621,23 @@ public class ReferencePropertySearchCondition extends PropertySearchCondition {
 	public static class ReferenceNormalConditionValue {
 		private Object value;
 		private Entity nest;
+
 		public ReferenceNormalConditionValue(Object value) {
 			this.value = value;
 		}
+
 		public Object getValue() {
 			return value;
 		}
+
 		public void setValue(Object value) {
 			this.value = value;
 		}
+
 		public Entity getNest() {
 			return nest;
 		}
+
 		public void setNest(Entity nest) {
 			this.nest = nest;
 		}
@@ -542,19 +646,24 @@ public class ReferencePropertySearchCondition extends PropertySearchCondition {
 	public static class RefComboCondition {
 		private String oid;
 		private String name;
+
 		public RefComboCondition(String oid, String name) {
 			this.oid = oid;
 			this.name = name;
 		}
+
 		public String getOid() {
 			return oid;
 		}
+
 		public void setOid(String oid) {
 			this.oid = oid;
 		}
+
 		public String getName() {
 			return name;
 		}
+
 		public void setName(String name) {
 			this.name = name;
 		}

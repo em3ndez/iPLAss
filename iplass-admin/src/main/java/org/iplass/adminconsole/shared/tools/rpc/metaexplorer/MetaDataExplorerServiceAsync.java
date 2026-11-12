@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,6 +27,7 @@ import org.iplass.adminconsole.shared.metadata.dto.MetaTreeNode;
 import org.iplass.adminconsole.shared.tools.dto.metaexplorer.DeleteResultInfo;
 import org.iplass.adminconsole.shared.tools.dto.metaexplorer.ImportFileInfo;
 import org.iplass.adminconsole.shared.tools.dto.metaexplorer.ImportMetaDataStatus;
+import org.iplass.adminconsole.shared.tools.dto.metaexplorer.MetaDataCheckResultInfo;
 import org.iplass.adminconsole.shared.tools.dto.metaexplorer.MetaDataImportResultInfo;
 import org.iplass.mtp.entity.Entity;
 import org.iplass.mtp.tenant.Tenant;
@@ -51,7 +52,8 @@ public interface MetaDataExplorerServiceAsync {
 
 	void getImportTenant(final int tenantId, final String tagOid, AsyncCallback<Tenant> callback);
 
-	void importMetaData(final int tenantId, final String tagOid, final List<String> pathList, final Tenant importTenant, AsyncCallback<MetaDataImportResultInfo> callback);
+	void importMetaData(final int tenantId, final String tagOid, final List<String> pathList, final Tenant importTenant,
+			AsyncCallback<MetaDataImportResultInfo> callback);
 
 	void removeImportFile(final int tenantId, final String tagOid, AsyncCallback<Void> callback);
 
@@ -62,4 +64,6 @@ public interface MetaDataExplorerServiceAsync {
 	void removeTag(final int tenantId, final List<String> tagList, AsyncCallback<Void> callback);
 
 	void deleteMetaData(final int tenantId, final List<String> pathList, AsyncCallback<DeleteResultInfo> callback);
+
+	void checkMetaData(final int tenantId, final String tagOid, final List<String> pathList, AsyncCallback<MetaDataCheckResultInfo> callback);
 }

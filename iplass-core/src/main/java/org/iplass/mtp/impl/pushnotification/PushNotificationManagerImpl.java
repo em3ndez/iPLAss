@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,7 +32,8 @@ import org.iplass.mtp.tenant.Tenant;
 
 public class PushNotificationManagerImpl implements PushNotificationManager {
 
-	private PushNotificationService pnService = ServiceRegistry.getRegistry().getService(PushNotificationService.class);
+	private PushNotificationService pnService = ServiceRegistry.getRegistry()
+			.getService(PushNotificationService.class);
 
 	@Override
 	public PushNotification createNotification(String tmplDefName,
@@ -48,7 +49,8 @@ public class PushNotificationManagerImpl implements PushNotificationManager {
 
 	@Override
 	public PushNotificationResult push(PushNotification notification) {
-		Tenant tenant = ExecuteContext.getCurrentContext().getCurrentTenant();
+		Tenant tenant = ExecuteContext.getCurrentContext()
+				.getCurrentTenant();
 		return pnService.push(tenant, notification);
 	}
 

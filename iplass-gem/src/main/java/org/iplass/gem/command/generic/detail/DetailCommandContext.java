@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,10 +25,13 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.iplass.gem.GemConfigService;
@@ -40,7 +43,9 @@ import org.iplass.gem.command.generic.detail.handler.ShowDetailLayoutViewEvent;
 import org.iplass.gem.command.generic.detail.handler.ShowDetailViewEventHandler;
 import org.iplass.gem.command.generic.detail.handler.ShowEditViewEventHandler;
 import org.iplass.mtp.command.RequestContext;
+import org.iplass.mtp.entity.BinaryReference;
 import org.iplass.mtp.entity.Entity;
+import org.iplass.mtp.entity.EntityKey;
 import org.iplass.mtp.entity.EntityManager;
 import org.iplass.mtp.entity.EntityRuntimeException;
 import org.iplass.mtp.entity.LoadOption;
@@ -59,7 +64,11 @@ import org.iplass.mtp.entity.definition.properties.SelectProperty;
 import org.iplass.mtp.entity.definition.properties.StringProperty;
 import org.iplass.mtp.entity.definition.properties.TimeProperty;
 import org.iplass.mtp.impl.util.ConvertUtil;
+import org.iplass.mtp.impl.view.generic.DetailFormViewRuntime;
+import org.iplass.mtp.impl.view.generic.FormViewRuntimeUtil;
+import org.iplass.mtp.impl.view.generic.editor.MetaBinaryPropertyEditor.BinaryPropertyEditorRuntime;
 import org.iplass.mtp.spi.ServiceRegistry;
+import org.iplass.mtp.util.CollectionUtil;
 import org.iplass.mtp.util.StringUtil;
 import org.iplass.mtp.view.generic.DetailFormView;
 import org.iplass.mtp.view.generic.DetailFormView.CopyTarget;
@@ -67,6 +76,7 @@ import org.iplass.mtp.view.generic.DetailFormViewHandler;
 import org.iplass.mtp.view.generic.EntityViewUtil;
 import org.iplass.mtp.view.generic.FormViewUtil;
 import org.iplass.mtp.view.generic.OutputType;
+import org.iplass.mtp.view.generic.editor.BinaryPropertyEditor;
 import org.iplass.mtp.view.generic.editor.DateRangePropertyEditor;
 import org.iplass.mtp.view.generic.editor.JoinPropertyEditor;
 import org.iplass.mtp.view.generic.editor.LabelablePropertyEditor;
@@ -138,7 +148,8 @@ public class DetailCommandContext extends RegistrationCommandContext
 	}
 
 	private void init() {
-		gemConfig = ServiceRegistry.getRegistry().getService(GemConfigService.class);
+		gemConfig = ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class);
 	}
 
 	/**
@@ -173,7 +184,6 @@ public class DetailCommandContext extends RegistrationCommandContext
 		return editedEntity != null ? editedEntity : currentEntity;
 	}
 
-
 	/**
 	 * 更新対象ロードエンティティを設定します。
 	 * @param currentEntity 対象エンティティ
@@ -207,7 +217,8 @@ public class DetailCommandContext extends RegistrationCommandContext
 			@Override
 			public boolean isDispProperty(PropertyItem property) {
 				//詳細編集で非表示なら更新対象外
-				return EntityViewUtil.isDisplayElement(entityDefinition.getName(), property.getElementRuntimeId(), OutputType.EDIT, getDispControlBindEntity())
+				return EntityViewUtil.isDisplayElement(entityDefinition.getName(), property.getElementRuntimeId(), OutputType.EDIT,
+						getDispControlBindEntity())
 						&& !property.isHideDetail();
 			}
 
@@ -232,20 +243,24 @@ public class DetailCommandContext extends RegistrationCommandContext
 			if (section instanceof DefaultSection) {
 				if (EntityViewUtil.isDisplayElement(getDefinitionName(), section.getElementRuntimeId(), OutputType.EDIT, getDispControlBindEntity())
 						&& !((DefaultSection) section).isHideDetail() && ViewUtil.dispElement(execType, section)) {
-					propList.addAll(getProperty((DefaultSection)section));
+					propList.addAll(getProperty((DefaultSection) section));
 				}
 			} else if (section instanceof ReferenceSection) {
 				// 参照セクションは同一名の定義が複数の場合があるのでまとめる
 				ReferenceSection rs = (ReferenceSection) section;
 				if (EntityViewUtil.isDisplayElement(getDefinitionName(), section.getElementRuntimeId(), OutputType.EDIT, getDispControlBindEntity())
 						&& !rs.isHideDetail() && ViewUtil.dispElement(execType, rs)) {
-					Optional<ReferenceSectionPropertyItem> ret = propList.stream().filter(p -> p instanceof ReferenceSectionPropertyItem)
-						.map(p -> (ReferenceSectionPropertyItem) p)
-						.filter(p -> p.getPropertyName().equals(rs.getPropertyName()))
-						.findFirst();
+					Optional<ReferenceSectionPropertyItem> ret = propList.stream()
+							.filter(p -> p instanceof ReferenceSectionPropertyItem)
+							.map(p -> (ReferenceSectionPropertyItem) p)
+							.filter(p -> p.getPropertyName()
+									.equals(rs.getPropertyName()))
+							.findFirst();
 
 					if (ret.isPresent()) {
-						ret.get().getSections().add(rs);
+						ret.get()
+								.getSections()
+								.add(rs);
 					} else {
 						propList.add(createReferenceSectionPropertyItem(rs));
 					}
@@ -266,15 +281,17 @@ public class DetailCommandContext extends RegistrationCommandContext
 		List<PropertyItem> propList = getProperty();
 
 		//EditorのLabel形式のチェック
-		List<PropertyItem> updateList = propList.stream().filter(property->{
-			if (property.getEditor() instanceof LabelablePropertyEditor) {
-				LabelablePropertyEditor editor = (LabelablePropertyEditor)property.getEditor();
-				if (editor.isLabel() && !editor.isUpdateWithLabelValue()) {
-					return false;
-				}
-			}
-			return true;
-		}).collect(Collectors.toList());
+		List<PropertyItem> updateList = propList.stream()
+				.filter(property -> {
+					if (property.getEditor() instanceof LabelablePropertyEditor) {
+						LabelablePropertyEditor editor = (LabelablePropertyEditor) property.getEditor();
+						if (editor.isLabel() && !editor.isUpdateWithLabelValue()) {
+							return false;
+						}
+					}
+					return true;
+				})
+				.collect(Collectors.toList());
 
 		return updateList;
 	}
@@ -323,13 +340,17 @@ public class DetailCommandContext extends RegistrationCommandContext
 				ReferenceSection rs = (ReferenceSection) elem;
 				if (EntityViewUtil.isDisplayElement(getDefinitionName(), elem.getElementRuntimeId(), OutputType.EDIT, getDispControlBindEntity())
 						&& !rs.isHideDetail() && ViewUtil.dispElement(execType, rs)) {
-					Optional<ReferenceSectionPropertyItem> ret = propList.stream().filter(p -> p instanceof ReferenceSectionPropertyItem)
-						.map(p -> (ReferenceSectionPropertyItem) p)
-						.filter(p -> p.getPropertyName().equals(rs.getPropertyName()))
-						.findFirst();
+					Optional<ReferenceSectionPropertyItem> ret = propList.stream()
+							.filter(p -> p instanceof ReferenceSectionPropertyItem)
+							.map(p -> (ReferenceSectionPropertyItem) p)
+							.filter(p -> p.getPropertyName()
+									.equals(rs.getPropertyName()))
+							.findFirst();
 
 					if (ret.isPresent()) {
-						ret.get().getSections().add(rs);
+						ret.get()
+								.getSections()
+								.add(rs);
 					} else {
 						propList.add(createReferenceSectionPropertyItem(rs));
 					}
@@ -347,8 +368,9 @@ public class DetailCommandContext extends RegistrationCommandContext
 	private ReferenceSectionPropertyItem createReferenceSectionPropertyItem(ReferenceSection section) {
 		ReferenceSectionPropertyItem property = new ReferenceSectionPropertyItem();
 		property.setPropertyName(section.getPropertyName());
-//		property.setDispFlag(section.getDispFlag());
-		property.getSections().add(section);
+		//		property.setDispFlag(section.getDispFlag());
+		property.getSections()
+				.add(section);
 		return property;
 	}
 
@@ -361,7 +383,7 @@ public class DetailCommandContext extends RegistrationCommandContext
 		Set<String> loadReferences = new HashSet<>();
 		for (Section section : getView().getSections()) {
 			if (section instanceof DefaultSection) {
-				getReferencePropertyName((DefaultSection)section, loadReferences);
+				getReferencePropertyName((DefaultSection) section, loadReferences);
 			} else if (section instanceof ReferenceSection) {
 				ReferenceSection rs = (ReferenceSection) section;
 				loadReferences.add(rs.getPropertyName());
@@ -413,7 +435,9 @@ public class DetailCommandContext extends RegistrationCommandContext
 		}
 
 		public ReferenceSection getSection(int index) {
-			Optional<ReferenceSection> ret = sections.stream().filter(s -> s.getIndex() == index).findFirst();
+			Optional<ReferenceSection> ret = sections.stream()
+					.filter(s -> s.getIndex() == index)
+					.findFirst();
 			if (ret.isPresent()) {
 				return ret.get();
 			}
@@ -435,7 +459,9 @@ public class DetailCommandContext extends RegistrationCommandContext
 		public boolean isHideDetail() {
 			// hideDetailがfalseのものがあればfalse扱い
 			for (ReferenceSection section : sections) {
-				if (!section.isHideDetail()) return false;
+				if (!section.isHideDetail()) {
+					return false;
+				}
 			}
 			return true;
 		}
@@ -475,21 +501,68 @@ public class DetailCommandContext extends RegistrationCommandContext
 	}
 
 	public CopyTarget getCopyTarget() {
-		String copyTarget = getParam("copyTarget");
+		String copyTarget = getParam(Constants.COPY_TARGET);
 		if (copyTarget == null || copyTarget.isEmpty()) {
 			return CopyTarget.SHALLOW;
 		}
 		return CopyTarget.getEnum(copyTarget);
 	}
 
-	/**
-	 * 新しいバージョンとして更新を行うかを取得します。
-	 * @return 新しいバージョンとして更新を行うか
-	 */
 	@Override
 	public boolean isNewVersion() {
 		String newVersion = getParam(Constants.NEWVERSION);
 		return newVersion != null && "true".equals(newVersion);
+	}
+
+	@Override
+	public boolean isLoadVersioned() {
+		if (isVersioned()) {
+			// バージョンロードが無効かをチェック（下位互換対応）
+			if (isLoadLatestVersionedEntity()) {
+				return false;
+			}
+			// 検索時に全バージョンを検索しているかを確認
+			String searchCond = getSearchCond();
+			if (StringUtil.isNotEmpty(searchCond)) {
+				for (String condition : searchCond.split("&")) {
+					if (condition.startsWith(Constants.SEARCH_ALL_VERSION + "=")
+							|| condition.startsWith(Constants.SEARCH_ALL_VERSION_DETAIL + "=")) {
+						String[] value = condition.split("=");
+						if (value.length > 1) {
+							return "1".equals(value[1]);
+						}
+					}
+				}
+			}
+			// 詳細画面の「別バージョンを参照」で参照されたか確認
+			if (isVersionSpecified()) {
+				return true;
+			}
+		} else {
+			// 検索時に保存時データを検索しているかを確認
+			String searchCond = getSearchCond();
+			if (StringUtil.isNotEmpty(searchCond)) {
+				for (String condition : searchCond.split("&")) {
+					if (condition.startsWith(Constants.SEARCH_SAVED_VERSION + "=")
+							|| condition.startsWith(Constants.SEARCH_SAVED_VERSION_DETAIL + "=")) {
+						String[] value = condition.split("=");
+						if (value.length > 1) {
+							return "1".equals(value[1]);
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * 詳細画面の「別バージョンを参照」で指定されたバージョンのEntityデータをロードするかを取得します。
+	 * @return
+	 */
+	public boolean isVersionSpecified() {
+		String versionSpecified = getParam(Constants.VERSION_SPECIFIED);
+		return versionSpecified != null && "true".equals(versionSpecified);
 	}
 
 	@Override
@@ -518,7 +591,9 @@ public class DetailCommandContext extends RegistrationCommandContext
 			PropertyDefinition pd = getProperty(property.getPropertyName());
 			if (pd instanceof ReferenceProperty) {
 				String mappedBy = ((ReferenceProperty) pd).getMappedBy();
-				if (StringUtil.isBlank(mappedBy)) continue;
+				if (StringUtil.isBlank(mappedBy)) {
+					continue;
+				}
 
 				if (property instanceof ReferenceSectionPropertyItem) {
 					return true;
@@ -547,6 +622,14 @@ public class DetailCommandContext extends RegistrationCommandContext
 	 */
 	public String getExecType() {
 		return getParam(Constants.EXEC_TYPE);
+	}
+
+	/**
+	 * リクエストからキャンセル時の遷移パスを取得します。
+	 * @return 遷移パス
+	 */
+	public String getBackPath() {
+		return getParam(Constants.BACK_PATH);
 	}
 
 	/**
@@ -599,10 +682,11 @@ public class DetailCommandContext extends RegistrationCommandContext
 			if (errorPrefix != null) {
 				String name = paramPrefix + p.getName();
 				//Entity生成時にエラーが発生していないかチェックして置き換え
-				String errorName = errorPrefix +  p.getName();
+				String errorName = errorPrefix + p.getName();
 				getErrors().stream()
-					.filter(error -> error.getPropertyName().equals(name))
-					.forEach(error -> error.setPropertyName(errorName));
+						.filter(error -> error.getPropertyName()
+								.equals(name))
+						.forEach(error -> error.setPropertyName(errorName));
 			}
 		}
 		return entity;
@@ -611,7 +695,9 @@ public class DetailCommandContext extends RegistrationCommandContext
 	private Timestamp getTimestamp() {
 		Timestamp ts = null;
 		Long l = getLongValue(Constants.TIMESTAMP);
-		if (l != null) ts = new Timestamp(l);
+		if (l != null) {
+			ts = new Timestamp(l);
+		}
 		return ts;
 	}
 
@@ -630,42 +716,41 @@ public class DetailCommandContext extends RegistrationCommandContext
 		//prefixが付くケース=NestTable内の多重参照なのであり得ない
 		//→件数取れないため通常の参照扱いで処理が終わる
 		Long count = getLongValue(prefix + p.getName() + "_count");
-		String isRs = getParam("isReferenceSection_" + prefix + p.getName());
+		String isReferenceSection = getParam("isReferenceSection_" + prefix + p.getName());
 		if (p.getMultiplicity() == 1) {
-			Entity entity = null;
+			List<Entity> list = null;
 			if (count == null) {
 				String key = getParam(prefix + p.getName());
-				entity = getRefEntity(rp.getObjectDefinitionName(), key);
+				list = getRefEntities(rp.getObjectDefinitionName(), new String[] { key });
 			} else {
-				List<Entity> list = null;
-				if (isRs != null && "true".equals(isRs)) {
+				if (isReferenceSection != null && "true".equals(isReferenceSection)) {
 					list = getRefSectionValues(rp, defName, count, prefix);
 				} else {
 					list = getRefTableValues(rp, defName, count, prefix);
 				}
-				if (list.size() > 0) entity = list.get(0);
 			}
-			return entity;
+			if (CollectionUtil.isNotEmpty(list)) {
+				return list.get(0);
+			} else {
+				return null;
+			}
 		} else {
 			List<Entity> list = null;
 			if (count == null) {
 				String[] params = getParams(prefix + p.getName());
 				if (params != null) {
-					list = Arrays.stream(params)
-							.map(key -> getRefEntity(rp.getObjectDefinitionName(), key))
-							.filter(value -> value != null)
-							.collect(Collectors.toList());
+					list = getRefEntities(rp.getObjectDefinitionName(), params);
 				}
 			} else {
 				//参照型で参照先のデータを作成・編集するケース
-				if (isRs != null && "true".equals(isRs)) {
+				if (isReferenceSection != null && "true".equals(isReferenceSection)) {
 					list = getRefSectionValues(rp, defName, count, prefix);
 				} else {
 					list = getRefTableValues(rp, defName, count, prefix);
 				}
 			}
 
-			if (list != null && !list.isEmpty()) {
+			if (CollectionUtil.isNotEmpty(list)) {
 				//マッピングクラスの配列を生成する
 				EntityDefinition ed = getEntityDefinition();
 				setEntityDefinition(definitionManager.get(defName));
@@ -681,38 +766,64 @@ public class DetailCommandContext extends RegistrationCommandContext
 		}
 	}
 
-	private Entity getRefEntity(String definitionName, String key) {
-		Entity entity = null;
-		String oid = null;
-		Long version = null;
-		if (key != null) {
-			int lastIndex = key.lastIndexOf("_");
+	/**
+	 * NestTable、ReferenceSection以外の参照先編集データを返します。
+	 *
+	 * @param definitionName 参照先Entity定義名
+	 * @param keyParameters oidとversionのパラメータ情報
+	 * @return 編集データ
+	 */
+	private List<Entity> getRefEntities(String definitionName, String[] keyParameters) {
 
-			if (lastIndex < 0) {
-				oid = key;
+		List<EntityKey> keys = Arrays.stream(keyParameters)
+				.filter(key -> StringUtil.isNotEmpty(key))
+				.map(key -> {
+					int lastIndex = key.lastIndexOf("_");
+					String oid = null;
+					Long version = null;
+					if (lastIndex < 0) {
+						oid = key;
+					} else {
+						oid = key.substring(0, lastIndex);
+						version = CommandUtil.getLong(key.substring(lastIndex + 1));
+					}
+					return new EntityKey(oid, version);
+				})
+				.collect(Collectors.toList());
+
+		List<Entity> entities = null;
+		if (!keys.isEmpty()) {
+			if (gemConfig.isMustLoadWithReference()) {
+				// 参照Entityをロードし直す
+				if (gemConfig.isLoadWithReference()) {
+					entities = entityManager.batchLoad(keys, definitionName);
+				} else {
+					entities = entityManager.batchLoad(keys, definitionName, new LoadOption(false, false));
+				}
 			} else {
-				oid = key.substring(0, lastIndex);
-				version = CommandUtil.getLong(key.substring(lastIndex + 1));
+				// 参照Entityをロードし直さない
+				final EntityDefinition referenceEntityDefinition = definitionManager.get(definitionName);
+				entities = keys.stream()
+						.map(key -> {
+							Entity entity = newEntity(referenceEntityDefinition);
+							entity.setOid(key.getOid());
+							entity.setVersion(key.getVersion());
+							return entity;
+						})
+						.collect(Collectors.toList());
 			}
 		}
-		if (StringUtil.isNotBlank(oid)) {
-			//バリデーションエラー時に消えないようにデータ読み込み
-			//gemの設定により、参照を合わせて読み込むか切り替える
-			if (gemConfig.isLoadWithReference()) {
-				entity = entityManager.load(oid, version, definitionName);
-			} else {
-				entity = entityManager.load(oid, version, definitionName, new LoadOption(false, false));
-			}
-		}
-		return entity;
+		return entities;
 	}
 
 	/**
-	 * リクエストパラメータからテーブルの参照型データの値を取得します。
-	 * @param p プロパティ定義
-	 * @param defName 参照型のEntity定義名
-	 * @param count 参照データの最大件数
-	 * @return 参照データのリスト
+	 * NestTableの編集データを返します。
+	 *
+	 * @param p 対象ReferenceProperty定義
+	 * @param defName 参照先Entity定義名
+	 * @param count 件数
+	 * @param prefix 参照型のプロパティのリクエストパラメータに設定されているプレフィックス
+	 * @return NestTableの編集データ
 	 */
 	private List<Entity> getRefTableValues(ReferenceProperty p, String defName, Long count, String prefix) {
 		final List<Entity> list = new ArrayList<>();
@@ -729,22 +840,25 @@ public class DetailCommandContext extends RegistrationCommandContext
 			entity.setValue(Constants.REF_RELOAD, Boolean.FALSE);
 
 			//Validationエラーが出るとhiddenに"null"が入るのでクリアする
-			if (entity.getOid() != null && entity.getOid().equals("null")) {
+			if (entity.getOid() != null && entity.getOid()
+					.equals("null")) {
 				entity.setOid(null);
 			}
 
 			//Entity生成時にエラーが発生していないかチェック
 			String checkPrefix = (errorPrefix != null ? errorPrefix : paramPrefix);
 			boolean hasError = getErrors().stream()
-					.filter(error -> error.getPropertyName().startsWith(checkPrefix))
-					.findFirst().isPresent();
+					.filter(error -> error.getPropertyName()
+							.startsWith(checkPrefix))
+					.findFirst()
+					.isPresent();
 
 			//エラーがなくて、何もデータが入ってないものは破棄する
 			if (hasError || !isEmpty(entity)) {
 				entity.setDefinitionName(defName);
 				entity.setValue(Constants.REF_INDEX, list.size());
 
-				Long orderIndex = getLongValue("tableOrderIndex[" + i + "]");
+				Long orderIndex = getLongValue("tableOrderIndex." + p.getName() + "[" + i + "]");
 				if (orderIndex != null) {
 					entity.setValue(Constants.REF_TABLE_ORDER_INDEX, orderIndex);
 				}
@@ -755,17 +869,22 @@ public class DetailCommandContext extends RegistrationCommandContext
 		setEntityDefinition(ed);//元の定義に詰め替える
 
 		// ネストテーブル用の登録処理を追加
-		Optional<PropertyItem> ret = getProperty().stream().filter(pi -> pi.getPropertyName().equals(p.getName())).findFirst();
+		Optional<PropertyItem> ret = getProperty().stream()
+				.filter(pi -> pi.getPropertyName()
+						.equals(p.getName()))
+				.findFirst();
 		if (ret.isPresent()) {
-			addNestTableRegistHandler(p, list, red, ret.get());
+			addNestTableRegistHandler(p, list, red, ret.get(), prefix);
 		}
 
 		return list;
 	}
 
-	private void addNestTableRegistHandler(ReferenceProperty p, List<Entity> list, EntityDefinition red, PropertyItem property) {
+	private void addNestTableRegistHandler(ReferenceProperty p, List<Entity> list, EntityDefinition red, PropertyItem property, String prefix) {
 		// ネストテーブルはプロパティ単位で登録可否決定
-		if (!NestTableReferenceRegistHandler.canRegist(property, getRegistrationPropertyBaseHandler())) return;
+		if (!NestTableReferenceRegistHandler.canRegist(property, getRegistrationPropertyBaseHandler())) {
+			return;
+		}
 
 		// カスタム登録処理によるNestTableの更新制御
 		ReferenceRegistOption option = null;
@@ -775,7 +894,8 @@ public class DetailCommandContext extends RegistrationCommandContext
 			// isSpecifyAllPropertiesがtrue、且つReference項目が除外、且つNestされたEntityの個々プロパティも全て指定なしの場合
 			// 参照先EntityにおけるEntityのデータ追加、更新不可
 			if (option.isSpecifyAllProperties() && !option.isSpecifiedAsReference()
-					&& option.getSpecifiedUpdateNestProperties().isEmpty()) {
+					&& option.getSpecifiedUpdateNestProperties()
+							.isEmpty()) {
 				return;
 			}
 		}
@@ -787,21 +907,60 @@ public class DetailCommandContext extends RegistrationCommandContext
 			//表示順再指定
 			PropertyDefinition pd = red.getProperty(editor.getTableOrderPropertyName());
 			target = EntityViewUtil.sortByOrderProperty(list, Constants.REF_TABLE_ORDER_INDEX);
+
+			// ソート前の行番号（REF_INDEX）から、ソート後の行番号へのマッピングを作成する
+			Map<Integer, Integer> indexMap = new HashMap<>();
 			for (int i = 0; i < target.size(); i++) {
-				target.get(i).setValue(editor.getTableOrderPropertyName(), ConvertUtil.convert(pd.getJavaType(), i));
+				Integer oldIndex = target.get(i)
+						.getValue(Constants.REF_INDEX);
+				if (oldIndex != null) {
+					indexMap.put(oldIndex, i);
+				}
+			}
+
+			// Entity作成時に追加済みの入力エラーも、ソート後の行番号へ付け替える
+			String errorBase = prefix + p.getName();
+			for (ValidateError error : getErrors()) {
+				String oldName = error.getPropertyName();
+				for (Map.Entry<Integer, Integer> entry : indexMap.entrySet()) {
+					String oldPrefix = errorBase + "[" + entry.getKey() + "].";
+					if (oldName.startsWith(oldPrefix)) {
+						String newPrefix = errorBase + "[" + entry.getValue() + "].";
+						error.setPropertyName(newPrefix + oldName.substring(oldPrefix.length()));
+						break;
+					}
+				}
+			}
+
+			for (int i = 0; i < target.size(); i++) {
+				target.get(i)
+						.setValue(editor.getTableOrderPropertyName(), ConvertUtil.convert(pd.getJavaType(), i));
+
+				// エラーメッセージのキーとの整合性をあわせるためREF_INDEXも更新する
+				target.get(i)
+						.setValue(Constants.REF_INDEX, i);
 			}
 		} else {
 			target = list;
 		}
 
-		ReferenceRegistHandler handler = NestTableReferenceRegistHandler.get(this, list, red, p, property, editor.getNestProperties(), getRegistrationPropertyBaseHandler(), option);
+		ReferenceRegistHandler handler = NestTableReferenceRegistHandler.get(this, list, red, p, property, editor.getNestProperties(),
+				getRegistrationPropertyBaseHandler(), option);
 		if (handler != null) {
 			handler.setForceUpdate(editor.isForceUpadte());
 			getReferenceRegistHandlers().add(handler);
 		}
 	}
 
-
+	/**
+	 * ReferenceSectionの編集データを返します。
+	 *
+	 * @param p 対象ReferenceProperty定義
+	 * @param defName 参照先Entity定義名
+	 * @param count 件数
+	 * @param prefix 参照型のプロパティのリクエストパラメータに設定されているプレフィックス
+	 * @return ReferenceSectionの編集データ
+	 */
 	private List<Entity> getRefSectionValues(ReferenceProperty p, String defName, Long count, String prefix) {
 		List<Entity> list = new ArrayList<>();
 		EntityDefinition ed = getEntityDefinition();
@@ -814,39 +973,46 @@ public class DetailCommandContext extends RegistrationCommandContext
 		Optional<ReferenceSectionPropertyItem> ret = properties.stream()
 				.filter(pi -> pi instanceof ReferenceSectionPropertyItem)
 				.map(pi -> (ReferenceSectionPropertyItem) pi)
-				.filter(pi -> pi.getPropertyName().equals(p.getName())).findFirst();
+				.filter(pi -> pi.getPropertyName()
+						.equals(p.getName()))
+				.findFirst();
 		ReferenceSectionPropertyItem rsProperty = ret.isPresent() ? ret.get() : null;
 
 		for (int i = 0; i < count; i++) {
 			//データあり
 			String paramPrefix = prefix + p.getName() + "[" + Integer.toString(i) + "].";
-			String errorPrefix = (i != list.size() ? prefix + p.getName() + "[" + Integer.toString(list.size()) + "]." : null);
+			String errorPrefix = (i != list.size() ? prefix + p.getName() + "[" + Integer.toString(i) + "]." : null);
 			Entity entity = createEntity(paramPrefix, errorPrefix);
 
 			//入力エラー時に再Loadされないようにフラグ設定
 			entity.setValue(Constants.REF_RELOAD, Boolean.FALSE);
 
 			//Validationエラーが出るとhiddenに"null"が入るのでクリアする
-			if (entity.getOid() != null && entity.getOid().equals("null")) {
+			if (entity.getOid() != null && entity.getOid()
+					.equals("null")) {
 				entity.setOid(null);
 			}
 
 			//Entity生成時にエラーが発生していないかチェック
 			String checkPrefix = (errorPrefix != null ? errorPrefix : paramPrefix);
 			boolean hasError = getErrors().stream()
-					.filter(error -> error.getPropertyName().startsWith(checkPrefix))
-					.findFirst().isPresent();
+					.filter(error -> error.getPropertyName()
+							.startsWith(checkPrefix))
+					.findFirst()
+					.isPresent();
 
 			//エラーがなくて、何もデータが入ってないものは破棄する
 			if (hasError || !isEmpty(entity)) {
 				entity.setDefinitionName(defName);
-				entity.setValue(Constants.REF_INDEX, list.size());
+				entity.setValue(Constants.REF_INDEX, i);
 
 				if (rsProperty != null) {
 					// entity,sectionでまとめる
 					if (p.getMultiplicity() == 1) {
-						if (rsProperty.getSections().size() > 0) {
-							ReferenceSection section = rsProperty.getSections().get(0);
+						if (rsProperty.getSections()
+								.size() > 0) {
+							ReferenceSection section = rsProperty.getSections()
+									.get(0);
 							ReferenceSectionValue rsv = new ReferenceSectionValue();
 							rsv.entity = entity;
 							rsv.section = section;
@@ -880,9 +1046,12 @@ public class DetailCommandContext extends RegistrationCommandContext
 		return list;
 	}
 
-	private void addReferenceSectionRegistHandler(final ReferenceProperty p, final List<ReferenceSectionValue> list, EntityDefinition red, ReferenceSectionPropertyItem property) {
+	private void addReferenceSectionRegistHandler(final ReferenceProperty p, final List<ReferenceSectionValue> list, EntityDefinition red,
+			ReferenceSectionPropertyItem property) {
 		// 参照セクションはプロパティ単位で登録可否決定
-		if (!ReferenceSectionReferenceRegistHandler.canRegist(property)) return;
+		if (!ReferenceSectionReferenceRegistHandler.canRegist(property)) {
+			return;
+		}
 
 		// カスタム登録処理による参照セクションの更新制御
 		ReferenceRegistOption option = null;
@@ -892,7 +1061,8 @@ public class DetailCommandContext extends RegistrationCommandContext
 			// isSpecifyAllPropertiesがtrue、且つReference項目が除外、且つNestされたEntityの個々プロパティも全て指定なしの場合
 			// 参照先EntityにおけるEntityのデータ更新不可
 			if (option.isSpecifyAllProperties() && !option.isSpecifiedAsReference()
-					&& option.getSpecifiedUpdateNestProperties().isEmpty()) {
+					&& option.getSpecifiedUpdateNestProperties()
+							.isEmpty()) {
 				return;
 			}
 		}
@@ -908,15 +1078,19 @@ public class DetailCommandContext extends RegistrationCommandContext
 		private Integer index;
 		private Entity entity;
 		private ReferenceSection section;
+
 		public Integer getIndex() {
 			return index;
 		}
+
 		public Entity getEntity() {
 			return entity;
 		}
+
 		public void setEntity(Entity entity) {
 			this.entity = entity;
 		}
+
 		public ReferenceSection getSection() {
 			return section;
 		}
@@ -931,9 +1105,13 @@ public class DetailCommandContext extends RegistrationCommandContext
 		for (PropertyDefinition pd : getPropertyList()) {
 			if (pd.getMultiplicity() != 1) {
 				Object[] obj = entity.getValue(pd.getName());
-				if (obj != null && obj.length > 0) return false;
+				if (obj != null && obj.length > 0) {
+					return false;
+				}
 			} else {
-				if (entity.getValue(pd.getName()) != null) return false;
+				if (entity.getValue(pd.getName()) != null) {
+					return false;
+				}
 			}
 		}
 		return true;
@@ -1058,7 +1236,7 @@ public class DetailCommandContext extends RegistrationCommandContext
 		List<PropertyElement> excludeList = new ArrayList<>();
 		for (Section section : getView().getSections()) {
 			if (section instanceof DefaultSection) {
-				excludeList.addAll(getExcludeLabelableProperty((DefaultSection)section));
+				excludeList.addAll(getExcludeLabelableProperty((DefaultSection) section));
 			}
 		}
 		this.excludeLabelableProperties = excludeList;
@@ -1080,14 +1258,15 @@ public class DetailCommandContext extends RegistrationCommandContext
 			boolean isInsert = (currentEntity == null);
 			for (Element element : section.getElements()) {
 				if (element instanceof DefaultSection) {
-					excludeList.addAll(getExcludeLabelableProperty((DefaultSection)element));
+					excludeList.addAll(getExcludeLabelableProperty((DefaultSection) element));
 				} else if (element instanceof PropertyItem) {
-					PropertyItem prop = (PropertyItem)element;
+					PropertyItem prop = (PropertyItem) element;
 					if (prop.getEditor() instanceof LabelablePropertyEditor) {
-						LabelablePropertyEditor editor = (LabelablePropertyEditor)prop.getEditor();
+						LabelablePropertyEditor editor = (LabelablePropertyEditor) prop.getEditor();
 						//更新時は値セットは除外しないため追加時のみチェック
 						if (isInsert && editor.isLabel()) {
-							if (EntityViewUtil.isDisplayElement(getDefinitionName(), prop.getElementRuntimeId(), OutputType.EDIT, getDispControlBindEntity())
+							if (EntityViewUtil.isDisplayElement(getDefinitionName(), prop.getElementRuntimeId(), OutputType.EDIT,
+									getDispControlBindEntity())
 									&& !prop.isHideDetail() && ViewUtil.dispElement(execType, prop)) {
 								if (!editor.isInsertWithLabelValue()) {
 									excludeList.add(prop);
@@ -1098,10 +1277,11 @@ public class DetailCommandContext extends RegistrationCommandContext
 				} else if (element instanceof VirtualPropertyItem) {
 					VirtualPropertyItem prop = (VirtualPropertyItem) element;
 					if (prop.getEditor() instanceof LabelablePropertyEditor) {
-						LabelablePropertyEditor editor = (LabelablePropertyEditor)prop.getEditor();
+						LabelablePropertyEditor editor = (LabelablePropertyEditor) prop.getEditor();
 						//更新時は値セットは除外しないため追加時のみチェック
 						if (isInsert && editor.isLabel()) {
-							if (EntityViewUtil.isDisplayElement(getDefinitionName(), prop.getElementRuntimeId(), OutputType.EDIT, getDispControlBindEntity())
+							if (EntityViewUtil.isDisplayElement(getDefinitionName(), prop.getElementRuntimeId(), OutputType.EDIT,
+									getDispControlBindEntity())
 									&& !prop.isHideDetail() && ViewUtil.dispElement(execType, prop)) {
 								if (!editor.isInsertWithLabelValue()) {
 									excludeList.add(prop);
@@ -1132,57 +1312,34 @@ public class DetailCommandContext extends RegistrationCommandContext
 	 */
 	public Set<String> getUseUserPropertyEditorPropertyName(boolean isDetail) {
 
-		if (useUserPropertyEditorPropertyNameList == null) {
-			useUserPropertyEditorPropertyNameList
-				= getUseUserPropertyEditorPropertyName(isDetail, Entity.LOCKED_BY, Entity.CREATE_BY, Entity.UPDATE_BY);
+		if (useUserPropertyEditorPropertyNameList != null) {
+			return useUserPropertyEditorPropertyNameList;
 		}
-		return useUserPropertyEditorPropertyNameList;
-	}
 
-	/**
-	 * 指定のプロパティ名を持ち、UserPropertyEditorを利用している検索結果のプロパティ名を取得します。
-	 * @param isDetail true:詳細編集、false:詳細表示
-	 * @param propNames
-	 * @return
-	 */
-	private Set<String> getUseUserPropertyEditorPropertyName(boolean isDetail, String... propNames) {
-
-		Set<String> ret = new HashSet<>();
+		useUserPropertyEditorPropertyNameList = new HashSet<>();
 		for (PropertyItem property : getDisplayProperty(isDetail)) {
 			String propertyName = property.getPropertyName();
 
 			if (property.getEditor() instanceof ReferencePropertyEditor) {
-				//ネストの項目を確認
+				// ネストの項目を確認
 				ReferencePropertyEditor editor = (ReferencePropertyEditor) property.getEditor();
-				if (!editor.getNestProperties().isEmpty()) {
-					Set<String> nest = getUseUserPropertyEditorNestPropertyName(editor, propNames);
+				if (!editor.getNestProperties()
+						.isEmpty()) {
+					Set<String> nest = getUseUserPropertyEditorNestPropertyName(editor);
 					for (String nestPropertyName : nest) {
 						String _nestPropertyName = propertyName + "." + nestPropertyName;
-						ret.add(_nestPropertyName);
+						useUserPropertyEditorPropertyNameList.add(_nestPropertyName);
 					}
 				}
 			} else if (property.getEditor() instanceof UserPropertyEditor) {
-				//直接指定項目の確認
-				for (String propName : propNames) {
-					boolean isUserEditor = false;
-					if (propertyName.contains(".")) {
-						//ReferencePropertyの直接指定
-						isUserEditor = propertyName.endsWith("." + propName);
-					} else {
-						//通常Property
-						isUserEditor = propertyName.equals(propName);
-					}
-					if (isUserEditor) {
-						ret.add(propertyName);
-					}
-				}
+				useUserPropertyEditorPropertyNameList.add(propertyName);
 			}
-
 		}
-		return ret;
+
+		return useUserPropertyEditorPropertyNameList;
 	}
 
-	private Set<String> getUseUserPropertyEditorNestPropertyName(ReferencePropertyEditor editor, String... propNames) {
+	private Set<String> getUseUserPropertyEditorNestPropertyName(ReferencePropertyEditor editor) {
 
 		Set<String> ret = new HashSet<>();
 		for (NestProperty property : editor.getNestProperties()) {
@@ -1190,20 +1347,16 @@ public class DetailCommandContext extends RegistrationCommandContext
 			if (property.getEditor() instanceof ReferencePropertyEditor) {
 				//再ネストの項目を確認
 				ReferencePropertyEditor nestEditor = (ReferencePropertyEditor) property.getEditor();
-				if (!nestEditor.getNestProperties().isEmpty()) {
-					Set<String> nest = getUseUserPropertyEditorNestPropertyName(nestEditor, propNames);
+				if (!nestEditor.getNestProperties()
+						.isEmpty()) {
+					Set<String> nest = getUseUserPropertyEditorNestPropertyName(nestEditor);
 					for (String nestPropertyName : nest) {
 						String _nestPropertyName = property.getPropertyName() + "." + nestPropertyName;
 						ret.add(_nestPropertyName);
 					}
 				}
 			} else if (property.getEditor() instanceof UserPropertyEditor) {
-				//NestProperty項目
-				for (String propName : propNames) {
-					if (propName.equals(property.getPropertyName())) {
-						ret.add(property.getPropertyName());
-					}
-				}
+				ret.add(property.getPropertyName());
 			}
 		}
 		return ret;
@@ -1215,6 +1368,8 @@ public class DetailCommandContext extends RegistrationCommandContext
 	 */
 	protected void validate(Entity entity) {
 		List<PropertyItem> properties = getDisplayProperty(true);
+		DetailFormViewRuntime formViewRuntime = FormViewRuntimeUtil.getFormViewRuntime(getDefinitionName(), getViewName(),
+				DetailFormViewRuntime.class);
 		for (PropertyItem property : properties) {
 			if (property.getEditor() instanceof DateRangePropertyEditor) {
 				//日付の逆転チェック
@@ -1224,6 +1379,8 @@ public class DetailCommandContext extends RegistrationCommandContext
 				//数値の逆転チェック
 				NumericRangePropertyEditor editor = (NumericRangePropertyEditor) property.getEditor();
 				checkNumericRange(editor, entity, property.getPropertyName(), editor.getToPropertyName(), "");
+			} else if (property.getEditor() instanceof BinaryPropertyEditor) {
+				checkBinary(formViewRuntime, property.getPropertyName(), entity, "");
 			} else if (property.getEditor() instanceof ReferencePropertyEditor) {
 				ReferencePropertyEditor editor = (ReferencePropertyEditor) property.getEditor();
 				Object val = entity.getValue(property.getPropertyName());
@@ -1231,7 +1388,7 @@ public class DetailCommandContext extends RegistrationCommandContext
 				Entity[] ary = null;
 				if (val != null) {
 					if (val instanceof Entity) {
-						ary = new Entity[] {(Entity) val};
+						ary = new Entity[] { (Entity) val };
 					} else if (val instanceof Entity[]) {
 						ary = (Entity[]) val;
 					}
@@ -1239,7 +1396,8 @@ public class DetailCommandContext extends RegistrationCommandContext
 
 				if (editor.getDisplayType() == ReferenceDisplayType.NESTTABLE
 						&& ary != null && ary.length > 0
-						&& editor.getNestProperties() != null && !editor.getNestProperties().isEmpty()) {
+						&& editor.getNestProperties() != null && !editor.getNestProperties()
+								.isEmpty()) {
 					//NestTable、参照セクション
 					for (int i = 0; i < ary.length; i++) {
 						String errorPrefix = property.getPropertyName() + "[" + i + "].";
@@ -1252,6 +1410,8 @@ public class DetailCommandContext extends RegistrationCommandContext
 								//数値の逆転チェック
 								NumericRangePropertyEditor de = (NumericRangePropertyEditor) np.getEditor();
 								checkNumericRange(de, ary[i], np.getPropertyName(), de.getToPropertyName(), errorPrefix);
+							} else if (np.getEditor() instanceof BinaryPropertyEditor) {
+								checkBinary(formViewRuntime, np.getPropertyName(), ary[i], errorPrefix);
 							}
 						}
 					}
@@ -1332,6 +1492,107 @@ public class DetailCommandContext extends RegistrationCommandContext
 	}
 
 	/**
+	 * バイナリプロパティのチェック
+	 *
+	 * <p>
+	 * チェック内容は以下の通り
+	 *
+	 * <ul>
+	 * <li>ファイルタイプについて、プロパティエディタもしくは、GemConfigService の受け入れ MIME Type パターンのチェック</li>
+	 * </ul>
+	 * </p>
+	 * @param editor プロパティエディタ
+	 * @param propertyName プロパティ名
+	 * @param entity エンティティ
+	 * @param propertyPrefix ネストプロパティの上位プロパティ名
+	 */
+	private void checkBinary(DetailFormViewRuntime viewRuntime, String propertyName, Entity entity, String propertyPrefix) {
+		Object propertyValue = entity.getValue(propertyName);
+		if (null == propertyValue) {
+			// 値が null であれば何もしない
+			return;
+		}
+
+		GemConfigService service = ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class);
+
+		// SectionRuntime のプロパティはネストプロパティを意識した形で情報を保管している。
+		// そのため、ネストプロパティの場合は、parent[0].child というプロパティ名でプロパティエディタを取得する
+		String fullPropertyName = propertyPrefix + propertyName;
+		BinaryPropertyEditorRuntime editorRuntime = FormViewRuntimeUtil.getPropertyEditorRuntime(viewRuntime, fullPropertyName,
+				BinaryPropertyEditorRuntime.class);
+
+		List<BinaryReference> errorBinaryList = resolveValue(entity, propertyName, (BinaryReference value) -> {
+			// MIME Type パターンのチェック
+			boolean isAccept = true;
+			// ファイル MIME Type の検査
+			if (null != editorRuntime && null != editorRuntime.getUploadAcceptMimeTypesPattern()) {
+				// プロパティエディタに許可する MIME Type が指定されている場合は、プロパティエディタを優先する
+				isAccept = editorRuntime.getUploadAcceptMimeTypesPattern()
+						.matcher(value.getType())
+						.matches();
+
+			} else if (null != service.getBinaryUploadAcceptMimeTypesPattern()) {
+				// プロパティエディタに設定が無く、GemConfigServiceの受け入れ許可設定が存在する場合は、GemConfigService の設定で許可設定を行う
+				isAccept = service.getBinaryUploadAcceptMimeTypesPattern()
+						.matcher(value.getType())
+						.matches();
+			}
+			// else {
+			// // プロパティエディタ、GemServiceConfig に設定が無い場合はチェックしない
+			// }
+
+			return isAccept;
+		});
+
+		if (!errorBinaryList.isEmpty()) {
+			// 許可されていない（パターンマッチしない）ファイルタイプの場合は、エラーメッセージ設定
+			String errorMessage = resourceString("command.generic.detail.DetailCommandContext.unacceptedFileType",
+					String.join(",", errorBinaryList.stream()
+							.map(v -> v.getName())
+							.collect(Collectors.toList())));
+			ValidateError e = new ValidateError();
+			e.setPropertyName(fullPropertyName);
+			e.addErrorMessage(errorMessage);
+			getErrors().add(e);
+		}
+	}
+
+	/**
+	 * エンティティの値を解決（単一、配列）し検証処理を実行する
+	 *
+	 * @param <R> プロパティデータ型
+	 * @param entity エンティティデータ
+	 * @param propertyName 対象プロパティ名
+	 * @param logic 検証処理。検証処理の返却値は次の通り（正常終了: true, 問題あり: false）。
+	 * @return 問題のあったデータリスト
+	 */
+	@SuppressWarnings("unchecked")
+	protected <R> List<R> resolveValue(Entity entity, String propertyName, Function<R, Boolean> logic) {
+		Object value = entity.getValue(propertyName);
+
+		List<R> result = new ArrayList<>();
+
+		if (null != value && value.getClass()
+				.isArray()) {
+			// 値が配列の場合
+			for (R o : (R[]) value) {
+				if (!logic.apply(o)) {
+					result.add(o);
+				}
+			}
+
+		} else {
+			// 値が単一値。値が null の場合も単一値として検証を実施する
+			if (!logic.apply((R) value)) {
+				result.add((R) value);
+			}
+		}
+
+		return result;
+	}
+
+	/**
 	 * 数値範囲のキャスト
 	 * @param number
 	 * @return castNumber
@@ -1359,7 +1620,7 @@ public class DetailCommandContext extends RegistrationCommandContext
 	 */
 	private void setValidateErrorMessage(RangePropertyEditor editor, String fromName, String errorPrefix, String resourceStringKey) {
 		String errorMessage = TemplateUtil.getMultilingualString(editor.getErrorMessage(), editor.getLocalizedErrorMessageList());
-		if (StringUtil.isBlank(errorMessage )) {
+		if (StringUtil.isBlank(errorMessage)) {
 			errorMessage = resourceString(resourceStringKey);
 		}
 		ValidateError e = new ValidateError();
@@ -1455,7 +1716,8 @@ public class DetailCommandContext extends RegistrationCommandContext
 
 		PropertyItem property = new PropertyItem();
 		property.setPropertyName(section.getPropertyName());
-		property.setDispFlag(EntityViewUtil.isDisplayElement(getDefinitionName(), section.getElementRuntimeId(), outputType, getDispControlBindEntity()));
+		property.setDispFlag(
+				EntityViewUtil.isDisplayElement(getDefinitionName(), section.getElementRuntimeId(), outputType, getDispControlBindEntity()));
 
 		ReferencePropertyEditor editor = new ReferencePropertyEditor();
 		editor.setDisplayType(ReferenceDisplayType.NESTTABLE);

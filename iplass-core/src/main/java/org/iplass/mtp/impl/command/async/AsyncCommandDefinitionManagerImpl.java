@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,7 +29,8 @@ import org.iplass.mtp.spi.ServiceRegistry;
 
 public class AsyncCommandDefinitionManagerImpl extends AbstractTypedDefinitionManager<AsyncCommandDefinition> implements AsyncCommandDefinitionManager {
 
-	private AsyncCommandService service = ServiceRegistry.getRegistry().getService(AsyncCommandService.class);
+	private AsyncCommandService service = ServiceRegistry.getRegistry()
+			.getService(AsyncCommandService.class);
 
 	@Override
 	public Class<AsyncCommandDefinition> getDefinitionType() {

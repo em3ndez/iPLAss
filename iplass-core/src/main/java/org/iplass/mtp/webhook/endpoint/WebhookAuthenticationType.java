@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -18,6 +18,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 package org.iplass.mtp.webhook.endpoint;
+
 /**
  * <% if (doclang == "ja") {%>
  * Authorizationヘッダーに使う認証タイプ
@@ -27,13 +28,12 @@ package org.iplass.mtp.webhook.endpoint;
  */
 public enum WebhookAuthenticationType {
 	BEARER("Bearer Authentication"),
-	BASIC("Basic Authentication"),//"username:password"
+	BASIC("Basic Authentication"), //"username:password"
 	CUSTOM("Custom Authentication");
-
 
 	private String displayName;
 
-	WebhookAuthenticationType(String displayName){
+	WebhookAuthenticationType(String displayName) {
 		this.displayName = displayName;
 	}
 

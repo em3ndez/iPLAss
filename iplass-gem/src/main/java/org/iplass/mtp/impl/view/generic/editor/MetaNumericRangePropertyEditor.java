@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -60,6 +60,9 @@ public class MetaNumericRangePropertyEditor extends MetaCustomPropertyEditor imp
 	/** FromのNull許容フラグ */
 	private boolean inputNullFrom;
 
+	/** Fromプロパティに対して値を含めて検索する*/
+	private boolean fromConditionAsLesserEqual = true;
+
 	/** Toプロパティエディタ */
 	private MetaPropertyEditor toEditor;
 
@@ -75,6 +78,9 @@ public class MetaNumericRangePropertyEditor extends MetaCustomPropertyEditor imp
 	/** ToのNull許容フラグ */
 	private boolean inputNullTo;
 
+	/** Toプロパティに対して値を含めて検索する*/
+	private boolean toConditionAsGreaterEqual;
+
 	/** 同値許容フラグ */
 	private boolean equivalentInput;
 
@@ -89,7 +95,7 @@ public class MetaNumericRangePropertyEditor extends MetaCustomPropertyEditor imp
 	 * @return オブジェクトID
 	 */
 	public String getObjectId() {
-	    return objectId;
+		return objectId;
 	}
 
 	/**
@@ -97,7 +103,7 @@ public class MetaNumericRangePropertyEditor extends MetaCustomPropertyEditor imp
 	 * @param objectId オブジェクトID
 	 */
 	public void setObjectId(String objectId) {
-	    this.objectId = objectId;
+		this.objectId = objectId;
 	}
 
 	/**
@@ -105,7 +111,7 @@ public class MetaNumericRangePropertyEditor extends MetaCustomPropertyEditor imp
 	 * @return プロパティエディタ
 	 */
 	public MetaPropertyEditor getEditor() {
-	    return editor;
+		return editor;
 	}
 
 	/**
@@ -113,7 +119,7 @@ public class MetaNumericRangePropertyEditor extends MetaCustomPropertyEditor imp
 	 * @param editor プロパティエディタ
 	 */
 	public void setEditor(MetaPropertyEditor editor) {
-	    this.editor = editor;
+		this.editor = editor;
 	}
 
 	/**
@@ -132,11 +138,27 @@ public class MetaNumericRangePropertyEditor extends MetaCustomPropertyEditor imp
 	}
 
 	/**
+	 * Fromプロパティに対して値を含めて検索するかを取得します。
+	 * @return Fromプロパティに対して値を含めて検索するか
+	 */
+	public boolean isFromConditionAsLesserEqual() {
+		return fromConditionAsLesserEqual;
+	}
+
+	/**
+	 * Fromプロパティに対して値を含めて検索するかを設定します。
+	 * @param fromConditionAsLesserEqual Fromプロパティに対して値を含めて検索するか
+	 */
+	public void setFromConditionAsLesserEqual(boolean fromConditionAsLesserEqual) {
+		this.fromConditionAsLesserEqual = fromConditionAsLesserEqual;
+	}
+
+	/**
 	 * Toプロパティエディタを取得します。
 	 * @return Toプロパティエディタ
 	 */
 	public MetaPropertyEditor getToEditor() {
-	    return toEditor;
+		return toEditor;
 	}
 
 	/**
@@ -144,7 +166,7 @@ public class MetaNumericRangePropertyEditor extends MetaCustomPropertyEditor imp
 	 * @param toEditor Toプロパティエディタ
 	 */
 	public void setToEditor(MetaPropertyEditor toEditor) {
-	    this.toEditor = toEditor;
+		this.toEditor = toEditor;
 	}
 
 	/**
@@ -206,6 +228,22 @@ public class MetaNumericRangePropertyEditor extends MetaCustomPropertyEditor imp
 	}
 
 	/**
+	 * Toプロパティに対して値を含めて検索するかを取得します。
+	 * @return Toプロパティに対して値を含めて検索するか
+	 */
+	public boolean isToConditionAsGreaterEqual() {
+		return toConditionAsGreaterEqual;
+	}
+
+	/**
+	 * Toプロパティに対して値を含めて検索するかを設定します。
+	 * @param toConditionAsGreaterEqual Toプロパティに対して値を含めて検索するか
+	 */
+	public void setToConditionAsGreaterEqual(boolean toConditionAsGreaterEqual) {
+		this.toConditionAsGreaterEqual = toConditionAsGreaterEqual;
+	}
+
+	/**
 	 * @return equivalentInput
 	 */
 	public boolean isEquivalentInput() {
@@ -256,7 +294,8 @@ public class MetaNumericRangePropertyEditor extends MetaCustomPropertyEditor imp
 		EntityContext metaContext = EntityContext.getCurrentContext();
 		EntityHandler entity = metaContext.getHandlerByName(e.getObjectName());
 
-		objectId = entity.getMetaData().getId();
+		objectId = entity.getMetaData()
+				.getId();
 		if (e.getEditor() != null) {
 			editor = MetaPropertyEditor.createInstance(e.getEditor());
 			editor.applyConfig(e.getEditor());
@@ -267,7 +306,9 @@ public class MetaNumericRangePropertyEditor extends MetaCustomPropertyEditor imp
 		}
 
 		setInputNullFrom(e.isInputNullFrom());
+		setFromConditionAsLesserEqual(e.isFromConditionAsLesserEqual());
 		setInputNullTo(e.isInputNullTo());
+		setToConditionAsGreaterEqual(e.isToConditionAsGreaterEqual());
 		setEquivalentInput(e.isEquivalentInput());
 
 		toPropertyId = convertId(e.getToPropertyName(), metaContext, entity);
@@ -280,7 +321,8 @@ public class MetaNumericRangePropertyEditor extends MetaCustomPropertyEditor imp
 		}
 
 		errorMessage = e.getErrorMessage();
-		if (e.getLocalizedErrorMessageList() != null && !e.getLocalizedErrorMessageList().isEmpty()) {
+		if (e.getLocalizedErrorMessageList() != null && !e.getLocalizedErrorMessageList()
+				.isEmpty()) {
 			localizedErrorMessageList = I18nUtil.toMeta(e.getLocalizedErrorMessageList());
 		}
 	}
@@ -296,7 +338,8 @@ public class MetaNumericRangePropertyEditor extends MetaCustomPropertyEditor imp
 		NumericRangePropertyEditor _editor = new NumericRangePropertyEditor();
 		super.fillTo(_editor);
 
-		_editor.setObjectName(entity.getMetaData().getName());
+		_editor.setObjectName(entity.getMetaData()
+				.getName());
 		if (editor != null) {
 			_editor.setEditor(editor.currentConfig(propertyName));
 		}
@@ -310,8 +353,11 @@ public class MetaNumericRangePropertyEditor extends MetaCustomPropertyEditor imp
 		}
 
 		_editor.setLocalizedToPropertyDisplayNameList(I18nUtil.toDef(localizedToPropertyDisplayNameList));
+
 		_editor.setInputNullFrom(inputNullFrom);
+		_editor.setFromConditionAsLesserEqual(fromConditionAsLesserEqual);
 		_editor.setInputNullTo(inputNullTo);
+		_editor.setToConditionAsGreaterEqual(toConditionAsGreaterEqual);
 		_editor.setEquivalentInput(equivalentInput);
 
 		_editor.setErrorMessage(errorMessage);

@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 <%@ page import="java.sql.Time" %>
@@ -90,12 +90,17 @@
 
 	Entity entity = request.getAttribute(Constants.ENTITY_DATA) instanceof Entity ? (Entity) request.getAttribute(Constants.ENTITY_DATA) : null;
 	Object propValue = request.getAttribute(Constants.EDITOR_PROP_VALUE);
+	String displayLabel = (String) request.getAttribute(Constants.EDITOR_DISPLAY_LABEL);
 
 	String defName = (String)request.getAttribute(Constants.DEF_NAME);
 	String rootDefName = (String)request.getAttribute(Constants.ROOT_DEF_NAME);
 	PropertyDefinition pd = (PropertyDefinition) request.getAttribute(Constants.EDITOR_PROPERTY_DEFINITION);
 	String scriptKey = (String)request.getAttribute(Constants.SECTION_SCRIPT_KEY);
 	String execType = (String) request.getAttribute(Constants.EXEC_TYPE);
+	Boolean nestDummyRow = (Boolean) request.getAttribute(Constants.EDITOR_REF_NEST_DUMMY_ROW);
+	if (nestDummyRow == null) {
+		nestDummyRow = false;
+	}
 
 	Boolean isVirtual = (Boolean) request.getAttribute(Constants.IS_VIRTUAL);
 	if (isVirtual == null) isVirtual = false;
@@ -137,9 +142,9 @@
 	}
 
 	//タイプ毎に出力内容かえる
-	if (editor.getDisplayType() != DateTimeDisplayType.LABEL 
+	if (editor.getDisplayType() != DateTimeDisplayType.LABEL
 			&& editor.getDisplayType() != DateTimeDisplayType.HIDDEN && updatable) {
-		
+
 		boolean isMultiple = pd.getMultiplicity() != 1;
 
 		//カスタムスタイル
@@ -161,6 +166,11 @@
 function <%=toggleAddBtnFunc%>(){
 	var display = $("#<%=StringUtil.escapeJavaScript(ulId)%> li:not(:hidden)").length < <%=pd.getMultiplicity()%>;
 	$("#id_addBtn_<c:out value="<%=propName %>" />").toggle(display);
+
+	var $parent = $("#<%=StringUtil.escapeJavaScript(ulId)%>").closest(".property-data");
+	if ($(".validate-error", $parent).length === 0) {
+		$(".format-error", $parent).remove();
+	}
 }
 </script>
 <%
@@ -192,7 +202,7 @@ function <%=toggleAddBtnFunc%>(){
 %>
 <input type="text" class="inpbr timepicker-form-size-01" style="<c:out value="<%=customStyle%>"/>" maxlength="<c:out value="<%=maxLength %>"/>"
 	data-stepmin="<c:out value="<%=minInterval %>"/>" data-timeformat="<c:out value="<%=sbFormat.toString() %>"/>"
-	data-fixedMin="<c:out value="<%=defaultMin%>"/>" data-fixedSec="<c:out value="<%=defaultSec%>"/>"/>
+	data-fixedMin="<c:out value="<%=defaultMin%>"/>" data-fixedSec="<c:out value="<%=defaultSec%>"/>" data-suppress-alert="true"/>
 <input type="hidden" />
 <input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.time.TimePropertyEditor_Edit.delete')}" class="gr-btn-02 del-btn" />
 </li>
@@ -225,8 +235,31 @@ function <%=toggleAddBtnFunc%>(){
 <input type="button" id="id_addBtn_<c:out value="<%=propName %>"/>" value="${m:rs('mtp-gem-messages', 'generic.editor.time.TimePropertyEditor_Edit.add')}" class="gr-btn-02 add-btn" style="<%=addBtnStyle%>"
 	onclick="addTimePickerItem('<%=StringUtil.escapeJavaScript(ulId)%>', <%=pd.getMultiplicity() + 1 %>, '<%=StringUtil.escapeJavaScript(dummyRowId)%>', '<%=StringUtil.escapeJavaScript(propName)%>', 'id_count_<%=StringUtil.escapeJavaScript(propName)%>', <%=toggleAddBtnFunc%>, <%=toggleAddBtnFunc%>)" />
 <input type="hidden" id="id_count_<c:out value="<%=propName %>"/>" value="<c:out value="<%=length %>"/>" />
+<script>
+$(function() {
+	<%-- common.js --%>
+	addEditValidator(function() {
+		var $input = $("#" + es("<%=ulId%>") + " li :text");
+		for (var i = 0; i < $input.length; i++) {
+			var $_input = $($input.get(i));
+			var val = $_input.val();
+			var timeFormat = $_input.attr("data-timeformat");
+			var fixedmin = $_input.attr("data-fixedmin");
+			var fixedsec = $_input.attr("data-fixedsec");
+			if (typeof val !== "undefined" && val !== null && val !== "") {
+				try {
+					validateTimePicker(val, timeFormat, fixedmin, fixedsec);
+				} catch (e) {
+					alert(messageFormat(scriptContext.gem.locale.common.timeFormatErrorMsg, "<%=StringUtil.escapeJavaScript(displayLabel)%>", timeFormat))
+					return false;
+				}
+			}
+		}
+		return true;
+	});
+});
+</script>
 <%
-
 			} else {
 
 %>
@@ -339,6 +372,32 @@ function <%=toggleAddBtnFunc%>(){
 <jsp:include page="TimeTimePicker.jsp"></jsp:include>
 </span>
 <%
+				if (!nestDummyRow) {
+					//NestTableダミー行は出力しない＆コピー時はコピー処理側から追加
+%>
+<script>
+$(function() {
+	<%-- common.js --%>
+	addEditValidator(function() {
+		var $input = $("#time_" + es("<%=StringUtil.escapeJavaScript(propName)%>"));
+		var val = $input.val();
+		var timeFormat = $input.attr("data-timeformat");
+		var fixedmin = $input.attr("data-fixedmin");
+		var fixedsec = $input.attr("data-fixedsec");
+		if (typeof val !== "undefined" && val !== null && val !== "") {
+			try {
+				validateTimePicker(val, timeFormat, fixedmin, fixedsec);
+			} catch (e) {
+				alert(messageFormat(scriptContext.gem.locale.common.timeFormatErrorMsg, "<%=StringUtil.escapeJavaScript(displayLabel)%>", timeFormat))
+				return false;
+			}
+		}
+		return true;
+	});
+});
+</script>
+<%
+				}
 			} else {
 %>
 <span class="timeselect-field">
@@ -351,7 +410,7 @@ function <%=toggleAddBtnFunc%>(){
 		}
 	} else {
 		//LABELかHIDDENか更新不可
-		
+
 		if (editor.getDisplayType() != DateTimeDisplayType.HIDDEN) {
 			request.setAttribute(Constants.OUTPUT_HIDDEN, true);
 		}

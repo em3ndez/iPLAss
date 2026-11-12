@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,8 +22,7 @@ package org.iplass.mtp.entity.definition;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
-
+import org.iplass.mtp.entity.definition.normalizers.HtmlSanitizer;
 import org.iplass.mtp.entity.definition.normalizers.ICUTransliterator;
 import org.iplass.mtp.entity.definition.normalizers.JavaClassNormalizer;
 import org.iplass.mtp.entity.definition.normalizers.NewlineNormalizer;
@@ -33,6 +32,7 @@ import org.iplass.mtp.entity.definition.normalizers.UnicodeNormalizer;
 import org.iplass.mtp.entity.definition.normalizers.WhiteSpaceTrimmer;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
 
 /**
  * <% if (doclang == "ja") {%>
@@ -45,14 +45,15 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  *
  */
 @XmlSeeAlso({
+		HtmlSanitizer.class,
 		ICUTransliterator.class,
 		JavaClassNormalizer.class,
 		NewlineNormalizer.class,
 		RegexReplace.class,
 		ScriptingNormalizer.class,
 		UnicodeNormalizer.class,
-		WhiteSpaceTrimmer.class})
-@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS)
+		WhiteSpaceTrimmer.class })
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 public abstract class NormalizerDefinition implements Serializable {
 	private static final long serialVersionUID = -5463919265806923883L;
 }

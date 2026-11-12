@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -34,10 +34,10 @@ public class TimeoutHint extends EQLHint {
 	private static final long serialVersionUID = -652190536500105365L;
 
 	private int seconds;
-	
+
 	public TimeoutHint() {
 	}
-	
+
 	public TimeoutHint(int seconds) {
 		this.seconds = seconds;
 	}

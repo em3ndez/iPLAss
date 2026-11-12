@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,7 +33,8 @@ public class MetaDataAuditLogger {
 
 	private static MetaDataAuditLogger instance = new MetaDataAuditLogger();
 
-	private MetaDataAuditLogger() {}
+	private MetaDataAuditLogger() {
+	}
 
 	public static MetaDataAuditLogger getLogger() {
 		return instance;
@@ -68,7 +69,9 @@ public class MetaDataAuditLogger {
 	 */
 	private String sanitize(Object detail) {
 		if (detail != null) {
-			return detail.toString().replace("\n", "\\n").replace("\r", "\\r");
+			return detail.toString()
+					.replace("\n", "\\n")
+					.replace("\r", "\\r");
 		}
 		return "";
 	}

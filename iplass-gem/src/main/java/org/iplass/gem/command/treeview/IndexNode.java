@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -19,7 +19,6 @@
  */
 
 package org.iplass.gem.command.treeview;
-
 
 /**
  * Entityのデータを件数ごとに区切るノード
@@ -59,7 +58,7 @@ public class IndexNode extends TreeViewNode {
 	 * @return オフセット
 	 */
 	public int getOffset() {
-	    return offset;
+		return offset;
 	}
 
 	/**
@@ -67,7 +66,7 @@ public class IndexNode extends TreeViewNode {
 	 * @param offset オフセット
 	 */
 	public void setOffset(int offset) {
-	    this.offset = offset;
+		this.offset = offset;
 	}
 
 	/**
@@ -75,7 +74,7 @@ public class IndexNode extends TreeViewNode {
 	 * @return 親ノードのOID
 	 */
 	public String getOid() {
-	    return oid;
+		return oid;
 	}
 
 	/**
@@ -83,6 +82,6 @@ public class IndexNode extends TreeViewNode {
 	 * @param oid 親ノードのOID
 	 */
 	public void setOid(String oid) {
-	    this.oid = oid;
+		this.oid = oid;
 	}
 }

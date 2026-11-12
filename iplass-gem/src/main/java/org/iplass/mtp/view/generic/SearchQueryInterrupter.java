@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -19,6 +19,8 @@
  */
 
 package org.iplass.mtp.view.generic;
+
+import java.util.List;
 
 import org.iplass.mtp.command.RequestContext;
 import org.iplass.mtp.entity.Entity;
@@ -64,7 +66,13 @@ public interface SearchQueryInterrupter {
 	 * @return 実行結果
 	 */
 	default public SearchQueryContext beforeSearch(RequestContext request, SearchFormView view, Query query, SearchQueryType type) {
-		return beforeSearch(request, view, query); // 既存向けに旧メソッドを呼び出す
+		SearchQueryContext searchQueryContext = beforeSearch(request, view, query); // 既存向けに旧メソッドを呼び出す
+		List<String> withoutConditionReferenceName = view.getWithoutConditionReferenceName();
+		if (searchQueryContext.getWithoutConditionReferenceName() == null && withoutConditionReferenceName != null) {
+			searchQueryContext.setWithoutConditionReferenceName(
+					withoutConditionReferenceName.toArray(new String[withoutConditionReferenceName.size()]));
+		}
+		return searchQueryContext;
 	}
 
 	/**

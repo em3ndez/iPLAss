@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -37,12 +37,14 @@ public abstract class ValueExpression implements ASTNode {
 
 	public static ValueExpression newValue(String valueExpression) {
 		try {
-			return QueryServiceHolder.getInstance().getQueryParser().parse(valueExpression, PolynomialSyntax.class);
+			return QueryServiceHolder.getInstance()
+					.getQueryParser()
+					.parse(valueExpression, PolynomialSyntax.class);
 		} catch (ParseException e) {
 			throw new QueryException(e.getMessage(), e);
 		}
 	}
-	
+
 	public abstract void accept(ValueExpressionVisitor visitor);
-	
+
 }

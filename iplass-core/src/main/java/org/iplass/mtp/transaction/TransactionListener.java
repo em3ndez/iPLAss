@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,19 +28,21 @@ package org.iplass.mtp.transaction;
  *
  */
 public interface TransactionListener {
-	
+
 	/**
 	 * トランザクションがcommitされた場合、通知されます。
 	 * 
 	 * @param t
 	 */
-	public default void afterCommit(Transaction t) {};
-	
+	public default void afterCommit(Transaction t) {
+	};
+
 	/**
 	 * トランザクションがrollbackされた場合、通知されます。
 	 * 
 	 * @param t
 	 */
-	public default void afterRollback(Transaction t) {};
+	public default void afterRollback(Transaction t) {
+	};
 
 }

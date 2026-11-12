@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,6 +26,7 @@ import java.util.List;
 import org.iplass.mtp.entity.definition.EntityDefinition;
 import org.iplass.mtp.view.filter.EntityFilterItem;
 import org.iplass.mtp.view.generic.SearchFormView;
+import org.iplass.mtp.view.generic.element.section.SearchConditionSection.FileSupportType;
 
 /**
  * 検索画面表示用データ
@@ -47,6 +48,9 @@ public class SearchFormViewData {
 
 	/** フィルタ設定 */
 	private List<EntityFilterItem> filters;
+
+	/** ファイルサポートタイプ */
+	private FileSupportType fileSupportType;
 
 	/**
 	 * コンストラクタ
@@ -123,7 +127,9 @@ public class SearchFormViewData {
 	 * @return フィルタ設定
 	 */
 	public List<EntityFilterItem> getFilters() {
-		if (filters == null) filters = new ArrayList<>();
+		if (filters == null) {
+			filters = new ArrayList<>();
+		}
 		return filters;
 	}
 
@@ -133,6 +139,22 @@ public class SearchFormViewData {
 	 */
 	public void setFilters(List<EntityFilterItem> filters) {
 		this.filters = filters;
+	}
+
+	/**
+	 * ファイルサポートタイプを取得します。
+	 * @return ファイルサポートタイプ
+	 */
+	public FileSupportType getFileSupportType() {
+		return fileSupportType;
+	}
+
+	/**
+	 * ファイルサポートタイプを設定します。
+	 * @param fileSupportType ファイルサポートタイプ
+	 */
+	public void setFileSupportType(FileSupportType fileSupportType) {
+		this.fileSupportType = fileSupportType;
 	}
 
 }

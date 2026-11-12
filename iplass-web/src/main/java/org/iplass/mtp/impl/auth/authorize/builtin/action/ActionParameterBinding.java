@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,27 +23,27 @@ package org.iplass.mtp.impl.auth.authorize.builtin.action;
 import org.iplass.mtp.web.actionmapping.permission.ActionParameter;
 
 public class ActionParameterBinding {
-	
+
 	private ActionParameter actionParameter;
-	
+
 	public ActionParameterBinding(ActionParameter actionParameter) {
 		this.actionParameter = actionParameter;
 	}
-	
+
 	public Object getValue(String name) {
 		if (actionParameter == null) {
 			return null;
 		}
 		return actionParameter.getValue(name);
 	}
-	
+
 	public boolean in(String name, Object... value) {
 		Object paramValue = null;
 		if (actionParameter != null) {
 			paramValue = actionParameter.getValue(name);
 		}
 		if (value != null) {
-			for (Object v: value) {
+			for (Object v : value) {
 				if (v == null) {
 					if (paramValue == null) {
 						return true;

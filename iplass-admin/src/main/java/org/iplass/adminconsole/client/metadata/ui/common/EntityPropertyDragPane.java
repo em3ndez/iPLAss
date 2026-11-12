@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -40,15 +40,14 @@ public class EntityPropertyDragPane extends VLayout {
 
 		SectionStackSection propertySection = new SectionStackSection("Properties");
 		propertySection.setExpanded(true);
-		propertySection.setCanCollapse(false);	//CLOSE不可
+		propertySection.setCanCollapse(false); //CLOSE不可
 		propertySection.setID(SECTION_ID_PROPERTY);
-
 
 		propertySectionStack.addSection(propertySection);
 
 		//表示TreeGrid
 		propertyGrid = new EntityPropertyTreeGrid(showRoot);
-		propertyGrid.setDragType("Property");	//DragされるItemのType設定
+		propertyGrid.setDragType("Property"); //DragされるItemのType設定
 
 		propertySection.addItem(propertyGrid);
 

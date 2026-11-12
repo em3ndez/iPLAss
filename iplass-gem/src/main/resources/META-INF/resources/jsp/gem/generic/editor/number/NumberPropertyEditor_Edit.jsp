@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 <%@ page import="java.text.DecimalFormat" %>
@@ -83,6 +83,7 @@
 
 	Entity entity = request.getAttribute(Constants.ENTITY_DATA) instanceof Entity ? (Entity) request.getAttribute(Constants.ENTITY_DATA) : null;
 	Object propValue = request.getAttribute(Constants.EDITOR_PROP_VALUE);
+	String displayLabel = (String) request.getAttribute(Constants.EDITOR_DISPLAY_LABEL);
 
 	String defName = (String)request.getAttribute(Constants.DEF_NAME);
 	String rootDefName = (String)request.getAttribute(Constants.ROOT_DEF_NAME);
@@ -118,7 +119,7 @@
 		request.setAttribute(Constants.AUTOCOMPLETION_SCRIPT_PATH, "/jsp/gem/generic/editor/number/NumberPropertyAutocompletion.jsp");
 	}
 
-	if (editor.getDisplayType() != NumberDisplayType.LABEL 
+	if (editor.getDisplayType() != NumberDisplayType.LABEL
 			&& editor.getDisplayType() != NumberDisplayType.HIDDEN && updatable) {
 		//テキスト
 
@@ -148,10 +149,22 @@
 			if (editor.isShowComma()) {
 				tmpCls += " commaFieldDummy";
 			}
+			String toggleAddBtnFunc = "toggleAddBtn_" + StringUtil.escapeJavaScript(propName);
 %>
+<script type="text/javascript">
+function <%=toggleAddBtnFunc%>() {
+	var display = $("#<%=StringUtil.escapeJavaScript(ulId)%> li:not(:hidden)").length < <%=pd.getMultiplicity()%>;
+	$("#id_addBtn_<c:out value="<%=propName%>"/>").toggle(display);
+
+	var $parent = $("#<%=StringUtil.escapeJavaScript(ulId)%>").closest(".property-data");
+	if ($(".validate-error", $parent).length === 0) {
+		$(".format-error", $parent).remove();
+	}
+}
+</script>
 <ul id="<c:out value="<%=ulId %>"/>" class="mb05">
 <li id="<c:out value="<%=dummyRowId %>"/>" class="list-add" style="display: none;">
-<input type="text" class="<c:out value="<%=tmpCls %>"/>" style="<c:out value="<%=customStyle%>"/>" onblur="numcheck(this)" <c:out value="<%=maxlength%>"/> /> <input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.number.NumberPropertyEditor_Edit.delete')}" class="gr-btn-02 del-btn" />
+<input type="text" class="<c:out value="<%=tmpCls %>"/>" style="<c:out value="<%=customStyle%>"/>" onblur="numcheck(this, true)" <c:out value="<%=maxlength%>"/> /> <input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.number.NumberPropertyEditor_Edit.delete')}" class="gr-btn-02 del-btn" />
 </li>
 <%
 			//データ出力
@@ -166,15 +179,34 @@
 					String liId = "li_" + propName + i;
 %>
 <li id="<c:out value="<%=liId %>"/>" class="list-add">
-<input type="text" name="<c:out value="<%=propName %>"/>" value="<c:out value="<%=str %>"/>" class="<c:out value="<%=cls %>"/>" style="<c:out value="<%=customStyle%>"/>" onblur="numcheck(this)" <c:out value="<%=maxlength%>"/> /> <input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.number.NumberPropertyEditor_Edit.delete')}" class="gr-btn-02 del-btn" onclick="deleteItem('<%=StringUtil.escapeJavaScript(liId)%>')" />
+<input type="text" name="<c:out value="<%=propName %>"/>" value="<c:out value="<%=str %>"/>" class="<c:out value="<%=cls %>"/>" style="<c:out value="<%=customStyle%>"/>" onblur="numcheck(this, true)" <c:out value="<%=maxlength%>"/> />
+<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.number.NumberPropertyEditor_Edit.delete')}" class="gr-btn-02 del-btn" onclick="deleteItem('<%=StringUtil.escapeJavaScript(liId)%>', <%=toggleAddBtnFunc%>)" />
 </li>
 <%
 				}
 			}
+			String addBtnStyle = "";
+			if (array != null && array.length >= pd.getMultiplicity()) addBtnStyle = "display: none;";
 %>
 </ul>
-<input type="button" id="id_addBtn_<c:out value="<%=propName %>"/>" value="${m:rs('mtp-gem-messages', 'generic.editor.number.NumberPropertyEditor_Edit.add')}" class="gr-btn-02 add-btn" onclick="addTextItem('<%=StringUtil.escapeJavaScript(ulId)%>', <%=pd.getMultiplicity() + 1%>, '<%=StringUtil.escapeJavaScript(dummyRowId)%>', '<%=StringUtil.escapeJavaScript(propName)%>', 'id_count_<%=StringUtil.escapeJavaScript(propName)%>', ':text')" />
+<input type="button" id="id_addBtn_<c:out value="<%=propName %>"/>" value="${m:rs('mtp-gem-messages', 'generic.editor.number.NumberPropertyEditor_Edit.add')}" class="gr-btn-02 add-btn" style="<%=addBtnStyle%>" onclick="addTextItem('<%=StringUtil.escapeJavaScript(ulId)%>', <%=pd.getMultiplicity() + 1%>, '<%=StringUtil.escapeJavaScript(dummyRowId)%>', '<%=StringUtil.escapeJavaScript(propName)%>', 'id_count_<%=StringUtil.escapeJavaScript(propName)%>', ':text', <%=toggleAddBtnFunc%>, <%=toggleAddBtnFunc%>)" />
 <input type="hidden" id="id_count_<c:out value="<%=propName %>"/>" value="<c:out value="<%=length %>"/>" />
+<script>
+$(function() {
+	<%-- common.js --%>
+	addEditValidator(function() {
+		var $input = $("#" + es("<%=ulId%>") + " li :text");
+		for (var i = 0; i < $input.length; i++) {
+			var val = $($input.get(i)).val();
+			if (typeof val !== "undefined" && val !== null && val !== "" && isNaN(val)) {
+				alert(scriptContext.gem.locale.common.numFormatErrorMsg.replace("{0}", "<%=StringUtil.escapeJavaScript(displayLabel)%>"));
+				return false;
+			}
+		}
+		return true;
+	});
+});
+</script>
 <%
 		} else {
 			//単一
@@ -187,12 +219,30 @@
 				}
 			}
 %>
-<input type="text" name="<c:out value="<%=propName %>"/>" value="<c:out value="<%=str %>"/>" class="<c:out value="<%=cls %>"/>" style="<c:out value="<%=customStyle%>"/>" onblur="numcheck(this)" <c:out value="<%=maxlength%>"/> />
+<input type="text" name="<c:out value="<%=propName %>"/>" value="<c:out value="<%=str %>"/>" class="<c:out value="<%=cls %>"/>" style="<c:out value="<%=customStyle%>"/>" onblur="numcheck(this, true)" <c:out value="<%=maxlength%>"/> />
 <%
+			if (nestDummyRow == null || !nestDummyRow) {
+				//NestTableダミー行は出力しない＆コピー時はコピー処理側から追加
+%>
+<script>
+$(function() {
+	<%-- common.js --%>
+	addEditValidator(function() {
+		var val = $(":text[name='" + es("<%=StringUtil.escapeJavaScript(propName)%>") + "']").val();
+		if (typeof val !== "undefined" && val !== null && val !== "" && isNaN(val)) {
+			alert(scriptContext.gem.locale.common.numFormatErrorMsg.replace("{0}", "<%=StringUtil.escapeJavaScript(displayLabel)%>"));
+			return false;
+		}
+		return true;
+	});
+});
+</script>
+<%
+			}
 		}
 	} else {
 		//LABELかHIDDENか更新不可
-		
+
 		if (editor.getDisplayType() != NumberDisplayType.HIDDEN) {
 			request.setAttribute(Constants.OUTPUT_HIDDEN, true);
 		}

@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -23,7 +23,7 @@
 <%@page import="org.iplass.mtp.web.template.TemplateUtil"%>
 <%@page import="org.iplass.mtp.command.RequestContext"%>
 <%@page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
-<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%
 pageContext.setAttribute("vh", new ConsentViewHelper((AuthorizationRequest) request.getSession().getAttribute(AuthorizeCommand.SESSION_AUTHORIZATION_REQUEST)));

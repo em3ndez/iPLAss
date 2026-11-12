@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -97,7 +97,7 @@ public class SearchResultRow {
 
 	@Override
 	public String toString() {
-		return response != null? response.toString() : null;
+		return response != null ? response.toString() : null;
 	}
 
 }

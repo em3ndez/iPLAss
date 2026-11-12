@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,23 +27,23 @@ import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.Locale;
 
-import javax.servlet.AsyncContext;
-import javax.servlet.DispatcherType;
-import javax.servlet.ReadListener;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletInputStream;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.Part;
-
 import org.iplass.mtp.impl.core.ExecuteContext;
 import org.iplass.mtp.web.actionmapping.RequestInfo;
+
+import jakarta.servlet.AsyncContext;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.ReadListener;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
 
 public class ReadOnlyHttpServletRequest extends HttpServletRequestWrapper implements RequestInfo {
 
@@ -53,7 +53,8 @@ public class ReadOnlyHttpServletRequest extends HttpServletRequestWrapper implem
 
 	@Override
 	public Locale getLocale() {
-		return ExecuteContext.getCurrentContext().getLangLocale();
+		return ExecuteContext.getCurrentContext()
+				.getLangLocale();
 	}
 
 	@Override
@@ -101,11 +102,6 @@ public class ReadOnlyHttpServletRequest extends HttpServletRequestWrapper implem
 
 	@Override
 	public boolean isRequestedSessionIdFromURL() {
-		throw new UnsupportedOperationException("Unsupported operation on ReadOnlyHttpServletRequest");
-	}
-
-	@Override
-	public boolean isRequestedSessionIdFromUrl() {
 		throw new UnsupportedOperationException("Unsupported operation on ReadOnlyHttpServletRequest");
 	}
 
@@ -167,11 +163,6 @@ public class ReadOnlyHttpServletRequest extends HttpServletRequestWrapper implem
 			//Do not handle content type not specified
 			return new BufferedReader(new InputStreamReader(new NullServletInputStream()));
 		}
-	}
-
-	@Override
-	public String getRealPath(String path) {
-		throw new UnsupportedOperationException("Unsupported operation on ReadOnlyHttpServletRequest");
 	}
 
 	@Override
@@ -240,7 +231,7 @@ public class ReadOnlyHttpServletRequest extends HttpServletRequestWrapper implem
 			ServletResponse servletResponse) throws IllegalStateException {
 		throw new UnsupportedOperationException("Unsupported operation on ReadOnlyHttpServletRequest");
 	}
-	
+
 	private class NullServletInputStream extends ServletInputStream {
 
 		@Override
@@ -262,7 +253,7 @@ public class ReadOnlyHttpServletRequest extends HttpServletRequestWrapper implem
 		public int read() throws IOException {
 			return -1;
 		}
-		
+
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.iplass.adminconsole.annotation.MultiLang;
+import org.iplass.adminconsole.view.annotation.FieldOrder;
 import org.iplass.adminconsole.view.annotation.InputType;
 import org.iplass.adminconsole.view.annotation.MetaFieldInfo;
 import org.iplass.adminconsole.view.annotation.Refrectable;
@@ -33,268 +34,297 @@ import org.iplass.mtp.definition.LocalizedStringDefinition;
 import org.iplass.mtp.view.generic.RequiredDisplayType;
 import org.iplass.mtp.view.generic.TextAlign;
 import org.iplass.mtp.view.generic.common.AutocompletionSetting;
-import org.iplass.mtp.view.generic.element.CsvItem;
+import org.iplass.mtp.view.generic.element.FileItem;
+import org.iplass.mtp.view.generic.element.SortItem;
 
 /**
  * 参照型でテーブル表示等の場合に表示する参照先のプロパティ定義
  * @author lis3wg
  */
-public class NestProperty implements Refrectable, CsvItem {
+@FieldOrder(manual = true)
+public class NestProperty implements Refrectable, FileItem, SortItem {
 
 	/** シリアルバージョンUID */
 	private static final long serialVersionUID = -7849466975195960549L;
 
-	/** プロパティ名 */
+	/** 仮想プロパティか */
 	@MetaFieldInfo(
-			displayName="プロパティ名",
-			displayNameKey="generic_editor_NestProperty_propertyNameDisplaNameKey",
-			displayOrder=100,
-			inputType=InputType.PROPERTY,
-			required=true,
-			description="参照型のプロパティ名を指定してください",
-			descriptionKey="generic_editor_NestProperty_propertyNameDescriptionKey",
-			childEntityName=true
+			displayName = "仮想プロパティ",
+			displayNameKey = "generic_editor_NestProperty_virtualDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 50,
+			descriptionKey = "generic_editor_NestProperty_virtualDescriptionKey"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.ALL}
+			referenceTypes = { FieldReferenceType.ALL }
+	)
+	private boolean virtual;
+
+	/** プロパティ名 */
+	@MetaFieldInfo(
+			displayName = "プロパティ名",
+			displayNameKey = "generic_editor_NestProperty_propertyNameDisplaNameKey",
+			displayOrder = 100,
+			inputType = InputType.PROPERTY,
+			required = true,
+			description = "参照型のプロパティ名を指定してください",
+			descriptionKey = "generic_editor_NestProperty_propertyNameDescriptionKey",
+			childEntityName = true
+	)
+	@EntityViewField(
+			referenceTypes = { FieldReferenceType.ALL }
 	)
 	private String propertyName;
 
 	/** プロパティエディタ */
 	@MetaFieldInfo(
-			displayName="プロパティエディタ",
-			displayNameKey="generic_editor_NestProperty_editorDisplaNameKey",
-			required=true,
-			displayOrder=200,
-			inputType=InputType.REFERENCE,
-			referenceClass=PropertyEditor.class,
-			description="プロパティの型にあわせたプロパティエディタを選択してください",
-			descriptionKey="generic_editor_NestProperty_editorDescriptionKey"
+			displayName = "プロパティエディタ",
+			displayNameKey = "generic_editor_NestProperty_editorDisplaNameKey",
+			required = true,
+			displayOrder = 200,
+			inputType = InputType.REFERENCE,
+			referenceClass = PropertyEditor.class,
+			description = "プロパティの型にあわせたプロパティエディタを選択してください",
+			descriptionKey = "generic_editor_NestProperty_editorDescriptionKey"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.ALL}
+			referenceTypes = { FieldReferenceType.ALL }
 	)
 	@MultiLang(itemNameGetter = "getPropertyName", isMultiLangValue = false)
 	private PropertyEditor editor;
 
 	/** 編集画面非表示設定 */
 	@MetaFieldInfo(
-			displayName="編集画面で非表示",
-			displayNameKey="generic_editor_NestProperty_hideDetailDisplaNameKey",
-			displayOrder=300,
-			inputType=InputType.CHECKBOX,
-			description="編集画面でこの項目を非表示にします。<BR />" +
+			displayName = "編集画面で非表示",
+			displayNameKey = "generic_editor_NestProperty_hideDetailDisplaNameKey",
+			displayOrder = 300,
+			inputType = InputType.CHECKBOX,
+			description = "編集画面でこの項目を非表示にします。<BR />" +
 					"この設定は参照テーブル、参照セクション、大量データ用参照セクションで有効になります。",
-			descriptionKey="generic_editor_NestProperty_hideDetailDescriptionKey"
+			descriptionKey = "generic_editor_NestProperty_hideDetailDescriptionKey"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.DETAIL}
+			referenceTypes = { FieldReferenceType.DETAIL }
 	)
 	private boolean hideDetail;
 
 	/** 詳細画面非表示設定 */
 	@MetaFieldInfo(
-			displayName="詳細画面で非表示",
-			displayNameKey="generic_editor_NestProperty_hideViewDisplaNameKey",
-			displayOrder=310,
-			inputType=InputType.CHECKBOX,
-			description="詳細画面でこの項目を非表示にします。<BR />" +
+			displayName = "詳細画面で非表示",
+			displayNameKey = "generic_editor_NestProperty_hideViewDisplaNameKey",
+			displayOrder = 310,
+			inputType = InputType.CHECKBOX,
+			description = "詳細画面でこの項目を非表示にします。<BR />" +
 					"この設定は参照テーブル、参照セクション、大量データ用参照セクションで有効になります。",
-			descriptionKey="generic_editor_NestProperty_hideViewDescriptionKey"
+			descriptionKey = "generic_editor_NestProperty_hideViewDescriptionKey"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.DETAIL}
+			referenceTypes = { FieldReferenceType.DETAIL }
 	)
 	private boolean hideView;
 
 	/** 表示ラベル */
 	@MetaFieldInfo(
-			displayName="表示ラベル",
-			displayNameKey="generic_editor_NestProperty_DisplaNameKey",
-			displayOrder=400,
-			description="未設定の場合はプロパティに定義された表示名が表示されます",
-			descriptionKey="generic_editor_NestProperty_DescriptionKey",
-			inputType=InputType.MULTI_LANG,
+			displayName = "表示ラベル",
+			displayNameKey = "generic_editor_NestProperty_DisplaNameKey",
+			displayOrder = 400,
+			description = "未設定の場合はプロパティに定義された表示名が表示されます",
+			descriptionKey = "generic_editor_NestProperty_DescriptionKey",
+			inputType = InputType.MULTI_LANG,
 			multiLangField = "localizedDisplayLabelList"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.ALL}
+			referenceTypes = { FieldReferenceType.ALL }
 	)
 	@MultiLang(itemNameGetter = "getPropertyName")
 	private String displayLabel;
 
 	/** 多言語設定情報 */
 	@MetaFieldInfo(
-			displayName="多言語設定",
-			displayNameKey="generic_editor_NestProperty_localizedDisplayLabelListDisplaNameKey",
-			displayOrder=410,
-			inputType=InputType.MULTI_LANG_LIST
+			displayName = "多言語設定",
+			displayNameKey = "generic_editor_NestProperty_localizedDisplayLabelListDisplaNameKey",
+			displayOrder = 410,
+			inputType = InputType.MULTI_LANG_LIST
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.ALL}
+			referenceTypes = { FieldReferenceType.ALL }
 	)
 	private List<LocalizedStringDefinition> localizedDisplayLabelList;
 
 	/** 説明 */
 	@MetaFieldInfo(
-			displayName="説明",
-			displayNameKey="generic_editor_NestProperty_descriptionDisplaNameKey",
-			displayOrder=420,
-			description="入力欄下部に表示する説明を設定します。",
-			descriptionKey="generic_editor_NestProperty_descriptionDescriptionKey",
-			inputType=InputType.MULTI_LANG,
+			displayName = "説明",
+			displayNameKey = "generic_editor_NestProperty_descriptionDisplaNameKey",
+			displayOrder = 420,
+			description = "入力欄下部に表示する説明を設定します。",
+			descriptionKey = "generic_editor_NestProperty_descriptionDescriptionKey",
+			inputType = InputType.MULTI_LANG,
 			multiLangField = "localizedDescriptionList"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.DETAIL}
+			referenceTypes = { FieldReferenceType.DETAIL }
 	)
 	@MultiLang(itemNameGetter = "getPropertyName")
 	private String description;
 
 	/** 説明の多言語設定情報 */
 	@MetaFieldInfo(
-			displayName="説明の多言語設定",
-			displayNameKey="generic_editor_NestProperty_localizedDescriptionListDisplaNameKey",
-			displayOrder=430,
-			inputType=InputType.MULTI_LANG_LIST
+			displayName = "説明の多言語設定",
+			displayNameKey = "generic_editor_NestProperty_localizedDescriptionListDisplaNameKey",
+			displayOrder = 430,
+			inputType = InputType.MULTI_LANG_LIST
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.DETAIL}
+			referenceTypes = { FieldReferenceType.DETAIL }
 	)
 	private List<LocalizedStringDefinition> localizedDescriptionList;
 
 	/** ツールチップ */
 	@MetaFieldInfo(
-			displayName="ツールチップ",
-			displayNameKey="generic_editor_NestProperty_tooltipDisplaNameKey",
-			displayOrder=440,
-			description="ツールチップに表示する説明を設定します。",
-			descriptionKey="generic_editor_NestProperty_tooltipDescriptionKey",
-			inputType=InputType.MULTI_LANG,
+			displayName = "ツールチップ",
+			displayNameKey = "generic_editor_NestProperty_tooltipDisplaNameKey",
+			displayOrder = 440,
+			description = "ツールチップに表示する説明を設定します。",
+			descriptionKey = "generic_editor_NestProperty_tooltipDescriptionKey",
+			inputType = InputType.MULTI_LANG,
 			multiLangField = "localizedTooltipList"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.SEARCHCONDITION, FieldReferenceType.DETAIL}
+			referenceTypes = { FieldReferenceType.SEARCHCONDITION, FieldReferenceType.DETAIL }
 	)
 	@MultiLang(itemNameGetter = "getPropertyName")
 	private String tooltip;
 
 	/** ツールチップの多言語設定情報 */
 	@MetaFieldInfo(
-			displayName="ツールチップの多言語設定",
-			displayNameKey="generic_editor_NestProperty_localizedTooltipListDisplaNameKey",
-			displayOrder=450,
-			inputType=InputType.MULTI_LANG_LIST
+			displayName = "ツールチップの多言語設定",
+			displayNameKey = "generic_editor_NestProperty_localizedTooltipListDisplaNameKey",
+			displayOrder = 450,
+			inputType = InputType.MULTI_LANG_LIST
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.SEARCHCONDITION, FieldReferenceType.DETAIL}
+			referenceTypes = { FieldReferenceType.SEARCHCONDITION, FieldReferenceType.DETAIL }
 	)
 	private List<LocalizedStringDefinition> localizedTooltipList;
 
 	/** 列幅 */
 	@MetaFieldInfo(
-			displayName="列幅",
-			displayNameKey="generic_editor_NestProperty_widthDisplaNameKey",
-			displayOrder=500,
-			inputType=InputType.NUMBER,
-			description="検索結果に表示する際の列幅を指定します。",
-			descriptionKey="generic_editor_NestProperty_widthDescriptionKey"
+			displayName = "列幅",
+			displayNameKey = "generic_editor_NestProperty_widthDisplaNameKey",
+			displayOrder = 500,
+			inputType = InputType.NUMBER,
+			description = "検索結果に表示する際の列幅を指定します。",
+			descriptionKey = "generic_editor_NestProperty_widthDescriptionKey"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.SEARCHRESULT, FieldReferenceType.DETAIL}
+			referenceTypes = { FieldReferenceType.SEARCHRESULT, FieldReferenceType.DETAIL }
 	)
 	private int width;
 
 	/** テキストの配置 */
 	@MetaFieldInfo(
-			displayName="テキストの配置",
-			displayNameKey="generic_editor_NestProperty_textAlignDisplaNameKey",
-			displayOrder=510,
-			inputType=InputType.ENUM,
-			enumClass=TextAlign.class,
-			description="検索結果でのテキストの配置を指定します。<br>" +
+			displayName = "テキストの配置",
+			displayNameKey = "generic_editor_NestProperty_textAlignDisplaNameKey",
+			displayOrder = 510,
+			inputType = InputType.ENUM,
+			enumClass = TextAlign.class,
+			description = "検索結果でのテキストの配置を指定します。<br>" +
 					"LEFT:左寄せ<br>" +
 					"CENTER:中央寄せ<br>" +
 					"RIGHT:右寄せ",
-			descriptionKey="generic_editor_NestProperty_textAlignDescriptionKey"
+			descriptionKey = "generic_editor_NestProperty_textAlignDescriptionKey"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.SEARCHRESULT}
+			referenceTypes = { FieldReferenceType.SEARCHRESULT }
 	)
 	private TextAlign textAlign;
 
 	/** 必須属性表示タイプ */
 	@MetaFieldInfo(
-			displayName="必須属性表示",
-			displayNameKey="generic_editor_NestProperty_requiredDisplayTypeDisplaNameKey",
-			displayOrder=600,
-			inputType=InputType.ENUM,
-			enumClass=RequiredDisplayType.class,
-			description="詳細画面で必須表示を行うかを設定します。<BR />" +
+			displayName = "必須属性表示",
+			displayNameKey = "generic_editor_NestProperty_requiredDisplayTypeDisplaNameKey",
+			displayOrder = 600,
+			inputType = InputType.ENUM,
+			enumClass = RequiredDisplayType.class,
+			description = "詳細画面で必須表示を行うかを設定します。<BR />" +
 					"DEFAULT : プロパティ定義の必須設定に従って必須属性を表示<BR />" +
 					"DISPLAY : 必須属性を表示<BR />" +
 					"NONE    : 必須属性を表示しない",
-			descriptionKey="generic_editor_NestProperty_requiredDisplayTypeDescriptionKey"
+			descriptionKey = "generic_editor_NestProperty_requiredDisplayTypeDescriptionKey"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.DETAIL}
+			referenceTypes = { FieldReferenceType.DETAIL }
 	)
 	private RequiredDisplayType requiredDisplayType;
 
 	/** 通常検索で必須条件にする */
 	@MetaFieldInfo(
-			displayName="通常検索で必須条件にする",
-			displayNameKey="generic_editor_NestProperty_requiredNormalDisplaNameKey",
-			displayOrder=610,
-			inputType=InputType.CHECKBOX,
-			description="通常検索で必須条件にするかを設定します。",
-			descriptionKey="generic_editor_NestProperty_requiredNormalDescriptionKey"
+			displayName = "通常検索で必須条件にする",
+			displayNameKey = "generic_editor_NestProperty_requiredNormalDisplaNameKey",
+			displayOrder = 610,
+			inputType = InputType.CHECKBOX,
+			description = "通常検索で必須条件にするかを設定します。",
+			descriptionKey = "generic_editor_NestProperty_requiredNormalDescriptionKey"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.SEARCHCONDITION}
+			referenceTypes = { FieldReferenceType.SEARCHCONDITION }
 	)
 	private boolean requiredNormal;
 
 	/** 詳細検索で必須条件にする */
 	@MetaFieldInfo(
-			displayName="詳細検索で必須条件にする",
-			displayNameKey="generic_editor_NestProperty_requiredDetailDisplaNameKey",
-			displayOrder=620,
-			inputType=InputType.CHECKBOX,
-			description="詳細検索で必須条件にするかを設定します。",
-			descriptionKey="generic_editor_NestProperty_requiredDetailDescriptionKey"
+			displayName = "詳細検索で必須条件にする",
+			displayNameKey = "generic_editor_NestProperty_requiredDetailDisplaNameKey",
+			displayOrder = 620,
+			inputType = InputType.CHECKBOX,
+			description = "詳細検索で必須条件にするかを設定します。",
+			descriptionKey = "generic_editor_NestProperty_requiredDetailDescriptionKey"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.SEARCHCONDITION}
+			referenceTypes = { FieldReferenceType.SEARCHCONDITION }
 	)
 	private boolean requiredDetail;
 
-	/** CSVの出力 */
+	/** ソートを許可 */
 	@MetaFieldInfo(
-			displayName="CSVに出力する",
-			displayNameKey="generic_editor_NestProperty_outputCsvDisplaNameKey",
-			inputType=InputType.CHECKBOX,
-			displayOrder=700,
-			description="CSVに出力するかを設定します。",
-			descriptionKey="generic_editor_NestProperty_outputCsvDescriptionKey"
+			displayName = "ソートを許可",
+			displayNameKey = "generic_editor_NestProperty_sortableDisplaNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 690,
+			description = "ソートを許可するかを設定します。",
+			descriptionKey = "generic_editor_NestProperty_sortableDescriptionKey"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.SEARCHRESULT}
+			referenceTypes = { FieldReferenceType.SEARCHRESULT }
+	)
+	private boolean sortable = true;
+
+	/** CSVの出力 */
+	@MetaFieldInfo(
+			displayName = "CSVに出力する",
+			displayNameKey = "generic_editor_NestProperty_outputCsvDisplaNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 700,
+			description = "CSVに出力するかを設定します。",
+			descriptionKey = "generic_editor_NestProperty_outputCsvDescriptionKey"
+	)
+	@EntityViewField(
+			referenceTypes = { FieldReferenceType.SEARCHRESULT }
 	)
 	private boolean outputCsv = true;
 
 	/** 自動補完設定 */
 	@MetaFieldInfo(
-			displayName="自動補完設定",
-			displayNameKey="generic_element_property_PropertyBase_autocompletionSettingDisplaNameKey",
-			displayOrder=800,
-			inputType=InputType.REFERENCE,
-			referenceClass=AutocompletionSetting.class,
-			description="自動補完設定を設定します。",
-			descriptionKey="generic_element_property_PropertyBase_autocompletionSettingDescriptionKey"
+			displayName = "自動補完設定",
+			displayNameKey = "generic_element_property_PropertyBase_autocompletionSettingDisplaNameKey",
+			displayOrder = 800,
+			inputType = InputType.REFERENCE,
+			referenceClass = AutocompletionSetting.class,
+			description = "自動補完設定を設定します。",
+			descriptionKey = "generic_element_property_PropertyBase_autocompletionSettingDescriptionKey"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.DETAIL, FieldReferenceType.SEARCHCONDITION}
+			referenceTypes = { FieldReferenceType.DETAIL, FieldReferenceType.SEARCHCONDITION }
 	)
 	private AutocompletionSetting autocompletionSetting;
 
@@ -305,9 +335,24 @@ public class NestProperty implements Refrectable, CsvItem {
 	}
 
 	/**
-	 * プロパティ名を取得します。
-	 * @return プロパティ名
+	 * 仮想プロパティかを取得します。
+	 *
+	 * @return sortable
 	 */
+	public boolean isVirtual() {
+		return virtual;
+	}
+
+	/**
+	 * 仮想プロパティかを設定します。
+	 *
+	 * @param virtual 仮想プロパティか
+	 */
+	public void setVirtual(boolean virtual) {
+		this.virtual = virtual;
+	}
+
+	@Override
 	public String getPropertyName() {
 		return propertyName;
 	}
@@ -320,10 +365,7 @@ public class NestProperty implements Refrectable, CsvItem {
 		this.propertyName = propertyName;
 	}
 
-	/**
-	 * 表示名を取得します。
-	 * @return 表示名
-	 */
+	@Override
 	public String getDisplayLabel() {
 		return displayLabel;
 	}
@@ -373,7 +415,7 @@ public class NestProperty implements Refrectable, CsvItem {
 	 * @return 列幅
 	 */
 	public int getWidth() {
-	    return width;
+		return width;
 	}
 
 	/**
@@ -381,7 +423,7 @@ public class NestProperty implements Refrectable, CsvItem {
 	 * @param width 列幅
 	 */
 	public void setWidth(int width) {
-	    this.width = width;
+		this.width = width;
 	}
 
 	/**
@@ -389,7 +431,7 @@ public class NestProperty implements Refrectable, CsvItem {
 	 * @return テキストの配置
 	 */
 	public TextAlign getTextAlign() {
-	    return textAlign;
+		return textAlign;
 	}
 
 	/**
@@ -397,7 +439,7 @@ public class NestProperty implements Refrectable, CsvItem {
 	 * @param textAlign テキストの配置
 	 */
 	public void setTextAlign(TextAlign textAlign) {
-	    this.textAlign = textAlign;
+		this.textAlign = textAlign;
 	}
 
 	/**
@@ -447,12 +489,13 @@ public class NestProperty implements Refrectable, CsvItem {
 	public void setRequiredDisplayType(RequiredDisplayType requiredDisplayType) {
 		this.requiredDisplayType = requiredDisplayType;
 	}
+
 	/**
 	 * 通常検索で必須条件にするを取得します。
 	 * @return 通常検索で必須条件にする
 	 */
 	public boolean isRequiredNormal() {
-	    return requiredNormal;
+		return requiredNormal;
 	}
 
 	/**
@@ -460,7 +503,7 @@ public class NestProperty implements Refrectable, CsvItem {
 	 * @param requiredNormal 通常検索で必須条件にする
 	 */
 	public void setRequiredNormal(boolean requiredNormal) {
-	    this.requiredNormal = requiredNormal;
+		this.requiredNormal = requiredNormal;
 	}
 
 	/**
@@ -468,7 +511,7 @@ public class NestProperty implements Refrectable, CsvItem {
 	 * @return 詳細検索で必須条件にする
 	 */
 	public boolean isRequiredDetail() {
-	    return requiredDetail;
+		return requiredDetail;
 	}
 
 	/**
@@ -476,13 +519,26 @@ public class NestProperty implements Refrectable, CsvItem {
 	 * @param requiredDetail 詳細検索で必須条件にする
 	 */
 	public void setRequiredDetail(boolean requiredDetail) {
-	    this.requiredDetail = requiredDetail;
+		this.requiredDetail = requiredDetail;
 	}
 
 	/**
-	 * CSVに出力するかを取得します。
-	 * @return CSVに出力するか
+	 * ソートを許可するかを取得します。
+	 * @return ソートを許可するか
 	 */
+	@Override
+	public boolean isSortable() {
+		return sortable;
+	}
+
+	/**
+	 * ソートを許可するかを設定します。
+	 * @param sortable ソートを許可するか
+	 */
+	public void setSortable(boolean sortable) {
+		this.sortable = sortable;
+	}
+
 	@Override
 	public boolean isOutputCsv() {
 		return outputCsv;
@@ -496,10 +552,7 @@ public class NestProperty implements Refrectable, CsvItem {
 		this.outputCsv = outputCsv;
 	}
 
-	/**
-	 * プロパティエディタを取得します。
-	 * @return プロパティエディタ
-	 */
+	@Override
 	public PropertyEditor getEditor() {
 		return editor;
 	}
@@ -528,10 +581,7 @@ public class NestProperty implements Refrectable, CsvItem {
 		this.autocompletionSetting = autocompletionSetting;
 	}
 
-	/**
-	 * 多言語設定情報を取得します。
-	 * @return リスト
-	 */
+	@Override
 	public List<LocalizedStringDefinition> getLocalizedDisplayLabelList() {
 		return localizedDisplayLabelList;
 	}

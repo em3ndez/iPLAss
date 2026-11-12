@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,13 +27,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
-import javax.servlet.ServletException;
 
 import org.iplass.gem.command.Constants;
 import org.iplass.gem.command.CreateSearchResultUtil;
@@ -96,38 +96,40 @@ import org.iplass.mtp.webapi.definition.RequestType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jakarta.servlet.ServletException;
+
 @WebApi(
-		name=FullTextSearchCommand.SEARCH_WEB_API_NAME,
-		displayName="全文検索",
-		accepts = {RequestType.REST_FORM},
+		name = FullTextSearchCommand.SEARCH_WEB_API_NAME,
+		displayName = "全文検索",
+		accepts = { RequestType.REST_FORM },
 		methods = MethodType.POST,
-		results={
-			Constants.MESSAGE, Constants.DATA,
-			"searchDefName", "fulltextKey", Constants.SEARCH_COND},
-		checkXRequestedWithHeader=true
-	)
-@CommandClass(name="gem/fulltext/FullTextSearchCommand", displayName="全文検索")
+		results = {
+				Constants.MESSAGE, Constants.DATA,
+				"searchDefName", "fulltextKey", Constants.SEARCH_COND },
+		checkXRequestedWithHeader = true
+)
+@CommandClass(name = "gem/fulltext/FullTextSearchCommand", displayName = "全文検索")
 public final class FullTextSearchCommand implements Command {
 
 	public static final String SEARCH_WEB_API_NAME = "gem/fulltext/search";
-	public static final String SEARCH_VIEW_ACTION_NAME = "gem/fulltext/searchview";
 
 	private static Logger logger = LoggerFactory.getLogger(FullTextSearchCommand.class);
 
 	@Override
 	public String execute(RequestContext request) {
 		// ロールからsectionを取得
-		String roleName = (String) request.getSession().getAttribute(Constants.ROLE_NAME);
+		String roleName = (String) request.getSession()
+				.getAttribute(Constants.ROLE_NAME);
 
 		String fulltextKey = request.getParam("fulltextKey");
 		if (StringUtil.isNotEmpty(fulltextKey)) {
-			fulltextKey = fulltextKey.replaceAll("　"," ");
+			fulltextKey = fulltextKey.replaceAll("　", " ");
 		} else {
 			request.setAttribute(Constants.MESSAGE, getRS("research"));
 			return Constants.CMD_EXEC_FAILURE;
 		}
 
-		String[] searchDefNames =request.getParams("searchDefName");
+		String[] searchDefNames = request.getParams("searchDefName");
 		final List<String> defNameList = getSelectedDefNameList(searchDefNames);
 		final Map<String, String> sortKeyMap = getSelectedSortKeyMap(searchDefNames, request);
 		final Map<String, String> sortTypeMap = getSelectedSortTypeMap(searchDefNames, request);
@@ -137,8 +139,8 @@ public final class FullTextSearchCommand implements Command {
 		//fulltextKeyには&が含まれる可能性があるため、解析を楽にするため最後に追加
 		if (!defNameList.isEmpty()) {
 			defNameList.stream()
-				.map(defName -> "&searchDefName=" + defName)
-				.forEach(param -> searchCond.append(param));
+					.map(defName -> "&searchDefName=" + defName)
+					.forEach(param -> searchCond.append(param));
 			searchCond.deleteCharAt(0);
 		}
 		searchCond.append("&fulltextKey=" + fulltextKey);
@@ -157,10 +159,12 @@ public final class FullTextSearchCommand implements Command {
 		FulltextSearchOption option = getFulltextSearchOption(searchCondList);
 
 		//検索処理
-		EntityManager em = ManagerLocator.getInstance().getManager(EntityManager.class);
+		EntityManager em = ManagerLocator.getInstance()
+				.getManager(EntityManager.class);
 		List<Entity> searchResult = null;
 		try {
-			searchResult = em.fulltextSearchEntity(fulltextKey, option).getList();
+			searchResult = em.fulltextSearchEntity(fulltextKey, option)
+					.getList();
 		} catch (FulltextSearchRuntimeException e) {
 			logger.error("fulltext search error.", e);
 			request.setAttribute(Constants.MESSAGE, getRS("validString"));
@@ -173,7 +177,8 @@ public final class FullTextSearchCommand implements Command {
 			return Constants.CMD_EXEC_FAILURE;
 		}
 
-		FulltextSearchManager fsm = ManagerLocator.getInstance().getManager(FulltextSearchManager.class);
+		FulltextSearchManager fsm = ManagerLocator.getInstance()
+				.getManager(FulltextSearchManager.class);
 		int maxRow = fsm.getMaxRows();
 		boolean isThrowExceptionWhenOverLimit = fsm.isThrowExceptionWhenOverLimit();
 		if (maxRow <= searchResult.size()) {
@@ -187,15 +192,18 @@ public final class FullTextSearchCommand implements Command {
 
 		//Crawl時間を取得
 		Map<String, Timestamp> crawlDateMap = fsm.getLastCrawlTimestamp(
-				option.getConditions().keySet().toArray(new String[0]));
+				option.getConditions()
+						.keySet()
+						.toArray(new String[0]));
 
 		//検索結果をentity定義ごとに整理
 		Map<String, List<Entity>> entityMap = searchResult.parallelStream()
-				.collect(Collectors.groupingBy(Entity :: getDefinitionName));
+				.collect(Collectors.groupingBy(Entity::getDefinitionName));
 
 		//レスポンス生成のための情報(EntityResultInfo)を取得
 		AuthContext auth = AuthContext.getCurrentContext();
-		EntityDefinitionManager edm = ManagerLocator.getInstance().getManager(EntityDefinitionManager.class);
+		EntityDefinitionManager edm = ManagerLocator.getInstance()
+				.getManager(EntityDefinitionManager.class);
 		List<EntityResultInfo> resultList = searchCondList.stream()
 				.map(search -> {
 					//検索結果をセット
@@ -204,7 +212,7 @@ public final class FullTextSearchCommand implements Command {
 					search.setCrawlDate(crawlDateMap.get(search.getDefinitionName()));
 					return search;
 				})
-				.filter(search -> search.getSearchResult() != null)	//結果があるもののみ
+				.filter(search -> search.getSearchResult() != null) //結果があるもののみ
 				.map(search -> {
 					//返す処理で必要な情報を取得
 					return getResultInfo(search, edm, auth);
@@ -214,19 +222,30 @@ public final class FullTextSearchCommand implements Command {
 		//UserEditorが設定されている場合はUser情報を検索
 		//(UserPropertyEditor.jspにて、ここから値を取得する)
 		Set<String> userOidSet = resultList.stream()
-			.map(res -> res.getUserOid())  //EntityごとのUserOidを取得
-			.flatMap(oidSet -> oidSet.stream())
-			.collect(Collectors.toSet());
+				.map(res -> res.getUserOid()) //EntityごとのUserOidを取得
+				.flatMap(oidSet -> oidSet.stream())
+				.collect(Collectors.toSet());
 		if (!userOidSet.isEmpty()) {
+
 			//User名の検索
-			Map<String, Entity> userInfoMap = getUserInfoMap(em, userOidSet);
+			final Map<String, Entity> userInfoMap = new HashMap<String, Entity>();
+			FulltextSearchViewParts parts = getTopViewParts(roleName);
+
+			if (parts.isShowUserNameWithPrivilegedValue()) {
+				AuthContext.doPrivileged(() -> {
+					getUserInfoMap(em, userInfoMap, userOidSet);
+				});
+			} else {
+				getUserInfoMap(em, userInfoMap, userOidSet);
+			}
+
 			request.setAttribute(Constants.USER_INFO_MAP, userInfoMap);
 		}
 
 		//レスポンス情報の生成
 		List<FullTextSearchResult> resultData = resultList.stream()
-				.sorted(Comparator.comparing(EntityResultInfo :: getDefinitionName))  //定義名でソート
-				.map(res -> res.toFullTextSearchResult())	//FullTextSearchResultに変換
+				.sorted(Comparator.comparing(EntityResultInfo::getDefinitionName)) //定義名でソート
+				.map(res -> res.toFullTextSearchResult()) //FullTextSearchResultに変換
 				.collect(Collectors.toList());
 		request.setAttribute(Constants.DATA, resultData);
 
@@ -237,7 +256,7 @@ public final class FullTextSearchCommand implements Command {
 
 		if (searchDefNames != null) {
 			return Arrays.stream(searchDefNames)
-					.filter(defName -> StringUtil.isNotEmpty(defName))	//ブランク除去
+					.filter(defName -> StringUtil.isNotEmpty(defName)) //ブランク除去
 					.collect(Collectors.toList());
 		} else {
 			return Collections.emptyList();
@@ -277,30 +296,33 @@ public final class FullTextSearchCommand implements Command {
 	 * @param sortTypeMap エンティティ名と並べ順のマップ
 	 * @return 検索対象Entity情報
 	 */
-	private List<EntitySearchInfo> getEntitySearchInfo(String roleName, List<String> selectedDefNameList, Map<String, String> sortKeyMap, Map<String, String> sortTypeMap) {
+	private List<EntitySearchInfo> getEntitySearchInfo(String roleName, List<String> selectedDefNameList, Map<String, String> sortKeyMap,
+			Map<String, String> sortTypeMap) {
 
 		//FulltextSearchViewPartsの取得
 		FulltextSearchViewParts parts = getTopViewParts(roleName);
 
-		EntityViewManager evm = ManagerLocator.getInstance().getManager(EntityViewManager.class);
-		EntityDefinitionManager edm = ManagerLocator.getInstance().getManager(EntityDefinitionManager.class);
+		EntityViewManager evm = ManagerLocator.getInstance()
+				.getManager(EntityViewManager.class);
+		EntityDefinitionManager edm = ManagerLocator.getInstance()
+				.getManager(EntityDefinitionManager.class);
 
-		if (parts == null){
+		if (parts == null) {
 			//Partsが未設定の場合は、選択Entityを対象にする
 			//選択Entityがない場合はEntity内のCrawl情報をすべて対象とする
 			List<String> defList = selectedDefNameList.isEmpty() ? edm.definitionList() : selectedDefNameList;
 
 			return defList.stream()
-				.map(defName -> edm.get(defName))	//EntityDefinitionにする
-				.filter(ed -> ed != null && ed.isCrawl())	//検索対象のみ
-				.map(ed -> {
-					//画面からのソート項目
-					String sortKey = sortKeyMap.get(ed.getName());
-					String sortType = sortTypeMap.get(ed.getName());
-					return getSearchInfo(ed, null, evm, edm, sortKey, sortType); // Partsがないため、Viewはデフォルト
-				})
-				.filter(i -> i != null)
-				.collect(Collectors.toList());
+					.map(defName -> edm.get(defName)) //EntityDefinitionにする
+					.filter(ed -> ed != null && ed.isCrawl()) //検索対象のみ
+					.map(ed -> {
+						//画面からのソート項目
+						String sortKey = sortKeyMap.get(ed.getName());
+						String sortType = sortTypeMap.get(ed.getName());
+						return getSearchInfo(ed, null, evm, edm, sortKey, sortType); // Partsがないため、Viewはデフォルト
+					})
+					.filter(i -> i != null)
+					.collect(Collectors.toList());
 
 		} else {
 			//Partsで指定されている表示対象Entity情報を取得
@@ -312,25 +334,26 @@ public final class FullTextSearchCommand implements Command {
 				Map<String, String> viewNames = parts.getViewNames();
 
 				//表示対象のみView名マッピング情報を保持
-				return isShowEntities.entrySet().stream()
-					.filter(p -> p.getValue())	//表示対象のみ
-					.filter(p -> selectedDefNameList.isEmpty() || selectedDefNameList.contains(p.getKey()))	//検索対象のみ
-					.map(p -> edm.get(p.getKey()))		//EntityDefinitionにする
-					.filter(ed -> ed != null && ed.isCrawl())	//検索対象のみ
-					.map(ed -> {
-						//View名を取得
-						String viewName = null;
-						if (viewNames != null) {
-							viewName = viewNames.get(ed.getName());
-						}
-						//画面からのソート項目
-						String sortKey = sortKeyMap.get(ed.getName());
-						String sortType = sortTypeMap.get(ed.getName());
-						//EntitySearchInfoを取得
-						return getSearchInfo(ed, viewName, evm, edm, sortKey, sortType);
-					})
-					.filter(i -> i != null)
-					.collect(Collectors.toList());
+				return isShowEntities.entrySet()
+						.stream()
+						.filter(p -> p.getValue()) //表示対象のみ
+						.filter(p -> selectedDefNameList.isEmpty() || selectedDefNameList.contains(p.getKey())) //検索対象のみ
+						.map(p -> edm.get(p.getKey())) //EntityDefinitionにする
+						.filter(ed -> ed != null && ed.isCrawl()) //検索対象のみ
+						.map(ed -> {
+							//View名を取得
+							String viewName = null;
+							if (viewNames != null) {
+								viewName = viewNames.get(ed.getName());
+							}
+							//画面からのソート項目
+							String sortKey = sortKeyMap.get(ed.getName());
+							String sortType = sortTypeMap.get(ed.getName());
+							//EntitySearchInfoを取得
+							return getSearchInfo(ed, viewName, evm, edm, sortKey, sortType);
+						})
+						.filter(i -> i != null)
+						.collect(Collectors.toList());
 			}
 		}
 		return Collections.emptyList();
@@ -338,36 +361,42 @@ public final class FullTextSearchCommand implements Command {
 
 	private FulltextSearchOption getFulltextSearchOption(List<EntitySearchInfo> searchCondList) {
 		FulltextSearchOption option = new FulltextSearchOption();
-		searchCondList.stream().forEach(info -> {
-				List<SortSetting> sortSettings = getSortSetting(info);
-				EntityDefinition ed = info.getEntityDefinition();
-				OrderBy order = getOrderBy(ed, sortSettings);
-				FulltextSearchCondition cond = new FulltextSearchCondition(info.getProperties(), order);
-				option.getConditions().put(info.getDefinitionName(), cond);
-			});
+		searchCondList.stream()
+				.forEach(info -> {
+					List<SortSetting> sortSettings = getSortSetting(info);
+					EntityDefinition ed = info.getEntityDefinition();
+					OrderBy order = getOrderBy(ed, sortSettings);
+					FulltextSearchCondition cond = new FulltextSearchCondition(info.getProperties(), order);
+					option.getConditions()
+							.put(info.getDefinitionName(), cond);
+				});
 		return option;
 	}
 
 	private FulltextSearchViewParts getTopViewParts(String roleName) {
 
-		if (roleName == null){
+		if (roleName == null) {
 			roleName = "DEFAULT";
 		}
 
-		TopViewDefinitionManager tvdm = ManagerLocator.getInstance().getManager(TopViewDefinitionManager.class);
+		TopViewDefinitionManager tvdm = ManagerLocator.getInstance()
+				.getManager(TopViewDefinitionManager.class);
 		TopViewDefinition definition = tvdm.get(roleName);
 
 		if (definition != null && definition.getParts() != null) {
-			Optional<TopViewParts> fulltextParts = definition.getParts().stream()
-					.filter(part -> part instanceof FulltextSearchViewParts).findFirst();
+			Optional<TopViewParts> fulltextParts = definition.getParts()
+					.stream()
+					.filter(part -> part instanceof FulltextSearchViewParts)
+					.findFirst();
 			if (fulltextParts.isPresent()) {
-				return (FulltextSearchViewParts)fulltextParts.get();
+				return (FulltextSearchViewParts) fulltextParts.get();
 			}
 		}
 		return null;
 	}
 
-	private EntitySearchInfo getSearchInfo(EntityDefinition ed, String viewName, EntityViewManager evm, EntityDefinitionManager edm, String sortKey, String sortType) {
+	private EntitySearchInfo getSearchInfo(EntityDefinition ed, String viewName, EntityViewManager evm, EntityDefinitionManager edm, String sortKey,
+			String sortType) {
 
 		EntitySearchInfo search = new EntitySearchInfo(ed);
 
@@ -397,15 +426,17 @@ public final class FullTextSearchCommand implements Command {
 		select.add(Entity.OID);
 		select.add(Entity.VERSION);
 
-		List<PropertyColumn> properties = resultSection.getElements().stream()
-				.filter(e -> e instanceof PropertyColumn).map(e -> (PropertyColumn) e)
+		List<PropertyColumn> properties = resultSection.getElements()
+				.stream()
+				.filter(e -> e instanceof PropertyColumn)
+				.map(e -> (PropertyColumn) e)
 				.collect(Collectors.toList());
 
 		for (PropertyColumn p : properties) {
 			if (EntityViewUtil.isDisplayElement(ed.getName(), p.getElementRuntimeId(), OutputType.SEARCHRESULT, null)) {
 				String propName = p.getPropertyName();
 				if (p.getEditor() instanceof ReferencePropertyEditor) {
-					List<NestProperty> nest = ((ReferencePropertyEditor)p.getEditor()).getNestProperties();
+					List<NestProperty> nest = ((ReferencePropertyEditor) p.getEditor()).getNestProperties();
 					addSearchProperty(select, ed, propName, p.getEditor(), nest.toArray(new NestProperty[nest.size()]));
 				} else if (p.getEditor() instanceof JoinPropertyEditor) {
 					addSearchProperty(select, ed, propName, p.getEditor());
@@ -449,7 +480,7 @@ public final class FullTextSearchCommand implements Command {
 				for (NestProperty np : nest) {
 					PropertyDefinition rpd = red.getProperty(np.getPropertyName());
 					if (rpd != null
-							&&!Entity.OID.equals(np.getPropertyName())
+							&& !Entity.OID.equals(np.getPropertyName())
 							&& !Entity.NAME.equals(np.getPropertyName())
 							&& !Entity.VERSION.equals(np.getPropertyName())) {
 						String nestPropName = propName + "." + np.getPropertyName();
@@ -470,7 +501,8 @@ public final class FullTextSearchCommand implements Command {
 						}
 						if (np.getEditor() instanceof ReferencePropertyEditor) {
 							ReferencePropertyEditor rpe = (ReferencePropertyEditor) np.getEditor();
-							if (!rpe.getNestProperties().isEmpty()) {
+							if (!rpe.getNestProperties()
+									.isEmpty()) {
 								List<NestProperty> _nest = rpe.getNestProperties();
 								addSearchProperty(select, ed, nestPropName, rpe, _nest.toArray(new NestProperty[_nest.size()]));
 							}
@@ -478,7 +510,8 @@ public final class FullTextSearchCommand implements Command {
 						} else if (np.getEditor() instanceof JoinPropertyEditor) {
 							JoinPropertyEditor je = (JoinPropertyEditor) np.getEditor();
 							addSearchProperty(select, ed, nestPropName, je.getEditor());
-							if (!je.getProperties().isEmpty()) {
+							if (!je.getProperties()
+									.isEmpty()) {
 								List<NestProperty> _nest = je.getProperties();
 								addSearchProperty(select, ed, propName, editor, _nest.toArray(new NestProperty[_nest.size()]));
 							}
@@ -495,12 +528,14 @@ public final class FullTextSearchCommand implements Command {
 //		} else if(pd instanceof BinaryProperty) {
 			//検索から外しておく
 		} else {
-			if (!select.contains(propName)) select.add(propName);
+			if (!select.contains(propName))
+				select.add(propName);
 		}
 	}
 
 	protected void addDisplayLabelProperty(List<String> select, EntityDefinition ed, String propName, ReferencePropertyEditor rpe) {
-		if (rpe.getDisplayLabelItem() == null) return;
+		if (rpe.getDisplayLabelItem() == null)
+			return;
 
 		PropertyDefinition pd = EntityViewUtil.getPropertyDefinition(propName, ed);
 		if (pd instanceof ReferenceProperty) {
@@ -516,7 +551,8 @@ public final class FullTextSearchCommand implements Command {
 	 * @return
 	 */
 	private EntityDefinition getReferenceEntityDefinition(ReferenceProperty rp) {
-		EntityDefinitionManager edm = ManagerLocator.getInstance().getManager(EntityDefinitionManager.class);
+		EntityDefinitionManager edm = ManagerLocator.getInstance()
+				.getManager(EntityDefinitionManager.class);
 		return edm.get(rp.getObjectDefinitionName());
 	}
 
@@ -533,38 +569,59 @@ public final class FullTextSearchCommand implements Command {
 			PropertyDefinition pd = EntityViewUtil.getPropertyDefinition(sortKey, info.getEntityDefinition());
 			if (pd != null) {
 				// 有効なプロパティのみ対象にする
-				SortSetting ss = new SortSetting();
-				ss.setSortKey(sortKey);
-				String sortType = info.getSortType();
-				if (StringUtil.isBlank(sortType)) {
-					ss.setSortType(ConditionSortType.DESC);
-				} else {
-					ss.setSortType(ConditionSortType.valueOf(sortType));
-				}
-				SearchResultSection section = info.getSearchFormView().getResultSection();
+				SearchResultSection section = info.getSearchFormView()
+						.getResultSection();
 				PropertyColumn property = getLayoutPropertyColumn(sortKey, section);
 				if (property != null) {
+					SortSetting ss = new SortSetting();
+
+					// 参照プロパティの場合、画面上の表示項目でソート
+					if (pd instanceof ReferenceProperty) {
+						sortKey = sortKey + "." + getDisplayNestProperty(property);
+					}
+					ss.setSortKey(sortKey);
+					String sortType = info.getSortType();
+					if (StringUtil.isBlank(sortType)) {
+						ss.setSortType(ConditionSortType.DESC);
+					} else {
+						ss.setSortType(ConditionSortType.valueOf(sortType));
+					}
 					ss.setNullOrderType(property.getNullOrderType());
 					setting.add(ss);
 				}
 			}
 		}
 
-		SearchConditionSection section = info.getSearchFormView().getCondSection();
-		if (section != null && section.isFulltextSearchSorted() && !section.getSortSetting().isEmpty()) {
+		SearchConditionSection section = info.getSearchFormView()
+				.getCondSection();
+		if (section != null && section.isFulltextSearchSorted() && !section.getSortSetting()
+				.isEmpty()) {
 			setting.addAll(section.getSortSetting());
 		}
 		return setting;
 	}
 
 	protected PropertyColumn getLayoutPropertyColumn(String propName, SearchResultSection section) {
-		Optional<PropertyColumn> property = section.getElements().stream()
-				.filter(e -> e instanceof PropertyColumn).map(e -> (PropertyColumn) e)
-				.filter(e -> propName.equals(e.getPropertyName())).findFirst();
+		Optional<PropertyColumn> property = section.getElements()
+				.stream()
+				.filter(e -> e instanceof PropertyColumn)
+				.map(e -> (PropertyColumn) e)
+				.filter(e -> propName.equals(e.getPropertyName()))
+				.findFirst();
 		if (property.isPresent()) {
 			return property.get();
 		}
 		return null;
+	}
+
+	private String getDisplayNestProperty(PropertyColumn refProp) {
+		PropertyEditor editor = refProp.getEditor();
+		if (editor instanceof ReferencePropertyEditor
+				&& StringUtil.isNotEmpty(((ReferencePropertyEditor) editor).getDisplayLabelItem())) {
+			return ((ReferencePropertyEditor) editor).getDisplayLabelItem();
+		} else {
+			return Entity.NAME;
+		}
 	}
 
 	private OrderBy getOrderBy(EntityDefinition ed, List<SortSetting> setting) {
@@ -572,17 +629,12 @@ public final class FullTextSearchCommand implements Command {
 		if (setting != null && !setting.isEmpty()) {
 			for (SortSetting ss : setting) {
 				if (ss.getSortKey() != null) {
-					String key = null;
-					PropertyDefinition pd = EntityViewUtil.getPropertyDefinition(ss.getSortKey(), ed);
-					if (pd instanceof ReferenceProperty) {
-						key = ss.getSortKey() + "." + Entity.OID;
-					} else {
-						key = ss.getSortKey();
-					}
-					SortType type = SortType.valueOf(ss.getSortType().name());
+					SortType type = SortType.valueOf(ss.getSortType()
+							.name());
 					NullOrderingSpec nullOrderingSpec = getNullOrderingSpec(ss.getNullOrderType());
-					if (orderBy == null) orderBy = new OrderBy();
-					orderBy.add(key, type, nullOrderingSpec);
+					if (orderBy == null)
+						orderBy = new OrderBy();
+					orderBy.add(ss.getSortKey(), type, nullOrderingSpec);
 				}
 			}
 		}
@@ -616,8 +668,10 @@ public final class FullTextSearchCommand implements Command {
 		result.setDisplayName(TemplateUtil.getMultilingualString(
 				formView.getTitle(),
 				formView.getLocalizedTitleList(),
-				serchCond.getEntityDefinition().getDisplayName(),
-				serchCond.getEntityDefinition().getLocalizedDisplayNameList()));
+				serchCond.getEntityDefinition()
+						.getDisplayName(),
+				serchCond.getEntityDefinition()
+						.getLocalizedDisplayNameList()));
 
 		//SearchResultSection
 		SearchResultSection resultSection = formView.getResultSection();
@@ -661,10 +715,13 @@ public final class FullTextSearchCommand implements Command {
 		colModel.setWidth(Integer.parseInt(getRS("detailLinkWidth")));
 		colModel.setAlign("center");
 		colModel.setClasses("detail-links");
+		colModel.setGrouping(resultSection.isGroupingData());
 		colModels.add(colModel);
 
-		List<PropertyColumn> properties = resultSection.getElements().stream()
-				.filter(e -> e instanceof PropertyColumn).map(e -> (PropertyColumn) e)
+		List<PropertyColumn> properties = resultSection.getElements()
+				.stream()
+				.filter(e -> e instanceof PropertyColumn)
+				.map(e -> (PropertyColumn) e)
 				.collect(Collectors.toList());
 
 		for (PropertyColumn property : properties) {
@@ -680,7 +737,9 @@ public final class FullTextSearchCommand implements Command {
 					String sortPropName = StringUtil.escapeHtml(propName);
 					boolean frozen = false;
 					Integer width = property.getWidth() > 0 ? property.getWidth() : null;
-					String align = property.getTextAlign() != null ? property.getTextAlign().name().toLowerCase() : null;
+					String align = property.getTextAlign() != null ? property.getTextAlign()
+							.name()
+							.toLowerCase() : null;
 					String style = property.getStyle() != null ? property.getStyle() : "";
 
 					//UserPropertyEditorのチェック
@@ -693,7 +752,9 @@ public final class FullTextSearchCommand implements Command {
 					colModel.setWidth(width);
 					colModel.setAlign(align);
 					colModel.setClasses(style);
-					colModel.setSortable(true);
+					colModel.setSortable(property.isSortable() && ViewUtil.getEntityViewHelper()
+							.isSortable(pd));
+					colModel.setGrouping(resultSection.isGroupingData());
 					colModels.add(colModel);
 
 				} else if (property.getEditor() instanceof ReferencePropertyEditor) {
@@ -703,7 +764,9 @@ public final class FullTextSearchCommand implements Command {
 						String sortPropName = StringUtil.escapeHtml(propName);
 						boolean frozen = false;
 						Integer width = property.getWidth() > 0 ? property.getWidth() : null;
-						String align = property.getTextAlign() != null ? property.getTextAlign().name().toLowerCase() : null;
+						String align = property.getTextAlign() != null ? property.getTextAlign()
+								.name()
+								.toLowerCase() : null;
 						String style = property.getStyle() != null ? property.getStyle() : null;
 
 						colModel = new ColModel(sortPropName, displayLabel);
@@ -711,7 +774,9 @@ public final class FullTextSearchCommand implements Command {
 						colModel.setWidth(width);
 						colModel.setAlign(align);
 						colModel.setClasses(style);
-						colModel.setSortable(true);
+						colModel.setSortable(property.isSortable() && ViewUtil.getEntityViewHelper()
+								.isSortable(pd));
+						colModel.setGrouping(resultSection.isGroupingData());
 						colModels.add(colModel);
 					} else {
 						//参照型のName以外を表示する場合
@@ -719,7 +784,7 @@ public final class FullTextSearchCommand implements Command {
 						String style = property.getStyle() != null ? property.getStyle() : null;
 
 						fixedCount = createNestColModel(colModels, userPropertyNames,
-								nest, propName, (ReferenceProperty)pd, style, fixedCount, edm);
+								nest, propName, (ReferenceProperty) pd, style, fixedCount, edm, resultSection.isGroupingData());
 					}
 				}
 			}
@@ -734,7 +799,7 @@ public final class FullTextSearchCommand implements Command {
 
 	private int createNestColModel(List<ColModel> colModels, List<String> userPropertyNames,
 			List<NestProperty> nest, String propName, ReferenceProperty rp, String style,
-			int fixedCount, EntityDefinitionManager edm) {
+			int fixedCount, EntityDefinitionManager edm, boolean isGroupingData) {
 
 		EntityDefinition red = edm.get(rp.getObjectDefinitionName());
 		int colCount = 0;
@@ -744,13 +809,14 @@ public final class FullTextSearchCommand implements Command {
 				String nestPropName = propName + "." + np.getPropertyName();
 				String nestStyle = StringUtil.isNotEmpty(style) ? style + "_col" + colCount++ : null;
 				if (rpd instanceof ReferenceProperty
-					&& np.getEditor() instanceof ReferencePropertyEditor
-					&& !((ReferencePropertyEditor) np.getEditor()).getNestProperties().isEmpty()) {
+						&& np.getEditor() instanceof ReferencePropertyEditor
+						&& !((ReferencePropertyEditor) np.getEditor()).getNestProperties()
+								.isEmpty()) {
 
 					//再Nest
 					fixedCount = createNestColModel(colModels, userPropertyNames,
-							((ReferencePropertyEditor)np.getEditor()).getNestProperties(),
-							nestPropName, (ReferenceProperty)rpd, nestStyle, fixedCount, edm);
+							((ReferencePropertyEditor) np.getEditor()).getNestProperties(),
+							nestPropName, (ReferenceProperty) rpd, nestStyle, fixedCount, edm, isGroupingData);
 				} else {
 					String sortPropName = StringUtil.escapeHtml(nestPropName);
 					String displayLabel = TemplateUtil.getMultilingualString(
@@ -758,13 +824,18 @@ public final class FullTextSearchCommand implements Command {
 							rpd.getDisplayName(), rpd.getLocalizedDisplayNameList());
 					boolean frozen = false;
 					Integer width = np.getWidth() > 0 ? np.getWidth() : null;
-					String align = np.getTextAlign() != null ? np.getTextAlign().name().toLowerCase() : null;
+					String align = np.getTextAlign() != null ? np.getTextAlign()
+							.name()
+							.toLowerCase() : null;
 
 					ColModel colModel = new ColModel(sortPropName, displayLabel);
 					colModel.setFrozen(frozen);
 					colModel.setWidth(width);
 					colModel.setAlign(align);
 					colModel.setClasses(nestStyle);
+					colModel.setSortable(np.isSortable() && ViewUtil.getEntityViewHelper()
+							.isSortable(rpd));
+					colModel.setGrouping(isGroupingData);
 					colModels.add(colModel);
 
 					//UserPropertyEditorのチェック
@@ -778,18 +849,27 @@ public final class FullTextSearchCommand implements Command {
 		return fixedCount;
 	}
 
-	private Map<String, Entity> getUserInfoMap(EntityManager em, final Set<String> userOidSet) {
+	private void getUserInfoMap(EntityManager em, Map<String, Entity> userInfoMap, final Set<String> userOidSet) {
 
 		Query q = new Query().select(Entity.OID, Entity.NAME)
-							 .from(User.DEFINITION_NAME)
-							 .where(new In(Entity.OID, userOidSet.toArray()));
+				.from(User.DEFINITION_NAME)
+				.where(new In(Entity.OID, userOidSet.toArray()));
 
-		return em.searchEntity(q).getList().stream()
-				.collect(Collectors.toMap(Entity :: getOid, entity -> entity));
+		em.searchEntity(q, new Predicate<Entity>() {
+
+			@Override
+			public boolean test(Entity dataModel) {
+				if (!userInfoMap.containsKey(dataModel.getOid())) {
+					userInfoMap.put(dataModel.getOid(), dataModel);
+				}
+				return true;
+			}
+		});
 	}
 
 	protected NullOrderingSpec getNullOrderingSpec(NullOrderType type) {
-		if (type == null) return null;
+		if (type == null)
+			return null;
 		switch (type) {
 		case FIRST:
 			return NullOrderingSpec.FIRST;
@@ -998,16 +1078,17 @@ public final class FullTextSearchCommand implements Command {
 				return Collections.emptySet();
 			}
 
-			return searchInfo.getSearchResult().stream()
-				.map(entity -> {
-					//検索結果から値を取得
-					return getUserPropertyName().stream()
-							.map(propName -> (String)entity.getValue(propName))
-							.collect(Collectors.toSet());
-				})
-				.flatMap(oidSet -> oidSet.stream())
-				.filter(oid -> oid != null)
-				.collect(Collectors.toSet());
+			return searchInfo.getSearchResult()
+					.stream()
+					.map(entity -> {
+						//検索結果から値を取得
+						return getUserPropertyName().stream()
+								.map(propName -> (String) entity.getValue(propName))
+								.collect(Collectors.toSet());
+					})
+					.flatMap(oidSet -> oidSet.stream())
+					.filter(oid -> oid != null)
+					.collect(Collectors.toSet());
 		}
 
 		/**
@@ -1026,7 +1107,8 @@ public final class FullTextSearchCommand implements Command {
 
 			String crawlDate = "-";
 			if (searchInfo.getCrawlDate() != null) {
-				DateFormat format = DateUtil.getSimpleDateFormat(TemplateUtil.getLocaleFormat().getOutputDatetimeSecFormat(), true);
+				DateFormat format = DateUtil.getSimpleDateFormat(TemplateUtil.getLocaleFormat()
+						.getOutputDatetimeSecFormat(), true);
 				crawlDate = format.format(searchInfo.getCrawlDate());
 			}
 			result.setCrawlDate(resourceString("fulltext.search.crawlDate", crawlDate));
@@ -1036,8 +1118,11 @@ public final class FullTextSearchCommand implements Command {
 			try {
 				result.setValues(CreateSearchResultUtil.getResultData(
 						searchInfo.getSearchResult(), searchInfo.getEntityDefinition(),
-						searchInfo.getSearchFormView().getResultSection(),
-						searchInfo.getSearchFormView().getName()).toResponse());
+						searchInfo.getSearchFormView()
+								.getResultSection(),
+						searchInfo.getSearchFormView()
+								.getName())
+						.toResponse());
 			} catch (IOException e) {
 				throw new SystemException(e);
 			} catch (ServletException e) {

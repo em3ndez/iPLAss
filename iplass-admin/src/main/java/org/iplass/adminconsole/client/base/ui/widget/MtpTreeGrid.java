@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -46,6 +46,10 @@ public class MtpTreeGrid extends TreeGrid {
 		//Chromeで画面zoom設定によってアイコンが表示されないので大きくする
 		//実際のアイコンサイズはCSSで調整
 		setIconSize(18); //16->18
+
+		setCanAutoFitFields(false);
+		setCanResizeFields(true);
+		setCanShowFilterEditor(false);
 	}
 
 	/**
@@ -80,7 +84,7 @@ public class MtpTreeGrid extends TreeGrid {
 			openParentFolder(parent);
 		}
 		//自身のOpen
-		if (getTree().isFolder(node) &&  !getTree().isOpen(node)) {
+		if (getTree().isFolder(node) && !getTree().isOpen(node)) {
 			getTree().openFolder(node);
 		}
 	}

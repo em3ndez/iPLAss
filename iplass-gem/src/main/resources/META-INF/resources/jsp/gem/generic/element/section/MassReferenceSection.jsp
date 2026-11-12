@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -66,7 +66,7 @@
 
 	String id = "";
 	if (StringUtil.isNotBlank(section.getId())) {
-		id = section.getId();
+		id = "id=\"" + StringUtil.escapeHtml(section.getId()) + "\"";
 	}
 
 	String style = "";
@@ -74,6 +74,8 @@
 		style = section.getStyle();
 	}
 
+	String styleAttr = ViewUtil.buildHeightStyleAttr(section.getSectionHeight());
+	
 	String disclosure = "";
 	String disclosureStyle = "";
 	if (!section.isExpandable()) {
@@ -161,11 +163,11 @@
 	//非同期で参照先のEntityを被参照のOIDで検索する
 %>
 
-<div id="<c:out value="<%=id %>"/>" class="<c:out value="<%=style %>"/>">
+<div <%=id %> class="mass-reference-section <c:out value="<%=style %>"/>" >
 <div class="hgroup-03 sechead<c:out value="<%=disclosure %>"/>">
 <h3><span><c:out value="<%=title %>"/></span></h3>
 </div>
-<div style="<c:out value="<%=disclosureStyle %>"/>">
+<div style="<%= disclosureStyle %><%= styleAttr %>">
 <%
 	if (StringUtil.isNotBlank(section.getUpperContents())) {
 		String defName = (String)request.getAttribute(Constants.ROOT_DEF_NAME);

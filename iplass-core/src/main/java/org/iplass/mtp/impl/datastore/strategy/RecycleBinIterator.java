@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,16 +23,19 @@ package org.iplass.mtp.impl.datastore.strategy;
 import java.sql.Timestamp;
 
 public interface RecycleBinIterator {
-	
-	public boolean next();
-	
-	public long getRbid();
-	public String getOid();
-	public String getName();
-	public Timestamp getRbDate();
-	public String getRbUser();
-	
-	public void close();
 
+	public boolean next();
+
+	public long getRbid();
+
+	public String getOid();
+
+	public String getName();
+
+	public Timestamp getRbDate();
+
+	public String getRbUser();
+
+	public void close();
 
 }

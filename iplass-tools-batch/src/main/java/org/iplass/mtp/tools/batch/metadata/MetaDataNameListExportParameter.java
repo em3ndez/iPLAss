@@ -1,11 +1,10 @@
 /*
- * Copyright 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright 2014 DENTSU SOKEN INC. All Rights Reserved.
  */
 
 package org.iplass.mtp.tools.batch.metadata;
 
 import java.io.File;
-
 
 public class MetaDataNameListExportParameter {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,8 +24,6 @@ import java.io.Serializable;
 import java.util.Enumeration;
 import java.util.Iterator;
 
-import javax.servlet.http.HttpSession;
-
 import org.iplass.mtp.command.RequestContextWrapper;
 import org.iplass.mtp.impl.session.Session;
 import org.iplass.mtp.impl.session.SessionService;
@@ -33,9 +31,11 @@ import org.iplass.mtp.impl.web.WebRequestContext;
 import org.iplass.mtp.impl.web.WebRequestStack;
 import org.iplass.mtp.spi.Config;
 
+import jakarta.servlet.http.HttpSession;
+
 public class HttpSessionService extends SessionService {
-	
-	static final String MUTEX_OBJECT_NAME ="mtp.session.store.Mutex";
+
+	static final String MUTEX_OBJECT_NAME = "mtp.session.store.Mutex";
 
 	@Override
 	public void init(Config config) {
@@ -53,21 +53,22 @@ public class HttpSessionService extends SessionService {
 				return new OnetimeSessionImpl(this);
 			}
 		} else {
-			
-			HttpSession httpSession = request.getRequest().getSession(create);
+
+			HttpSession httpSession = request.getRequest()
+					.getSession(create);
 			if (httpSession != null) {
 				return new HttpServletSession(httpSession, this);
 			}
 		}
-		
+
 		return null;
 	}
-	
+
 	private static class HttpServletSession implements Session {
-		
+
 		private HttpSession httpSession;
 		private SessionService service;
-		
+
 		private HttpServletSession(HttpSession httpSession, SessionService service) {
 			this.httpSession = httpSession;
 			this.service = service;
@@ -119,7 +120,7 @@ public class HttpSessionService extends SessionService {
 		public void invalidate() {
 			service.removeSessionFromExecuteContext(this);
 			httpSession.invalidate();
-			
+
 			WebRequestContext webRequestContext = null;
 			WebRequestStack stack = WebRequestStack.getCurrent();
 			if (stack != null) {
@@ -158,9 +159,18 @@ public class HttpSessionService extends SessionService {
 		public long getCreationTime() {
 			return httpSession.getCreationTime();
 		}
-		
+
+		@Override
+		public void changeSessionId() {
+			WebRequestStack request = WebRequestStack.getCurrent();
+			if (request == null) {
+				throw new IllegalStateException("HttpServletRequest cannot be identified.");
+			}
+			request.getRequest()
+					.changeSessionId();
+		}
 	}
-	
+
 	public static class MutexObject implements Serializable {
 		private static final long serialVersionUID = -8257705546725540025L;
 	}

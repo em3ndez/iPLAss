@@ -1,37 +1,73 @@
-dependencies {
-	compileOnly configurations.jeecoreapis
-	compileOnly configurations.jeewebapis
+configurations {
+	compileOnly.extendsFrom(jeecoreapis)
+	compileOnly.extendsFrom(jeewebapis)
+}
 
-	implementation 'org.codehaus.groovy:groovy'
-	implementation sharedLib('org.apache.httpcomponents:httpclient')
+configurations.configureEach {
+	// JasperReports 7 系の推移依存で xml-apis が含まれるが、JDK に含まれており動作不良を起こすため除外する
+	exclude group: 'xml-apis', module: 'xml-apis' 
+}
+
+dependencies {
+	// dependency management
+	constraints {
+		api(sharedLib('commons-beanutils:commons-beanutils')) {
+			because 'this library is used in jxls, jasperreports.'
+		}
+	}
+
+	implementation 'org.apache.groovy:groovy'
+	//apache http clients
+	implementation sharedLib('org.apache.httpcomponents.client5:httpclient5')
+	implementation sharedLib('org.apache.httpcomponents.core5:httpcore5')
+	implementation sharedLib('org.apache.httpcomponents.core5:httpcore5-h2')
+
+	implementation sharedLib('net.logstash.logback:logstash-logback-encoder')
+	
+	implementation sharedLib('commons-codec:commons-codec')
+	implementation sharedLib('org.apache.commons:commons-collections4')
+	implementation sharedLib('commons-io:commons-io')
+
+	implementation(sharedLib('org.apache.tika:tika-core'))
 
 	//apache POI
 	api sharedLib('org.apache.poi:poi')
 	api sharedLib('org.apache.poi:poi-ooxml')
 	
 	//JXLS
-	implementation sharedLib('org.jxls:jxls')
-	api(sharedLib('org.jxls:jxls')) {
-		transitive = false
-	}
+	api sharedLib('org.jxls:jxls')
 	implementation sharedLib('org.jxls:jxls-poi')
 
-	//jasper reports
-	implementation(sharedLib('net.sf.jasperreports:jasperreports')) {
-		//define minimum dependency
-		exclude(group: 'org.codehaus.castor', module: 'castor-xml')
-		exclude(group: 'org.eclipse.jdt', module: 'ecj')
-		exclude(group: 'org.jfree', module: 'jcommon')
-		exclude(group: 'org.jfree', module: 'jfreechart')
-	}
-	api(sharedLib('net.sf.jasperreports:jasperreports')) {
-		transitive = false
-	}
+	//PDFBox（PDF_JXLS 出力 PDF のパスワード暗号化用）
+	implementation sharedLib('org.apache.pdfbox:pdfbox')
 
-	implementation sharedLib('commons-fileupload:commons-fileupload')
+	// jasperreports
+	api sharedLib('net.sf.jasperreports:jasperreports')
+	implementation sharedLib('net.sf.jasperreports:jasperreports-excel-poi')
+	implementation (sharedLib('net.sf.jasperreports:jasperreports-pdf')) { 
+		// openpdf は 2 系のバージョンを利用する
+		exclude group: 'com.github.librepdf', module: 'openpdf'
+	}
+	implementation sharedLib('net.sf.jasperreports:jasperreports-jdt')
+	implementation sharedLib('net.sf.jasperreports:jasperreports-groovy')
+	// openpdf (for use jasperreports-pdf) 
+	runtimeOnly sharedLib('com.github.librepdf:openpdf')
+
+	implementation sharedLib('org.apache.commons:commons-fileupload2-jakarta-servlet6')
 
 	//Java JWT
 	implementation sharedLib('io.jsonwebtoken:jjwt-api')
 	runtimeOnly sharedLib('io.jsonwebtoken:jjwt-impl')
 	runtimeOnly sharedLib('io.jsonwebtoken:jjwt-jackson')
+	
+	implementation sharedLib('com.webauthn4j:webauthn4j-core')
+	implementation sharedLib('com.webauthn4j:webauthn4j-metadata')
+
+	// swagger(support OpenAPI)
+	implementation sharedLib('io.swagger.core.v3:swagger-models-jakarta')
+	implementation sharedLib('io.swagger.core.v3:swagger-core-jakarta')
+
+	// victools (convert JavaCode to JSON Schema) 
+	implementation sharedLib('com.github.victools:jsonschema-generator')
+	implementation sharedLib('com.github.victools:jsonschema-module-jackson')
 }

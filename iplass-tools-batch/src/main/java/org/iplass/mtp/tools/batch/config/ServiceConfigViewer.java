@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,15 +27,16 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-
 import org.iplass.mtp.impl.core.config.BootstrapProps;
 import org.iplass.mtp.impl.core.config.ServiceDefinition;
 import org.iplass.mtp.impl.core.config.ServiceDefinitionParser;
 import org.iplass.mtp.spi.ServiceRegistry;
+import org.iplass.mtp.tools.batch.MtpBatchResourceDisposer;
 import org.iplass.mtp.util.StringUtil;
+
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
 
 public class ServiceConfigViewer {
 
@@ -51,8 +52,8 @@ public class ServiceConfigViewer {
 	}
 
 	private static enum Mode {
-		PARSE_ONLY,		// パースのみ
-		PARSE_LOAD			// パース及びサービスのロード
+		PARSE_ONLY, // パースのみ
+		PARSE_LOAD // パース及びサービスのロード
 	}
 
 	private Mode mode = Mode.PARSE_ONLY;
@@ -69,7 +70,8 @@ public class ServiceConfigViewer {
 	public ServiceConfigViewer(String[] args) {
 		for (int i = 0; i < args.length; i += 2) {
 			if (args.length > i + 1) {
-				if (args[i + 1].startsWith("-")) continue;
+				if (args[i + 1].startsWith("-"))
+					continue;
 				if (Option.MODE.value.equals(args[i])) {
 					mode = Mode.valueOf(args[i + 1]);
 				} else if (Option.OUT_FILE.value.equals(args[i])) {
@@ -78,8 +80,9 @@ public class ServiceConfigViewer {
 			}
 		}
 
-		configFileName = BootstrapProps.getInstance().getProperty(
-				BootstrapProps.CONFIG_FILE_NAME, BootstrapProps.DEFAULT_CONFIG_FILE_NAME);
+		configFileName = BootstrapProps.getInstance()
+				.getProperty(
+						BootstrapProps.CONFIG_FILE_NAME, BootstrapProps.DEFAULT_CONFIG_FILE_NAME);
 	}
 
 	/**
@@ -92,6 +95,9 @@ public class ServiceConfigViewer {
 			new ServiceConfigViewer(args).execute();
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			// リソース破棄
+			MtpBatchResourceDisposer.disposeResource();
 		}
 	}
 
@@ -110,21 +116,26 @@ public class ServiceConfigViewer {
 			ServiceDefinition sd = parser.read(configFileName);
 
 			if (mode.equals(Mode.PARSE_LOAD)) {
-				BootstrapProps.getInstance().setProperty(BootstrapProps.CONFIG_FILE_NAME, configFileName);
-				Stream.of(sd.getService()).forEach(sc -> {
-					// 全てのサービスをロード
-					if (sc.getName() != null) {
-						ServiceRegistry.getRegistry().getService(sc.getName());
-					} else {
-						ServiceRegistry.getRegistry().getService(sc.getInterfaceName());
-					}
-				});
+				BootstrapProps.getInstance()
+						.setProperty(BootstrapProps.CONFIG_FILE_NAME, configFileName);
+				Stream.of(sd.getService())
+						.forEach(sc -> {
+							// 全てのサービスをロード
+							if (sc.getName() != null) {
+								ServiceRegistry.getRegistry()
+										.getService(sc.getName());
+							} else {
+								ServiceRegistry.getRegistry()
+										.getService(sc.getInterfaceName());
+							}
+						});
 			}
 
 			if (toFile) {
 				writer = Files.newBufferedWriter(Paths.get(outputFileName));
 			} else {
-				writer = System.console() != null ? System.console().writer() : new OutputStreamWriter(System.out);
+				writer = System.console() != null ? System.console()
+						.writer() : new OutputStreamWriter(System.out);
 			}
 
 			// マージ済みなのでincludesとinheritsはクリアする

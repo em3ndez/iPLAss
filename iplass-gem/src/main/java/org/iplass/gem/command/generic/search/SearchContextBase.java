@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,11 +21,15 @@
 package org.iplass.gem.command.generic.search;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.iplass.gem.command.CommandUtil;
 import org.iplass.gem.command.Constants;
@@ -36,6 +40,7 @@ import org.iplass.gem.command.generic.search.handler.CheckPermissionLimitConditi
 import org.iplass.gem.command.generic.search.handler.CreateSearchResultEvent;
 import org.iplass.gem.command.generic.search.handler.CreateSearchResultEventHandler;
 import org.iplass.mtp.ManagerLocator;
+import org.iplass.mtp.SystemException;
 import org.iplass.mtp.command.RequestContext;
 import org.iplass.mtp.entity.Entity;
 import org.iplass.mtp.entity.EntityRuntimeException;
@@ -54,10 +59,19 @@ import org.iplass.mtp.entity.query.SortSpec;
 import org.iplass.mtp.entity.query.SortSpec.NullOrderingSpec;
 import org.iplass.mtp.entity.query.SortSpec.SortType;
 import org.iplass.mtp.entity.query.condition.Condition;
+import org.iplass.mtp.entity.query.value.ValueExpression;
+import org.iplass.mtp.entity.query.value.primary.EntityField;
 import org.iplass.mtp.entity.query.value.primary.Literal;
+import org.iplass.mtp.impl.parser.ParseContext;
+import org.iplass.mtp.impl.parser.ParseException;
+import org.iplass.mtp.impl.parser.SyntaxService;
+import org.iplass.mtp.impl.query.OrderBySyntax;
+import org.iplass.mtp.impl.query.QuerySyntaxRegister;
 import org.iplass.mtp.impl.util.ObjectUtil;
+import org.iplass.mtp.spi.ServiceRegistry;
 import org.iplass.mtp.util.StringUtil;
 import org.iplass.mtp.utilityclass.definition.UtilityClassDefinitionManager;
+import org.iplass.mtp.view.filter.EntityFilterItem;
 import org.iplass.mtp.view.generic.EntityView;
 import org.iplass.mtp.view.generic.EntityViewManager;
 import org.iplass.mtp.view.generic.EntityViewUtil;
@@ -78,13 +92,13 @@ import org.iplass.mtp.view.generic.editor.UserPropertyEditor;
 import org.iplass.mtp.view.generic.element.property.PropertyColumn;
 import org.iplass.mtp.view.generic.element.property.PropertyItem;
 import org.iplass.mtp.view.generic.element.section.SearchConditionSection;
-import org.iplass.mtp.view.generic.element.section.SearchConditionSection.ConditionSortType;
 import org.iplass.mtp.view.generic.element.section.SearchResultSection;
 import org.iplass.mtp.view.generic.element.section.SearchResultSection.ExclusiveControlPoint;
 import org.iplass.mtp.view.generic.element.section.SortSetting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// TODO: Metadata定義クラス（Entity/EntityView/Form/...）が持つべきロジックがこのクラスに漏れ出している（カプセル化ができない）
 public abstract class SearchContextBase implements SearchContext, CreateSearchResultEventHandler {
 
 	private static Logger log = LoggerFactory.getLogger(SearchContextBase.class);
@@ -158,7 +172,7 @@ public abstract class SearchContextBase implements SearchContext, CreateSearchRe
 			if (EntityViewUtil.isDisplayElement(getDefName(), p.getElementRuntimeId(), OutputType.SEARCHRESULT, null)) {
 				String propName = p.getPropertyName();
 				if (p.getEditor() instanceof ReferencePropertyEditor) {
-					List<NestProperty> nest = ((ReferencePropertyEditor)p.getEditor()).getNestProperties();
+					List<NestProperty> nest = ((ReferencePropertyEditor) p.getEditor()).getNestProperties();
 					addSearchProperty(select, propName, p.getEditor(), nest.toArray(new NestProperty[nest.size()]));
 				} else if (p.getEditor() instanceof JoinPropertyEditor) {
 					JoinPropertyEditor je = (JoinPropertyEditor) p.getEditor();
@@ -177,18 +191,21 @@ public abstract class SearchContextBase implements SearchContext, CreateSearchRe
 				}
 			}
 		}
+		List<ValueExpression> fieldSelection = select.stream()
+				.<ValueExpression> map(EntityField::new)
+				.toList();
+		List<ValueExpression> orderBySelection = Optional.ofNullable(getOrderBy())
+				.stream()
+				.flatMap(orderBy -> orderBy.getSortSpecList()
+						.stream()
+						.map(SortSpec::getSortKey))
+				.toList();
+
 		// ソート条件のデータを取得カラムにしておかないと、DistinctでSQLエラーになる。
-		OrderBy orderBy = getOrderBy();
-		if (orderBy != null) {
-			for (SortSpec sortSpec : orderBy.getSortSpecList()) {
-				String sortKey = sortSpec.getSortKey().toString();
-				if (!select.contains(sortKey)) addSearchProperty(select, sortKey);
-			}
-		}
-		boolean distinct = getConditionSection().isDistinct();
-		Select s = new Select().add(select.toArray());
-		s.setDistinct(distinct);
-		return s;
+		boolean isDistinct = getConditionSection().isDistinct();
+		return new Select(isDistinct, (isDistinct ? Stream.concat(fieldSelection.stream(), orderBySelection.stream()) : fieldSelection.stream())
+				.distinct()
+				.toList());
 	}
 
 	@Override
@@ -221,51 +238,12 @@ public abstract class SearchContextBase implements SearchContext, CreateSearchRe
 
 	@Override
 	public OrderBy getOrderBy() {
-		OrderBy orderBy = null;
-		// ソート設定が存在する場合
-		if (hasSortSetting()) {
-			orderBy = new OrderBy();
-			for (SortSetting ss : getSortSetting()) {
-				String sortKey = ss.getSortKey();
-				PropertyDefinition pd = getPropertyDefinition(sortKey);
-				// ソートキーに参照プロパティ自体が指定された場合（参照先Entityのプロパティまで明示指定された場合は除く）
-				if (pd instanceof ReferenceProperty) {
-					PropertyColumn property = getLayoutPropertyColumn(sortKey);
-					// 当該項目が画面上表示される場合は、画面上の表示項目でソート
-					if (property != null) {
-						sortKey = sortKey + "." + getDisplayNestProperty(property);
-					} else {
-						// 画面上に表示されない場合は、Nameでソート
-						sortKey = sortKey + "." + Entity.NAME;
-					}
-				}
-				SortType type = SortType.valueOf(ss.getSortType().name());
-				NullOrderingSpec nullOrderingSpec = getNullOrderingSpec(ss.getNullOrderType());
-				orderBy.add(sortKey, type, nullOrderingSpec);
-			}
-		} else {
-			// ソート設定がない場合
-			String sortKey = getSortKey();
-			if (Entity.OID.equals(sortKey)) {
-				orderBy = new OrderBy();
-				orderBy.add(sortKey, getSortType());
-			} else {
-				PropertyColumn property = getLayoutPropertyColumn(sortKey);
-				// OID以外はSearchResultに定義されているPropertyのみ許可
-				if (property != null) {
-					PropertyDefinition pd = getPropertyDefinition(sortKey);
-					// 参照プロパティの場合、画面上の表示項目でソート
-					if (pd instanceof ReferenceProperty) {
-						sortKey = sortKey + "." + getDisplayNestProperty(property);
-					}
-					NullOrderingSpec nullOrderingSpec = getNullOrderingSpec(property.getNullOrderType());
-					orderBy = new OrderBy();
-					orderBy.add(sortKey, getSortType(), nullOrderingSpec);
-				}
-			}
-		}
-		return orderBy;
+		Optional<String> requestSortKey = getRequestSortKey();
+		SearchConditionSection conditionSection = getConditionSection();
+
+		return getOrderByWithConditionSection(requestSortKey, conditionSection, new SortSpec(Entity.OID, SortType.DESC)).orElse(null);
 	}
+
 	@Override
 	public Limit getLimit() {
 		Limit limit = new Limit(getSearchLimit(), getOffset());
@@ -274,8 +252,14 @@ public abstract class SearchContextBase implements SearchContext, CreateSearchRe
 
 	@Override
 	public boolean isVersioned() {
-		String allVer = getRequest().getParam("allVersion");
-		return "1".equals(allVer);
+		if (getEntityDefinition().getVersionControlType() != VersionControlType.NONE) {
+			String allVer = getRequest().getParam(Constants.SEARCH_ALL_VERSION);
+			return "1".equals(allVer);
+		} else if (getForm().isCanVersionedReferenceSearchForNoneVersionedEntity()) {
+			String referenceVer = getRequest().getParam(Constants.SEARCH_SAVED_VERSION);
+			return "1".equals(referenceVer);
+		}
+		return false;
 	}
 
 	@Override
@@ -295,6 +279,147 @@ public abstract class SearchContextBase implements SearchContext, CreateSearchRe
 		return true;
 	}
 
+	/**
+	 * リクエスト値と検索条件のソート設定から、OrderByを決定します。
+	 */
+	protected final Optional<OrderBy> getOrderByWithConditionSection(Optional<String> requestSortKey, SearchConditionSection conditionSection,
+			SortSpec defaultSortSpec) {
+		if (requestSortKey.isEmpty() && conditionSection.getSortSetting()
+				.isEmpty()
+				&& conditionSection.isUnsorted()) {
+			return Optional.empty();
+		}
+
+		List<SortSpec> settingSortSpecs = conditionSection.getSortSetting()
+				.stream()
+				.map(this::getSettingSortSpec)
+				.toList();
+
+		return Optional.of(getOrderBy(requestSortKey, settingSortSpecs, defaultSortSpec));
+	}
+
+	/**
+	 * リクエスト値とフィルター設定から、OrderByを決定します。
+	 */
+	protected final OrderBy getOrderByWithFilter(Optional<String> requestSortKey, Optional<EntityFilterItem> filter, SortSpec defaultSortSpec) {
+		List<SortSpec> settingSortSpecs = filter.map(f -> getOrderBy(f).map(OrderBy::getSortSpecList)
+				.orElse(Collections.emptyList()))
+				.orElseGet(() -> Collections.emptyList());
+
+		return getOrderBy(requestSortKey, settingSortSpecs, defaultSortSpec);
+	}
+
+	/**
+	 * リクエスト値とソート設定から、OrderByを決定します。
+	 */
+	private OrderBy getOrderBy(Optional<String> requestSortKey, List<SortSpec> settingSortSpecs, SortSpec defaultSortSpec) {
+		List<SortSpec> additionalSortSpecs = settingSortSpecs.isEmpty() ? List.of(defaultSortSpec) : settingSortSpecs;
+
+		Optional<SortSpec> requestSortSpec = requestSortKey.map(this::getRequestSortSpec);
+
+		OrderBy orderBy = new OrderBy();
+
+		Stream.concat(
+				requestSortSpec.stream(),
+				additionalSortSpecs.stream()
+						.filter(spec -> requestSortSpec
+								.filter(r -> r.getSortKey()
+										.equals(spec.getSortKey()))
+								.isEmpty()))
+				.forEach(orderBy::add);
+
+		return orderBy;
+	}
+
+	/**
+	 * ソート設定からソート条件を取得します。
+	 */
+	private SortSpec getSettingSortSpec(SortSetting ss) {
+		String sortKey = ss.getSortKey();
+		EntityField field = switch (getPropertyDefinition(sortKey)) {
+		case ReferenceProperty ref -> {
+			// ソートキーに参照プロパティ自体が指定された場合（参照先Entityのプロパティまで明示指定された場合は除く）
+			PropertyColumn property = getLayoutPropertyColumn(sortKey);
+			EntityField fallbackField = new EntityField(sortKey + "." + Entity.NAME);
+
+			if (property == null) {
+				// 画面上に表示されない場合
+				yield fallbackField;
+			}
+			yield findInSearchResult(sortKey, property, () -> new EntityField(sortKey + "." + getReferencePropertyDisplayName(property.getEditor())),
+					(np) -> new EntityField(sortKey + "." + getReferencePropertyDisplayName(np.getEditor())))
+							.orElse(fallbackField);
+
+		}
+		default -> new EntityField(sortKey);
+		};
+
+		return new SortSpec(field, SortType.valueOf(ss.getSortType()
+				.name()), getNullOrderingSpec(ss.getNullOrderType()));
+	}
+
+	/**
+	 * リクエストからソート条件を取得します。
+	 */
+	private SortSpec getRequestSortSpec(String sortKey) {
+		PropertyDefinition pd = getPropertyDefinition(sortKey);
+		if (pd == null) {
+			throw new SystemException("invalid sort key: " + sortKey);
+		}
+
+		if (Entity.OID.equals(sortKey)) {
+			return new SortSpec(sortKey, getSortType());
+		}
+		PropertyColumn property = getLayoutPropertyColumn(sortKey);
+		// OID以外はSearchResultに定義されているPropertyのみ許可
+		if (property == null) {
+			throw new SystemException("invalid sort key: " + sortKey);
+		}
+
+		return (switch (pd) {
+		case ReferenceProperty ref -> findInSearchResult(sortKey, property,
+				() -> new EntityField(sortKey + "." + getReferencePropertyDisplayName(property.getEditor())),
+				(np) -> new EntityField(sortKey + "." + getReferencePropertyDisplayName(np.getEditor())));
+		default -> findInSearchResult(sortKey, property, () -> new EntityField(sortKey), (np) -> new EntityField(sortKey));
+		}).map(field -> new SortSpec(field, getSortType(), getNullOrderingSpec(property.getNullOrderType())))
+				.orElseThrow(() -> new SystemException("invalid sort key: " + sortKey));
+	}
+
+	/**
+	 * 検索結果一覧プロパティからソートキーに対応するEntityFieldを取得します。
+	 */
+	private Optional<EntityField> findInSearchResult(String sortKey, PropertyColumn property, Supplier<EntityField> dndFieldGetter,
+			Function<NestProperty, EntityField> nestPropFieldGetter) {
+		if (property.getPropertyName()
+				.equals(sortKey)) {
+			// ソートキーが直接D&Dされた列の場合
+			return Optional.of(dndFieldGetter.get());
+		}
+		// ネストの存在チェック
+		return Optional.ofNullable(getLayoutNestProperty(property, sortKey))
+				.map(nestPropFieldGetter);
+	}
+
+	/**
+	 * フィルタ設定のソート設定からOrderByを取得します。
+	 */
+	private Optional<OrderBy> getOrderBy(EntityFilterItem item) {
+		SyntaxService service = ServiceRegistry.getRegistry()
+				.getService(SyntaxService.class);
+		OrderBySyntax syntax = service.getSyntaxContext(QuerySyntaxRegister.QUERY_CONTEXT)
+				.getSyntax(OrderBySyntax.class);
+
+		return Optional.ofNullable(item.getSort())
+				.filter(StringUtil::isNotEmpty)
+				.map(sort -> {
+					try {
+						return syntax.parse(new ParseContext("order by " + sort));
+					} catch (ParseException e) {
+						throw new SystemException(e.getMessage(), e);
+					}
+				});
+	}
+
 	protected SearchFormView getForm() {
 		String viewName = getViewName();
 		if (form == null) {
@@ -308,6 +433,7 @@ public abstract class SearchContextBase implements SearchContext, CreateSearchRe
 	 * @return 検索条件セクション
 	 */
 	protected SearchConditionSection getConditionSection() {
+		// TODO: これはnullを返すことがあるのか？ 利用側を見ると、nullチェックをしてないものがある。
 		return getForm() != null ? getForm().getCondSection() : null;
 	}
 
@@ -316,8 +442,10 @@ public abstract class SearchContextBase implements SearchContext, CreateSearchRe
 	 * @return
 	 */
 	protected List<PropertyItem> getLayoutProperties() {
-		List<PropertyItem> filteredList = getConditionSection().getElements().stream()
-				.filter(e -> e instanceof PropertyItem).map(e -> (PropertyItem) e)
+		List<PropertyItem> filteredList = getConditionSection().getElements()
+				.stream()
+				.filter(e -> e instanceof PropertyItem)
+				.map(e -> (PropertyItem) e)
 				.collect(Collectors.toList());
 
 		List<PropertyItem> properties = new ArrayList<>();
@@ -352,15 +480,19 @@ public abstract class SearchContextBase implements SearchContext, CreateSearchRe
 	 * @return
 	 */
 	protected List<PropertyColumn> getColumnProperties() {
-		List<PropertyColumn> properties = getResultSection().getElements().stream()
-				.filter(e -> e instanceof PropertyColumn).map(e -> (PropertyColumn) e)
+		List<PropertyColumn> properties = getResultSection().getElements()
+				.stream()
+				.filter(e -> e instanceof PropertyColumn)
+				.map(e -> (PropertyColumn) e)
 				.collect(Collectors.toList());
 		return properties;
 	}
 
 	protected PropertyItem getLayoutProperty(String propName) {
 		List<PropertyItem> properties = getLayoutProperties();
-		Optional<PropertyItem> property = properties.stream().filter(e -> propName.equals(e.getPropertyName())).findFirst();
+		Optional<PropertyItem> property = properties.stream()
+				.filter(e -> propName.equals(e.getPropertyName()))
+				.findFirst();
 		if (property.isPresent()) {
 			return property.get();
 		}
@@ -376,18 +508,85 @@ public abstract class SearchContextBase implements SearchContext, CreateSearchRe
 				condPropName = condPropName.split("\\.")[0];
 			}
 
-			if (propName.equals(condPropName)) return property;
+			if (propName.equals(condPropName))
+				return property;
 		}
 		return null;
 	}
 
 	protected PropertyColumn getLayoutPropertyColumn(String propName) {
 		Optional<PropertyColumn> property = getColumnProperties().stream()
-				.filter(e -> propName.equals(e.getPropertyName())).findFirst();
+				.filter(e -> propName.equals(e.getPropertyName()))
+				.findFirst();
 		if (property.isPresent()) {
 			return property.get();
 		}
+
+		// プロパティ名で一致する列がない場合、参照の各階層を下からチェック
+		int dotIndex = propName.lastIndexOf(".");
+		if (dotIndex > -1) {
+			return getLayoutPropertyColumn(propName.substring(0, dotIndex));
+		}
+
 		return null;
+	}
+
+	/**
+	 * プロパティからNestPropertyを取得
+	 * @param property
+	 * @param propName
+	 * @return
+	 */
+	private NestProperty getLayoutNestProperty(PropertyColumn property, String propName) {
+		if (property.getEditor() != null && !(property.getEditor() instanceof ReferencePropertyEditor)) {
+			return null;
+		}
+
+		// 親階層以降のプロパティ名で再帰検索
+		String subPropName = propName.substring(property.getPropertyName()
+				.length() + 1);
+		return findLayoutNestPropertyRecursive(subPropName, (ReferencePropertyEditor) property.getEditor());
+	}
+
+	/**
+	 * プロパティ名に一致するネストプロパティを再帰的に検索し取得する
+	 * @param propertyName プロパティ名
+	 * @param editor 参照プロパティエディタ
+	 * @return ネストプロパティ
+	 */
+	private NestProperty findLayoutNestPropertyRecursive(String propertyName, ReferencePropertyEditor editor) {
+		if (editor.getNestProperties()
+				.isEmpty()) {
+			return null;
+		}
+
+		int dotIndex = propertyName.indexOf(".");
+		if (dotIndex > -1) {
+			// 子階層を再帰呼び出し
+			String topPropName = propertyName.substring(0, dotIndex);
+			String subPropName = propertyName.substring(dotIndex + 1);
+
+			Optional<NestProperty> opt = editor.getNestProperties()
+					.stream()
+					.filter(np -> np.getPropertyName()
+							.equals(topPropName))
+					.findFirst();
+			if (!opt.isPresent())
+				return null;
+
+			NestProperty subProp = opt.get();
+			if (subProp.getEditor() instanceof ReferencePropertyEditor) {
+				return findLayoutNestPropertyRecursive(subPropName, (ReferencePropertyEditor) subProp.getEditor());
+			}
+		}
+
+		// 一致するNestPropetyを取得
+		Optional<NestProperty> opt = editor.getNestProperties()
+				.stream()
+				.filter(np -> np.getPropertyName()
+						.equals(propertyName))
+				.findFirst();
+		return opt.orElse(null);
 	}
 
 	/**
@@ -410,31 +609,6 @@ public abstract class SearchContextBase implements SearchContext, CreateSearchRe
 	protected String getViewName() {
 		return request.getParam(Constants.VIEW_NAME);
 	}
-	/**
-	 * リクエストからソートキーを取得します。
-	 * ソートキーが指定されていない場合は、検索画面のデフォルトソートキーを取得します。
-	 * @return ソートキー
-	 */
-	protected String getSortKey() {
-		String sortKey = request.getParam(Constants.SEARCH_SORTKEY);
-		
-		// 検索時のソートキー
-		if (StringUtil.isBlank(sortKey)) {
-			if (getConditionSection().isUnsorted()) {
-				return null;
-			}
-			// デフォルトはOID
-			return Entity.OID;
-		}
-		
-		PropertyDefinition pd = getPropertyDefinition(sortKey);
-		if (pd == null) {
-			//ソート項目が存在しない場合はOIDを設定
-			return Entity.OID;
-		}
-		
-		return sortKey;
-	}
 
 	/**
 	 * リクエストからソートタイプを取得します。
@@ -450,7 +624,8 @@ public abstract class SearchContextBase implements SearchContext, CreateSearchRe
 	}
 
 	protected NullOrderingSpec getNullOrderingSpec(NullOrderType type) {
-		if (type == null) return null;
+		if (type == null)
+			return null;
 		switch (type) {
 		case FIRST:
 			return NullOrderingSpec.FIRST;
@@ -462,79 +637,42 @@ public abstract class SearchContextBase implements SearchContext, CreateSearchRe
 		return null;
 	}
 
-	/**
-	 * ソート設定が定義されているか
-	 * @return ソート設定が定義されているか
-	 */
-	protected boolean hasSortSetting() {
-		SearchConditionSection section = getConditionSection();
-		if (section != null) {
-			return !section.getSortSetting().isEmpty();
-		}
-		return false;
+	protected final Optional<String> getRequestSortKey() {
+		return Optional.ofNullable(getRequest().getParam(Constants.SEARCH_SORTKEY))
+				.filter(StringUtil::isNotBlank);
 	}
 
 	/**
-	 * ソート設定を取得します。
-	 * @return ソート設定
+	 * 参照項目の表示ラベルを取得
+	 * @param editor
+	 * @return
 	 */
-	protected List<SortSetting> getSortSetting() {
-		List<SortSetting> setting = new ArrayList<>();
-
-		//画面でソート条件が指定されれば第1キーに
-		String sortKey = getRequest().getParam(Constants.SEARCH_SORTKEY);
-		if (StringUtil.isNotBlank(sortKey)) {
-			PropertyColumn property = getLayoutPropertyColumn(sortKey);
-			// SearchResultに定義されているPropertyのみ許可
-			if (property != null) {
-				SortSetting ss = new SortSetting();
-				ss.setSortKey(sortKey);
-				
-				String sortType = getRequest().getParam(Constants.SEARCH_SORTTYPE);
-				if (StringUtil.isBlank(sortType)) {
-					ss.setSortType(ConditionSortType.DESC);
-				} else {
-					ss.setSortType(ConditionSortType.valueOf(sortType));
-				}
-				
-				ss.setNullOrderType(property.getNullOrderType());
-				
-				setting.add(ss);
-			}
-		}
-		
-		SearchConditionSection section = getConditionSection();
-		if (section != null && !section.getSortSetting().isEmpty()) {
-			setting.addAll(section.getSortSetting());
-		}
-		return setting;
-	}
-	
-	/**
-	 * 参照プロパティで、検索結果に表示されている項目を取得します。
-	 * @return 表示項目
-	 */
-	protected String getDisplayNestProperty(PropertyColumn refProp) {
-		PropertyEditor editor = refProp.getEditor();
-		
+	protected String getReferencePropertyDisplayName(PropertyEditor editor) {
 		if (editor instanceof ReferencePropertyEditor
 				&& StringUtil.isNotEmpty(((ReferencePropertyEditor) editor).getDisplayLabelItem())) {
-			return ((ReferencePropertyEditor)editor).getDisplayLabelItem();
+			return ((ReferencePropertyEditor) editor).getDisplayLabelItem();
 		} else {
 			return Entity.NAME;
 		}
-		
 	}
-	
+
 	/**
-	 * リクエストから検索上限を取得します。
-	 * 検索上限が指定されていない場合は検索画面のデフォルトソート上限を取得します。
+	 * リクエストから検索上限を取得します。検索上限が指定されていない場合は、定義またはservice-config設定から補完します。
+	 * リクエストの検索上限は、定義またはservice-config設定の上限を超えることはできません。
+	 *
 	 * @return
 	 */
 	protected Integer getSearchLimit() {
-		Integer limit = request.getParamAsInt(Constants.SEARCH_LIMIT);
-		if (limit == null) limit = ViewUtil.getSearchLimit(getResultSection());
-		return limit;
+		// 定義またはservice-config設定の上限
+		Integer limit = ViewUtil.getSearchLimit(getResultSection());
+
+		// リクエストパラメータの検索上限
+		Integer requestedLimit = request.getParamAsInt(Constants.SEARCH_LIMIT);
+		if (requestedLimit == null) {
+			return limit;
+		}
+
+		return limit > requestedLimit ? requestedLimit : limit;
 	}
 
 	/**
@@ -544,7 +682,8 @@ public abstract class SearchContextBase implements SearchContext, CreateSearchRe
 	 */
 	protected Integer getOffset() {
 		Integer offset = request.getParamAsInt(Constants.SEARCH_OFFSET);
-		if (offset == null) offset = 0;
+		if (offset == null)
+			offset = 0;
 		return offset;
 	}
 
@@ -577,9 +716,14 @@ public abstract class SearchContextBase implements SearchContext, CreateSearchRe
 			if (nest != null && nest.length > 0) {
 				EntityDefinition red = getReferenceEntityDefinition((ReferenceProperty) pd);
 				for (NestProperty np : nest) {
+					// 仮想プロパティは検索項目に含めない
+					if (np.isVirtual()) {
+						continue;
+					}
+
 					PropertyDefinition rpd = red.getProperty(np.getPropertyName());
 					if (rpd != null
-							&&!Entity.OID.equals(np.getPropertyName())
+							&& !Entity.OID.equals(np.getPropertyName())
 							&& !Entity.NAME.equals(np.getPropertyName())
 							&& !Entity.VERSION.equals(np.getPropertyName())) {
 						String nestPropName = propName + "." + np.getPropertyName();
@@ -600,7 +744,8 @@ public abstract class SearchContextBase implements SearchContext, CreateSearchRe
 						}
 						if (np.getEditor() instanceof ReferencePropertyEditor) {
 							ReferencePropertyEditor rpe = (ReferencePropertyEditor) np.getEditor();
-							if (!rpe.getNestProperties().isEmpty()) {
+							if (!rpe.getNestProperties()
+									.isEmpty()) {
 								List<NestProperty> _nest = rpe.getNestProperties();
 								addSearchProperty(select, nestPropName, rpe, _nest.toArray(new NestProperty[_nest.size()]));
 							}
@@ -608,7 +753,8 @@ public abstract class SearchContextBase implements SearchContext, CreateSearchRe
 						} else if (np.getEditor() instanceof JoinPropertyEditor) {
 							JoinPropertyEditor jpe = (JoinPropertyEditor) np.getEditor();
 							addSearchProperty(select, nestPropName, jpe.getEditor());
-							if (!jpe.getProperties().isEmpty()) {
+							if (!jpe.getProperties()
+									.isEmpty()) {
 								List<NestProperty> _nest = jpe.getProperties();
 								addSearchProperty(select, propName, editor, _nest.toArray(new NestProperty[_nest.size()]));
 							}
@@ -622,12 +768,14 @@ public abstract class SearchContextBase implements SearchContext, CreateSearchRe
 				}
 			}
 		} else {
-			if (!select.contains(propName)) select.add(propName);
+			if (!select.contains(propName))
+				select.add(propName);
 		}
 	}
 
 	protected void addDisplayLabelProperty(ArrayList<String> select, String propName, ReferencePropertyEditor rpe) {
-		if (rpe.getDisplayLabelItem() == null) return;
+		if (rpe.getDisplayLabelItem() == null)
+			return;
 
 		PropertyDefinition pd = getPropertyDefinition(propName);
 		if (pd instanceof ReferenceProperty) {
@@ -643,10 +791,12 @@ public abstract class SearchContextBase implements SearchContext, CreateSearchRe
 	 * @return
 	 */
 	protected EntityDefinition getReferenceEntityDefinition(ReferenceProperty rp) {
-		EntityDefinitionManager edm = ManagerLocator.getInstance().getManager(EntityDefinitionManager.class);
+		EntityDefinitionManager edm = ManagerLocator.getInstance()
+				.getManager(EntityDefinitionManager.class);
 		return edm.get(rp.getObjectDefinitionName());
 	}
 
+	//TODO: EntityViewUtil.getPropertyDefinition() とロジックが重複
 	protected PropertyDefinition getPropertyDefinition(String propName) {
 		int firstDotIndex = propName.indexOf('.');
 		if (firstDotIndex > 0) {
@@ -685,77 +835,55 @@ public abstract class SearchContextBase implements SearchContext, CreateSearchRe
 	 * @return UserPropertyEditorを利用しているプロパティ名の一覧
 	 */
 	public Set<String> getUseUserPropertyEditorPropertyName() {
-		if (useUserPropertyEditorPropertyNameList == null) {
-			//UserPropertyEditorを使用しているlockedbyプロパティを取得
-			useUserPropertyEditorPropertyNameList
-				= getUseUserPropertyEditorPropertyName(Entity.LOCKED_BY, Entity.CREATE_BY, Entity.UPDATE_BY);
-		}
-		return useUserPropertyEditorPropertyNameList;
-	}
 
-	/**
-	 * 指定のプロパティ名を持ち、UserPropertyEditorを利用している検索結果のプロパティ名を取得します。
-	 * @param propNames
-	 * @return
-	 */
-	private Set<String> getUseUserPropertyEditorPropertyName(String... propNames) {
-		Set<String> ret = new HashSet<>();
+		if (useUserPropertyEditorPropertyNameList != null) {
+			return useUserPropertyEditorPropertyNameList;
+		}
+
+		useUserPropertyEditorPropertyNameList = new HashSet<>();
+
 		List<PropertyColumn> properties = getColumnProperties();
 		for (PropertyColumn property : properties) {
 			String propertyName = property.getPropertyName();
 
 			if (property.getEditor() instanceof ReferencePropertyEditor) {
-				//ネストの項目を確認
+				// ネストの項目を確認
 				ReferencePropertyEditor editor = (ReferencePropertyEditor) property.getEditor();
-				if (!editor.getNestProperties().isEmpty()) {
-					Set<String> nest = getUseUserPropertyEditorNestPropertyName(editor, propNames);
+				if (!editor.getNestProperties()
+						.isEmpty()) {
+					Set<String> nest = getUseUserPropertyEditorNestPropertyName(editor);
 					for (String nestPropertyName : nest) {
 						String _nestPropertyName = propertyName + "." + nestPropertyName;
-						ret.add(_nestPropertyName);
+						useUserPropertyEditorPropertyNameList.add(_nestPropertyName);
 					}
 				}
 			} else if (property.getEditor() instanceof UserPropertyEditor) {
-				//直接指定項目の確認
-				for (String propName : propNames) {
-					boolean isUserEditor = false;
-					if (propertyName.contains(".")) {
-						//ReferencePropertyの直接指定
-						isUserEditor = propertyName.endsWith("." + propName);
-					} else {
-						//通常Property
-						isUserEditor = propertyName.equals(propName);
-					}
-					if (isUserEditor) {
-						ret.add(propertyName);
-					}
-				}
+				useUserPropertyEditorPropertyNameList.add(propertyName);
 			}
 
 		}
-		return ret;
+
+		return useUserPropertyEditorPropertyNameList;
 	}
 
-	private Set<String> getUseUserPropertyEditorNestPropertyName(ReferencePropertyEditor editor, String... propNames) {
+	private Set<String> getUseUserPropertyEditorNestPropertyName(ReferencePropertyEditor editor) {
 		Set<String> ret = new HashSet<>();
 		for (NestProperty property : editor.getNestProperties()) {
 
 			if (property.getEditor() instanceof ReferencePropertyEditor) {
 				//再ネストの項目を確認
 				ReferencePropertyEditor nestEditor = (ReferencePropertyEditor) property.getEditor();
-				if (!nestEditor.getNestProperties().isEmpty()) {
-					Set<String> nest = getUseUserPropertyEditorNestPropertyName(nestEditor, propNames);
+				if (!nestEditor.getNestProperties()
+						.isEmpty()) {
+					Set<String> nest = getUseUserPropertyEditorNestPropertyName(nestEditor);
 					for (String nestPropertyName : nest) {
 						String _nestPropertyName = property.getPropertyName() + "." + nestPropertyName;
 						ret.add(_nestPropertyName);
 					}
 				}
 			} else if (property.getEditor() instanceof UserPropertyEditor) {
-				//NestProperty項目
-				for (String propName : propNames) {
-					if (propName.equals(property.getPropertyName())) {
-						ret.add(property.getPropertyName());
-					}
-				}
+				// NestProperty項目
+				ret.add(property.getPropertyName());
 			}
 		}
 		return ret;
@@ -816,7 +944,8 @@ public abstract class SearchContextBase implements SearchContext, CreateSearchRe
 	}
 
 	protected SearchQueryInterrupter getDefaultSearchQueryInterrupter() {
-		return new SearchQueryInterrupter() {};
+		return new SearchQueryInterrupter() {
+		};
 	}
 
 	@Override
@@ -867,4 +996,5 @@ public abstract class SearchContextBase implements SearchContext, CreateSearchRe
 	private static String resourceString(String key, Object... arguments) {
 		return GemResourceBundleUtil.resourceString(key, arguments);
 	}
+
 }

@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
 <%@ page import="java.text.DecimalFormat" %>
@@ -107,7 +107,7 @@
 		if (isMultiple) {
 			//複数
 %>
-<ul class="data-label<c:out value="<%=clsComma %>"/>" style="<c:out value="<%=customStyle %>"/>">
+<ul name="data-label-<c:out value="<%=propName %>"/>" class="data-label<c:out value="<%=clsComma %>"/>" style="<c:out value="<%=customStyle %>"/>">
 <%
 			Number[] array = propValue instanceof Number[] ? (Number[]) propValue : null;
 			if (array != null) {
@@ -124,6 +124,7 @@
 %>
 <input type="hidden" name="<c:out value="<%=propName %>"/>" value="<c:out value="<%=hiddenValue %>"/>" />
 </li>
+
 <%
 				}
 			}
@@ -134,7 +135,7 @@
 			//単数
 			String str = propValue instanceof Number ? format(editor.getNumberFormat(), (Number) propValue) : "";
 %>
-<span class="data-label<c:out value="<%=clsComma %>"/>" style="<c:out value="<%=customStyle %>"/>">
+<span name="data-label-<c:out value="<%=propName %>"/>" class="data-label<c:out value="<%=clsComma %>"/>" style="<c:out value="<%=customStyle %>"/>">
 <c:out value="<%=str %>"/>
 <%
 			String hiddenValue = "";
@@ -143,6 +144,7 @@
 %>
 <input type="hidden" name="<c:out value="<%=propName %>"/>" value="<c:out value="<%=hiddenValue %>"/>" />
 </span>
+
 <%
 		}
 	} else {
@@ -150,6 +152,9 @@
 		
 		if (isMultiple) {
 			//複数
+%>
+<ul name="data-hidden-<c:out value="<%=propName %>"/>">
+<%
 			Number[] array = propValue instanceof Number[] ? (Number[]) propValue : null;
 			if (array != null) {
 				for (int i = 0; i < array.length; i++) {
@@ -158,10 +163,15 @@
 					if (tmp instanceof Double) hiddenValue = "" + ((Double)tmp).doubleValue();
 					else if (tmp instanceof Long) hiddenValue = "" + ((Long)tmp).longValue();
 %>
+<li>
 <input type="hidden" name="<c:out value="<%=propName %>"/>" value="<c:out value="<%=hiddenValue %>"/>" />
+</li>
 <%
 				}
 			}
+%>
+</ul>
+<%
 		} else {
 			//単数
 			String hiddenValue = "";

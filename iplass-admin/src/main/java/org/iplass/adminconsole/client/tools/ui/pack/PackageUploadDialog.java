@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,6 +33,7 @@ import org.iplass.adminconsole.client.base.util.SmartGWTUtil;
 import org.iplass.adminconsole.shared.metadata.dto.MetaDataConstants;
 import org.iplass.adminconsole.shared.tools.dto.pack.PackageUploadProperty;
 
+import com.google.gwt.json.client.JSONValue;
 import com.google.gwt.user.client.ui.Hidden;
 import com.smartgwt.client.types.Alignment;
 import com.smartgwt.client.types.VerticalAlignment;
@@ -47,8 +48,6 @@ import com.smartgwt.client.widgets.form.fields.TextAreaItem;
 import com.smartgwt.client.widgets.form.fields.TextItem;
 import com.smartgwt.client.widgets.layout.HLayout;
 import com.smartgwt.client.widgets.layout.VLayout;
-
-import gwtupload.client.IUploadStatus.Status;
 
 /**
  * Packageファイルをアップロードするダイアログ
@@ -105,18 +104,22 @@ public class PackageUploadDialog extends AbstractWindow {
 		final AdminSingleUploader uploader = new AdminSingleUploader(UPLOAD_SERVICE);
 		uploader.setValidExtensions("zip");
 		uploader.addOnStartUploadHandler((result) -> {
-			uploader.debugUploader("onStart");
-			startUpload();
-		});
-		uploader.addOnStatusChangedHandler((result) -> {
-			uploader.debugUploader("onStatusChanged");
+			if (!result.isCanceled()) {
+				uploader.debugUploader("onStart");
+				startUpload();
+			} else {
+				uploader.removeHidden();
+			}
 		});
 		uploader.addOnFinishUploadHandler((result) -> {
 			uploader.debugUploader("onFinish");
-			if (uploader.getStatus() == Status.SUCCESS) {
-				finishUpload(uploader.getMessage());
+			if (uploader.getLastUploadState()
+					.isSuccess()) {
+				finishUpload(uploader.getLastUploadState()
+						.getData());
 			} else {
-				errorUpload(uploader.getErrorMessage());
+				errorUpload(uploader.getLastUploadState()
+						.getErrorMessage());
 			}
 
 			//Hidden項目の削除
@@ -125,13 +128,13 @@ public class PackageUploadDialog extends AbstractWindow {
 
 		fileComposit.addMember(uploader);
 
-		final TextItem nameField = new TextItem("name","Name");
+		final TextItem nameField = new TextItem("name", "Name");
 		nameField.setWidth(MetaDataConstants.DEFAULT_FORM_ITEM_WIDTH);
 		//nameField.setHint("default upload file name");
 		nameField.setHint(AdminClientMessageUtil.getString("ui_tools_pack_PackageUploadDialog_notSpeIsFileName"));
 
 		final TextAreaItem descriptionField = new TextAreaItem("description", "Comment");
-//		descriptionField.setWidth("100%");
+		//		descriptionField.setWidth("100%");
 		descriptionField.setWidth(MetaDataConstants.DEFAULT_FORM_ITEM_WIDTH);
 		descriptionField.setHeight(100);
 
@@ -153,28 +156,30 @@ public class PackageUploadDialog extends AbstractWindow {
 		upload.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				if (uploader.getFileName() == null || uploader.getFileName().isEmpty()) {
+				if (uploader.getFileName() == null || uploader.getFileName()
+						.isEmpty()) {
 					SC.warn(AdminClientMessageUtil.getString("ui_tools_pack_PackageUploadDialog_selectFile"));
 					return;
 				}
 				SC.ask(AdminClientMessageUtil.getString("ui_tools_pack_PackageUploadDialog_confirm"),
 						AdminClientMessageUtil.getString("ui_tools_pack_PackageUploadDialog_startUploadConf"), new BooleanCallback() {
 
-					@Override
-					public void execute(Boolean value) {
-						if (value) {
-							uploader.add(new Hidden(PackageUploadProperty.TENANT_ID, Integer.toString(TenantInfoHolder.getId())));
-							uploader.add(new Hidden(PackageUploadProperty.UPLOAD_FILE_NAME, SmartGWTUtil.getStringValue(nameField)));
-							uploader.add(new Hidden(PackageUploadProperty.DESCRIPTION, SmartGWTUtil.getStringValue(descriptionField)));
-							uploader.submit();
-						}
-					}
+							@Override
+							public void execute(Boolean value) {
+								if (value) {
+									uploader.add(new Hidden(PackageUploadProperty.TENANT_ID, Integer.toString(TenantInfoHolder.getId())));
+									uploader.add(new Hidden(PackageUploadProperty.UPLOAD_FILE_NAME, SmartGWTUtil.getStringValue(nameField)));
+									uploader.add(new Hidden(PackageUploadProperty.DESCRIPTION, SmartGWTUtil.getStringValue(descriptionField)));
+									uploader.submit();
+								}
+							}
 
-				});
+						});
 			}
 		});
 		cancel = new IButton("Cancel");
 		cancel.addClickHandler(new ClickHandler() {
+			@Override
 			public void onClick(ClickEvent event) {
 				destroy();
 			}
@@ -225,7 +230,7 @@ public class PackageUploadDialog extends AbstractWindow {
 		messageTabSet.setTabTitleProgress();
 	}
 
-	private void finishUpload(String message) {
+	private void finishUpload(JSONValue message) {
 		//JSON->Result
 		final PackageUploadResultInfo result = new PackageUploadResultInfo(message);
 
@@ -247,16 +252,16 @@ public class PackageUploadDialog extends AbstractWindow {
 			SC.ask(AdminClientMessageUtil.getString("ui_tools_pack_PackageUploadDialog_confirm"),
 					AdminClientMessageUtil.getString("ui_tools_pack_PackageUploadDialog_performImportContinue"), new BooleanCallback() {
 
-				@Override
-				public void execute(Boolean value) {
-					if (value) {
-						//PackageImportダイアログを表示
-						PackageImportDialog.showFullScreen(result.fileOid, owner);
+						@Override
+						public void execute(Boolean value) {
+							if (value) {
+								//PackageImportダイアログを表示
+								PackageImportDialog.showFullScreen(result.fileOid, owner);
 
-						destroy();
-					}
-				}
-			});
+								destroy();
+							}
+						}
+					});
 
 		}
 	}
@@ -277,7 +282,7 @@ public class PackageUploadDialog extends AbstractWindow {
 
 		String fileOid;
 
-		public PackageUploadResultInfo(String json) {
+		public PackageUploadResultInfo(JSONValue json) {
 			super(json);
 
 			fileOid = getFileUploadFileOid();
@@ -303,11 +308,14 @@ public class PackageUploadDialog extends AbstractWindow {
 		}
 
 		private String getFileUploadStatusMessage(String status) {
-			if (PackageUploadProperty.Status.SUCCESS.name().equals(status)) {
+			if (PackageUploadProperty.Status.SUCCESS.name()
+					.equals(status)) {
 				return AdminClientMessageUtil.getString("ui_tools_pack_PackageUploadDialog_uploadSuccessful");
-			} else if (PackageUploadProperty.Status.WARN.name().equals(status)) {
+			} else if (PackageUploadProperty.Status.WARN.name()
+					.equals(status)) {
 				return AdminClientMessageUtil.getString("ui_tools_pack_PackageUploadDialog_uploadWarn");
-			} else if (PackageUploadProperty.Status.ERROR.name().equals(status)) {
+			} else if (PackageUploadProperty.Status.ERROR.name()
+					.equals(status)) {
 				return AdminClientMessageUtil.getString("ui_tools_pack_PackageUploadDialog_uploadErr");
 			} else {
 				return AdminClientMessageUtil.getString("ui_tools_pack_PackageUploadDialog_notGetUploadResult");

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,7 +31,7 @@ import org.iplass.mtp.impl.query.QueryConstants;
 import org.iplass.mtp.impl.query.value.expr.PolynomialSyntax;
 
 public class ParenValueSyntax implements Syntax<ValueExpression>, QueryConstants {
-	
+
 	private PolynomialSyntax polynomial;
 
 	public void init(SyntaxContext context) {
@@ -39,7 +39,7 @@ public class ParenValueSyntax implements Syntax<ValueExpression>, QueryConstants
 	}
 
 	public ValueExpression parse(ParseContext str) throws ParseException {
-		
+
 		//TODO 実際は括弧が必要ない場合「((-12))」とかにBracketValueをショートカットするロジックを入れるかどうか
 
 		if (!str.startsWith(LEFT_PAREN)) {
@@ -47,15 +47,15 @@ public class ParenValueSyntax implements Syntax<ValueExpression>, QueryConstants
 		}
 		str.consumeChars(1);
 		str.consumeChars(ParseContext.WHITE_SPACES);
-		
+
 		ValueExpression nestedValue = polynomial.parse(str);
-		
+
 		if (!str.startsWith(RIGHT_PAREN)) {
 			throw new ParseException(new EvalError(") expected.", this, str));
 		}
 		str.consumeChars(1);
 		str.consumeChars(ParseContext.WHITE_SPACES);
-		
+
 		return new ParenValue(nestedValue);
 	}
 

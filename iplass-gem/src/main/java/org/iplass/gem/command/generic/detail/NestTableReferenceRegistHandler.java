@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -51,16 +51,20 @@ public abstract class NestTableReferenceRegistHandler extends ReferenceRegistHan
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static boolean canRegist(PropertyBase property, RegistrationPropertyBaseHandler propBaseHandler) {
 		// 非表示なら更新対象外
-		if (!propBaseHandler.isDispProperty(property)) return false;
+		if (!propBaseHandler.isDispProperty(property))
+			return false;
 
 		// テーブルの場合のみ新規or更新
-		if (!(propBaseHandler.getEditor(property) instanceof ReferencePropertyEditor)) return false;
+		if (!(propBaseHandler.getEditor(property) instanceof ReferencePropertyEditor))
+			return false;
 
 		ReferencePropertyEditor editor = (ReferencePropertyEditor) propBaseHandler.getEditor(property);
-		if (editor.getDisplayType() != ReferenceDisplayType.NESTTABLE) return false;
+		if (editor.getDisplayType() != ReferenceDisplayType.NESTTABLE)
+			return false;
 
 		// Viewモードの場合は編集画面では更新対象ではないので対象外
-		if (editor.getEditPage() == EditPage.VIEW) return false;
+		if (editor.getEditPage() == EditPage.VIEW)
+			return false;
 
 		return true;
 	}
@@ -88,7 +92,8 @@ public abstract class NestTableReferenceRegistHandler extends ReferenceRegistHan
 			List<NestProperty> nestProperties, RegistrationPropertyBaseHandler propBaseHandler,
 			ReferenceRegistOption option) {
 
-		if (rp.getMappedBy() == null || rp.getMappedBy().isEmpty()) {
+		if (rp.getMappedBy() == null || rp.getMappedBy()
+				.isEmpty()) {
 			// 通常参照は登録前のみ
 			return new NestTableReferenceRegistHandler() {
 				@Override
@@ -98,6 +103,13 @@ public abstract class NestTableReferenceRegistHandler extends ReferenceRegistHan
 					List<ValidateError> errors = new ArrayList<>();
 					if (checkMultiple(rp, errors)) {
 						registReference(context, inputEntity, loadedEntity, ed, property, rp, errors);
+
+						if (!errors.isEmpty()) {
+							ValidateError ve = new ValidateError();
+							ve.addErrorMessage(resourceString("command.generic.detail.NestTableReferenceRegistHandler.errorInTable"));
+							ve.setPropertyName(rp.getName());
+							errors.add(ve);
+						}
 					}
 					function.execute(errors);
 				}
@@ -113,6 +125,13 @@ public abstract class NestTableReferenceRegistHandler extends ReferenceRegistHan
 					List<ValidateError> errors = new ArrayList<>();
 					if (checkMultiple(rp, errors)) {
 						registMappedbyReference(context, inputEntity, loadedEntity, ed, property, rp, errors);
+
+						if (!errors.isEmpty()) {
+							ValidateError ve = new ValidateError();
+							ve.addErrorMessage(resourceString("command.generic.detail.NestTableReferenceRegistHandler.errorInTable"));
+							ve.setPropertyName(rp.getName());
+							errors.add(ve);
+						}
 					}
 					function.execute(errors);
 				}
@@ -165,7 +184,8 @@ public abstract class NestTableReferenceRegistHandler extends ReferenceRegistHan
 
 		// 参照元のプロパティ定義
 		String defName = rp.getObjectDefinitionName();
-		ReferenceProperty mpd = (ReferenceProperty) edm.get(defName).getProperty(mappedBy);
+		ReferenceProperty mpd = (ReferenceProperty) edm.get(defName)
+				.getProperty(mappedBy);
 
 		// 参照元の登録
 		List<Entity> registList = new ArrayList<>();
@@ -174,7 +194,7 @@ public abstract class NestTableReferenceRegistHandler extends ReferenceRegistHan
 
 		// 新規・更新されたものは参照プロパティにEntityを追加
 		for (Entity entity : registList) {
-			setMappedByValue(context, loadedEntity, mappedBy, defName, mpd, entity);
+			setMappedByValue(context, loadedEntity, mappedBy, defName, mpd, property, entity);
 			errors.addAll(registReference(context, entity, updateProperties, rp.getName()));
 		}
 
@@ -190,7 +210,7 @@ public abstract class NestTableReferenceRegistHandler extends ReferenceRegistHan
 					}
 				} else {
 					for (Entity de : deleteList) {
-						delMappedByValue(context, inputEntity, mappedBy, defName, mpd, de);
+						delMappedByValue(context, inputEntity, mappedBy, defName, mpd, property, de);
 						List<String> delProperties = new ArrayList<>();
 						delProperties.add(mappedBy);
 						errors.addAll(registReference(context, de, delProperties, rp.getName()));
@@ -203,33 +223,36 @@ public abstract class NestTableReferenceRegistHandler extends ReferenceRegistHan
 	/** カスタム登録処理によるNestEntityの更新制御適用 */
 	protected void applyRegistOption(List<String> updateProperties, ReferencePropertyEditor editor,
 			EntityDefinition ed) {
-		
+
 		// 新規作成、単一プロパティに対する一括更新（BulkUpdate）の場合は制御対象外
 		if (registOption == null) {
 			updateProperties.addAll(getUpdateProperties(editor.getNestProperties(), ed));
 			addTableOrderProperty(updateProperties, editor);
 			return;
 		}
-		
+
 		// 更新対象のプロパティ設定
 		getUpdatePropertiesWithOption(updateProperties, editor.getNestProperties(), ed);
 		// ネストテーブルの表示順プロパティの指定があった場合、更新可能項目として必ず追加
 		addTableOrderProperty(updateProperties, editor);
-		
-		if (registOption.isSpecifiedAsReference() && !registOption.getSpecifiedUpdateNestProperties().isEmpty()) {
+
+		if (registOption.isSpecifiedAsReference() && !registOption.getSpecifiedUpdateNestProperties()
+				.isEmpty()) {
 			// Reference項目として更新可能且つ、NestされたEntityの個々のプロパティに対して、更新対象の指定がある場合
 			// データの追加、削除は可能。新規Entityの更新不可項目はnullに設定。
 			for (Entity entity : references) {
 				if (entity.getOid() == null) {
 					for (PropertyDefinition pd : ed.getPropertyList()) {
 						// ネストテーブルの表示順プロパティは更新可能。
-						if (StringUtil.isNotBlank(editor.getTableOrderPropertyName()) && 
-								pd.getName().equals(editor.getTableOrderPropertyName())) {
+						if (StringUtil.isNotBlank(editor.getTableOrderPropertyName()) &&
+								pd.getName()
+										.equals(editor.getTableOrderPropertyName())) {
 							break;
 						}
 						boolean specified = false;
 						for (String specifiedProperty : registOption.getSpecifiedUpdateNestProperties()) {
-							if (pd.getName().equals(specifiedProperty)) {
+							if (pd.getName()
+									.equals(specifiedProperty)) {
 								specified = true;
 								break;
 							}
@@ -241,7 +264,8 @@ public abstract class NestTableReferenceRegistHandler extends ReferenceRegistHan
 				}
 			}
 		} else if (!registOption.isSpecifiedAsReference()
-				&& !registOption.getSpecifiedUpdateNestProperties().isEmpty()) {
+				&& !registOption.getSpecifiedUpdateNestProperties()
+						.isEmpty()) {
 			// Reference項目として更新不可且つ、NestされたEntityの個々のプロパティに対して、更新対象の指定がある場合
 			// データの追加、削除は不可能。
 			for (Entity entity : references.toArray(new Entity[references.size()])) {
@@ -251,7 +275,7 @@ public abstract class NestTableReferenceRegistHandler extends ReferenceRegistHan
 			}
 		}
 	}
-	
+
 	/** ネストテーブルの表示順プロパティを追加 */
 	protected void addTableOrderProperty(List<String> updateProperties, ReferencePropertyEditor editor) {
 		if (StringUtil.isNotBlank(editor.getTableOrderPropertyName())
@@ -303,9 +327,11 @@ public abstract class NestTableReferenceRegistHandler extends ReferenceRegistHan
 		}
 
 		for (Entity stored : storedRefList) {
-			boolean match = registRefList.stream().anyMatch(regist -> {
-				return regist.getOid() != null && stored.getOid().equals(regist.getOid());
-			});
+			boolean match = registRefList.stream()
+					.anyMatch(regist -> {
+						return regist.getOid() != null && stored.getOid()
+								.equals(regist.getOid());
+					});
 			if (!match) {
 				// ロードしたデータにしかなければ削除
 				deleteRefList.add(stored);
@@ -327,7 +353,7 @@ public abstract class NestTableReferenceRegistHandler extends ReferenceRegistHan
 				ValidateError error = new ValidateError();
 				error.setPropertyName(p.getName());
 //				error.addErrorMessage(TemplateUtil.getResourceString("登録可能なデータは{0}件までです。", p.getMultiplicity()));
-				error.addErrorMessage("登録可能なデータは" + p.getMultiplicity() + "件までです。");
+				error.addErrorMessage(resourceString("command.generic.detail.NestTableReferenceRegistHandler.errorOverLimit", p.getMultiplicity()));
 				errors.add(error);
 				return false;
 			}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,11 +22,6 @@ package org.iplass.mtp.view.generic.editor;
 
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlEnumValue;
-import javax.xml.bind.annotation.XmlType;
-
 import org.iplass.adminconsole.annotation.MultiLang;
 import org.iplass.adminconsole.view.annotation.IgnoreField;
 import org.iplass.adminconsole.view.annotation.InputType;
@@ -38,6 +33,11 @@ import org.iplass.mtp.view.generic.Jsp;
 import org.iplass.mtp.view.generic.Jsps;
 import org.iplass.mtp.view.generic.ViewConst;
 
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlEnumValue;
+import jakarta.xml.bind.annotation.XmlType;
+
 /**
  * 数値範囲型プロパティエディタ
  * @author ICOM Shojima
@@ -45,17 +45,18 @@ import org.iplass.mtp.view.generic.ViewConst;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @Jsps({
-	@Jsp(path="/jsp/gem/generic/editor/NumericRangePropertyEditor.jsp", key=ViewConst.DESIGN_TYPE_GEM)
+		@Jsp(path = "/jsp/gem/generic/editor/NumericRangePropertyEditor.jsp", key = ViewConst.DESIGN_TYPE_GEM)
 })
-@IgnoreField({"customStyle", "inputCustomStyle"})
-public class NumericRangePropertyEditor extends CustomPropertyEditor implements RangePropertyEditor{
+@IgnoreField({ "customStyle", "inputCustomStyle" })
+public class NumericRangePropertyEditor extends CustomPropertyEditor implements RangePropertyEditor {
 
 	private static final long serialVersionUID = 8195155444735209927L;
 
 	/** 表示タイプ */
-	@XmlType(namespace="http://mtp.iplass.org/xml/definition/view/generic")
+	@XmlType(namespace = "http://mtp.iplass.org/xml/definition/view/generic")
 	public enum NumericRangeDisplayType {
-		@XmlEnumValue("NumericRange")NUMERICRANGE
+		@XmlEnumValue("NumericRange")
+		NUMERICRANGE
 	}
 
 	/** オブジェクト名 */
@@ -63,146 +64,177 @@ public class NumericRangePropertyEditor extends CustomPropertyEditor implements 
 
 	/** プロパティエディタ */
 	@MetaFieldInfo(
-			displayName="プロパティエディタ",
-			displayNameKey="generic_editor_NumericRangePropertyEditor_editorDisplaNameKey",
-			required=true,
-			inputType=InputType.REFERENCE,
-			fixedReferenceClass={
+			displayName = "プロパティエディタ",
+			displayNameKey = "generic_editor_NumericRangePropertyEditor_editorDisplaNameKey",
+			required = true,
+			inputType = InputType.REFERENCE,
+			fixedReferenceClass = {
 					FloatPropertyEditor.class,
 					IntegerPropertyEditor.class,
 					DecimalPropertyEditor.class
-					},
-			displayOrder=100,
-			description="プロパティの型にあわせたプロパティエディタを選択してください。",
-			descriptionKey="generic_editor_NumericRangePropertyEditor_editorDescriptionKey"
+			},
+			displayOrder = 100,
+			description = "プロパティの型にあわせたプロパティエディタを選択してください。",
+			descriptionKey = "generic_editor_NumericRangePropertyEditor_editorDescriptionKey"
 	)
 	@EntityViewField()
 	private PropertyEditor editor;
 
 	/** FromプロパティでNull入力を許容するか*/
 	@MetaFieldInfo(
-			displayName="Nullの入力を許可",
-			displayNameKey="generic_editor_NumericRangePropertyEditor_inputNullFromDisplayNameKey",
-			inputType=InputType.CHECKBOX,
-			displayOrder=105,
-			description="入力値にNullを許可するか設定します。",
-			descriptionKey="generic_editor_NumericRangePropertyEditor_inputNullFromDescriptionKey"
+			displayName = "Nullの入力を許可",
+			displayNameKey = "generic_editor_NumericRangePropertyEditor_inputNullFromDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 105,
+			description = "入力値にNullを許可するか設定します。",
+			descriptionKey = "generic_editor_NumericRangePropertyEditor_inputNullFromDescriptionKey"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.SEARCHCONDITION, FieldReferenceType.DETAIL, FieldReferenceType.BULK}
+			referenceTypes = { FieldReferenceType.SEARCHCONDITION, FieldReferenceType.DETAIL, FieldReferenceType.BULK }
 	)
 	private boolean inputNullFrom;
 
+	/** Fromプロパティに対して値を含めて検索する*/
+	@MetaFieldInfo(
+			displayName = "Fromプロパティに対して値を含めて検索する",
+			displayNameKey = "generic_editor_NumericRangePropertyEditor_fromConditionAsLesserEqualDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 108,
+			description = "Fromプロパティに対して値を含めて検索するかを設定します。",
+			descriptionKey = "generic_editor_NumericRangePropertyEditor_fromConditionAsLesserEqualDescriptionKey"
+	)
+	@EntityViewField(
+			referenceTypes = { FieldReferenceType.SEARCHCONDITION }
+	)
+	private boolean fromConditionAsLesserEqual = true;
+
 	/** Toプロパティ名 */
-	@MetaFieldInfo(displayName="Toプロパティ名",
-			displayNameKey="generic_editor_NumericRangePropertyEditor_toPropertyNameDisplaNameKey",
-			required=true,
-			inputType=InputType.PROPERTY,
-			displayOrder=110,
-			description="このプロパティと組み合わせて表示する他のプロパティを指定します。<br>"
+	@MetaFieldInfo(
+			displayName = "Toプロパティ名",
+			displayNameKey = "generic_editor_NumericRangePropertyEditor_toPropertyNameDisplaNameKey",
+			required = true,
+			inputType = InputType.PROPERTY,
+			displayOrder = 110,
+			description = "このプロパティと組み合わせて表示する他のプロパティを指定します。<br>"
 					+ "指定するプロパティの型はこのプロパティに合わせて下さい。",
-			descriptionKey="generic_editor_NumericRangePropertyEditor_toPropertyNameDescriptionKey"
+			descriptionKey = "generic_editor_NumericRangePropertyEditor_toPropertyNameDescriptionKey"
 	)
 	@EntityViewField()
 	private String toPropertyName;
 
 	/** Toプロパティ表示名 */
-	@MetaFieldInfo(displayName="詳細検索でのToプロパティ表示名",
-			displayNameKey="generic_editor_NumericRangePropertyEditor_toPropertyDisplayNameDisplaNameKey",
-			required=false,
-			inputType=InputType.MULTI_LANG,
-			displayOrder=115,
-			description="詳細検索で表示するToプロパティのラベルを設定します。",
-			descriptionKey="generic_editor_NumericRangePropertyEditor_toPropertyDisplayNameDescriptionKey",
-			multiLangField="localizedToPropertyDisplayNameList"
+	@MetaFieldInfo(
+			displayName = "詳細検索でのToプロパティ表示名",
+			displayNameKey = "generic_editor_NumericRangePropertyEditor_toPropertyDisplayNameDisplaNameKey",
+			required = false,
+			inputType = InputType.MULTI_LANG,
+			displayOrder = 115,
+			description = "詳細検索で表示するToプロパティのラベルを設定します。",
+			descriptionKey = "generic_editor_NumericRangePropertyEditor_toPropertyDisplayNameDescriptionKey",
+			multiLangField = "localizedToPropertyDisplayNameList"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.SEARCHCONDITION}
+			referenceTypes = { FieldReferenceType.SEARCHCONDITION }
 	)
 	@MultiLang()
 	private String toPropertyDisplayName;
 
 	/** Toプロパティ表示名の多言語設定情報 */
 	@MetaFieldInfo(
-			displayName="詳細検索でのToプロパティ表示名の多言語設定",
-			displayNameKey="generic_editor_NumericRangePropertyEditor_localizedToPropertyDisplayNameListDisplaNameKey",
-			inputType=InputType.MULTI_LANG_LIST,
-			displayOrder=120
+			displayName = "詳細検索でのToプロパティ表示名の多言語設定",
+			displayNameKey = "generic_editor_NumericRangePropertyEditor_localizedToPropertyDisplayNameListDisplaNameKey",
+			inputType = InputType.MULTI_LANG_LIST,
+			displayOrder = 120
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.SEARCHCONDITION}
+			referenceTypes = { FieldReferenceType.SEARCHCONDITION }
 	)
 	private List<LocalizedStringDefinition> localizedToPropertyDisplayNameList;
 
 	/** Toプロパティエディタ */
 	@MetaFieldInfo(
-			displayName="Toプロパティエディタ",
-			displayNameKey="generic_editor_NumericRangePropertyEditor_toEditorDisplaNameKey",
-			inputType=InputType.REFERENCE,
-			fixedReferenceClass={
+			displayName = "Toプロパティエディタ",
+			displayNameKey = "generic_editor_NumericRangePropertyEditor_toEditorDisplaNameKey",
+			inputType = InputType.REFERENCE,
+			fixedReferenceClass = {
 					FloatPropertyEditor.class,
 					IntegerPropertyEditor.class,
 					DecimalPropertyEditor.class
-					},
-			displayOrder=125,
-			description="プロパティの型にあわせたプロパティエディタを選択してください。<br>"
+			},
+			displayOrder = 125,
+			description = "プロパティの型にあわせたプロパティエディタを選択してください。<br>"
 					+ "未指定の場合、プロパティエディタの設定が有効になります。",
-			descriptionKey="generic_editor_NumericRangePropertyEditor_toEditorDescriptionKey"
+			descriptionKey = "generic_editor_NumericRangePropertyEditor_toEditorDescriptionKey"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.SEARCHRESULT, FieldReferenceType.DETAIL, FieldReferenceType.BULK}
+			referenceTypes = { FieldReferenceType.SEARCHRESULT, FieldReferenceType.DETAIL, FieldReferenceType.BULK }
 	)
 	private PropertyEditor toEditor;
 
 	/** ToプロパティでNull入力を許容するか*/
 	@MetaFieldInfo(
-			displayName="Nullの入力を許可",
-			displayNameKey="generic_editor_NumericRangePropertyEditor_inputNullToDisplayNameKey",
-			inputType=InputType.CHECKBOX,
-			displayOrder=130,
-			description="入力値にNullを許可するか設定します。",
-			descriptionKey="generic_editor_NumericRangePropertyEditor_inputNullToDescriptionKey"
+			displayName = "Nullの入力を許可",
+			displayNameKey = "generic_editor_NumericRangePropertyEditor_inputNullToDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 130,
+			description = "入力値にNullを許可するか設定します。",
+			descriptionKey = "generic_editor_NumericRangePropertyEditor_inputNullToDescriptionKey"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.SEARCHCONDITION, FieldReferenceType.DETAIL, FieldReferenceType.BULK}
+			referenceTypes = { FieldReferenceType.SEARCHCONDITION, FieldReferenceType.DETAIL, FieldReferenceType.BULK }
 	)
 	private boolean inputNullTo;
 
-	/** 同値の入力を許容するか*/
+	/** Toプロパティに対して値を含めて検索する*/
 	@MetaFieldInfo(
-			displayName="同値の入力を許可",
-			displayNameKey="generic_editor_NumericRangePropertyEditor_equivalentInputDisplayNameKey",
-			inputType=InputType.CHECKBOX,
-			displayOrder=135,
-			description="入力値に同値を許可するか設定します。",
-			descriptionKey="generic_editor_NumericRangePropertyEditor_equivalentInputDescriptionKey"
+			displayName = "Toプロパティに対して値を含めて検索する",
+			displayNameKey = "generic_editor_NumericRangePropertyEditor_toConditionAsGreaterEqualDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 133,
+			description = "Toプロパティに対して値を含めて検索するかを設定します。",
+			descriptionKey = "generic_editor_NumericRangePropertyEditor_toConditionAsGreaterEqualDescriptionKey"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.SEARCHCONDITION, FieldReferenceType.DETAIL, FieldReferenceType.BULK}
+			referenceTypes = { FieldReferenceType.SEARCHCONDITION }
+	)
+	private boolean toConditionAsGreaterEqual;
+
+	/** 同値の入力を許容するか*/
+	@MetaFieldInfo(
+			displayName = "同値の入力を許可",
+			displayNameKey = "generic_editor_NumericRangePropertyEditor_equivalentInputDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 135,
+			description = "入力値に同値を許可するか設定します。",
+			descriptionKey = "generic_editor_NumericRangePropertyEditor_equivalentInputDescriptionKey"
+	)
+	@EntityViewField(
+			referenceTypes = { FieldReferenceType.SEARCHCONDITION, FieldReferenceType.DETAIL, FieldReferenceType.BULK }
 	)
 	private boolean equivalentInput;
 
 	/** エラーメッセージ */
-	@MetaFieldInfo(displayName="エラーメッセージ",
-			displayNameKey="generic_editor_NumericRangePropertyEditor_errorMessageNameDisplaNameKey",
-			description="FromとToの大小関係が不正な場合のエラーメッセージを設定します。",
-			descriptionKey="generic_editor_NumericRangePropertyEditor_errorMessageNameDescriptionKey",
-			inputType=InputType.MULTI_LANG,
+	@MetaFieldInfo(
+			displayName = "エラーメッセージ",
+			displayNameKey = "generic_editor_NumericRangePropertyEditor_errorMessageNameDisplaNameKey",
+			description = "FromとToの大小関係が不正な場合のエラーメッセージを設定します。",
+			descriptionKey = "generic_editor_NumericRangePropertyEditor_errorMessageNameDescriptionKey",
+			inputType = InputType.MULTI_LANG,
 			multiLangField = "localizedErrorMessageList",
-			displayOrder=140
+			displayOrder = 140
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.DETAIL, FieldReferenceType.BULK}
+			referenceTypes = { FieldReferenceType.DETAIL, FieldReferenceType.BULK }
 	)
 	@MultiLang()
 	private String errorMessage;
 
 	/** エラーメッセージ多言語設定情報 */
 	@MetaFieldInfo(
-			displayName="多言語設定情報",
-			displayNameKey="generic_editor_NumericRangePropertyEditor_localizedErrorMessageListDisplaNameKey",
-			inputType=InputType.MULTI_LANG_LIST,
-			displayOrder=140
+			displayName = "多言語設定情報",
+			displayNameKey = "generic_editor_NumericRangePropertyEditor_localizedErrorMessageListDisplaNameKey",
+			inputType = InputType.MULTI_LANG_LIST,
+			displayOrder = 140
 	)
 	@EntityViewField()
 	private List<LocalizedStringDefinition> localizedErrorMessageList;
@@ -212,13 +244,12 @@ public class NumericRangePropertyEditor extends CustomPropertyEditor implements 
 		return NumericRangeDisplayType.NUMERICRANGE;
 	}
 
-
 	/**
 	 * オブジェクト名を取得します。
 	 * @return オブジェクト名
 	 */
 	public String getObjectName() {
-	    return objectName;
+		return objectName;
 	}
 
 	/**
@@ -226,12 +257,13 @@ public class NumericRangePropertyEditor extends CustomPropertyEditor implements 
 	 * @param objectName オブジェクト名
 	 */
 	public void setObjectName(String objectName) {
-	    this.objectName = objectName;
+		this.objectName = objectName;
 	}
 
 	/**
 	 * @return editor
 	 */
+	@Override
 	public PropertyEditor getEditor() {
 		return editor;
 	}
@@ -258,8 +290,25 @@ public class NumericRangePropertyEditor extends CustomPropertyEditor implements 
 	}
 
 	/**
+	 * Fromプロパティに対して値を含めて検索するかを取得します。
+	 * @return Fromプロパティに対して値を含めて検索するか
+	 */
+	public boolean isFromConditionAsLesserEqual() {
+		return fromConditionAsLesserEqual;
+	}
+
+	/**
+	 * Fromプロパティに対して値を含めて検索するかを設定します。
+	 * @param fromConditionAsLesserEqual Fromプロパティに対して値を含めて検索するか
+	 */
+	public void setFromConditionAsLesserEqual(boolean fromConditionAsLesserEqual) {
+		this.fromConditionAsLesserEqual = fromConditionAsLesserEqual;
+	}
+
+	/**
 	 * @return toEditor
 	 */
+	@Override
 	public PropertyEditor getToEditor() {
 		return toEditor;
 	}
@@ -274,6 +323,7 @@ public class NumericRangePropertyEditor extends CustomPropertyEditor implements 
 	/**
 	 * @return toPropertyName
 	 */
+	@Override
 	public String getToPropertyName() {
 		return toPropertyName;
 	}
@@ -288,6 +338,7 @@ public class NumericRangePropertyEditor extends CustomPropertyEditor implements 
 	/**
 	 * @return toPropertyDisplayName
 	 */
+	@Override
 	public String getToPropertyDisplayName() {
 		return toPropertyDisplayName;
 	}
@@ -303,6 +354,7 @@ public class NumericRangePropertyEditor extends CustomPropertyEditor implements 
 	 * Toプロパティ表示名の多言語設定情報を取得します。
 	 * @return リスト
 	 */
+	@Override
 	public List<LocalizedStringDefinition> getLocalizedToPropertyDisplayNameList() {
 		return localizedToPropertyDisplayNameList;
 	}
@@ -330,6 +382,22 @@ public class NumericRangePropertyEditor extends CustomPropertyEditor implements 
 	}
 
 	/**
+	 * Toプロパティに対して値を含めて検索するかを取得します。
+	 * @return Toプロパティに対して値を含めて検索するか
+	 */
+	public boolean isToConditionAsGreaterEqual() {
+		return toConditionAsGreaterEqual;
+	}
+
+	/**
+	 * Toプロパティに対して値を含めて検索するかを設定します。
+	 * @param toConditionAsGreaterEqual Toプロパティに対して値を含めて検索するか
+	 */
+	public void setToConditionAsGreaterEqual(boolean toConditionAsGreaterEqual) {
+		this.toConditionAsGreaterEqual = toConditionAsGreaterEqual;
+	}
+
+	/**
 	 * @return equivalentInput
 	 */
 	public boolean isEquivalentInput() {
@@ -346,6 +414,7 @@ public class NumericRangePropertyEditor extends CustomPropertyEditor implements 
 	/**
 	 * @return errorMessage
 	 */
+	@Override
 	public String getErrorMessage() {
 		return errorMessage;
 	}
@@ -360,6 +429,7 @@ public class NumericRangePropertyEditor extends CustomPropertyEditor implements 
 	/**
 	 * @return localizedErrorMessageList
 	 */
+	@Override
 	public List<LocalizedStringDefinition> getLocalizedErrorMessageList() {
 		return localizedErrorMessageList;
 	}
@@ -370,6 +440,5 @@ public class NumericRangePropertyEditor extends CustomPropertyEditor implements 
 	public void setLocalizedErrorMessageList(List<LocalizedStringDefinition> localizedErrorMessageList) {
 		this.localizedErrorMessageList = localizedErrorMessageList;
 	}
-
 
 }

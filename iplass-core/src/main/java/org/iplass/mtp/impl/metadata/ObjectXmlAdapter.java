@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,7 +20,7 @@
 
 package org.iplass.mtp.impl.metadata;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
+import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 
 public class ObjectXmlAdapter<ValueType, BoundType> extends XmlAdapter<ValueType, BoundType> {
 
@@ -35,6 +35,5 @@ public class ObjectXmlAdapter<ValueType, BoundType> extends XmlAdapter<ValueType
 	public BoundType unmarshal(ValueType v) throws Exception {
 		return (BoundType) v;
 	}
-
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -42,11 +42,13 @@ public class Constants {
 	public static final String VERSION = "version";
 	public static final String TIMESTAMP = "timestamp";
 	public static final String NEWVERSION = "newversion";
+	public static final String VERSION_SPECIFIED = "versionSpecified";
 	public static final String MESSAGE = "message";
 	public static final String ERROR_PROP = "errorProperty";
 	public static final String DATA = "data";
 	public static final String REF_EDIT = "refEdit";
 	public static final String COPY = "copy";
+	public static final String COPY_TARGET = "copyTarget";
 	public static final String DIALOG_MODE = "isDialog";
 
 	public static final String SEARCH_TYPE = "searchType";
@@ -55,6 +57,10 @@ public class Constants {
 	public static final String SEARCH_OFFSET = "offset";
 	public static final String SEARCH_SORTKEY = "sortKey";
 	public static final String SEARCH_SORTTYPE = "sortType";
+	public static final String SEARCH_ALL_VERSION = "allVersion";
+	public static final String SEARCH_ALL_VERSION_DETAIL = "allVersionDtl";
+	public static final String SEARCH_SAVED_VERSION = "savedVersion";
+	public static final String SEARCH_SAVED_VERSION_DETAIL = "savedVersionDtl";
 	public static final String SEARCH_COND = "searchCond";
 	public static final String SEARCH_COND_MAP = "searchCondMap";
 	public static final String SEARCH_COND_PREFIX = "sc_";
@@ -121,10 +127,21 @@ public class Constants {
 	//一括更新されたデータの件数
 	public static final String BULK_UPDATED_COUNT = "bulkUpdatedCnt";
 
-	/** CSVダウンロード時の文字コード */
+	//CSVダウンロード時の文字コード
 	public static final String CSV_CHARACTER_CODE = "characterCode";
-	public static final String CSV_FILE_DOWNLOAD_TOKEN = "fileDownloadToken";
-	public static final String CSV_IS_OUTPUT_CODE_VALUE = "isOutputCodeValue";
+
+	/** サポートファイル形式 */
+	public static final String FILE_SUPPORT_TYPE = "fileSupportType";
+	/** ダウンロード完了判定用TOKEN */
+	public static final String FILE_DOWNLOAD_TOKEN = "fileDownloadToken";
+	/** コード値を出力するか */
+	public static final String FILE_IS_OUTPUT_CODE_VALUE = "isOutputCodeValue";
+	/** アップロード形式か */
+	public static final String FILE_IS_FOR_UPLOAD = "isForUpload";
+	/** 表示名を出力しないか */
+	public static final String FILE_IS_NO_DISP_NAME = "isNoDispName";
+	/** 検索結果を出力するか */
+	public static final String FILE_IS_OUTPUT_RESULT = "isOutputResult";
 
 	public static final String AND = "And";
 	public static final String OR = "Or";
@@ -146,6 +163,8 @@ public class Constants {
 	public static final String IN = "In";
 	public static final String RANGE = "Range";
 
+	public static final String ISNULL_VALUE = "isNull";
+
 	//Editor用パラメータ
 	public static final String EDITOR_STYLE = "style";
 	public static final String EDITOR_DISPLAY_LABEL = "displayLabel";
@@ -155,10 +174,12 @@ public class Constants {
 	public static final String EDITOR_PROP_VALUE = "propValue";
 	public static final String EDITOR_DEFAULT_VALUE = "propDefaultValue";
 	public static final String EDITOR_PARENT_ENTITY = "parentEntity";
+	public static final String EDITOR_UNIQUE_ID = "editorUniqueId";
 
 	public static final String EDITOR_SELECT_VALUE_LIST = "selectValueList";
 	public static final String EDITOR_LOCAL_VALUE_LIST = "localValueList";
 
+	// DatePicker制御用
 	public static final String EDITOR_PICKER_PROP_NAME = "_propName";
 	public static final String EDITOR_PICKER_PROP_VALUE = "_propValue";
 	public static final String EDITOR_PICKER_DEFAULT_VALUE = "_defaultValue";
@@ -167,11 +188,22 @@ public class Constants {
 	public static final String EDITOR_PICKER_DEFAULT_SEC = "defaultSec";
 	public static final String EDITOR_PICKER_DEFAULT_MSEC = "defaultMsec";
 
+	// RichText制御用
+	public static final String EDITOR_RICHTEXT_DEFAULT_LIBRARY = "richTextDefaultLibrary";
+	public static final String EDITOR_RICHTEXT_LIBRARY = "richTextLibrary";
+	public static final String EDITOR_RICHTEXT_ALLOWED_CONTENT = "richTextAllowedContent";
+	public static final String EDITOR_RICHTEXT_HIDE_TOOL_BAR = "richTextHideToolBar";
+	public static final String EDITOR_RICHTEXT_ALLOWED_LINK_ACTION = "richTextAllowedLinkAction";
+	public static final String EDITOR_RICHTEXT_EDITOR_OPTION = "richTextEditorOption";
+	public static final String EDITOR_RICHTEXT_TARGET_NAME = "richTextTargetName";
+
+	// Reference制御用
 	public static final String EDITOR_REF_RELOAD_URL = "reloadUrl";
 	public static final String EDITOR_REF_MAPPEDBY = "mappedBy";
 	public static final String EDITOR_REF_ENTITY_VALUE_MAP = "entityValueMap";
 	public static final String EDITOR_REF_NEST = "nest";
 	public static final String EDITOR_REF_NEST_DUMMY_ROW = "nestDummyRow";
+	public static final String EDITOR_REF_NEST_DUMMY_ROW_INDEX = "Dummy";
 	public static final String EDITOR_REF_NEST_PROPERTY = "nestProperty";
 	public static final String EDITOR_REF_NEST_PROPERTY_ITEM = "nestPropertyItem";
 	public static final String EDITOR_REF_NEST_PROPERTY_PREFIX = "nest_";
@@ -179,6 +211,7 @@ public class Constants {
 	public static final String EDITOR_REF_NEST_EDITOR = "nestEditor";
 	public static final String EDITOR_REF_NEST_STYLE = "nestStyle";
 	public static final String EDITOR_REF_NEST_VALUE = "nestValue";
+	public static final String EDITOR_REF_NEST_DATA_INDEX = "nestIndex";
 	public static final String EDITOR_REF_NEST_REQUIRED = "nestRequired";
 	public static final String EDITOR_REF_NEST_DISPLAY_LABEL = "nestDisplayLabel";
 	public static final String EDITOR_REF_SHOW_PROPERTY = "showProperty";
@@ -236,6 +269,7 @@ public class Constants {
 	public static final String AUTOCOMPLETION_REF_NEST_PROP_NAME = "autocompletionNestPropName";
 	public static final String AUTOCOMPLETION_REF_SECTION_INDEX = "autocompletionReferenceSectionIndex";
 	public static final String AUTOCOMPLETION_ROOT_ENTITY_DATA = "autocompletionRootEntityData";
+	public static final String AUTOCOMPLETION_EDITOR_VALUES = "autocompletionEditorValues";
 
 	// お知らせ用
 	public static final String DATA_ENTITY = "entity";
@@ -271,8 +305,10 @@ public class Constants {
 	// ロック処理
 	public static final String LOCK_RESULT = "lockResult";
 
-	//ユーザ情報変更
+	//ユーザー情報変更
 	public static final String UPDATE_USER_INFO = "updateUserInfo";
+	public static final String NESTTABLE_DEF_NAME = "nestTableDefName";
+	public static final String NESTTABLE_VIEW_NAME = "nestTableViewName";
 
 	// コマンド内でEntityに設定しているフラグ等
 	public static final String REF_INDEX = "##refIndex";
@@ -329,17 +365,17 @@ public class Constants {
 	public static final String CMD_RSLT_JSP_DIALOG = "/jsp/gem/layout/dialog.jsp";
 	public static final String CMD_RSLT_JSP_FULLTEXT_SEARCH = "/jsp/gem/fulltext/search.jsp";
 	public static final String CMD_RSLT_JSP_BACK_PATH = "/jsp/gem/generic/backPath.jsp";
-	public static final String CMD_RSLT_JSP_CSV_UPLOAD_RESULT = "/jsp/gem/generic/upload/csvUploadResult.jsp";
-	public static final String CMD_RSLT_JSP_CSV_UPLOAD = "/jsp/gem/generic/upload/csvUpload.jsp";
+	public static final String CMD_RSLT_JSP_FILE_UPLOAD_RESULT = "/jsp/gem/generic/upload/fileUploadResult.jsp";
+	public static final String CMD_RSLT_JSP_FILE_UPLOAD = "/jsp/gem/generic/upload/fileUpload.jsp";
 	public static final String CMD_RSLT_JSP_LOGIN = "/jsp/gem/auth/Login.jsp";
 	public static final String CMD_RSLT_JSP_REAUTH = "/jsp/gem/auth/ReAuth.jsp";
 	public static final String CMD_RSLT_JSP_UPDATE_PASSWORD = "/jsp/gem/auth/Password.jsp";
 	public static final String CMD_RSLT_JSP_RESET_SPECIFIC_PASSWORD = "/jsp/gem/auth/specificPassword.jsp";
 	public static final String CMD_RSLT_JSP_PASSWORD_EXPIRE = "/jsp/gem/auth/Expire.jsp";
 	public static final String CMD_RSLT_JSP_VERIFY2ND = "/jsp/gem/auth/Verify2nd.jsp";
-	public static final String CMD_RSLT_JSP_BULK_EDIT="/jsp/gem/generic/bulk/bulkEdit.jsp";
-	public static final String CMD_RSLT_JSP_BULK_MULTI_EDIT="/jsp/gem/generic/bulk/edit.jsp";
-	public static final String CMD_RSLT_JSP_APP_MAINTENANCE="/jsp/gem/auth/application.jsp";
+	public static final String CMD_RSLT_JSP_BULK_EDIT = "/jsp/gem/generic/bulk/bulkEdit.jsp";
+	public static final String CMD_RSLT_JSP_BULK_MULTI_EDIT = "/jsp/gem/generic/bulk/edit.jsp";
+	public static final String CMD_RSLT_JSP_APP_MAINTENANCE = "/jsp/gem/auth/application.jsp";
 	public static final String CMD_RSLT_HTML_PDFVIEWER_PATH = "/jsp/gem/binary/pdfviewer.jsp";
 	public static final String CMD_RSLT_HTML_IMGVIEWER_PATH = "/jsp/gem/binary/imgviewer.jsp";
 
@@ -359,10 +395,13 @@ public class Constants {
 	public static final String TEMPLATE_EDIT = "gem/generic/detail/edit";
 	public static final String TEMPLATE_REF_EDIT = "gem/generic/detail/ref/edit";
 	public static final String TEMPLATE_COMPLETED = "gem/generic/detail/ref/completed";
-	public static final String TEMPLATE_BULK_EDIT="gem/generic/bulk/bulkEdit";
-	public static final String TEMPLATE_BULK_MULTI_EDIT="gem/generic/bulk/edit";
+	public static final String TEMPLATE_BULK_EDIT = "gem/generic/bulk/bulkEdit";
+	public static final String TEMPLATE_BULK_MULTI_EDIT = "gem/generic/bulk/edit";
 	public static final String TEMPLATE_SEARCH = "gem/generic/search/search";
-	public static final String TEMPLATE_CSV_UPLOAD = "gem/generic/upload/csvUpload";
+	public static final String TEMPLATE_FILE_UPLOAD = "gem/generic/upload/fileUpload";
+
+	public static final String TEMPLATE_EDITOR_RICHTEXT_CKEDITOR = "gem/generic/editor/richtext/ckeditor/resource";
+	public static final String TEMPLATE_EDITOR_RICHTEXT_QUILL = "gem/generic/editor/richtext/quill/resource";
 
 	// LayoutAction
 	public static final String LAYOUT_NORMAL_ACTION = "gem/layout/defaultLayout";

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,17 +25,19 @@ import org.iplass.mtp.entity.query.SubQuery;
 import org.iplass.mtp.entity.query.value.primary.EntityField;
 
 class RefTrimmer extends ASTTransformerSupport {
-	
+
 	String ref;
-	
+
 	RefTrimmer(String refName) {
 		this.ref = refName + ".";
 	}
 
 	@Override
 	public ASTNode visit(EntityField entityField) {
-		if (entityField.getPropertyName().startsWith(ref)) {
-			return new EntityField(entityField.getPropertyName().substring(ref.length()));
+		if (entityField.getPropertyName()
+				.startsWith(ref)) {
+			return new EntityField(entityField.getPropertyName()
+					.substring(ref.length()), entityField.getArrayIndex());
 		} else {
 			return entityField;
 		}

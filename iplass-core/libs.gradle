@@ -1,5 +1,16 @@
+configurations {
+	compileOnly.extendsFrom(jeecoreapis)
+	
+	implementation.extendsFrom jakartaImplValidation
+}
+
 dependencies {
-	compileOnly configurations.jeecoreapis
+	// dependency management
+	constraints {
+		api(sharedLib('org.apache.commons:commons-compress')) {
+			because 'To unify the versions used by poi and tika.'
+		}
+	}
 
 	//apache commons
 	implementation sharedLib('commons-io:commons-io')
@@ -9,64 +20,57 @@ dependencies {
 	implementation sharedLib('commons-codec:commons-codec')
 
 	//apache http clients
-	implementation sharedLib('org.apache.httpcomponents:httpclient')
-	
+	implementation sharedLib('org.apache.httpcomponents.client5:httpclient5')
+	implementation sharedLib('org.apache.httpcomponents.core5:httpcore5')
+	implementation sharedLib('org.apache.httpcomponents.core5:httpcore5-h2')
+
 	//lucene
-	implementation(sharedLib('org.apache.lucene:lucene-queryparser')) {
-		//TODO 必要？？
-		exclude(group: 'org.apache.lucene', module: 'lucene-queries')
-		exclude(group: 'org.apache.lucene', module: 'lucene-sandbox')
-	}
-	implementation sharedLib('org.apache.lucene:lucene-analyzers-kuromoji')
-	runtimeOnly sharedLib('org.apache.lucene:lucene-analyzers-smartcn')
+	implementation sharedLib('org.apache.lucene:lucene-queryparser')
+	implementation sharedLib('org.apache.lucene:lucene-analysis-kuromoji')
 	runtimeOnly sharedLib('org.apache.lucene:lucene-backward-codecs')
-	runtimeOnly(sharedLib('org.apache.lucene:lucene-highlighter')) {
-		//TODO 必要？？
-		exclude(group: 'org.apache.lucene', module: 'lucene-join')
-		exclude(group: 'org.apache.lucene', module: 'lucene-queries')
-		exclude(group: 'org.apache.lucene', module: 'lucene-memory')
-	}
 
-	//tika(依存関係多いので明示的に指定する)
-	implementation(sharedLib('org.apache.tika:tika-core'))
-	implementation(sharedLib('org.apache.tika:tika-parsers')) {
-		transitive = false
-	}
-	runtimeOnly(sharedLib('org.apache.commons:commons-compress'))
-	runtimeOnly(sharedLib('org.apache.pdfbox:jempbox'))
-	runtimeOnly(sharedLib('org.apache.pdfbox:pdfbox'))
-	runtimeOnly(sharedLib('org.apache.pdfbox:pdfbox-tools')) {
-		transitive = false
-	}
-	runtimeOnly sharedLib('org.ccil.cowan.tagsoup:tagsoup')
-
+	//tika
+	implementation sharedLib('org.apache.tika:tika-core')
+	implementation sharedLib('org.apache.tika:tika-parser-xml-module')
+	implementation sharedLib('org.apache.tika:tika-parser-html-module')
+	implementation sharedLib('org.apache.tika:tika-parser-microsoft-module')
+	implementation sharedLib('org.apache.tika:tika-parser-pdf-module')
+	implementation sharedLib('org.apache.tika:tika-parser-text-module')
 	runtimeOnly sharedLib('org.apache.poi:poi')
 	runtimeOnly sharedLib('org.apache.poi:poi-scratchpad')
 	runtimeOnly sharedLib('org.apache.poi:poi-ooxml')
 
+	//jsoup (HTML sanitize)
+	implementation sharedLib('org.jsoup:jsoup')
+
 	//groovy
-	implementation 'org.codehaus.groovy:groovy'
-	implementation 'org.codehaus.groovy:groovy-templates'
+	implementation 'org.apache.groovy:groovy'
+	implementation 'org.apache.groovy:groovy-templates'
 
 	//supercsv
 	implementation sharedLib('net.sf.supercsv:super-csv')
 
+	//apache POI
+	api sharedLib('org.apache.poi:poi')
+	api sharedLib('org.apache.poi:poi-ooxml')
+
 	// caffeine
 	implementation sharedLib('com.github.ben-manes.caffeine:caffeine')
 
-	//slf4j and logback
+	//slf4j/logback/logstash-logback-encoder
 	api sharedLib('org.slf4j:slf4j-api')
 	implementation sharedLib('ch.qos.logback:logback-classic')
 	runtimeOnly sharedLib('org.slf4j:jcl-over-slf4j')
-
+	runtimeOnly sharedLib('org.apache.logging.log4j:log4j-to-slf4j')
+	implementation sharedLib('net.logstash.logback:logstash-logback-encoder')
+	
 	//jackson
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
 
-	//hibernate validator
-	implementation sharedLib('org.hibernate.validator:hibernate-validator')
+	//hibernate validator ⇒ jakartaImplValidation
 	
 	//Bouncy Castle S/MIME API
-	implementation sharedLib('org.bouncycastle:bcmail-jdk15on')
+	implementation sharedLib('org.bouncycastle:bcjmail-jdk18on')
 	
 	//JGroups
 	implementation sharedLib('org.jgroups:jgroups')

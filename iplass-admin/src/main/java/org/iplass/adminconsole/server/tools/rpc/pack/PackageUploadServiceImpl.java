@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,12 +24,11 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.io.FilenameUtils;
 import org.iplass.adminconsole.server.base.i18n.AdminResourceBundleUtil;
 import org.iplass.adminconsole.server.base.io.upload.AdminUploadAction;
+import org.iplass.adminconsole.server.base.io.upload.MultipartRequestParameter;
+import org.iplass.adminconsole.server.base.io.upload.UploadActionException;
 import org.iplass.adminconsole.server.base.io.upload.UploadResponseInfo;
 import org.iplass.adminconsole.server.base.io.upload.UploadRuntimeException;
 import org.iplass.adminconsole.server.base.io.upload.UploadUtil;
@@ -43,46 +42,41 @@ import org.iplass.mtp.spi.ServiceRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import gwtupload.server.exceptions.UploadActionException;
+import jakarta.servlet.http.HttpServletRequest;
 
 @SuppressWarnings("serial")
 public class PackageUploadServiceImpl extends AdminUploadAction {
 
 	private static final Logger logger = LoggerFactory.getLogger(PackageUploadServiceImpl.class);
 
-	private PackageService service = ServiceRegistry.getRegistry().getService(PackageService.class);
+	private PackageService service = ServiceRegistry.getRegistry()
+			.getService(PackageService.class);
 
-	/* (非 Javadoc)
-	 * @see gwtupload.server.UploadAction#executeAction(javax.servlet.http.HttpServletRequest, java.util.List)
-	 */
 	@Override
 	public String executeAction(final HttpServletRequest request,
-			final List<FileItem> sessionFiles) throws UploadActionException {
+			final List<MultipartRequestParameter> sessionFiles) throws UploadActionException {
 
 		final PackageUploadResponseInfo result = new PackageUploadResponseInfo();
-		final HashMap<String,Object> args = new HashMap<String,Object>();
+		final HashMap<String, Object> args = new HashMap<String, Object>();
 		try {
 
 			//リクエスト情報の取得
 			readRequest(request, sessionFiles, args);
 
-			//セッションからファイルを削除
-		    super.removeSessionFileItems(request);
-
-		    //リクエスト情報の検証
+			//リクエスト情報の検証
 			validateRequest(args);
 
 			//テナントIDの取得
-			int tenantId = Integer.parseInt((String)args.get(PackageUploadProperty.TENANT_ID));
+			int tenantId = Integer.parseInt((String) args.get(PackageUploadProperty.TENANT_ID));
 
 			//ここでトランザクションを開始
 			AuthUtil.authCheckAndInvoke(getServletContext(), request, null, tenantId, new AuthUtil.Callable<Void>() {
 
 				@Override
 				public Void call() {
-					File file = (File)args.get(PackageUploadProperty.UPLOAD_FILE);
-					String fileName = (String)args.get(PackageUploadProperty.UPLOAD_FILE_NAME);
-					String description = (String)args.get(PackageUploadProperty.DESCRIPTION);
+					File file = (File) args.get(PackageUploadProperty.UPLOAD_FILE);
+					String fileName = (String) args.get(PackageUploadProperty.UPLOAD_FILE_NAME);
+					String description = (String) args.get(PackageUploadProperty.DESCRIPTION);
 
 					//ファイルの変換チェック
 					validateFile(file);
@@ -119,12 +113,12 @@ public class PackageUploadServiceImpl extends AdminUploadAction {
 		} catch (Exception e) {
 			TransactionUtil.setRollback();
 			logger.error(e.getMessage(), e);
-//			throw new UploadActionException(e);
+			//			throw new UploadActionException(e);
 			result.setStatusError();
 			result.addMessage(resourceString("systemErr"));
 		} finally {
 			//Tempファイルを削除
-			File file = (File)args.get(PackageUploadProperty.UPLOAD_FILE);
+			File file = (File) args.get(PackageUploadProperty.UPLOAD_FILE);
 			if (file != null) {
 				if (!file.delete()) {
 					logger.warn("Fail to delete temporary resource:" + file.getPath());
@@ -133,22 +127,22 @@ public class PackageUploadServiceImpl extends AdminUploadAction {
 		}
 
 		//ResultをJSON形式に変換
-	    try {
+		try {
 			return UploadUtil.toJsonResponse(result);
 		} catch (UploadRuntimeException e) {
 			throw new UploadActionException(e);
 		}
 	}
 
-	private void readRequest(final HttpServletRequest request, List<FileItem> sessionFiles, HashMap<String,Object> args) {
+	private void readRequest(final HttpServletRequest request, List<MultipartRequestParameter> sessionFiles, HashMap<String, Object> args) {
 
 		//リクエスト情報の取得
 		String fileDefaultName = null;
 		try {
-			for (FileItem item : sessionFiles) {
+			for (MultipartRequestParameter item : sessionFiles) {
 				if (item.isFormField()) {
-			    	//File以外のもの
-			        args.put(item.getFieldName(), UploadUtil.getValueAsString(item));
+					//File以外のもの
+					args.put(item.getFieldName(), UploadUtil.getValueAsString(item));
 				} else {
 					//Fileの場合、tempに書きだし
 					File tempFile = UploadUtil.writeFileToTemporary(item, getContextTempDir());
@@ -160,12 +154,12 @@ public class PackageUploadServiceImpl extends AdminUploadAction {
 			throw new UploadRuntimeException(resourceString("errReadingRequestInfo"), e);
 		}
 		if (args.get(PackageUploadProperty.UPLOAD_FILE_NAME) == null
-				|| ((String)args.get(PackageUploadProperty.UPLOAD_FILE_NAME)).isEmpty()) {
+				|| ((String) args.get(PackageUploadProperty.UPLOAD_FILE_NAME)).isEmpty()) {
 			args.put(PackageUploadProperty.UPLOAD_FILE_NAME, fileDefaultName);
 		}
 	}
 
-	private void validateRequest(HashMap<String,Object> args) {
+	private void validateRequest(HashMap<String, Object> args) {
 		if (args.get(PackageUploadProperty.UPLOAD_FILE) == null) {
 			throw new UploadRuntimeException(resourceString("canNotGetImportFile"));
 		}

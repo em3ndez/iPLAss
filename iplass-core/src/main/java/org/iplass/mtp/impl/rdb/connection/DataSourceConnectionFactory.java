@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,7 +32,6 @@ import javax.sql.DataSource;
 import org.iplass.mtp.spi.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 public class DataSourceConnectionFactory extends AbstractConnectionFactory {
 
@@ -74,18 +73,19 @@ public class DataSourceConnectionFactory extends AbstractConnectionFactory {
 
 	public void init(Config config) {
 		super.init(config);
-		
+
 		//jndi env
-		for (String n: config.getNames()) {
+		for (String n : config.getNames()) {
 			if (n.startsWith(JNDI_ENV_PREFIX)) {
 				jndiEnv.put(n.substring(JNDI_ENV_PREFIX.length()), config.getValue(n));
 			}
 		}
-		
+
 		dataSource = config.getValue("dataSource", DataSource.class);
 		if (dataSource != null) {
 			if (logger.isDebugEnabled()) {
-				logger.debug("create DataSource directly. DataSource class:" + dataSource.getClass().getName());
+				logger.debug("create DataSource directly. DataSource class:" + dataSource.getClass()
+						.getName());
 			}
 			directCreate = true;
 		} else {
@@ -94,7 +94,7 @@ public class DataSourceConnectionFactory extends AbstractConnectionFactory {
 			if (config.getValue("dataSourceName") != null) {
 				dsName = config.getValue("dataSourceName");
 			}
-			
+
 			if (logger.isDebugEnabled()) {
 				logger.debug("look up DataSource from JNDI. name:" + dsName);
 			}
@@ -116,7 +116,7 @@ public class DataSourceConnectionFactory extends AbstractConnectionFactory {
 			}
 		}
 	}
-	
+
 	protected InitialContext getInitialContext() throws NamingException {
 		if (jndiEnv.size() > 0) {
 			return new InitialContext(jndiEnv);
@@ -124,7 +124,7 @@ public class DataSourceConnectionFactory extends AbstractConnectionFactory {
 			return new InitialContext();
 		}
 	}
-	
+
 	public DataSource getDataSource() {
 		return dataSource;
 	}

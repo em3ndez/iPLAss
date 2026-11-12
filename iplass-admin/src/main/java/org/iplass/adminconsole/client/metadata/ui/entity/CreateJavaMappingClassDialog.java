@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -48,7 +48,7 @@ public class CreateJavaMappingClassDialog extends MtpDialog {
 		final DynamicForm form = new MtpForm();
 		form.setAutoFocus(true);
 
-		final TextItem classNameField = new MtpTextItem("className","Class Name");
+		final TextItem classNameField = new MtpTextItem("className", "Class Name");
 		classNameField.setValue(className);
 
 		form.setItems(classNameField);
@@ -65,13 +65,13 @@ public class CreateJavaMappingClassDialog extends MtpDialog {
 		IButton create = new IButton("Create");
 		create.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
-				if (form.validate()){
+				if (form.validate()) {
 					PostDownloadFrame frame = new PostDownloadFrame();
 					frame.setAction(GWT.getModuleBaseURL() + EntityJavaMappingClassDownloadProperty.ACTION_URL)
-						.addParameter(EntityJavaMappingClassDownloadProperty.TENANT_ID, String.valueOf(TenantInfoHolder.getId()))
-						.addParameter(EntityJavaMappingClassDownloadProperty.ENTITY_NAME, defName)
-						.addParameter(EntityJavaMappingClassDownloadProperty.CLASS_NAME, SmartGWTUtil.getStringValue(classNameField))
-						.execute();
+							.addParameter(EntityJavaMappingClassDownloadProperty.TENANT_ID, String.valueOf(TenantInfoHolder.getId()))
+							.addParameter(EntityJavaMappingClassDownloadProperty.ENTITY_NAME, defName)
+							.addParameter(EntityJavaMappingClassDownloadProperty.CLASS_NAME, SmartGWTUtil.getStringValue(classNameField))
+							.execute();
 				}
 			}
 		});

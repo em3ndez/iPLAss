@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  * ResourceBundle取得用のユーティリティ。
  */
 public class ResourceBundleUtil {
-	
+
 	private static Logger logger = LoggerFactory.getLogger(ResourceBundleUtil.class);
 
 	/**
@@ -106,7 +106,7 @@ public class ResourceBundleUtil {
 			return "";
 		}
 	}
-	
+
 	/**
 	 * bundleName, langLocaleで指定されるResourceBundleに定義された文字列を返します。
 	 *
@@ -125,5 +125,5 @@ public class ResourceBundleUtil {
 			return "";
 		}
 	}
-	
+
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,8 +22,8 @@ package org.iplass.mtp.impl.metadata.xmlresource;
 
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
 
 public class ContextPath {
 
@@ -59,7 +59,7 @@ public class ContextPath {
 		return entry;
 	}
 
-	@XmlElement(name="metaDataEntry")
+	@XmlElement(name = "metaDataEntry")
 	public void setEntry(List<XmlResourceMetaDataEntryThinWrapper> entry) {
 		this.entry = entry;
 	}

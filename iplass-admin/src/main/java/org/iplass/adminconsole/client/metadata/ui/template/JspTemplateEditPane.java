@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -60,13 +60,13 @@ public class JspTemplateEditPane extends TemplateTypeEditPane implements HasEdit
 
 	@Override
 	public void setDefinition(TemplateDefinition definition) {
-		JspTemplateDefinition jspDefinition = (JspTemplateDefinition)definition;
+		JspTemplateDefinition jspDefinition = (JspTemplateDefinition) definition;
 		pathField.setValue(jspDefinition.getPath());
 	}
 
 	@Override
 	public TemplateDefinition getEditDefinition(TemplateDefinition definition) {
-		JspTemplateDefinition jspDefinition = (JspTemplateDefinition)definition;
+		JspTemplateDefinition jspDefinition = (JspTemplateDefinition) definition;
 		jspDefinition.setPath(SmartGWTUtil.getStringValue(pathField));
 		return jspDefinition;
 	}

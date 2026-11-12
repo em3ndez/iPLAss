@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,12 +22,12 @@ package org.iplass.mtp.impl.core.config;
 import java.util.Properties;
 
 public interface PassphraseSupplier extends AutoCloseable {
-	
+
 	public char[] getPassphrase();
-	
+
 	public default void open(Properties prop) {
 	};
-	
+
 	public default void close() {
 	};
 

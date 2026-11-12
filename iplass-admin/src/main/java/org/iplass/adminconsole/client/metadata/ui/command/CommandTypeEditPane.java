@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,9 +27,9 @@ import com.smartgwt.client.widgets.layout.VLayout;
 public abstract class CommandTypeEditPane extends VLayout {
 
 	public abstract void setDefinition(CommandDefinition definition);
-	
+
 	public abstract CommandDefinition getEditDefinition(CommandDefinition definition);
-	
+
 	public abstract boolean validate();
 
 }

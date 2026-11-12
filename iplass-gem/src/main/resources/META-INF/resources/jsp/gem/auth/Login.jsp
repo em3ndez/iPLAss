@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -64,6 +64,18 @@ boolean isRememberMe = ExecuteContext.getCurrentContext().getCurrentTenant().get
 <%@include file="../layout/resource/langfont.jsp" %>
 <%@include file="../layout/resource/tenant.jsp" %>
 
+<script type="text/javascript">
+$(() => {
+	const LOGIN_BUTTON_DISABLE_DURATION_MS = 60 * 1000;
+	const loginBtn = $("#loginBtn");
+	$('form[name="loginForm"]').on('submit', () => {
+		loginBtn.prop("disabled", true);
+		setTimeout(() => {
+			loginBtn.prop("disabled", false);
+		}, LOGIN_BUTTON_DISABLE_DURATION_MS);
+	});
+});
+</script>
 <%if (isRememberMe) {%>
 <script type="text/javascript">
 <!--
@@ -122,7 +134,7 @@ TemplateUtil.includeTemplate("gem/layout/header", pageContext);
 
 <%if (errorMessage != null) {%>
 <div class="error">
-<span class="error"><%= errorMessage %></span>
+<span class="error"><c:out value="<%= errorMessage %>"/></span>
 </div>
 <%}%>
 
@@ -145,7 +157,7 @@ TemplateUtil.includeTemplate("gem/layout/header", pageContext);
 </table>
 
 <p class="nav-login-01">
-<input type="submit" class="gr-btn" value="${m:rs('mtp-gem-messages', 'auth.Login.login')}" />
+<input type="submit" id="loginBtn" class="gr-btn" value="${m:rs('mtp-gem-messages', 'auth.Login.login')}" />
 </p>
 
 <%if (orgUrl != null) {%>
@@ -154,6 +166,7 @@ TemplateUtil.includeTemplate("gem/layout/header", pageContext);
 
 ${m:outputToken('FORM_XHTML', true)}
 </form>
+<%@include file="./webAuthn.inc.jsp"%>
 </div><!-- main -->
 </div><!-- content -->
 

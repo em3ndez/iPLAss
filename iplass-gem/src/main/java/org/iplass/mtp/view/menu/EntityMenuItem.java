@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,7 +20,7 @@
 
 package org.iplass.mtp.view.menu;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Entity表示用メニューアイテム定義
@@ -62,7 +62,7 @@ public class EntityMenuItem extends MenuItem {
 	 * @return Action実行時に追加されるパラメータ
 	 */
 	public String getParameter() {
-	    return parameter;
+		return parameter;
 	}
 
 	/**
@@ -71,7 +71,7 @@ public class EntityMenuItem extends MenuItem {
 	 * @param parameter Action実行時に追加されるパラメータ
 	 */
 	public void setParameter(String parameter) {
-	    this.parameter = parameter;
+		this.parameter = parameter;
 	}
 
 	/**
@@ -80,7 +80,7 @@ public class EntityMenuItem extends MenuItem {
 	 * @return メニューに表示するEntity定義名
 	 */
 	public String getEntityDefinitionName() {
-	    return entityDefinitionName;
+		return entityDefinitionName;
 	}
 
 	/**
@@ -89,7 +89,7 @@ public class EntityMenuItem extends MenuItem {
 	 * @param entityDefinitionName メニューに表示するEntity定義名
 	 */
 	public void setEntityDefinitionName(String entityDefinitionName) {
-	    this.entityDefinitionName = entityDefinitionName;
+		this.entityDefinitionName = entityDefinitionName;
 	}
 
 	/**

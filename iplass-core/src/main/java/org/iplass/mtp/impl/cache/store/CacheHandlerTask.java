@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,7 +35,7 @@ import java.util.concurrent.Callable;
  * @param <R> 処理結果
  */
 public interface CacheHandlerTask<K, V, R> extends Callable<R>, Serializable {
-	
+
 	/**
 	 * 処理対象がこのメソッドでセットされる。
 	 * 

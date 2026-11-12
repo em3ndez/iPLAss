@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -145,7 +145,7 @@ function oidCellFormatter(cellvalue, options, rowObject) {
 }
 
 /**
-* CSVダウンロード実行
+* ファイルダウンロード実行
 * @param searchType 検索タイプ(normal、detail、fixed)
 * @param formName search condition form name
 * @param action 実行Action
@@ -156,8 +156,9 @@ function oidCellFormatter(cellvalue, options, rowObject) {
 * @param isNoDispName ダイアログ表示時、Upload形式の場合に「表示名を出力」するか
 * @param isOutputResult ダイアログ表示時、CSV項目を指定している場合、「検索結果一覧に表示された項目で出力」するか、指定していない場合はnull
 * @param isOutputCodeValue ダイアログ表示時、Upload形式以外の場合に「コード値でダウンロードする」か
+* @param fileSupportType ダイアログ表示時、ファイル形式
 */
-function csvDownload(searchType, formName, action, target, interval, isForUpload, characterCode, isNoDispName, isOutputResult, isOutputCodeValue) {
+function fileDownload(searchType, formName, action, target, interval, isForUpload, characterCode, isNoDispName, isOutputResult, isOutputCodeValue, fileSupportType) {
 	var $form = $("<form method='POST' />").attr({action:contextPath + action}).appendTo("body");
 	$("<input />").attr({type:"hidden", name:"defName", value:$(":hidden[name='defName']").val()}).appendTo($form);
 	$("<input />").attr({type:"hidden", name:"searchType", value:searchType}).appendTo($form);
@@ -165,6 +166,7 @@ function csvDownload(searchType, formName, action, target, interval, isForUpload
 	$("<input />").attr({type:"hidden", name:"characterCode", value:characterCode}).appendTo($form);
 	$("<input />").attr({type:"hidden", name:"isNoDispName", value:isNoDispName}).appendTo($form);
 	$("<input />").attr({type:"hidden", name:"isOutputResult", value:isOutputResult}).appendTo($form);
+	$("<input />").attr({type:"hidden", name:"fileSupportType", value:fileSupportType}).appendTo($form);
 	//カスタムでDL処理を作ってる場合、古いバージョンのパラメータ使ってる可能性あるので念のため
 	$("<input />").attr({type:"hidden", name:"isAllProperty", value:isForUpload}).appendTo($form);
 
@@ -516,30 +518,30 @@ function deleteSessionStorage(name) {
  * @param validatorFunc
  */
 function addCommonValidator(validatorFunc) {
-	if (!scriptContext["validator"]) {
-		scriptContext["validator"] = new Array();
+	if (!scriptContext.gem["validation"]) {
+		scriptContext.gem["validation"] = new Array();
 	}
-	scriptContext["validator"].push(validatorFunc);
+	scriptContext.gem["validation"].push(validatorFunc);
 }
 /**
  * 通常検索Validatorの追加
  * @param validatorFunc
  */
 function addNormalValidator(validatorFunc) {
-	if (!scriptContext["normal_validation"]) {
-		scriptContext["normal_validation"] = new Array();
+	if (!scriptContext.gem["normal_validation"]) {
+		scriptContext.gem["normal_validation"] = new Array();
 	}
-	scriptContext["normal_validation"].push(validatorFunc);
+	scriptContext.gem["normal_validation"].push(validatorFunc);
 }
 /**
  * 詳細検索Validatorの追加
  * @param validatorFunc
  */
 function addDetailValidator(validatorFunc) {
-	if (!scriptContext["detail_validation"]) {
-		scriptContext["detail_validation"] = new Array();
+	if (!scriptContext.gem["detail_validation"]) {
+		scriptContext.gem["detail_validation"] = new Array();
 	}
-	scriptContext["detail_validation"].push(validatorFunc);
+	scriptContext.gem["detail_validation"].push(validatorFunc);
 }
 
 /**
@@ -547,7 +549,7 @@ function addDetailValidator(validatorFunc) {
  * @returns {Boolean} true:OK
  */
 function condCommonValidate(searchType) {
-	var validators = scriptContext["validator"];
+	var validators = scriptContext.gem["validation"];
 	if (validators && validators.length > 0) {
 		for (var i = 0; i < validators.length; i++) {
 			if (!validators[i].call(this)) return false;
@@ -562,7 +564,7 @@ function condCommonValidate(searchType) {
  * @returns {Boolean} true:OK
  */
 function condTypeValidate(searchType) {
-	var validators = scriptContext[searchType + "_validation"];
+	var validators = scriptContext.gem[searchType + "_validation"];
 	if (validators && validators.length > 0) {
 		for (var i = 0; i < validators.length; i++) {
 			if (!validators[i].call(this)) return false;
@@ -640,10 +642,10 @@ function detailRequiresAtLeastOneFieldValidate(message, param) {
  * @param resetFunc
  */
 function addNormalConditionItemResetHandler(resetFunc) {
-	if (!scriptContext["normal_resetter"]) {
-		scriptContext["normal_resetter"] = new Array();
+	if (!scriptContext.gem["normal_resetter"]) {
+		scriptContext.gem["normal_resetter"] = new Array();
 	}
-	scriptContext["normal_resetter"].push(resetFunc);
+	scriptContext.gem["normal_resetter"].push(resetFunc);
 }
 
 /**
@@ -654,10 +656,10 @@ function addNormalConditionItemResetHandler(resetFunc) {
  * @param resetFunc
  */
 function addNormalConditionItemCustomResetHandler(resetFunc) {
-	if (!scriptContext["normal_custom_resetter"]) {
-		scriptContext["normal_custom_resetter"] = new Array();
+	if (!scriptContext.gem["normal_custom_resetter"]) {
+		scriptContext.gem["normal_custom_resetter"] = new Array();
 	}
-	scriptContext["normal_custom_resetter"].push(resetFunc);
+	scriptContext.gem["normal_custom_resetter"].push(resetFunc);
 }
 
 /**
@@ -667,7 +669,7 @@ function addNormalConditionItemCustomResetHandler(resetFunc) {
 function resetNormalCondition() {
 	var curData = $("[name='normalForm']").serialize();
 	var reset = false;
-	var resetters = scriptContext["normal_resetter"];
+	var resetters = scriptContext.gem["normal_resetter"];
 	if (resetters && resetters.length > 0) {
 		for (var i = 0; i < resetters.length; i++) {
 			resetters[i].call(this);
@@ -675,7 +677,7 @@ function resetNormalCondition() {
 		reset = true;
 	}
 	//通常のリセットのあとにカスタム呼び出し
-	var customs = scriptContext["normal_custom_resetter"];
+	var customs = scriptContext.gem["normal_custom_resetter"];
 	if (customs && customs.length > 0) {
 		for (var i = 0; i < customs.length; i++) {
 			customs[i].call(this);
@@ -696,6 +698,15 @@ function resetNormalCondition() {
  * 詳細検索 行追加
  */
 function addDetailCondition() {
+	var maxOfDetailSearchItems = $("#maxOfDetailSearchItems").val() 
+	
+	if (!isNaN(maxOfDetailSearchItems)) {
+		if($(".data-deep-search tbody").children("tr").length >= maxOfDetailSearchItems) {
+			alert(scriptContext.gem.locale.common.maxOfDetailSearchItemsWarningMsg);
+			return;
+		}
+	}
+
 	countUp("id_detailConditionCount", function(count) {
 		var $table = $(".data-deep-search tbody");
 		var $srcRow = $table.children("tr:first");
@@ -782,6 +793,118 @@ function resetDetailCondition() {
 }
 
 ////////////////////////////////////////////////////////
+//詳細・編集画面用のJavascript
+////////////////////////////////////////////////////////
+
+/**
+ * 編集画面Validatorの追加
+ * @param validatorFunc
+ */
+function addEditValidator(validatorFunc) {
+	if (!scriptContext.gem["edit_validation"]) {
+		scriptContext.gem["edit_validation"] = new Array();
+	}
+	scriptContext.gem["edit_validation"].push(validatorFunc);
+}
+
+/**
+ * 編集画面Validate処理
+ * @returns {Boolean} true:OK
+ */
+function editValidate() {
+	return editValidateById("detailForm");
+}
+
+/**
+ * 編集画面Validate処理
+ * @param attrId ID属性
+ * @returns {Boolean} true:OK
+ */
+function editValidateById(attrId) {
+	var ret = true;
+
+	//Editor独自のチェック
+	var validators = scriptContext.gem["edit_validation"];
+	if (validators && validators.length > 0) {
+		for (var i = 0; i < validators.length; i++) {
+			if (!validators[i].call(this)) {
+				ret = false;
+				//1つでもエラーであれば抜ける
+				break;
+			}
+		}
+	}
+
+	//Inputのtype、patternによるチェック(StringPropertyEditor)
+	if (!$("#" + attrId)[0].checkValidity()) {
+    	ret = false;
+  	}
+	return ret;
+}
+
+/**
+ * 編集画面Inputの独自type、patternのValidateエラー時のカスタムメッセージを追加
+ * @param id プロパティKEY
+ * @param type メッセージの種類
+ * @param message メッセージ
+ */
+function addHtmlValidationMessage(id, type, message) {
+	if (!scriptContext.gem["html_validation"]) {
+		scriptContext.gem["html_validation"] = new Array();
+	}
+	if (!scriptContext.gem.html_validation[id]) {
+		scriptContext.gem.html_validation[id] = new Map();
+	}
+	
+	scriptContext.gem.html_validation[id].set(type, message);
+}
+
+/**
+ * 編集画面Inputの独自type、patternのValidate処理
+ * @param element 対象のInput
+ */
+function typeValidate(element) {
+	var $element = $(element);
+
+	// メッセージの初期化
+	var $parent = $element.closest(".property-data");
+	$element.removeClass("validate-error");
+	if ($(".validate-error", $parent).length === 0) {
+		$(".format-error", $parent).remove();
+	}
+	
+	$element[0].checkValidity();
+}
+
+/**
+ * 編集画面Inputの独自type、patternのValidateエラー表示処理
+ * @param event Invalidイベント
+ * @param element 対象のInput
+ */
+function typeInvalid(event, element) {
+	var $element = $(element);
+
+	var $parent = $element.closest(".property-data");
+	$element.addClass("validate-error");
+	if ($(".format-error", $parent).length === 0) {
+		var $errorArea = $("<p />").addClass("error format-error").appendTo($parent);
+
+		var message = event.target.validationMessage;
+
+		var key=$parent.attr("data-editor-id") 
+		var customMessageMap = scriptContext.gem.html_validation && scriptContext.gem.html_validation[key];
+		if (customMessageMap) {
+			if (event.target.validity.patternMismatch && customMessageMap.get("patternMismatch")) {
+				message = customMessageMap.get("patternMismatch");
+			} else if (event.target.validity.typeMismatch && customMessageMap.get("typeMismatch")) {
+				message = customMessageMap.get("typeMismatch");
+			}
+		}
+		$("<span />").addClass("error").text(message).appendTo($errorArea);
+	}
+}
+
+////////////////////////////////////////////////////////
 //String・数値用のJavascript
 ////////////////////////////////////////////////////////
 
@@ -833,19 +956,40 @@ function copyText(liId, propName, idx, selector, delCallback) {
 
 /**
  * 数値チェック
+ * @param element 入力項目
+ * @param suppressAlert アラートを抑止し、値を保持
  */
-function numcheck(element) {
+function numcheck(element, suppressAlert) {
 	var v = element.value;
+	var $parent = $(element).closest(".property-data"); // 詳細編集、検索画面のみ対応
 	//空白のみの場合は空をセット
 	if (v.trim().length == 0) {
 		element.value = "";
+		$(element).removeClass("validate-error");
+		if ($(".validate-error", $parent).length === 0) {
+			$(".format-error", $parent).remove();
+		}
 		return;
 	}
 	//数値変換可能かをチェック
 	if (isNaN(v)) {
-		alert(scriptContext.gem.locale.common.numcheckMsg);
-		element.value = "";
+		if (suppressAlert) {
+			$(element).addClass("validate-error");
+			//アラートの代わりにエラーメッセージ
+			if ($(".format-error", $parent).length === 0) {
+				var $p = $("<p />").addClass("error format-error").appendTo($parent);
+				$("<span />").addClass("error").text(scriptContext.gem.locale.common.numcheckMsg).appendTo($p);
+			}
+		} else {
+			alert(scriptContext.gem.locale.common.numcheckMsg);
+			element.value = "";
+		}
 		return;
+	}
+
+	$(element).removeClass("validate-error");
+	if ($(".validate-error", $parent).length === 0) {
+		$(".format-error", $parent).remove();
 	}
 
 	//前後の空白や0を消すためparseした値をセット
@@ -1027,6 +1171,25 @@ function addDateItem(ulId, multiplicity, dummyRowId, propName, countId, func, de
 }
 
 /**
+ * 検索画面、編集画面 参照プロパティ ユニーク項目削除
+ *
+ * @param liId 参照アイテムのID
+ * @param isMultiple 多重度複数を許可するか
+ * @param delCallback 削除時のCallback
+ */
+function deleteUniqueRefItem(liId, isMultiple, delCallback) {
+	if (isMultiple) {
+		// 多重度が複数の場合はアイテムを削除
+		deleteItem(liId, delCallback);
+	} else {
+		// 多重度が1の場合は値をクリア
+		const $txt = $("#uniq_txt_" + es(liId));
+		$txt.val("");
+		$txt.change();
+	}
+}
+
+/**
  * 参照画面 ユニーク項目追加
  *
  * @param ulId
@@ -1038,7 +1201,8 @@ function addDateItem(ulId, multiplicity, dummyRowId, propName, countId, func, de
  */
 function addUniqueRefItem(ulId, multiplicity, dummyRowId, propName, countId, func, delCallback) {
 	if (canAddItem(ulId, multiplicity)) {
-		countUp(countId, function(count) {
+		//jQueryセレクタ用のエスケープは、本来 セレクタ側（countUpの $()）でやるべき。しかし、影響範囲が広すぎるため、ここでエスケープしている
+		countUp(es(countId), function(count) {
 			var $copy = copyUniqueRefItem(dummyRowId, propName, count, delCallback);
 			if (func && $.isFunction(func)) func.call(this, $copy);
 		});
@@ -1050,7 +1214,7 @@ function addUniqueRefItem(ulId, multiplicity, dummyRowId, propName, countId, fun
 		var copyId = "li_" + newId;
 
 		//ソースをコピー
-		var $src = $("#" + dummyRowId);
+		var $src = $("#" + es(dummyRowId));
 		var $copy = clone($src, copyId);
 
 		//input
@@ -1058,15 +1222,22 @@ function addUniqueRefItem(ulId, multiplicity, dummyRowId, propName, countId, fun
 		var $link = $("a.modal-lnk", $copy);
 		var $hidden = $(":hidden:last", $copy);
 		var $selBtn = $(":button.sel-btn", $copy);
+		var $insBtn = $(":button.ins-btn", $copy);
 		var $delBtn = $(":button.del-btn", $copy);
 
 		//inputのidを設定
 		$text.attr("id", "uniq_txt_" + copyId);
 
 		if ($("body.modal-body").length != 0) {
+			// modal 内で開く場合
 			$link.subModalWindow();
+			$selBtn.subModalWindow();
+			$insBtn.subModalWindow();
 		} else {
+			// main ページで開く場合
 			$link.modalWindow();
+			$selBtn.modalWindow();
+			$insBtn.modalWindow();
 		}
 
 		//hiddenにnameとidを指定
@@ -1074,8 +1245,8 @@ function addUniqueRefItem(ulId, multiplicity, dummyRowId, propName, countId, fun
 
 		//selectボタンにidを設定
 		$selBtn.attr("id", "sel_btn_" + newId);
-		//削除ボタンのclickを設定
-		$delBtn.click(function() {deleteItem(copyId, delCallback);});
+		//削除ボタンのclickを設定(追加可能なので多重度複数)
+		$delBtn.click(function() {deleteUniqueRefItem(copyId, true, delCallback);});
 
 		$copy.css("display", "");
 		$copy.refUnique();
@@ -1438,7 +1609,7 @@ function addTimestampSelectItem(ulId, multiplicity, dummyRowId, propName, countI
 			i++;
 		});
 		//inputのidを設定(非表示の場合の設定)
-		$(":hidden:not(:last)", $copy).each(function() {
+		$("input:hidden:not(:last)", $copy).each(function() {
 			$(this).attr("id", selId[i]);
 			i++;
 		});
@@ -1686,91 +1857,116 @@ function convertFromLocaleDatetimeString(str, inFormat) {
 ////////////////////////////////////////////////////////
 
 function uploadFile(file, token) {
-	var $file = $(file);
+	const $file = $(file);
 
-	var fileId = $file.attr("id");
-	var propName = $file.attr("data-pname");
-	var max = $file.attr("data-multiplicity") - 0;
-	var displayType = $file.attr("data-displayType");
-	var fileCount = 0;
-	var completeCount = 0
+	const fileId = $file.attr("id");
+	const viewName = $file.attr("data-vname");
+	const defName = $file.attr("data-dname");
+	const propName = $file.attr("data-pname");
+	const max = $file.attr("data-multiplicity") - 0;
+	const displayType = $file.attr("data-displayType");
 
-	var $img = $("#img_" + es(propName));
-	var $span = $("#em_" + es(propName)).text("");
-	$span.hide();
+	// アップロードするファイル数
+	let fileCount = 0;
+	// 成功したファイル数
+	let completeCount = 0
+	// 失敗したファイル数
+	let errorCount = 0;
 
-	var option = {};
+	const $loading = $("#img_" + es(propName));
+	const $messageArea = $("#em_" + es(propName)).text("");
+
+	$messageArea.hide();
+
+	const option = {};
 	if (typeof token !== "undefined" && token != null && token != "") {
-		option.formData = {"_t": token};
+		option.formData = { "_t": token, "viewName": viewName, "defName": defName, "propName": propName };
 	}
 	$.extend(option, {
 		url: $file.attr("data-uploadUrl"),
 		dataType: "xml",
 		dropZone: $file.parent(),
+		//順次アップロード設定を追加（同期実行）
+		sequentialUploads: $file.attr("data-binaryUploadAsync") === "false",
 		change: function(e, data) {//ファイル選択後に1回
-			return preSend(e, data);
+			return beforeSend(e, data);
 		},
 		drop: function(e, data) {//ファイル選択後に1回
-			return preSend(e, data);
+			return beforeSend(e, data);
 		},
 		done: function(e, data) {//ファイル単位で発生
-			var $_file = $("#" + es(fileId));//plugin内でcloneされ、$fileが別物になる
+			const $_file = $("#" + es(fileId));//plugin内でcloneされ、$fileが別物になる
 			completeCount++;
 
 			if (data.result != null) {
-				var result = $(data.result).find("Result").text();
+				const result = $(data.result).find("Result").text();
 				if (result == null || result == "") {
-					$span.text(scriptContext.gem.locale.binary.failedToFileUpload).show();
+					$messageArea.text(scriptContext.gem.locale.binary.failedToFileUpload).show();
 				} else {
-					var error = $(data.result).find("error").text();
+					const error = $(data.result).find("error").text();
 					if (error == null || error == "") {
-						var lobId = $(data.result).find("lobId").text();
-						var binaryName = $(data.result).find("name").text();
-						var type = $(data.result).find("type").text();
+						const lobId = $(data.result).find("lobId").text();
+						const binaryName = $(data.result).find("name").text();
+						const type = $(data.result).find("type").text();
 
-						var count = $_file.attr("data-binCount") - 0;
+						const count = $_file.attr("data-binCount") - 0;
 						addBinaryGroup(propName, count, fileId, binaryName, type, lobId, displayType, null, true);
 						$_file.attr("data-binCount", count);
 
 						$("[name='" + es(propName) + "']:eq(0)").trigger("change", {});
 					} else {
-						$span.text(error).show();
+						$messageArea.text(error).show();
 					}
 				}
 			} else {
-				$span.text(scriptContext.gem.locale.binary.failedToFileUpload).show();
+				$messageArea.text(scriptContext.gem.locale.binary.failedToFileUpload).show();
 			}
 
-			//全て完了(成功or失敗)してから入力欄コントロール
-			if (fileCount === completeCount) {
-				$img.hide();
-
-				var uploaded = $("#ul_" + es(propName)).children("li").length;
-				if (uploaded < max) {
-					// file表示
-					$_file.show();
-				}
-			}
+			afterSend();
+		},
+		fail: function(e, data) {//ファイル単位で発生
+			errorCount++;
+			$messageArea.text(scriptContext.gem.locale.binary.failedToFileUpload).show();
+			afterSend();
 		}
 	});
 
-	// change,dropから呼ばれる
-	function preSend(e, data) {
+	// 送信前処理
+	function beforeSend(e, data) {
 		fileCount = data.files.length;
 		completeCount = 0;
+		errorCount = 0;
 
-		var uploaded = $("#ul_" + es(propName)).children("li").length;
+		const uploadedCount = $("#ul_" + es(propName)).children("li").length;
 
-		if (fileCount + uploaded > max) {
+		if (fileCount + uploadedCount > max) {
 			alert(messageFormat(scriptContext.gem.locale.binary.filesLimitOver, max));
 			return false;
 		}
 
-		var $_file = $("#" + es(fileId));//plugin内でcloneされ、$fileが別物になる
+		// file非表示
+		const $_file = $("#" + es(fileId));//plugin内でcloneされ、$fileが別物になる
 		$_file.hide();
-		$span.text("").hide();
-		$img.show();
+
+		// メッセージエリア初期化、ローディング表示
+		$messageArea.text("").hide();
+		$loading.show();
 		return true;
+	}
+
+	// 送信後処理
+	function afterSend() {
+		// 全て完了(成功or失敗)してから入力欄コントロール
+		if (fileCount === (completeCount + errorCount)) {
+			$loading.hide();
+
+			const uploadedCount = $("#ul_" + es(propName)).children("li").length;
+			if (uploadedCount < max) {
+				// file表示
+				const $_file = $("#" + es(fileId));//plugin内でcloneされ、$fileが別物になる
+				$_file.show();
+			}
+		}
 	}
 
 	$file.fileupload(option);
@@ -1791,7 +1987,7 @@ function addBinaryGroup(propName, count, fileId, brName, brType, brLobId, displa
 	//参照で追加した行で、なぜかjQueryのセレクタでelementが取れない
 	var $input = $("#" + es(fileId));
 	var $ul = $("#ul_" + es(propName));
-	var $li = $("<li id='li_" + propName + count + "'>").addClass("list-bin").appendTo($ul);
+	var $li = $("<li />").attr("id", "li_" + propName + count).addClass("list-bin").appendTo($ul);
 
 	var download = $input.attr("data-downloadUrl") + "?id=" + brLobId;
 	var ref = $input.attr("data-refUrl") + "?id=" + brLobId;
@@ -1813,7 +2009,8 @@ function addBinaryGroup(propName, count, fileId, brName, brType, brLobId, displa
 		// 入力内容も消えてしまうので、少なくともアップロード時は別タブ表示にしておく
 		if (brType.indexOf("application/pdf") > -1 && usePdfjs) {
 			var pdfPath = pdfviewer + "?file=" + encodeURIComponent(download);
-			$li.append("<a href='" + pdfPath + "' target='_blank' class='link-bin'>" + brName + "</a> ");
+			const $a = $("<a />").attr("href", pdfPath).attr("target", "_blank").addClass("link-btn").text(brName);
+			$li.append($a);
 		} else if (brType.indexOf("image") > -1 && useImageViewer && openNewTab) {
 			//ImageViewer＋別タブの場合のみViewer起動
 			var imageViewerPath = imgviewer + "?id=" + brLobId;
@@ -1828,7 +2025,8 @@ function addBinaryGroup(propName, count, fileId, brName, brType, brLobId, displa
 			});
 			$li.append($link);
 		} else {
-			$li.append("<a href='" + download + "' target='_blank' class='link-bin'>" + brName + "</a> ");
+			const $a = $("<a />").attr("href", download).attr("target", "_blank").addClass("link-btn").text(brName);
+			$li.append($a);
 		}
 	}
 
@@ -1853,7 +2051,7 @@ function addBinaryGroup(propName, count, fileId, brName, brType, brLobId, displa
 	}
 
 	//削除ボタン
-	$("<a href='javascript:void(0)' class='binaryDelete del-btn link-bin'> " + scriptContext.gem.locale.binary.deleteLink + "</a>")
+	$("<a />").attr("href", "javascript:void(0)").addClass("binaryDelete del-btn link-bin").text(scriptContext.gem.locale.binary.deleteLink)
 			.appendTo($li).click(function() {
 		//liを削除
 		$li.remove();
@@ -1867,7 +2065,7 @@ function addBinaryGroup(propName, count, fileId, brName, brType, brLobId, displa
 	if (displayType && (displayType == "BINARY" || displayType == "PREVIEW")) {
 		if (brType && brType.indexOf("image") > -1) {
 			//imageファイルの場合は画像を表示
-			var $p = $("<p id='p_" + propName + count + "' class='mb0' />").appendTo($li);
+			var $p = $("<p />").attr("id", "p_" + propName + count).addClass("mb0").appendTo($li);
 
 			var $img = $("<img/>")
 				.attr("src", ref)
@@ -1904,20 +2102,35 @@ function addBinaryGroup(propName, count, fileId, brName, brType, brLobId, displa
 			// swfファイルの場合はアニメーションを表示
 			var width = $input.attr("data-binWidth") - 0;
 			var height = $input.attr("data-binHeight") - 0;
-			var $p = $("<p id='p_" + propName + count + "' class='mb0' />").appendTo($li);
-			var $img = $("<object data='" + ref + "' type='application/x-shockwave-flash' width='" + width + "' height='" + height + "' ><param name='movie' value='" + ref + "' /><param name='quality' value='high'>" + scriptContext.gem.locale.binary.notVewFlash + "</object>").appendTo($p);
+			var $p = $("<p />").attr("id", "p_" + propName + count).addClass("mb0").appendTo($li);
+			var $img = $("<object />").attr("data", ref).attr("type", "application/x-shockwave-flash").attr("width", width).attr("height", height);
+			$img.append($("<param />").attr("name", "movie").attr("value", ref));
+			$img.append($("<param />").attr("name", "quality").attr("value", "high").text(scriptContext.gem.locale.binary.notVewFlash));
+			$img.appendTo($p);
 		} else if (brType && brType.indexOf("video/mpeg") > -1) {
 			// mpegファイルの場合は動画を表示
 			var width = $input.attr("data-binWidth") - 0;
 			var height = $input.attr("data-binHeight") - 0;
-			var $p = $("<p id='p_" + propName + count + "' class='mb0' />").appendTo($li);
-			var $img = $("<object classid='clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B' width='" + width + "' height='" + height + "'><param name='src' value='" + ref + "' /><param name='autostart' value='true' /><param name='type' value='video/mpeg'><param name='controller' value='true' /><embed src='" + ref + "' scale='ToFit' width='" + width + "' height='" + height + "'></embed></object>").appendTo($p);
+			var $p = $("<p />").attr("id", "p_" + propName + count).addClass("mb0").appendTo($li);
+			var $img = $("<object />").attr("classid", 'clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B').attr("width", width).attr("height", height);
+			$img.append($("<param />").attr("name", "src").attr("value", ref));
+			$img.append($("<param />").attr("name", "autostart").attr("value", "true"));
+			$img.append($("<param />").attr("name", "type").attr("value", "video/mpeg"));
+			$img.append($("<param />").attr("name", "controller").attr("value", "true"));
+			$img.append($("<embed />").attr("src", ref).attr("scale", "ToFit").attr("width", width).attr("height", height));
+			$img.appendTo($p);
 		} else if (brType && brType.indexOf("video/quicktime") > -1) {
 			// movファイルの場合は動画を表示
 			var width = $input.attr("data-binWidth") - 0;
 			var height = $input.attr("data-binHeight") - 0;
-			var $p = $("<p id='p_" + propName + count + "' class='mb0' />").appendTo($li);
-			var $img = $("<object classid='clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B' codebase='http://www.apple.com/qtactivex/qtplugin.cab' width='" + width + "' height='" + height + "'><param name='src' value='" + ref + "'><param name='autoplay' value='true'><param name='type' value='video/quicktime'><param name='scale' value='ToFit'><embed src='" + ref + "' autoplay='true' scale='ToFit' type='video/quicktime' pluginspage='http://www.apple.com/quicktime/download/' width='" + width + "' height='" + height + "'></object>").appendTo($p);
+			var $p = $("<p />").attr("id", "p_" + propName + count).addClass("mb0").appendTo($li);
+			var $img = $("<object />").attr("classid", 'clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B').attr("codebase", 'http://www.apple.com/qtactivex/qtplugin.cab').attr("width", width).attr("height", height);
+			$img.append($("<param />").attr("name", "src").attr("value", ref));
+			$img.append($("<param />").attr("name", "autoplay").attr("value", "true"));
+			$img.append($("<param />").attr("name", "type").attr("value", "video/quicktime"));
+			$img.append($("<param />").attr("name", "scale").attr("value", "ToFit"));
+			$img.append($("<embed />").attr("src", ref).attr("autoplay", "true").attr("scale", "ToFit").attr("type", "video/quicktime").attr("pluginspage", "http://www.apple.com/quicktime/download/").attr("width", width).attr("height", height));
+			$img.appendTo($p);
 		} else if (brType && brType.indexOf("audio/mpeg") > -1) {
 			// mp3の場合はaudioタグを利用
 			createAudioElement($li, "audio/mpeg", propName + count, ref);
@@ -2347,10 +2560,12 @@ function showReference(viewAction, defName, oid, version, linkId, refEdit, editC
  * @param button
  * @return
  */
-function searchReference(selectAction, viewAction, defName, propName, multiplicity, multi, urlParam, refEdit, callback, button, viewName, permitConditionSelectAll, permitVersionedSelect, parentDefName, parentViewName, viewType, refSectionIndex, delCallback, entityOid, entityVersion) {
-	var _propName = propName.replace(/\[/g, "\\[").replace(/\]/g, "\\]").replace(/\./g, "\\.");
+function searchReference(selectAction, viewAction, defName, propName, multiplicity, multi, urlParam, refEdit, callback, button, viewName, permitConditionSelectAll, permitVersionedSelect, parentDefName, parentViewName, viewType, refSectionIndex, delCallback, entityOid, entityVersion, dpCallback, customStyle) {
+	// null は空文字にし、プロパティ名の前後にある空白文字を正規表現で除去する。
+	var referencePropertyName =
+		propName == null ? "" : String(propName).replace(/^\s+|\s+$/g, "");
 	document.scriptContext["searchReferenceCallback"] = function(selectArray) {
-		var $ul = $("#ul_" + _propName);
+		var $ul = $("#ul_" + es(referencePropertyName));
 		var refs = new Array();
 		$ul.children("li").children(":hidden").each(function() {
 			refs[$(this).val()] = this.parentNode;
@@ -2389,12 +2604,13 @@ function searchReference(selectAction, viewAction, defName, propName, multiplici
 		}
 
 		if (list.length > 0) {
-			var parentPropName = propName.replace(/^sc_/, "").replace(/\[\w+\]/g, "");
+			// API 用のプロパティ名にするため、検索条件の "sc_" 接頭辞とネストテーブルの行識別子（例: [0]）を除去する。
+			var parentPropName = referencePropertyName.replace(/^sc_/, "").replace(/\[\w+\]/g, "");
 			getEntityNameList(defName, viewName, parentDefName, parentViewName, parentPropName, viewType, refSectionIndex, list, rootEntity, function(entities) {
 				for (var i = 0; i < entities.length; i++) {
 					var entity = entities[i];
 					var _key = entity.oid + "_" + entity.version;
-					addReference("li_" + propName + _key, viewAction, defName, _key, entity.name, propName, "ul_" + _propName, refEdit, delCallback, parentDefName, parentViewName, viewType, null, entityOid, entityVersion);
+					addReference("li_" + referencePropertyName + _key, viewAction, defName, _key, entity.name, referencePropertyName, "ul_" + es(referencePropertyName), refEdit, delCallback, parentDefName, parentViewName, viewType, null, entityOid, entityVersion, customStyle);
 				}
 				entityList = entities;
 			});
@@ -2402,15 +2618,15 @@ function searchReference(selectAction, viewAction, defName, propName, multiplici
 
 		if (callback && $.isFunction(callback)) {
 			if (typeof button === "undefined" || button == null) {
-				callback.call(this, entityList, deleteList, propName);
+				callback.call(this, entityList, deleteList, referencePropertyName);
 			} else {
 				//引数で渡されたトリガーとなるボタンをthisとして渡す
-				callback.call(button, entityList, deleteList, propName);
+				callback.call(button, entityList, deleteList, referencePropertyName);
 			}
 		}
 
 		if (entityList.length > 0) {
-			$("[name='" + _propName + "']:eq(0)").trigger("change", {});// 複数選択だとイベントが複数回発生するので1つだけ
+			$("[name='" + es(referencePropertyName) + "']:eq(0)").trigger("change", {});// 複数選択だとイベントが複数回発生するので1つだけ
 		}
 		closeModalDialog();
 	};
@@ -2424,13 +2640,18 @@ function searchReference(selectAction, viewAction, defName, propName, multiplici
 	$("<input />").attr({type:"hidden", name:"defName", value:defName}).appendTo($form);//定義名
 	$("<input />").attr({type:"hidden", name:"multiplicity", value:multiplicity}).appendTo($form);//選択可能数
 	$("<input />").attr({type:"hidden", name:"selectType", value:selType}).appendTo($form);//単一or複数
-	$("<input />").attr({type:"hidden", name:"propName", value:propName}).appendTo($form);//プロパティ名
-	$("<input />").attr({type:"hidden", name:"rootName", value:"ul_" + propName}).appendTo($form);
+	$("<input />").attr({type:"hidden", name:"propName", value: referencePropertyName }).appendTo($form); //プロパティ名
+	$("<input />").attr({type:"hidden", name:"rootName", value:"ul_" + referencePropertyName,}).appendTo($form);
 	$("<input />").attr({type:"hidden", name:"permitConditionSelectAll", value:permitConditionSelectAll}).appendTo($form);
 	$("<input />").attr({type:"hidden", name:"permitVersionedSelect", value:permitVersionedSelect}).appendTo($form);
 	if (isSubModal) $("<input />").attr({type:"hidden", name:"modalTarget", value:target}).appendTo($form);
-	var kv = urlParam.split("&");
-	if (urlParam.length > 0 && kv.length > 0) {
+
+	var _param = urlParam;
+	if (dpCallback) {
+		_param = dpCallback(urlParam);
+	}
+	var kv = _param.split("&");
+	if (_param.length > 0 && kv.length > 0) {
 		for (var i = 0; i < kv.length; i++) {
 			var _kv = kv[i].split("=");
 			if (_kv.length > 0) {
@@ -2564,8 +2785,9 @@ function searchReferenceForBi(webapi, selectAction, viewAction, defName, entityD
  * @param button       実行ボタンのSelector
  * @param permitConditionSelectAll  検索条件での全選択を許可
  * @param permitVersionedSelect 選択画面でバージョン検索を許可
+ * @param dpCallback   動的パラメータ生成用のコールバック
  */
-function searchReferenceFromView(selectAction, updateAction, defName, id, propName, multiplicity, multi, urlParam, reloadUrl, button, permitConditionSelectAll, permitVersionedSelect) {
+function searchReferenceFromView(selectAction, updateAction, defName, id, propName, multiplicity, multi, urlParam, reloadUrl, button, permitConditionSelectAll, permitVersionedSelect, dpCallback) {
 	document.scriptContext["searchReferenceCallback"] = function(selectArray) {
 		//選択されたOID情報をもとに参照元Entityを更新(更新後画面が再表示される)
 		var _propName = propName.replace(/\[/g, "\\[").replace(/\]/g, "\\]").replace(/\./g, "\\.");
@@ -2588,19 +2810,34 @@ function searchReferenceFromView(selectAction, updateAction, defName, id, propNa
 			}
 		}
 
-		var $form = $("#detailForm");
-		for (var i = 0; i < selectArray.length; i++) {
-			var key = selectArray[i];
-			if (key in refLink) continue;
+		/**
+		 * Entityデータ選択後のリロード処理をカスタイズする場合は、下記を引数に
+		 * document.scriptContext["customSearchReferenceFromViewCallback"]に関数を設定します。
+		 * 
+		 * @param selectArray 選択したEntityデータ
+		 * @param propName プロパティ名
+		 * @param refLink Entityデータ選択後のリンク情報
+		 * 
+		 */
+		var func = document.scriptContext["customSearchReferenceFromViewCallback"];
+		if (func && $.isFunction(func)) {
+			closeModalDialog();
+			func.call(this, selectArray, propName, refLink);
+		} else {
+			var $form = $("#detailForm");
+			for (var i = 0; i < selectArray.length; i++) {
+				var key = selectArray[i];
+				if (key in refLink) continue;
+	
+				$("<input type='hidden' />").attr("name", propName).val(key).appendTo($form);
+			}
 
-			$("<input type='hidden' />").attr("name", propName).val(key).appendTo($form);
+			closeModalDialog();
+
+			$("<input type='hidden' name='updatePropertyName' />").val(propName).appendTo($form);
+			$("<input type='hidden' name='reloadUrl' />").val(reloadUrl).appendTo($form);
+			$form.attr("action", updateAction).submit();
 		}
-
-		closeModalDialog();
-
-		$("<input type='hidden' name='updatePropertyName' />").val(propName).appendTo($form);
-		$("<input type='hidden' name='reloadUrl' />").val(reloadUrl).appendTo($form);
-		$form.attr("action", updateAction).submit();
 
 	};
 
@@ -2618,8 +2855,13 @@ function searchReferenceFromView(selectAction, updateAction, defName, id, propNa
 	$("<input />").attr({type:"hidden", name:"permitConditionSelectAll", value:permitConditionSelectAll}).appendTo($form);
 	$("<input />").attr({type:"hidden", name:"permitVersionedSelect", value:permitVersionedSelect}).appendTo($form);
 	if (isSubModal) $("<input />").attr({type:"hidden", name:"modalTarget", value:target}).appendTo($form);
-	var kv = urlParam.split("&");
-	if (urlParam.length > 0 && kv.length > 0) {
+
+	var _param = urlParam;
+	if (dpCallback) {
+		_param = dpCallback(urlParam);
+	}
+	var kv = _param.split("&");
+	if (_param.length > 0 && kv.length > 0) {
 		for (var i = 0; i < kv.length; i++) {
 			var _kv = kv[i].split("=");
 			if (_kv.length > 0) {
@@ -2635,7 +2877,7 @@ function searchReferenceFromView(selectAction, updateAction, defName, id, propNa
 	$form.remove();
 }
 
-function searchUniqueReference(id, selectAction, viewAction, defName, propName, urlParam, refEdit, callback, button, viewName, permitConditionSelectAll, permitVersionedSelect, parentDefName, parentViewName, viewType, refSectionIndex, entityOid, entityVersion) {
+function searchUniqueReference(id, selectAction, viewAction, defName, propName, urlParam, refEdit, callback, button, viewName, permitConditionSelectAll, permitVersionedSelect, parentDefName, parentViewName, viewType, refSectionIndex, entityOid, entityVersion, dpCallback, customStyle) {
 	var _id = id.replace(/\[/g, "\\[").replace(/\]/g, "\\]").replace(/\./g, "\\.");
 	var _propName = propName.replace(/\[/g, "\\[").replace(/\]/g, "\\]").replace(/\./g, "\\.");
 	document.scriptContext["searchReferenceCallback"] = function(selectArray) {
@@ -2646,6 +2888,13 @@ function searchUniqueReference(id, selectAction, viewAction, defName, propName, 
 		});
 
 		var key = selectArray[0];
+		
+		// 未選択の場合は処理を中断する
+		if (key == null || key === "") {
+			alert(scriptContext.gem.locale.reference.notSelectedData);
+			return;
+		}
+
 		// 重複チェック （自分を除く）
 		if (key in refs && !$(refs[key]).is("#" + _id)) {
 			alert(scriptContext.gem.locale.reference.duplicateData);
@@ -2668,7 +2917,7 @@ function searchUniqueReference(id, selectAction, viewAction, defName, propName, 
 				var entity = entities[i];
 				var _key = entity.oid + "_" + entity.version;
 				var uniqueValue = entity.uniqueValue;
-				updateUniqueReference(_id, viewAction, defName, _key, entity.name, propName, "ul_" + _propName, refEdit, "uniq_txt_" + _id , uniqueValue, parentDefName, parentViewName, viewType, refSectionIndex, entityOid, entityVersion);
+				updateUniqueReference(_id, viewAction, defName, _key, entity.name, propName, "ul_" + _propName, refEdit, "uniq_txt_" + _id , uniqueValue, parentDefName, parentViewName, viewType, refSectionIndex, entityOid, entityVersion, customStyle);
 			}
 			entityList = entities;
 		});
@@ -2701,8 +2950,13 @@ function searchUniqueReference(id, selectAction, viewAction, defName, propName, 
 	$("<input />").attr({type:"hidden", name:"permitConditionSelectAll", value:permitConditionSelectAll}).appendTo($form);
 	$("<input />").attr({type:"hidden", name:"permitVersionedSelect", value:permitVersionedSelect}).appendTo($form);
 	if (isSubModal) $("<input />").attr({type:"hidden", name:"modalTarget", value:target}).appendTo($form);
-	var kv = urlParam.split("&");
-	if (urlParam.length > 0 && kv.length > 0) {
+
+	var _param = urlParam;
+	if (dpCallback) {
+		_param = dpCallback(urlParam);
+	}
+	var kv = _param.split("&");
+	if (_param.length > 0 && kv.length > 0) {
 		for (var i = 0; i < kv.length; i++) {
 			var _kv = kv[i].split("=");
 			if (_kv.length > 0) {
@@ -2726,7 +2980,7 @@ function searchUniqueReference(id, selectAction, viewAction, defName, propName, 
  * @param multiplicity
  * @return
  */
-function insertReference(addAction, viewAction, defName, propName, multiplicity, urlParam, parentOid, parentVersion, parentDefName, parentViewName, refEdit, callback, button, delCallback, viewType, refSectionIndex, entityOid, entityVersion) {
+function insertReference(addAction, viewAction, defName, propName, multiplicity, urlParam, parentOid, parentVersion, parentDefName, parentViewName, refEdit, callback, button, delCallback, viewType, refSectionIndex, entityOid, entityVersion, dpCallback, customStyle) {
 	var isSubModal = $("body.modal-body").length != 0;
 	var target = getModalTarget(isSubModal);
 
@@ -2737,7 +2991,7 @@ function insertReference(addAction, viewAction, defName, propName, multiplicity,
 		document.scriptContext["editReferenceCallback"] = function(entity) {
 			var $ul = $("#ul_" + _propName);
 			var key = entity.oid + "_" + entity.version;
-			var linkId = addReference("li_" + propName + key, viewAction, defName, key, entity.name, propName, "ul_" + _propName, refEdit, delCallback, parentDefName, parentViewName, viewType, null, entityOid, entityVersion);
+			var linkId = addReference("li_" + propName + key, viewAction, defName, key, entity.name, propName, "ul_" + _propName, refEdit, delCallback, parentDefName, parentViewName, viewType, null, entityOid, entityVersion, customStyle);
 
 			//カスタムのCallbackが定義されている場合に呼び出す
 			if (callback && $.isFunction(callback)) {
@@ -2768,8 +3022,13 @@ function insertReference(addAction, viewAction, defName, propName, multiplicity,
 		$("<input />").attr({type:"hidden", name:"viewType", value:viewType}).appendTo($form);
 		if (refSectionIndex) $("<input />").attr({type:"hidden", name:"referenceSectionIndex", value:refSectionIndex}).appendTo($form);
 		if (isSubModal) $("<input />").attr({type:"hidden", name:"modalTarget", value:target}).appendTo($form);
-		var kv = urlParam.split("&");
-		if (urlParam.length > 0 && kv.length > 0) {
+
+		var _param = urlParam;
+		if (dpCallback) {
+			_param = dpCallback(urlParam);
+		}
+		var kv = _param.split("&");
+		if (_param.length > 0 && kv.length > 0) {
 			for (var i = 0; i < kv.length; i++) {
 				var _kv = kv[i].split("=");
 				if (_kv.length > 0) {
@@ -2798,11 +3057,12 @@ function insertReference(addAction, viewAction, defName, propName, multiplicity,
  * @param reloadUrl     リロード用URL
  * @param entityOid
  * @param entityVersion
+ * @param dpCallback    動的URLパラメータ作成コールバック
  */
 function insertReferenceFromView(addAction, defName, id, multiplicity, urlParam,
 		parentOid, parentVersion, parentDefName, mappedBy,
 		oid, updateAction, propName, reloadUrl, entityOid, entityVersion,
-		webapi, orderPropName, orderPropValue, shiftUp) {
+		webapi, orderPropName, orderPropValue, shiftUp, dpCallback) {
 	var _propName = propName.replace(/\[/g, "\\[").replace(/\]/g, "\\]").replace(/\./g, "\\.");
 
 	var isMappedBy = mappedBy != null && mappedBy != "";
@@ -2828,17 +3088,30 @@ function insertReferenceFromView(addAction, defName, id, multiplicity, urlParam,
 				"_t": $(":hidden[name='_t']").val()
 			};
 			postAsync(webapi, JSON.stringify(param), function() {
-				var $form = $("#detailForm");
-				if (isMappedBy) {
-					//非参照の場合は再ロード
-					$form.attr("action", reloadUrl).submit()
+				/**
+				 * Entityデータ追加後のリロード処理をカスタマイズする場合、下記を引数に
+				 * document.scriptContext["customInsertReferenceFromViewCallback"]に関数を設定します。
+				 * 
+				 * @param entity 追加したEntityデータ
+				 * @param propName プロパティ名
+				 * @param isMappedBy 被参照かどうか
+				 */
+				var func = document.scriptContext["customInsertReferenceFromViewCallback"];
+				if (func && $.isFunction(func)) {
+					func.call(this, entity, propName, isMappedBy);
 				} else {
-					//通常参照の場合は参照Propertyを更新（更新Action側で再ロード）
-					var key = entity.oid + "_" + entity.version;
-					$("<input type='hidden' name='" + propName + "' />").val(key).appendTo($form);
-					$("<input type='hidden' name='updatePropertyName' />").val(propName).appendTo($form);
-					$("<input type='hidden' name='reloadUrl' />").val(reloadUrl).appendTo($form);
-					$form.attr("action", updateAction).submit();
+					var $form = $("#detailForm");
+					if (isMappedBy) {
+						//非参照の場合は再ロード
+						$form.attr("action", reloadUrl).submit()
+					} else {
+						//通常参照の場合は参照Propertyを更新（更新Action側で再ロード）
+						var key = entity.oid + "_" + entity.version;
+						$("<input type='hidden' name='" + propName + "' />").val(key).appendTo($form);
+						$("<input type='hidden' name='updatePropertyName' />").val(propName).appendTo($form);
+						$("<input type='hidden' name='reloadUrl' />").val(reloadUrl).appendTo($form);
+						$form.attr("action", updateAction).submit();
+					}
 				}
 			});
 		};
@@ -2857,8 +3130,13 @@ function insertReferenceFromView(addAction, defName, id, multiplicity, urlParam,
 			$("<input />").attr({type:"hidden", name:"updateByParam", value:true}).appendTo($form);
 			$("<input />").attr({type:"hidden", name:mappedBy, value:oid}).appendTo($form);
 		}
-		var kv = urlParam.split("&");
-		if (urlParam.length > 0 && kv.length > 0) {
+
+		var _param = urlParam;
+		if (dpCallback) {
+			_param = dpCallback(urlParam);
+		}
+		var kv = _param.split("&");
+		if (_param.length > 0 && kv.length > 0) {
 			for (var i = 0; i < kv.length; i++) {
 				var _kv = kv[i].split("=");
 				if (_kv.length > 0) {
@@ -2873,7 +3151,7 @@ function insertReferenceFromView(addAction, defName, id, multiplicity, urlParam,
 	}
 }
 
-function insertUniqueReference(id, addAction, viewAction, defName, propName, multiplicity, urlParam, parentDefName, parentViewName, refEdit, callback, button, viewType, refSectionIndex) {
+function insertUniqueReference(id, addAction, viewAction, defName, propName, multiplicity, urlParam, parentDefName, parentViewName, refEdit, callback, button, viewType, refSectionIndex, dpCallback, customStyle) {
 	var isSubModal = $("body.modal-body").length != 0;
 	var target = getModalTarget(isSubModal);
 
@@ -2890,7 +3168,7 @@ function insertUniqueReference(id, addAction, viewAction, defName, propName, mul
 		var $ul = $("#ul_" + _propName);
 		var key = entity.oid + "_" + entity.version;
 		var uniqueValue = entity.uniqueValue;
-		updateUniqueReference(_id, viewAction, defName, key, entity.name, propName, "ul_" + _propName, refEdit, "uniq_txt_" + _id , uniqueValue, parentDefName, parentViewName, viewType, refSectionIndex, entityOid, entityVersion);
+		updateUniqueReference(_id, viewAction, defName, key, entity.name, propName, "ul_" + _propName, refEdit, "uniq_txt_" + _id , uniqueValue, parentDefName, parentViewName, viewType, refSectionIndex, entityOid, entityVersion, customStyle);
 
 		//カスタムのCallbackが定義されている場合に呼び出す
 		if (callback && $.isFunction(callback)) {
@@ -2921,8 +3199,13 @@ function insertUniqueReference(id, addAction, viewAction, defName, propName, mul
 	$("<input />").attr({type:"hidden", name:"entityVersion", value:entityVersion}).appendTo($form);
 	if (refSectionIndex) $("<input />").attr({type:"hidden", name:"referenceSectionIndex", value:refSectionIndex}).appendTo($form);
 	if (isSubModal) $("<input />").attr({type:"hidden", name:"modalTarget", value:target}).appendTo($form);
-	var kv = urlParam.split("&");
-	if (urlParam.length > 0 && kv.length > 0) {
+
+	var _param = urlParam;
+	if (dpCallback) {
+		_param = dpCallback(urlParam);
+	}
+	var kv = _param.split("&");
+	if (_param.length > 0 && kv.length > 0) {
 		for (var i = 0; i < kv.length; i++) {
 			var _kv = kv[i].split("=");
 			if (_kv.length > 0) {
@@ -2934,7 +3217,7 @@ function insertUniqueReference(id, addAction, viewAction, defName, propName, mul
 	$form.remove();
 }
 
-function addReference(id, viewAction, defName, key, label, propName, ulId, refEdit, delCallback, parentDefName, parentViewName, viewType, refSectionIndex, entityOid, entityVersion) {
+function addReference(id, viewAction, defName, key, label, propName, ulId, refEdit, delCallback, parentDefName, parentViewName, viewType, refSectionIndex, entityOid, entityVersion, customStyle) {
 	var tmp = keySplit(key);
 	var oid = tmp.oid;
 	var ver = tmp.version;
@@ -2945,9 +3228,19 @@ function addReference(id, viewAction, defName, key, label, propName, ulId, refEd
 
 	//リンク追加
 	var linkId = propName + "_" + tmp.oid;
-	var $link = $("<a href='javascript:void(0)' />").attr({"id":linkId, "data-linkId":linkId}).click(function() {
+	var $link = $("<a href='javascript:void(0)' />").attr({"id":linkId, "data-linkId":linkId, "style":customStyle}).click(function() {
 		showReference(viewAction, defName, oid, ver, linkId, refEdit, null, parentDefName, parentViewName, propName, viewType, refSectionIndex, entityOid, entityVersion);
 	}).appendTo($li);
+	if ($ul.attr("data-reference-modal") === "true") {
+		$link.attr("data-reference-modal", "true");
+		const dialogWidth = $ul.attr("data-dialog-width");
+		const dialogHeight = $ul.attr("data-dialog-height");
+		const dialogMaximize = $ul.attr("data-dialog-maximize");
+		if (dialogWidth != null) $link.attr("data-dialog-width", dialogWidth);
+		if (dialogHeight != null) $link.attr("data-dialog-height", dialogHeight);
+		if (dialogMaximize != null)
+			$link.attr("data-dialog-maximize", dialogMaximize);
+	}
 	$link.text(label);
 	if ($("body.modal-body").length != 0) {
 		$link.subModalWindow();
@@ -2976,7 +3269,7 @@ function addReference(id, viewAction, defName, key, label, propName, ulId, refEd
 	return linkId;
 }
 
-function addUniqueReference(viewAction, key, label, unique, defName, propName, multiplicity, ulId, dummyRowId, refEdit, countId, delCallback, parentDefName, parentViewName, viewType, refSectionIndex, entityOid, entityVersion) {
+function addUniqueReference(viewAction, key, label, unique, defName, propName, multiplicity, ulId, dummyRowId, refEdit, countId, delCallback, parentDefName, parentViewName, viewType, refSectionIndex, entityOid, entityVersion, customStyle) {
 	var tmp = keySplit(key);
 	var oid = tmp.oid;
 	var ver = tmp.version;
@@ -2993,7 +3286,7 @@ function addUniqueReference(viewAction, key, label, unique, defName, propName, m
 
 		//linkを設定
 		var linkId = propName + "_" + tmp.oid;
-		$link.attr({"id":linkId, "data-linkId":linkId}).click(function() {
+		$link.attr({"id":linkId, "data-linkId":linkId, "style":customStyle}).click(function() {
 			showReference(viewAction, defName, oid, ver, linkId, refEdit, delCallback, parentDefName, parentViewName, propName, viewType, refSectionIndex, entityOid, entityVersion);
 		});
 		$link.text(label);
@@ -3006,7 +3299,7 @@ function addUniqueReference(viewAction, key, label, unique, defName, propName, m
 	}, delCallback);
 }
 
-function updateUniqueReference(id, viewAction, defName, key, label, propName, ulId, refEdit, txtId, uniqueValue, parentDefName, parentViewName, viewType, refSectionIndex, entityOid, entityVersion) {
+function updateUniqueReference(id, viewAction, defName, key, label, propName, ulId, refEdit, txtId, uniqueValue, parentDefName, parentViewName, viewType, refSectionIndex, entityOid, entityVersion, customStyle) {
 	var tmp = keySplit(key);
 	var oid = tmp.oid;
 	var ver = tmp.version;
@@ -3016,7 +3309,7 @@ function updateUniqueReference(id, viewAction, defName, key, label, propName, ul
 	var $txt = $("#" + txtId)
 
 	var linkId = propName + "_" + tmp.oid;
-	var $link = $("a", $li).attr({"id":linkId, "data-linkId":linkId}).removeAttr("onclick").off("click");
+	var $link = $("a", $li).attr({"id":linkId, "data-linkId":linkId, "style":customStyle}).removeAttr("onclick").off("click");
 	$link.click(function() {
 		showReference(viewAction, defName, oid, ver, linkId, refEdit, null, parentDefName, parentViewName, propName, viewType, refSectionIndex, entityOid, entityVersion);
 	});
@@ -3103,7 +3396,7 @@ function getDialogTrigger($v, option) {
 	return $dialogTrigger;
 }
 
-function viewEditableReference(viewAction, defName, oid, reloadUrl, refEdit, urlParam) {
+function viewEditableReference(viewAction, defName, oid, reloadUrl, refEdit, urlParam, dpCallbackKey) {
 
 	var isSubModal = $("body.modal-body").length != 0;
 	var target = getModalTarget(isSubModal);
@@ -3111,26 +3404,32 @@ function viewEditableReference(viewAction, defName, oid, reloadUrl, refEdit, url
 
 	document.scriptContext["editReferenceCallback"] = function(entity) {
 		edited = true;
-		if ($("body.modal-body").length != 0) {
-			//FIXME このパターンはどれか不明？参照ダイアログでNestTableを利用している場合か？
-
-			//refEdit,modalTarget→ダイアログ表示時のパラメータを再利用
-			submitForm(reloadUrl, {
-				"defName":$(":hidden[name='defName']").val(),
-				"oid":$(":hidden[name='oid']").val(),
-				"refEdit":editable,
-				"modalTarget":modalTarget
-				});
-			closeModalDialog();
-
+		
+		var func = document.scriptContext["customEditReferenceCallback"];
+		if (func && $.isFunction(func)) {
+			func.call(this, entity);
 		} else {
-			var $form = $("<form />").attr({method:"POST", action:viewAction + "/" + encodeURIComponent(oid), target:target}).appendTo("body");
-			$("<input />").attr({type:"hidden", name:"version", value:entity.version}).appendTo($form);
-			$("<input />").attr({type:"hidden", name:"refEdit", value:refEdit}).appendTo($form);
-			if (isSubModal) $("<input />").attr({type:"hidden", name:"modalTarget", value:target}).appendTo($form);
+			if ($("body.modal-body").length != 0) {
+				//FIXME このパターンはどれか不明？参照ダイアログでNestTableを利用している場合か？
 
-			$form.submit();
-			$form.remove();
+				//refEdit,modalTarget→ダイアログ表示時のパラメータを再利用
+				submitForm(reloadUrl, {
+					"defName":$(":hidden[name='defName']").val(),
+					"oid":$(":hidden[name='oid']").val(),
+					"refEdit":editable,
+					"modalTarget":modalTarget
+					});
+				closeModalDialog();
+
+			} else {
+				var $form = $("<form />").attr({method:"POST", action:viewAction + "/" + encodeURIComponent(oid), target:target}).appendTo("body");
+				$("<input />").attr({type:"hidden", name:"version", value:entity.version}).appendTo($form);
+				$("<input />").attr({type:"hidden", name:"refEdit", value:refEdit}).appendTo($form);
+				if (isSubModal) $("<input />").attr({type:"hidden", name:"modalTarget", value:target}).appendTo($form);
+
+				$form.submit();
+				$form.remove();
+			}
 		}
 	};
 
@@ -3148,8 +3447,13 @@ function viewEditableReference(viewAction, defName, oid, reloadUrl, refEdit, url
 	if (isSubModal) $("<input />").attr({type:"hidden", name:"modalTarget", value:target}).appendTo($form);
 
 	if (typeof urlParam === "undefined" || urlParam === null || urlParam === "") urlParam = "";
-	var kv = urlParam.split("&");
-	if (urlParam.length > 0 && kv.length > 0) {
+	var _param = urlParam;
+	var dpCallback = scriptContext[dpCallbackKey];
+	if (dpCallback) {
+		_param = dpCallback(urlParam);
+	}
+	var kv = _param.split("&");
+	if (_param.length > 0 && kv.length > 0) {
 		for (var i = 0; i < kv.length; i++) {
 			var _kv = kv[i].split("=");
 			if (_kv.length > 0) {
@@ -3306,7 +3610,7 @@ function updateNestValue_Number(type, $node, parentPropName, name, entity) {
 		}
 	} else if (type == "LABEL") {
 		let dummyField = $("span.data-label.commaLabel", $node);
-		let hiddenArea = null; 
+		let hiddenArea = null;
 		if (dummyField.length > 0) {
 			dummyField.text(insertComma(val, separator));
 			hiddenArea = dummyField;
@@ -3726,32 +4030,41 @@ function addNestRow(rowId, countId, multiplicy, insertTop, rootDefName, viewName
 			replaceDummyAttr(this, "data-propName", idx);
 		});
 		$copyRow.addClass("stripeRow");
+		
+		var columns = [];
 
 		//形式による置換以外の処理
 		$headerRow.children("th").each(function(num) {
 			var type = getType(this);
+			var label = $(".property-label", this).text();
 			var $td = $copyRow.children(":nth-child(" + (num + 1) + ")");
+			columns.push($td);
 			if (type[0] == "String" || type[0] == "LongText") {
 				//文字列
 				addNestRow_String(type[1], $td, idx);
 			} else if (type[0] == "Decimal" || type[0] == "Float" || type[0] == "Integer") {
 				//数値
-				addNestRow_Number(type[1], $td, idx);
+				addNestRow_Number(type[1], $td, idx, label);
 			} else if (type[0] == "Date") {
 				//日付
-				addNestRow_Date(type[1], $td, idx);
+				addNestRow_Date(type[1], $td, idx, label);
 			} else if (type[0] == "Time") {
 				//時間
-				addNestRow_Time(type[1], $td, idx);
+				addNestRow_Time(type[1], $td, idx, label);
 			} else if (type[0] == "Timestamp") {
 				//日時
-				addNestRow_Timestamp(type[1], $td, idx);
+				addNestRow_Timestamp(type[1], $td, idx, label);
 			} else if (type[0] == "Binary") {
 				//バイナリ
 				$td.children(":file").each(function() {
 					replaceDummyAttr(this, "data-pname", idx);
 					var token = $(this).attr("token");
 					uploadFile(this, token);
+				});
+			} else if (type[0] == "Select") {
+				//Select
+				$td.children("ul").each(function() {
+					replaceDummyAttr(this, "data-itemname", idx);
 				});
 			} else if (type[0] == "Reference") {
 				//参照
@@ -3783,8 +4096,18 @@ function addNestRow(rowId, countId, multiplicy, insertTop, rootDefName, viewName
 				$(".down-icon", $td).on("click", function(){shiftDown(rowId)});
 			} else if (type[0] == "last") {
 				//削除ボタン
-				$($td).children(":button").on("click", function() {deleteRefTableRow(rowId, delCallback);});
+				$($td).children(":button").on("click", function() {
+					deleteRefTableRow(rowId, function(id) {
+						// 列に対して削除をマーク
+						columns.forEach(column => column.addClass('invalid-row'));
+						columns = null;
+						if (delCallback && $.isFunction(delCallback)) delCallback.call(this, id);
+					});
+				});
 			}
+
+			//列追加時の個別処理
+			callNestRow_ColumnCallback(orgPropName, $td, idx);
 		});
 
 		//追加された行のラジオボタン開閉制御
@@ -3798,6 +4121,46 @@ function addNestRow(rowId, countId, multiplicy, insertTop, rootDefName, viewName
 }
 
 /**
+ * ネストされた参照型の入力テーブルに行が追加されたときに各列(Editor)での個別処理を追加
+ * @param rootPropertyName ルートの参照プロパティ名
+ * @param referencePropetyName 参照先プロパティ名
+ * @param callback 個別処理。引数として、td、indexを渡す
+ */
+function addNestRow_ColumnCallback(rootPropertyName, referencePropetyName, callback) {
+	if (!scriptContext.gem["nest_column_callback"]) {
+		scriptContext.gem["nest_column_callback"] = new Array();
+	}
+	if (!scriptContext.gem.nest_column_callback[rootPropertyName]) {
+		scriptContext.gem.nest_column_callback[rootPropertyName] = new Map();
+	}
+	
+	scriptContext.gem.nest_column_callback[rootPropertyName].set(referencePropetyName, callback);
+}
+
+/**
+ * ネストされた参照型の入力テーブルに行が追加されたときに各列での個別処理を実行
+ * @param rootPropertyName ルートの参照プロパティ名
+ * @param $td 追加された列 
+ * @param index 行番号
+ */
+function callNestRow_ColumnCallback(rootPropertyName, $td, index) {
+	// ルートの参照プロパティ名
+	const referencePropetyName = $td.attr("data-propName");
+
+	if (referencePropetyName && scriptContext.gem["nest_column_callback"]) {
+		if (scriptContext.gem.nest_column_callback[rootPropertyName]) {
+			const callbackMap = scriptContext.gem.nest_column_callback[rootPropertyName];
+			if (callbackMap.get(referencePropetyName)) {
+				const callback = callbackMap.get(referencePropetyName);
+				if (callback && $.isFunction(callback)) {
+					callback.call(this, $td, index);
+				} 
+			}
+		}
+	}
+}
+
+/**
  * ネストされた参照型の入力テーブルに文字列型の入力欄追加
  * @param cell
  * @param idx
@@ -3807,7 +4170,6 @@ function addNestRow_String(type, cell, idx) {
 	if (type == "RICHTEXT") {
 		var $text = $(cell).children("textarea");
 		$text.attr("id", "id_" + $text.attr("name"));
-		$text.ckeditor();
 	}
 }
 
@@ -3817,12 +4179,25 @@ function addNestRow_String(type, cell, idx) {
  * @param idx
  * @return
  */
-function addNestRow_Number(type, cell, idx) {
+function addNestRow_Number(type, cell, idx, label) {
 	var $text = $(cell).children(":text");
 	if ($text.hasClass("commaFieldDummy")) {
 		$text.removeClass("commaFieldDummy").addClass("commaField");
 		$text.commaField();
 	}
+	//登録、更新時の入力チェック
+	addEditValidator(function() {
+		// 削除行は除外
+		if ($(cell).hasClass("invalid-row")) {
+			return true;
+		}
+		var val = $text.val();
+		if (typeof val !== "undefined" && val !== null && val !== "" && isNaN(val)) {
+			alert(scriptContext.gem.locale.common.numFormatErrorMsg.replace("{0}", label));
+			return false;
+		}
+		return true;
+	});
 }
 
 /**
@@ -3831,13 +4206,43 @@ function addNestRow_Number(type, cell, idx) {
  * @param idx
  * @return
  */
-function addNestRow_Date(type, cell, idx) {
+function addNestRow_Date(type, cell, idx, label) {
 	if (type == "DATETIME") {
 		var id = $(cell).children("input:hidden:last").attr("id").substring(2);
+
+		// hidden input から初期値を取得（JSP と同様の処理）
+		var hiddenDate = $(cell).children("input:hidden:last").val();
+		if (hiddenDate != null && hiddenDate !== "") {
+			// ロケール日付文字列へ変換（JSP の convertToLocaleDateString と同等）
+			var date = convertToLocaleDateString(hiddenDate, dateUtil.getServerDateFormat());
+
+			// 表示用 input に値を設定
+			$("#d_" + es(id)).val(date).trigger("blur");
+		}
+
+		// 日付入力欄の初期化
 		$(cell).children(":text:first").each(function() {
 			this.removeAttribute("onchange");
 			$(this).change(function() {dateChange(id);});
 			datepicker(this);
+		});
+
+		//登録、更新時の入力チェック
+		addEditValidator(function() {
+			// 削除行は除外
+			if ($(cell).hasClass("invalid-row")) {
+				return true;
+			}
+			var val = $("#d_" + es(id)).val();
+			if (typeof val !== "undefined" && val != null && val !== "") {
+				try {
+					validateDate(val, dateUtil.getInputDateFormat(), "");
+				} catch (e) {
+					alert(messageFormat(scriptContext.gem.locale.common.dateFormatErrorMsg, label, dateUtil.getInputDateFormat()))
+					return false;
+				}
+			}
+			return true;
 		});
 	}
 }
@@ -3848,10 +4253,12 @@ function addNestRow_Date(type, cell, idx) {
  * @param idx
  * @return
  */
-function addNestRow_Time(type, cell, idx) {
+function addNestRow_Time(type, cell, idx, label) {
 	if (type == "DATETIME") {
 
 		var timeformat = $("span", cell).children(":text:first").attr("data-timeformat");
+		var fixedmin = $("span", cell).children(":text:first").attr("data-fixedmin");
+		var fixedsec = $("span", cell).children(":text:first").attr("data-fixedsec");
 		var stepmin = $("span", cell).children(":text:first").attr("data-stepmin");
 
 		if (timeformat && timeformat.length > 0 && stepmin && stepmin.length > 0) {
@@ -3861,6 +4268,25 @@ function addNestRow_Time(type, cell, idx) {
 				this.removeAttribute("onchange");
 				$(this).change(function() {timePickerChange(id);});
 				timepicker(this);
+			});
+
+			//登録、更新時の入力チェック
+			addEditValidator(function() {
+				// 削除行は除外
+				if ($(cell).hasClass("invalid-row")) {
+					return true;
+				}
+				var $input = $("#time_" + es(id));
+				var val = $input.val();
+				if (typeof val !== "undefined" && val !== null && val !== "") {
+					try {
+						validateTimePicker(val, timeformat, fixedmin, fixedsec);
+					} catch (e) {
+						alert(messageFormat(scriptContext.gem.locale.common.timeFormatErrorMsg, label, timeformat))
+						return false;
+					}
+				}
+				return true;
 			});
 
 		} else {
@@ -3881,10 +4307,12 @@ function addNestRow_Time(type, cell, idx) {
  * @param idx
  * @return
  */
-function addNestRow_Timestamp(type, cell, idx) {
+function addNestRow_Timestamp(type, cell, idx, label) {
 	if (type == "DATETIME") {
 
 		var timeformat = $("span", cell).children(":text:first").attr("data-timeformat");
+		var fixedmin = $("span", cell).children(":text:first").attr("data-fixedmin");
+		var fixedsec = $("span", cell).children(":text:first").attr("data-fixedsec");
 		var stepmin = $("span", cell).children(":text:first").attr("data-stepmin");
 
 		if (timeformat && timeformat.length > 0 && stepmin && stepmin.length > 0) {
@@ -3894,6 +4322,26 @@ function addNestRow_Timestamp(type, cell, idx) {
 				this.removeAttribute("onchange");
 				$(this).change(function() {timestampPickerChange(id);});
 				datetimepicker(this);
+			});
+
+			//登録、更新時の入力チェック
+			addEditValidator(function() {
+				// 削除行は除外
+				if ($(cell).hasClass("invalid-row")) {
+					return true;
+				}
+				var $input = $("#datetime_" + es(id));
+				var val = $input.val();
+				var dateFormat = dateUtil.getInputDateFormat();
+				if (typeof val !== "undefined" && val !== null && val !== "") {
+					try {
+						validateTimestampPicker(val, dateFormat, timeformat, fixedmin, fixedsec);
+					} catch (e) {
+						alert(messageFormat(scriptContext.gem.locale.common.timestampFormatErrorMsg, label, dateFormat + " " + timeformat))
+						return false;
+					}
+				}
+				return true;
 			});
 
 		} else {
@@ -3908,6 +4356,24 @@ function addNestRow_Timestamp(type, cell, idx) {
 				this.removeAttribute("onchange");
 				$(this).change(function() {timestampSelectChange(id);});
 				datepicker(this);
+			});
+
+			//登録、更新時の入力チェック
+			addEditValidator(function() {
+				// 削除行は除外
+				if ($(cell).hasClass("invalid-row")) {
+					return true;
+				}
+				var val = $("#d_" + es(id)).val();
+				if (typeof val !== "undefined" && val != null && val !== "") {
+					try {
+						validateDate(val, dateUtil.getInputDateFormat(), "");
+					} catch (e) {
+						alert(messageFormat(scriptContext.gem.locale.common.dateFormatErrorMsg, label, dateUtil.getInputDateFormat()))
+						return false;
+					}
+				}
+				return true;
 			});
 		}
 	}
@@ -3928,7 +4394,7 @@ function addNestRow_Reference(type, cell, idx) {
 		});
 		$selButton.off("click");
 
-		var $insButton = $(".ins-btn", $(cell));
+		var $insButton = $(".ins-btn", cell);
 		$insButton.off("click");
 
 		if ($("body.modal-body").length != 0) {
@@ -3958,7 +4424,8 @@ function addNestRow_Reference(type, cell, idx) {
 			var refSectionIndex = $selButton.attr("data-refSectionIndex");
 			var entityOid = $selButton.attr("data-entityOid");
 			var entityVersion = $selButton.attr("data-entityVersion");
-			searchReference(selectAction, viewAction, defName, propName, multiplicity, false, urlParam, refEdit, callback, $selButton, viewName, permitConditionSelectAll, permitVersionedSelect, parentDefName, parentViewName, viewType, refSectionIndex, entityOid, entityVersion);
+			var customStyle = $selButton.attr("data-customStyle");
+			searchReference(selectAction, viewAction, defName, propName, multiplicity, false, urlParam, refEdit, callback, $selButton, viewName, permitConditionSelectAll, permitVersionedSelect, parentDefName, parentViewName, viewType, refSectionIndex, null, entityOid, entityVersion, null, customStyle);
 		});
 
 		$insButton.on("click", function() {
@@ -3979,15 +4446,16 @@ function addNestRow_Reference(type, cell, idx) {
 			var entityVersion = $insButton.attr("data-entityVersion");
 			var callbackKey = $insButton.attr("data-callbackKey");
 			var callback = scriptContext[callbackKey];
-			insertReference(addAction, viewAction, defName, propName, multiplicity, urlParam, parentOid, parentVersion, parentDefName, parentViewName, refEdit, callback, $insButton, null, viewType, refSectionIndex, entityOid, entityVersion);
+			var customStyle = $selButton.attr("data-customStyle");
+			insertReference(addAction, viewAction, defName, propName, multiplicity, urlParam, parentOid, parentVersion, parentDefName, parentViewName, refEdit, callback, $insButton, null, viewType, refSectionIndex, entityOid, entityVersion, null, customStyle);
 		});
 	} else if (type == "TREE") {
-		var $selBtn = $(".sel-btn", $(cell));
+		var $selBtn = $(".sel-btn", cell);
 		replaceDummyAttr($selBtn, "data-container", idx);
 		replaceDummyAttr($selBtn, "data-uniqueName", idx);
 		$selBtn.refRecursiveTree();
 
-		var $insButton = $(".ins-btn", $(cell));
+		var $insButton = $(".ins-btn", cell);
 		$insButton.off("click");
 
 		if ($("body.modal-body").length != 0) {
@@ -4013,16 +4481,38 @@ function addNestRow_Reference(type, cell, idx) {
 			var entityVersion = $insButton.attr("data-entityVersion");
 			var callbackKey = $insButton.attr("data-callbackKey");
 			var callback = scriptContext[callbackKey];
-			insertReference(addAction, viewAction, defName, propName, multiplicity, urlParam, parentOid, parentVersion, parentDefName, parentViewName, refEdit, callback, $insButton, null, viewType, refSectionIndex, entityOid, entityVersion);
+			var customStyle = $selButton.attr("data-customStyle");
+			insertReference(addAction, viewAction, defName, propName, multiplicity, urlParam, parentOid, parentVersion, parentDefName, parentViewName, refEdit, callback, $insButton, null, viewType, refSectionIndex, entityOid, entityVersion, customStyle);
 		});
+	} else if (type == "SELECT") {
+		// 連動プロパティの対応
+		var $refLinkSelect = $(".refLinkSelect", cell);
+		replaceDummyAttr($refLinkSelect, "data-linkName", idx);
+		$(".refLinkSelect", cell).refLinkSelect();
+	} else if (type == "CHECKBOX") {
+		var $radioWrap = $("ul", cell);
+		replaceDummyAttr($radioWrap, "data-itemName", idx);
+		
+		// 連動プロパティの対応
+		var $refLinkRadio = $(".refLinkRadio", cell);
+		replaceDummyAttr($refLinkRadio, "data-linkName", idx);
+		$(".refLinkRadio", cell).refLinkRadio();
 	} else if (type == "UNIQUE") {
-		var $li = $(".unique-list", $(cell));
+		var $li = $(".unique-list", cell);
 		replaceDummyAttr($li, "data-propName", idx);
-		$(".refUnique", $(cell)).refUnique();
+		$(".refUnique", cell).refUnique();
+		var $buttons = $(cell).find(".sel-btn, .ins-btn");
+		if ($("body.modal-body").length != 0) {
+			$buttons.subModalWindow();
+		} else {
+			$buttons.modalWindow();
+		}
 	} else if (type == "REFCOMBO") {
-		//TODO 連動コンボ時の初期ロードで実行されるjavascriptをどうにかする
-		$(cell).children("select").each(function() {
-		});
+		// 参照コンボの対応
+		$(".ref-combo-sync", cell).refComboSync();
+	} else if (type == "SELECTFILTER") {
+		// 選択フィルターの対応
+		$(".ref-select-filter", cell).refSelectFilter();
 	}
 }
 
@@ -4845,3 +5335,234 @@ var dateUtil = new DateUtil({
 		timeSecFormat:scriptContext.locale.inputTimeSecFormat
 	}
 });
+
+////////////////////////////////////////////////////////
+//自動補完用のJavascript
+////////////////////////////////////////////////////////
+/**
+ * 編集画面の自動補完値の正規化
+ * 
+ * @param value 自動補完値
+ * @param multiplicity 多重度
+ * @param inputLength 表示されている入力領域の数
+ * @param nullValue nullまたはundefinedの場合の値
+ * @returns 正規化した値
+ */
+function normalizedDetailAutoCompletionValue(value, multiplicity, inputLength, nullValue = null) {
+
+	let normalizedValue;
+	if (multiplicity === 1) {
+		if (value instanceof Array) {
+			normalizedValue = value.length > 0 ? value[0] : nullValue;
+		} else {
+			normalizedValue = value;
+		}
+		if (nullValue !== null && normalizedValue == null) {
+			// nullまたはundefinedは、nullValueで置き換え
+			normalizedValue = nullValue;
+		}
+	} else {
+		if (value instanceof Array) {
+			if (multiplicity > 0 && value.length > multiplicity) {
+				// 多重度分まででカット
+				normalizedValue = value.slice(0, multiplicity);
+			} else {
+				normalizedValue = value;
+			}
+		} else {
+			// 配列化
+			normalizedValue = [value];
+		}
+
+		if (value != null) {
+			// nullまたはundefinedの場合は既存動作の整合性のため１件目のみクリアするので対象外
+			if (normalizedValue.length < inputLength) {
+				// 既に表示されている入力領域分、追加する
+				normalizedValue = normalizedValue.concat(Array(inputLength - normalizedValue.length).fill(nullValue));
+			}
+		}
+
+		if (nullValue !== null) {
+			normalizedValue = normalizedValue.map(function( value ) {
+				// nullまたはundefinedは、nullValueで置き換え
+				return value == null ? nullValue : value;
+			});
+		}
+	}
+	return normalizedValue;
+}
+
+/**
+ * 編集画面のLable形式の自動補完値の表示
+ * 
+ * @param value 自動補完値(正規化した値)
+ * @param multiplicity 多重度
+ * @param propName プロパティ名
+ * @param labelFunction 値に対するLabelを返す関数
+ * @param hiddenFunction 値に対するhidden値を返す関数
+ */
+function renderDetailAutoCompletionLabelType(value, multiplicity, propName, labelFunction, hiddenFunction) {
+
+	if (multiplicity == 1) {
+		const labelValue = labelFunction(value);
+		const hiddenValue = hiddenFunction(value);
+		const newLabel = labelValue 
+			+ "<input type='hidden' name='" + propName + "' value='" + hiddenValue + "'>";
+
+		$("[name='data-label-" + propName + "']").html(newLabel);
+
+	} else {
+		// nullによる先頭のみクリアを考慮し、値分でLoopし、対象行をクリア、新しい値を先頭に追加
+		let newLabels = "";
+		const currentLables = $("[name='data-label-" + propName + "'] li");
+		for (let i = 0; i < value.length; i++) {
+			if (currentLables[i] != null) currentLables[i].remove();
+			
+			const labelValue = labelFunction(value[i]);
+			const hiddenValue = hiddenFunction(value[i]);
+			const newLabel = "<li>" + labelValue 
+				+ "<input type='hidden' name='" + propName + "' value='" + hiddenValue + "'></li>";
+			newLabels += newLabel;
+		}
+
+		$(newLabels).prependTo($("[name='data-label-" + propName + "']"));
+	}
+}
+
+/**
+ * 編集画面のLable形式の自動補完値の表示
+ * 値が{label, value}形式の場合
+ * 
+ * @param value 自動補完値(正規化した値)
+ * @param multiplicity 多重度
+ * @param propName プロパティ名
+ */
+function renderDetailAutoCompletionLabelTypeLabelFormat(value, multiplicity, propName) {
+
+	renderDetailAutoCompletionLabelType(value, multiplicity, propName,
+		function(value) {
+			if (!value) {
+				return ""
+			}
+			return value.label;
+		},
+		function(value) {
+			if (!value) {
+				return "";
+			}
+			return value.value;
+		}
+	);
+}
+
+/**
+ * 編集画面のLable形式の自動補完値の表示
+ * EditorValueで表示する形式の場合
+ * 
+ * @param value 自動補完値(正規化した値)
+ * @param multiplicity 多重度
+ * @param propName プロパティ名
+ * @param editorValueMap EditorValueのMap
+ */
+function renderDetailAutoCompletionLabelTypeEditorValueFormat(value, multiplicity, propName, editorValueMap) {
+
+	if (multiplicity == 1) {
+		//値が有効の場合のみ出力
+		if (value && editorValueMap.has(String(value))) {
+			const editorValue = editorValueMap.get(String(value));
+			const newLabel = "<li class='" + editorValue.style + "'>" 
+				+ editorValue.label 
+				+ "<input type='hidden' name='" + propName + "' value='" + value + "'>"
+				+ "</li>";
+
+			$("[name='data-label-" + propName + "']").html(newLabel);
+		} else {
+			$("[name='data-label-" + propName + "']").html("");
+		}
+	} else {
+		// nullによる先頭のみクリアを考慮し、値分でLoopし、対象行をクリア、新しい値を先頭に追加
+		let newLabels = "";
+		const currentLables = $("[name='data-label-" + propName + "'] li");
+		for (let i = 0; i < value.length; i++) {
+			if (currentLables[i] != null) currentLables[i].remove();
+			
+			if (value[i] && editorValueMap.has(String(value[i]))) {
+				const editorValue = editorValueMap.get(String(value[i]));
+				const newLabel = "<li class='" + editorValue.style + "'>"
+					+ editorValue.label 
+					+ "<input type='hidden' name='" + propName + "' value='" + value[i] + "'>"
+					+ "</li>";
+				newLabels += newLabel;
+			} else {
+				const newLabel = "<li>"
+					+ "<input type='hidden' name='" + propName + "'>"
+					+ "</li>";
+				newLabels += newLabel;
+			}
+		}
+
+		$(newLabels).prependTo($("[name='data-label-" + propName + "']"));
+	}
+
+}
+
+/**
+ * 編集画面のHidden形式の自動補完値の表示
+ * hidden値を検証したい場合はhiddenFunctionを指定して検証してください。
+ * 
+ * @param value 自動補完値(正規化した値)
+ * @param multiplicity 多重度
+ * @param propName プロパティ名
+ * @param hiddenFunction 値に対するhidden値を返す関数
+ */
+function renderDetailAutoCompletionHiddenType(value, multiplicity, propName, hiddenFunction = null) {
+
+	if (multiplicity == 1) {
+		const hiddenValue = getHiddenValue(value, hiddenFunction);
+		$('[name=' + propName + ']').val(hiddenValue);
+	} else {
+		// nullによる先頭のみクリアを考慮し、値分でLoopし、対象行をクリア、新しい値を先頭に追加
+		let newHiddens = "";
+		const currentHiddens = $("[name='data-hidden-" + propName + "'] li");
+		for (let i = 0; i < value.length; i++) {
+			if (currentHiddens[i] != null) currentHiddens[i].remove();
+			
+			const hiddenValue = getHiddenValue(value[i], hiddenFunction);
+			const newHidden = "<li>" + "<input type='hidden' name='" + propName + "' value='" + hiddenValue + "'></li>";
+			newHiddens += newHidden;
+		}
+
+		$(newHiddens).prependTo($("[name='data-hidden-" + propName + "']"));
+	}
+	
+	function getHiddenValue(value, hiddenFunction) {
+		if (hiddenFunction) {
+			return hiddenFunction(value);
+		} else {
+			return value != null ? value : "";
+		}
+	}
+}
+
+/**
+ * decode base64url to arrayBuffer
+ */
+function base64UrlDecode(base64url) {
+	let input = base64url.replace(/-/g, "+").replace(/_/g, "/");
+	let diff = input.length % 4;
+	if (diff) {
+		input += "=".repeat(4 - diff);
+	}
+	return Uint8Array.from(atob(input), c => c.charCodeAt(0)).buffer;
+}
+
+/**
+ * encode arrayBuffer to base64url string
+ */
+function base64UrlEncode(arrayBuffer) {
+	if (!arrayBuffer || arrayBuffer.length == 0) {
+		return undefined;
+	}
+	return btoa(String.fromCharCode.apply(null, new Uint8Array(arrayBuffer))).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+}
+

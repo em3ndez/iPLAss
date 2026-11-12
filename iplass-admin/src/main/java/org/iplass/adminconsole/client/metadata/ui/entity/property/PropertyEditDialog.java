@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -39,15 +39,6 @@ import com.smartgwt.client.widgets.events.ClickHandler;
 import com.smartgwt.client.widgets.layout.VLayout;
 
 public class PropertyEditDialog extends MtpDialog {
-
-	/** 初期高さ */
-	private static final int INIT_HEIGHT = 600;
-
-	/** Windowタイトル分とフッタ分の高さ */
-	private static final int LAYOUT_HEIGHT = 90;
-
-	/** TOP表示位置を調整する高さの閾値(ダイアログが高すぎるとフッタがスクロールで隠れるため) */
-	private static final int AJUST_MAX_HEIGHT = 600;
 
 	/** 対象Propertyのレコード */
 	private PropertyListGridRecord record;
@@ -93,7 +84,7 @@ public class PropertyEditDialog extends MtpDialog {
 		} else {
 			setTitle("Property");
 		}
-		setHeight(INIT_HEIGHT);
+		setHeight(600);
 		setShowMaximizeButton(true);
 
 		pnlCommonAttribute = new PropertyCommonAttributePane(new PropertyCommonAttributePaneHandler() {
@@ -246,44 +237,22 @@ public class PropertyEditDialog extends MtpDialog {
 		//既存のタイプ設定をクリア
 		if (pnlTypeAttribute != null) {
 			pnlAttributeContainer.removeMember(typeSeparater);
-			pnlAttributeContainer.removeMember((Canvas)pnlTypeAttribute);
+			pnlAttributeContainer.removeMember((Canvas) pnlTypeAttribute);
 			pnlTypeAttribute = null;
 		}
-
-		int height =
-				pnlCommonAttribute.panelHeight()
-				+ pnlValidation.panelHeight()
-				+ pnlNormalizer.panelHeight()
-				+ LAYOUT_HEIGHT;
 
 		if (type != null) {
 			pnlTypeAttribute = typeController.createTypeAttributePane(type);
 			if (pnlTypeAttribute != null) {
 				if (pnlTypeAttribute instanceof NeedsEnableLangMap) {
-					((NeedsEnableLangMap)pnlTypeAttribute).setEnableLangMap(enableLangMap);
+					((NeedsEnableLangMap) pnlTypeAttribute).setEnableLangMap(enableLangMap);
 				}
 				pnlAttributeContainer.addMember(typeSeparater);
-				pnlAttributeContainer.addMember((Canvas)pnlTypeAttribute);
+				pnlAttributeContainer.addMember((Canvas) pnlTypeAttribute);
 
 				pnlTypeAttribute.applyFrom(defName, record, typeAttribute);
-
-				height += pnlTypeAttribute.panelHeight();
 			}
 		}
-
-		//タイプによる高さが大きい場合、表示するTOP位置を調整
-		if (height > AJUST_MAX_HEIGHT) {
-			//上に上げる高さ
-			int ajustTop = height - AJUST_MAX_HEIGHT;
-
-			//ページのTOPよりも上に行く場合は、ページのTOPにする
-			int top = getPageTop();
-			if (top < ajustTop) {
-				ajustTop = top;
-			}
-			moveBy(0, -1 * ajustTop);
-		}
-		setHeight(height);
 	}
 
 }

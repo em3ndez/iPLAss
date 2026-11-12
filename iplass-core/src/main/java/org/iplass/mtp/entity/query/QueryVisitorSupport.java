@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -50,6 +50,7 @@ import org.iplass.mtp.entity.query.hint.TimeoutHint;
 import org.iplass.mtp.entity.query.value.RowValueList;
 import org.iplass.mtp.entity.query.value.aggregate.Avg;
 import org.iplass.mtp.entity.query.value.aggregate.Count;
+import org.iplass.mtp.entity.query.value.aggregate.Listagg;
 import org.iplass.mtp.entity.query.value.aggregate.Max;
 import org.iplass.mtp.entity.query.value.aggregate.Median;
 import org.iplass.mtp.entity.query.value.aggregate.Min;
@@ -59,6 +60,8 @@ import org.iplass.mtp.entity.query.value.aggregate.StdDevSamp;
 import org.iplass.mtp.entity.query.value.aggregate.Sum;
 import org.iplass.mtp.entity.query.value.aggregate.VarPop;
 import org.iplass.mtp.entity.query.value.aggregate.VarSamp;
+import org.iplass.mtp.entity.query.value.aggregate.WithinGroup;
+import org.iplass.mtp.entity.query.value.aggregate.WithinGroupSortSpec;
 import org.iplass.mtp.entity.query.value.controlflow.Case;
 import org.iplass.mtp.entity.query.value.controlflow.Else;
 import org.iplass.mtp.entity.query.value.controlflow.When;
@@ -278,7 +281,7 @@ public abstract class QueryVisitorSupport implements QueryVisitor {
 	public boolean visit(Cast cast) {
 		return true;
 	}
-	
+
 	@Override
 	public boolean visit(Refer refer) {
 		return true;
@@ -446,6 +449,21 @@ public abstract class QueryVisitorSupport implements QueryVisitor {
 
 	@Override
 	public boolean visit(RowValueList rowValueList) {
+		return true;
+	}
+
+	@Override
+	public boolean visit(Listagg listagg) {
+		return true;
+	}
+
+	@Override
+	public boolean visit(WithinGroup withinGroup) {
+		return true;
+	}
+
+	@Override
+	public boolean visit(WithinGroupSortSpec sortSpec) {
 		return true;
 	}
 }

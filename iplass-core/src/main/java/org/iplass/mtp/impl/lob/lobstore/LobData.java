@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,17 +26,17 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public interface LobData {
-	
+
 	public long getLobDataId();
-	
+
 	public long getSize();
-	
+
 	public InputStream getBinaryInputStream();
-	
+
 	public OutputStream getBinaryOutputStream();
-	
+
 	public void transferFrom(File file) throws IOException;
-	
+
 	public boolean exists();
 
 }

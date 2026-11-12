@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,5 +35,6 @@ public interface I18nServiceAsync {
 
 	void getMultiLangItemInfoForDisp(int tenantId, Definition definition, AsyncCallback<Map<String, List<LocalizedStringDefinition>>> callback);
 
-	void getMultiLangItemInfoForUpdate(int tenantId, Definition definition, Map<String, MultiLangFieldInfo> updateDefinitionInfo, AsyncCallback<Definition> callback);
+	void getMultiLangItemInfoForUpdate(int tenantId, Definition definition, Map<String, MultiLangFieldInfo> updateDefinitionInfo,
+			AsyncCallback<Definition> callback);
 }

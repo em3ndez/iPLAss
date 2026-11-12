@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -73,7 +73,6 @@ public class MetaTenantMailInfo extends MetaTenantConfig<TenantMailInfo> {
 	public void setSendMailEnable(boolean sendMailEnable) {
 		this.sendMailEnable = sendMailEnable;
 	}
-
 
 	/**
 	 * From アドレスを取得します。
@@ -190,7 +189,8 @@ public class MetaTenantMailInfo extends MetaTenantConfig<TenantMailInfo> {
 		private String defaultMailFromName;
 
 		public MetaTenantMailInfoRuntime() {
-			TenantContextService tcService = ServiceRegistry.getRegistry().getService(TenantContextService.class);
+			TenantContextService tcService = ServiceRegistry.getRegistry()
+					.getService(TenantContextService.class);
 			defaultMailFrom = tcService.getDefaultMailFrom();
 			defaultMailFromName = tcService.getDefaultMailFromName();
 		}

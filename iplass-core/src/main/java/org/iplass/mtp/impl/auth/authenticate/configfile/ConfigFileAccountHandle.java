@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,12 +35,13 @@ public class ConfigFileAccountHandle implements AccountHandle {
 	private String accountId;
 	private int authenticationProviderIndex;
 	private Map<String, Object> attributeMap;
-	
+
 	ConfigFileAccountHandle(AccountConfig accountConfig) {
 		accountId = accountConfig.getId();
 		attributeMap = new HashMap<>();
 		if (accountConfig.getAttributeMap() != null) {
-			for (Map.Entry<String, Object> e: accountConfig.getAttributeMap().entrySet()) {
+			for (Map.Entry<String, Object> e : accountConfig.getAttributeMap()
+					.entrySet()) {
 				Serializable val = ObjectUtil.deepCopy((Serializable) e.getValue());
 				attributeMap.put(e.getKey(), val);
 			}

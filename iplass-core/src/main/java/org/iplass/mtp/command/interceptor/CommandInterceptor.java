@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,9 +21,9 @@
 package org.iplass.mtp.command.interceptor;
 
 public interface CommandInterceptor {
-	
+
 	//TODO 暗黙的な初期化、破棄メソッド。init()、destroy()の呼び出し。
-	
+
 	public String intercept(CommandInvocation invocation);
 
 }

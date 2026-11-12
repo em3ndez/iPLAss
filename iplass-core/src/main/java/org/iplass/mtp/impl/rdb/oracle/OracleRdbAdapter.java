@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -37,10 +37,23 @@ import java.text.SimpleDateFormat;
 import org.iplass.mtp.entity.query.GroupBy.RollType;
 import org.iplass.mtp.entity.query.SortSpec.NullOrderingSpec;
 import org.iplass.mtp.entity.query.SortSpec.SortType;
-import org.iplass.mtp.entity.query.value.aggregate.Aggregate;
+import org.iplass.mtp.entity.query.value.aggregate.Avg;
+import org.iplass.mtp.entity.query.value.aggregate.Count;
+import org.iplass.mtp.entity.query.value.aggregate.Listagg;
+import org.iplass.mtp.entity.query.value.aggregate.Max;
 import org.iplass.mtp.entity.query.value.aggregate.Median;
+import org.iplass.mtp.entity.query.value.aggregate.Min;
 import org.iplass.mtp.entity.query.value.aggregate.Mode;
+import org.iplass.mtp.entity.query.value.aggregate.StdDevPop;
+import org.iplass.mtp.entity.query.value.aggregate.StdDevSamp;
+import org.iplass.mtp.entity.query.value.aggregate.Sum;
+import org.iplass.mtp.entity.query.value.aggregate.VarPop;
+import org.iplass.mtp.entity.query.value.aggregate.VarSamp;
+import org.iplass.mtp.impl.entity.property.PropertyService;
+import org.iplass.mtp.impl.entity.property.PropertyType;
 import org.iplass.mtp.impl.i18n.I18nService;
+import org.iplass.mtp.impl.properties.basic.DateType;
+import org.iplass.mtp.impl.rdb.adapter.BaseRdbTypeAdapter;
 import org.iplass.mtp.impl.rdb.adapter.HintPlace;
 import org.iplass.mtp.impl.rdb.adapter.MultiInsertContext;
 import org.iplass.mtp.impl.rdb.adapter.MultiTableUpdateMethod;
@@ -52,12 +65,15 @@ import org.iplass.mtp.impl.rdb.adapter.bulk.BulkUpdateContext;
 import org.iplass.mtp.impl.rdb.adapter.bulk.InOperatorBulkDeleteContext;
 import org.iplass.mtp.impl.rdb.adapter.bulk.PreparedBulkInsertContext;
 import org.iplass.mtp.impl.rdb.adapter.bulk.PreparedBulkUpdateContext;
+import org.iplass.mtp.impl.rdb.adapter.function.AggregateFunctionAdapter;
 import org.iplass.mtp.impl.rdb.adapter.function.DynamicTypedFunctionAdapter;
 import org.iplass.mtp.impl.rdb.adapter.function.StaticTypedFunctionAdapter;
+import org.iplass.mtp.impl.rdb.common.function.CountFunctionAdapter;
 import org.iplass.mtp.impl.rdb.common.function.CurrentDateFunctionAdapter;
 import org.iplass.mtp.impl.rdb.common.function.CurrentDateTimeFunctionAdapter;
 import org.iplass.mtp.impl.rdb.common.function.CurrentTimeFunctionAdapter;
 import org.iplass.mtp.impl.rdb.common.function.ExtractDateFunctionAdapter;
+import org.iplass.mtp.impl.rdb.common.function.ListaggFunctionAdapter;
 import org.iplass.mtp.impl.rdb.common.function.LocalTimeFunctionAdapter;
 import org.iplass.mtp.impl.rdb.common.function.RoundTruncFunctionAdapter;
 import org.iplass.mtp.impl.rdb.oracle.function.OracleDateAddFunctionAdapter;
@@ -66,8 +82,11 @@ import org.iplass.mtp.spi.ServiceRegistry;
 
 public class OracleRdbAdapter extends RdbAdapter {
 
-	private static final String[] optimizerHintBracket = {"/*+", "*/"};
-	
+	private static final String[] optimizerHintBracket = { "/*+", "*/" };
+	private static OracleDateRdbTypeAdapter oracleDateRdbTypeAdapter = new OracleDateRdbTypeAdapter(ServiceRegistry.getRegistry()
+			.getService(PropertyService.class)
+			.getPropertyType(java.sql.Date.class));
+
 	private int lockTimeout = 0;
 	private String timestampFunction = "CURRENT_TIMESTAMP(3)";
 	private String addMonthsFunction = "ADD_MONTHS";
@@ -87,9 +106,10 @@ public class OracleRdbAdapter extends RdbAdapter {
 	private int maxFetchSize = 100;
 	private int defaultQueryTimeout;
 	private int defaultFetchSize;
-	
+
 	//Oracle 12cから利用可能なFETCH FIRST句を使うか否か
-	private boolean useFetchFirstClause;
+	private boolean useFetchFirstClause = true;
+	private boolean bindDateAsString = true;
 
 	private String viewSubQueryAlias = "vsq";
 
@@ -108,10 +128,10 @@ public class OracleRdbAdapter extends RdbAdapter {
 		addFunction(new StaticTypedFunctionAdapter("CONCAT", String.class));
 		addFunction(new StaticTypedFunctionAdapter("SUBSTR", String.class));
 		addFunction(new StaticTypedFunctionAdapter("REPLACE", String.class));
-		addFunction(new DynamicTypedFunctionAdapter("MOD", new int[]{0,1}));
+		addFunction(new DynamicTypedFunctionAdapter("MOD", new int[] { 0, 1 }));
 		addFunction(new StaticTypedFunctionAdapter("SQRT", Double.class));
-		addFunction(new DynamicTypedFunctionAdapter("POWER", new int[]{0,1}));
-		addFunction(new DynamicTypedFunctionAdapter("ABS", new int[]{0}));
+		addFunction(new DynamicTypedFunctionAdapter("POWER", new int[] { 0, 1 }));
+		addFunction(new DynamicTypedFunctionAdapter("ABS", new int[] { 0 }));
 		addFunction(new StaticTypedFunctionAdapter("CEIL", Long.class));
 		addFunction(new StaticTypedFunctionAdapter("FLOOR", Long.class));
 		addFunction(new RoundTruncFunctionAdapter("ROUND", "ROUND"));
@@ -131,25 +151,55 @@ public class OracleRdbAdapter extends RdbAdapter {
 		addFunction(new CurrentDateTimeFunctionAdapter());
 		addFunction(new LocalTimeFunctionAdapter());
 
+		// 三角関数
+		addFunction(new StaticTypedFunctionAdapter("SIN", Double.class));
+		addFunction(new StaticTypedFunctionAdapter("COS", Double.class));
+		addFunction(new StaticTypedFunctionAdapter("TAN", Double.class));
+		addFunction(new StaticTypedFunctionAdapter("ASIN", Double.class));
+		addFunction(new StaticTypedFunctionAdapter("ACOS", Double.class));
+		addFunction(new StaticTypedFunctionAdapter("ATAN", Double.class));
+		addFunction(new StaticTypedFunctionAdapter("ATAN2", Double.class));
+
+		addAggregateFunction(Count.class, new CountFunctionAdapter());
+		addAggregateFunction(Sum.class, new AggregateFunctionAdapter<Sum>("SUM", null));
+		addAggregateFunction(Avg.class, new AggregateFunctionAdapter<Avg>("AVG", Double.class));
+		addAggregateFunction(Max.class, new AggregateFunctionAdapter<Max>("MAX", null));
+		addAggregateFunction(Min.class, new AggregateFunctionAdapter<Min>("MIN", null));
+		addAggregateFunction(StdDevPop.class, new AggregateFunctionAdapter<StdDevPop>("STDDEV_POP", Double.class));
+		addAggregateFunction(StdDevSamp.class, new AggregateFunctionAdapter<StdDevSamp>("STDDEV_SAMP", Double.class));
+		addAggregateFunction(VarPop.class, new AggregateFunctionAdapter<VarPop>("VAR_POP", Double.class));
+		addAggregateFunction(VarSamp.class, new AggregateFunctionAdapter<VarSamp>("VAR_SAMP", Double.class));
+		addAggregateFunction(Listagg.class, new ListaggFunctionAdapter());//distinct、 order by省略は19c以降可能
+
+		addAggregateFunction(Mode.class, new AggregateFunctionAdapter<Mode>("MODE", "STATS_MODE", null));
+		addAggregateFunction(Median.class, new AggregateFunctionAdapter<Median>("MEDIAN", null));
+
 		DateFormatSymbols symbols = new DateFormatSymbols();
 		symbols.setEras(new String[] { "-", "" });
 
-		I18nService i18n = ServiceRegistry.getRegistry().getService(I18nService.class);
+		I18nService i18n = ServiceRegistry.getRegistry()
+				.getService(I18nService.class);
 		SimpleDateFormat sdfMin = new SimpleDateFormat("GyyyyMMddHHmmssSSS", symbols);
 		sdfMin.setTimeZone(i18n.getTimezone());
 		SimpleDateFormat sdfMax = new SimpleDateFormat("yyyyMMddHHmmssSSS");
 		sdfMax.setTimeZone(i18n.getTimezone());
 
 		try {
-			dateMin = sdfMin.parse(DATE_MIN).getTime();
-			dateMax = sdfMax.parse(DATE_MAX).getTime();
+			dateMin = sdfMin.parse(DATE_MIN)
+					.getTime();
+			dateMax = sdfMax.parse(DATE_MAX)
+					.getTime();
 		} catch (ParseException e) {
 			throw new UnsupportedDataTypeException(e);
 		}
+	}
 
-		//TODO
-		//LOCALTIME(timestamp)
+	public boolean isBindDateAsString() {
+		return bindDateAsString;
+	}
 
+	public void setBindDateAsString(boolean bindDateAsString) {
+		this.bindDateAsString = bindDateAsString;
 	}
 
 	public boolean isUseFetchFirstClause() {
@@ -258,18 +308,21 @@ public class OracleRdbAdapter extends RdbAdapter {
 		}
 	}
 
+	@Override
 	public String toDateExpression(Date date) {
 		checkDateRange(date);
 		SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd");
 		return "TO_DATE('" + fmt.format(date) + "','YYYY-MM-DD')";
 	}
 
+	@Override
 	public String toTimeExpression(Time time) {
 		checkDateRange(time);
 		SimpleDateFormat fmt = new SimpleDateFormat("HH:mm:ss");
 		return "TO_TIMESTAMP('1970-01-01 " + fmt.format(time) + "','YYYY-MM-DD HH24:MI:SS.FF')";
 	}
 
+	@Override
 	public String toTimeStampExpression(Timestamp date) {
 		checkDateRange(date);
 		SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
@@ -279,6 +332,7 @@ public class OracleRdbAdapter extends RdbAdapter {
 		return "TO_TIMESTAMP('" + fmt.format(date) + "','YYYY-MM-DD HH24:MI:SS.FF')";
 	}
 
+	@Override
 	public String systimestamp() {
 		if (rdbTimeZone() == null) {
 			return timestampFunction;
@@ -287,20 +341,21 @@ public class OracleRdbAdapter extends RdbAdapter {
 		}
 	}
 
-	private static final String[] CAST_VARCHAR = {"CAST(", " AS VARCHAR2(4000))"};
-	private static final String[] CAST_BIGINT = {"CAST(", " AS NUMBER)"};
-	private static final String[] CAST_DECIMAL = {"CAST(", " AS NUMBER)"};
-	private static final String[] CAST_DATE = {"TRUNC(CAST(", " AS DATE))"};
-	private static final String[] CAST_DOUBLE = {"CAST(", " AS BINARY_DOUBLE)"};
-	private static final String[] CAST_TIME = {"TO_TIMESTAMP(CONCAT('1970-01-01 ',TO_CHAR(CAST(", " AS TIMESTAMP),'HH24:MI:SS')),'YYYY-MM-DD HH24:MI:SS.FF')"};
-	private static final String[] CAST_TIMESTAMP = {"CAST(", " AS TIMESTAMP)"};
-	
+	private static final String[] CAST_VARCHAR = { "CAST(", " AS VARCHAR2(4000))" };
+	private static final String[] CAST_BIGINT = { "CAST(", " AS NUMBER)" };
+	private static final String[] CAST_DECIMAL = { "CAST(", " AS NUMBER)" };
+	private static final String[] CAST_DATE = { "TRUNC(CAST(", " AS DATE))" };
+	private static final String[] CAST_DOUBLE = { "CAST(", " AS BINARY_DOUBLE)" };
+	private static final String[] CAST_TIME = { "TO_TIMESTAMP(CONCAT('1970-01-01 ',TO_CHAR(CAST(",
+			" AS TIMESTAMP),'HH24:MI:SS')),'YYYY-MM-DD HH24:MI:SS.FF')" };
+	private static final String[] CAST_TIMESTAMP = { "CAST(", " AS TIMESTAMP)" };
+
 	@Override
 	public String[] castExp(int sqlType, Integer lengthOrPrecision, Integer scale) {
 		switch (sqlType) {
 		case Types.VARCHAR:
 			if (lengthOrPrecision != null) {
-				return new String[]{"CAST(", " AS VARCHAR2(" + lengthOrPrecision + " CHAR))"};
+				return new String[] { "CAST(", " AS VARCHAR2(" + lengthOrPrecision + " CHAR))" };
 			} else {
 				return CAST_VARCHAR;
 			}
@@ -311,13 +366,13 @@ public class OracleRdbAdapter extends RdbAdapter {
 				if (scale == null) {
 					return CAST_DECIMAL;
 				} else {
-					return new String[]{"CAST(", " AS NUMBER(*," + scale + "))"};
+					return new String[] { "CAST(", " AS NUMBER(*," + scale + "))" };
 				}
 			} else {
 				if (scale == null) {
-					return new String[]{"CAST(", " AS NUMBER(" + lengthOrPrecision + ",0))"};
+					return new String[] { "CAST(", " AS NUMBER(" + lengthOrPrecision + ",0))" };
 				} else {
-					return new String[]{"CAST(",  " AS NUMBER(" + lengthOrPrecision + "," + scale + "))"};
+					return new String[] { "CAST(", " AS NUMBER(" + lengthOrPrecision + "," + scale + "))" };
 				}
 			}
 		case Types.DATE:
@@ -335,7 +390,7 @@ public class OracleRdbAdapter extends RdbAdapter {
 
 	@Override
 	public CharSequence cast(int fromSqlType, int toSqlType, CharSequence valExpr, Integer lengthOrPrecision, Integer scale) {
-		
+
 		switch (toSqlType) {
 		case Types.DATE:
 			if (fromSqlType == Types.VARCHAR) {
@@ -366,10 +421,11 @@ public class OracleRdbAdapter extends RdbAdapter {
 		default:
 			break;
 		}
-		
+
 		return super.cast(fromSqlType, toSqlType, valExpr, lengthOrPrecision, scale);
 	}
 
+	@Override
 	public MultiInsertContext createMultiInsertContext(Statement stmt) {
 		return new OracleMultiInsertContext(stmt);
 	}
@@ -397,7 +453,7 @@ public class OracleRdbAdapter extends RdbAdapter {
 				if (scale == null) {
 					return "NUMBER(" + lengthOrPrecision + ")";
 				} else {
-					return "NUMBER("+ lengthOrPrecision + "," + scale + ")";
+					return "NUMBER(" + lengthOrPrecision + "," + scale + ")";
 				}
 			}
 		case Types.DATE:
@@ -411,7 +467,7 @@ public class OracleRdbAdapter extends RdbAdapter {
 			return null;
 		}
 	}
-	
+
 	@Override
 	public String dual() {
 		return "FROM DUAL";
@@ -467,19 +523,18 @@ public class OracleRdbAdapter extends RdbAdapter {
 			}
 		}
 	}
-	
+
 	@Override
 	public Object[] toLimitSqlBindValue(int limitCount,
 			int offset) {
 		if (useFetchFirstClause) {
-			return new Integer[]{
-					Integer.valueOf(offset), Integer.valueOf(limitCount)};
+			return new Integer[] {
+					Integer.valueOf(offset), Integer.valueOf(limitCount) };
 		} else {
-			return new Integer[]{
-					Integer.valueOf(offset + 1), Integer.valueOf(offset + limitCount)};
+			return new Integer[] {
+					Integer.valueOf(offset + 1), Integer.valueOf(offset + limitCount) };
 		}
 	}
-
 
 	@Override
 	public boolean isDuplicateValueException(SQLException e) {
@@ -489,7 +544,8 @@ public class OracleRdbAdapter extends RdbAdapter {
 			if (e instanceof BatchUpdateException) {
 				//FIXME 現状、バッチ更新でPK違反かどうかをエラーコードで知ることができない。。。エラーメッセージにORA-00001が含まれているかどうかで判断するしかない。。。
 				if (e.getMessage() != null
-						&& e.getMessage().contains("ORA-00001")) {
+						&& e.getMessage()
+								.contains("ORA-00001")) {
 					return true;
 				}
 			}
@@ -584,16 +640,16 @@ public class OracleRdbAdapter extends RdbAdapter {
 
 	@Override
 	public String likePattern(String str) {
-        if (str == null) {
-        	return null;
-        }
+		if (str == null) {
+			return null;
+		}
 
-        boolean needSanitaizing = false;
-        char current = 0;
-        for (int i = 0; i < str.length(); i++) {
-            current = str.charAt(i);
+		boolean needSanitaizing = false;
+		char current = 0;
+		for (int i = 0; i < str.length(); i++) {
+			current = str.charAt(i);
 
-            switch (current) {
+			switch (current) {
 			case '％':
 			case '＿':
 				if (escapeFullwidthWildcard) {
@@ -604,35 +660,34 @@ public class OracleRdbAdapter extends RdbAdapter {
 				break;
 			}
 
-            if (needSanitaizing) {
-            	break;
-            }
-        }
+			if (needSanitaizing) {
+				break;
+			}
+		}
 
-        if (!needSanitaizing) {
-            return str;
-        }
+		if (!needSanitaizing) {
+			return str;
+		}
 
+		StringBuilder buff = new StringBuilder();
 
-        StringBuilder buff = new StringBuilder();
+		for (int i = 0; i < str.length(); i++) {
+			current = str.charAt(i);
+			switch (current) {
+			case '％':
+			case '＿':
+				if (escapeFullwidthWildcard) {
+					buff.append('\\');
+				}
+				break;
+			default:
+				break;
+			}
 
-        for (int i = 0; i < str.length(); i++) {
-        	current = str.charAt(i);
-            switch (current) {
-            case '％':
-            case '＿':
-            	if (escapeFullwidthWildcard) {
-                    buff.append('\\');
-            	}
-                break;
-            default:
-                break;
-            }
+			buff.append(current);
+		}
 
-            buff.append(current);
-        }
-
-        return buff.toString();
+		return buff.toString();
 	}
 
 	@Override
@@ -684,17 +739,17 @@ public class OracleRdbAdapter extends RdbAdapter {
 		if (rdbTimeZone() == null) {
 			return new String[] {
 					"CAST(FROM_TZ(",
-					",SESSIONTIMEZONE) AT TIME ZONE '" + to + "' AS TIMESTAMP)"};
+					",SESSIONTIMEZONE) AT TIME ZONE '" + to + "' AS TIMESTAMP)" };
 		} else {
 			return new String[] {
 					"CAST(FROM_TZ(",
-					",'" + rdbTimeZone().getID() + "') AT TIME ZONE '" + to + "' AS TIMESTAMP)"};
+					",'" + rdbTimeZone().getID() + "') AT TIME ZONE '" + to + "' AS TIMESTAMP)" };
 		}
 	}
 
 	@Override
 	public boolean isEnableInPartitioning() {
-		return enableInPartitioning ;
+		return enableInPartitioning;
 	}
 
 	public void setEnableInPartitioning(boolean enableInPartitioning) {
@@ -745,21 +800,12 @@ public class OracleRdbAdapter extends RdbAdapter {
 	public void setEnableBindHint(boolean enableBindHint) {
 		this.enableBindHint = enableBindHint;
 	}
-	
-	public String aggregateFunctionName(Aggregate agg) {
-		if (agg instanceof Mode) {
-			return "STATS_MODE";
-		}
-		if (agg instanceof Median) {
-			return "MEDIAN";
-		}
-		return super.aggregateFunctionName(agg);
-	}
 
 	@Override
 	public boolean isAlwaysBind() {
 		return alwaysBind;
 	}
+
 	public void setAlwaysBind(boolean alwaysBind) {
 		this.alwaysBind = alwaysBind;
 	}
@@ -777,7 +823,7 @@ public class OracleRdbAdapter extends RdbAdapter {
 	public int getThresholdCountOfUsePrepareStatement() {
 		return thresholdCountOfUsePrepareStatement;
 	}
-	
+
 	public void setThresholdCountOfUsePrepareStatement(
 			int thresholdCountOfUsePrepareStatement) {
 		this.thresholdCountOfUsePrepareStatement = thresholdCountOfUsePrepareStatement;
@@ -807,7 +853,8 @@ public class OracleRdbAdapter extends RdbAdapter {
 	@Override
 	public ResultSet getTableNames(String tableNamePattern, Connection con) throws SQLException {
 		DatabaseMetaData dbMeta = con.getMetaData();
-		return dbMeta.getTables(null, dbMeta.getUserName().toUpperCase(), tableNamePattern, null);
+		return dbMeta.getTables(null, dbMeta.getUserName()
+				.toUpperCase(), tableNamePattern, null);
 	}
 
 	@Override
@@ -865,7 +912,8 @@ public class OracleRdbAdapter extends RdbAdapter {
 
 		// LobID
 		sb.append(String.format("TRIM(SUBSTR(c%d, 3, 16)) AS \"%s%s\"",
-				colNo, colName.toUpperCase(), lobIdSuffix.toUpperCase())).append(",");
+				colNo, colName.toUpperCase(), lobIdSuffix.toUpperCase()))
+				.append(",");
 		// Text
 		sb.append(String.format("SUBSTR(c%d, 22) AS \"%s\"", colNo, colName.toUpperCase()));
 
@@ -880,14 +928,41 @@ public class OracleRdbAdapter extends RdbAdapter {
 
 		// ビュー削除DDL
 		if (withDropView) {
-			sb.append("DROP VIEW \"").append(viewName.toUpperCase()).append("\" CASCADE CONSTRAINTS;");
-			sb.append(lf).append(lf);
+			sb.append("DROP VIEW \"")
+					.append(viewName.toUpperCase())
+					.append("\" CASCADE CONSTRAINTS;");
+			sb.append(lf)
+					.append(lf);
 		}
 
 		// ビュー作成DDL
-		sb.append("CREATE VIEW \"").append(viewName.toUpperCase()).append("\" AS").append(lf);
-		sb.append(selectSql).append(";").append(lf).append(lf);
+		sb.append("CREATE VIEW \"")
+				.append(viewName.toUpperCase())
+				.append("\" AS")
+				.append(lf);
+		sb.append(selectSql)
+				.append(";")
+				.append(lf)
+				.append(lf);
 
 		return sb.toString();
+	}
+
+	@Override
+	public BaseRdbTypeAdapter getRdbTypeAdapter(Object value) {
+		if (bindDateAsString && value instanceof Date) {
+			return oracleDateRdbTypeAdapter;
+		} else {
+			return super.getRdbTypeAdapter(value);
+		}
+	}
+
+	@Override
+	public BaseRdbTypeAdapter getRdbTypeAdapter(PropertyType propType) {
+		if (bindDateAsString && propType instanceof DateType) {
+			return oracleDateRdbTypeAdapter;
+		} else {
+			return super.getRdbTypeAdapter(propType);
+		}
 	}
 }

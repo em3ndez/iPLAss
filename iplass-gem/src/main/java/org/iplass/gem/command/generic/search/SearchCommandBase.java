@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 import org.iplass.gem.command.Constants;
-import org.iplass.gem.command.GemResourceBundleUtil;
 import org.iplass.mtp.ManagerLocator;
 import org.iplass.mtp.auth.AuthContext;
 import org.iplass.mtp.auth.User;
@@ -35,7 +34,6 @@ import org.iplass.mtp.command.Command;
 import org.iplass.mtp.command.RequestContext;
 import org.iplass.mtp.entity.Entity;
 import org.iplass.mtp.entity.EntityManager;
-import org.iplass.mtp.entity.EntityRuntimeException;
 import org.iplass.mtp.entity.SearchResult;
 import org.iplass.mtp.entity.definition.EntityDefinitionManager;
 import org.iplass.mtp.entity.permission.EntityPermission;
@@ -61,11 +59,13 @@ public abstract class SearchCommandBase implements Command {
 	protected EntityViewManager evm = null;
 	protected EntityManager em = null;
 
-
 	public SearchCommandBase() {
-		edm = ManagerLocator.getInstance().getManager(EntityDefinitionManager.class);
-		evm = ManagerLocator.getInstance().getManager(EntityViewManager.class);
-		em = ManagerLocator.getInstance().getManager(EntityManager.class);
+		edm = ManagerLocator.getInstance()
+				.getManager(EntityDefinitionManager.class);
+		evm = ManagerLocator.getInstance()
+				.getManager(EntityViewManager.class);
+		em = ManagerLocator.getInstance()
+				.getManager(EntityManager.class);
 	}
 
 	@Override
@@ -121,26 +121,7 @@ public abstract class SearchCommandBase implements Command {
 		return Constants.CMD_EXEC_SUCCESS;
 	}
 
-	public SearchContext getContext(RequestContext request) {
-		SearchContext context = null;
-		try {
-			context = getContextClass().newInstance();
-		} catch (InstantiationException e) {
-			throw new EntityRuntimeException(resourceString("command.generic.search.SearchCommandBase.internalErr"), e);
-		} catch (IllegalAccessException e) {
-			throw new EntityRuntimeException(resourceString("command.generic.search.SearchCommandBase.internalErr"), e);
-		}
-
-		if (context != null) {
-			context.setRequest(request);
-			context.setEntityDefinition(edm.get(context.getDefName()));
-			context.setEntityView(evm.get(context.getDefName()));
-		}
-
-		return context;
-	}
-
-	protected abstract Class<? extends SearchContext> getContextClass();
+	public abstract SearchContext getContext(RequestContext request);
 
 	protected Query toQuery(SearchContext context) {
 
@@ -148,7 +129,7 @@ public abstract class SearchCommandBase implements Command {
 		query.setSelect(context.getSelect());
 		query.setFrom(context.getFrom());
 		query.setWhere(context.getWhere());
-		query.setVersiond(context.isVersioned());
+		query.setVersioned(context.isVersioned());
 
 		return query;
 	}
@@ -159,7 +140,7 @@ public abstract class SearchCommandBase implements Command {
 		query.select(Entity.OID, Entity.VERSION);
 		query.from(context.getDefName());
 		query.setWhere(context.getWhere());
-		query.setVersiond(context.isVersioned());
+		query.setVersioned(context.isVersioned());
 
 		return query;
 	}
@@ -170,7 +151,7 @@ public abstract class SearchCommandBase implements Command {
 		query.select(Entity.OID, Entity.VERSION, Entity.UPDATE_DATE);
 		query.from(context.getDefName());
 		query.setWhere(context.getWhere());
-		query.setVersiond(context.isVersioned());
+		query.setVersioned(context.isVersioned());
 
 		return query;
 	}
@@ -218,7 +199,7 @@ public abstract class SearchCommandBase implements Command {
 	 */
 	boolean isValidateCondition(RequestContext request) {
 		return (request.getAttribute("isValidateCondition") != null
-				&& (Boolean)request.getAttribute("isValidateCondition"));
+				&& (Boolean) request.getAttribute("isValidateCondition"));
 	}
 
 	/**
@@ -241,12 +222,14 @@ public abstract class SearchCommandBase implements Command {
 			result = AuthContext.doPrivileged(() -> searchEntity(_context, userOidList, sqContext.getQuery()));
 		} else {
 			if (sqContext.getWithoutConditionReferenceName() != null) {
-				result = EntityPermission.doQueryAs(sqContext.getWithoutConditionReferenceName(), () -> searchEntity(_context, userOidList, sqContext.getQuery()));
+				result = EntityPermission.doQueryAs(sqContext.getWithoutConditionReferenceName(),
+						() -> searchEntity(_context, userOidList, sqContext.getQuery()));
 			} else {
 				result = searchEntity(_context, userOidList, sqContext.getQuery());
 			}
 		}
-		context.getRequest().setAttribute("result", result);
+		context.getRequest()
+				.setAttribute("result", result);
 
 		if (!userOidList.isEmpty()) {
 			setUserInfoMap(context, userOidList);
@@ -280,10 +263,26 @@ public abstract class SearchCommandBase implements Command {
 	private void setUserInfoMap(SearchContext context, final List<String> userOidList) {
 		//UserEntityを検索してリクエストに格納
 		final Map<String, Entity> userMap = new HashMap<String, Entity>();
+		final SearchContextBase searchContextBase = (SearchContextBase) context;
 
+		if (searchContextBase.getForm()
+				.isShowUserNameWithPrivilegedValue()) {
+			AuthContext.doPrivileged(() -> {
+				searchUserMap(userMap, userOidList);
+			});
+		} else {
+			searchUserMap(userMap, userOidList);
+		}
+
+		context.getRequest()
+				.setAttribute(Constants.USER_INFO_MAP, userMap);
+	}
+
+	private void searchUserMap(Map<String, Entity> userMap, final List<String> userOidList) {
 		Query q = new Query().select(Entity.OID, Entity.NAME)
-							 .from(User.DEFINITION_NAME)
-							 .where(new In(Entity.OID, userOidList.toArray()));
+				.from(User.DEFINITION_NAME)
+				.where(new In(Entity.OID, userOidList.toArray()));
+
 		em.searchEntity(q, new Predicate<Entity>() {
 
 			@Override
@@ -294,8 +293,6 @@ public abstract class SearchCommandBase implements Command {
 				return true;
 			}
 		});
-
-		context.getRequest().setAttribute(Constants.USER_INFO_MAP, userMap);
 	}
 
 	final protected void count(SearchContext context, Query query) {
@@ -316,10 +313,7 @@ public abstract class SearchCommandBase implements Command {
 			}
 		}
 
-		context.getRequest().setAttribute("count", count);
-	}
-
-	private static String resourceString(String key, Object... arguments) {
-		return GemResourceBundleUtil.resourceString(key, arguments);
+		context.getRequest()
+				.setAttribute("count", count);
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,7 +22,6 @@ package org.iplass.mtp.web.template.report.definition;
 
 import java.io.Serializable;
 
-
 public class LocalizedReportDefinition implements Serializable {
 
 	private static final long serialVersionUID = 448974983951499194L;
@@ -34,24 +33,31 @@ public class LocalizedReportDefinition implements Serializable {
 	public String getLocaleName() {
 		return localeName;
 	}
+
 	public void setLocaleName(String localeName) {
 		this.localeName = localeName;
 	}
+
 	public String getFileName() {
 		return fileName;
 	}
+
 	public void setFileName(String fileName) {
 		this.fileName = fileName;
 	}
+
 	public byte[] getBinary() {
 		return binary;
 	}
+
 	public void setBinary(byte[] binary) {
 		this.binary = binary;
 	}
+
 	public ReportType getReportType() {
 		return reportType;
 	}
+
 	public void setReportType(ReportType reportType) {
 		this.reportType = reportType;
 	}

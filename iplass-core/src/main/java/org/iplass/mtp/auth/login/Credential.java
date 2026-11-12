@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,10 +21,15 @@
 package org.iplass.mtp.auth.login;
 
 public interface Credential {
-	
+	/** 
+	 * authenticationFactorにAuthenticationProcessTypeをセットする際のキー名
+	 */
+	public static final String FACTOR_AUTHENTICATION_PROCESS_TYPE = "mtp.auth.AuthenticationProcessType";
+
 	public String getId();
-	
+
 	public Object getAuthenticationFactor(String name);
+
 	public void setAuthenticationFactor(String name, Object value);
 
 }

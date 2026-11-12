@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -48,6 +48,7 @@ public class MetaInterceptorClass extends BaseRootMetaData implements DefinableM
 
 	public abstract class InterceptorClassRuntime implements MetaDataRuntime {
 		public abstract Object newInterceptor();
+
 		public abstract MetaInterceptorClass getMetaData();
 	}
 

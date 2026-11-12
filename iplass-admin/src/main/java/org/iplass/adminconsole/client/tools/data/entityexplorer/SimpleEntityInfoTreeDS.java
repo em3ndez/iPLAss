@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -48,11 +48,6 @@ public class SimpleEntityInfoTreeDS extends AbstractAdminDataSource {
 		LISTNER_COUNT,
 		VERSIONING,
 
-		DETAIL_VIEW_COUNT,
-		SEARCH_VIEW_COUNT,
-		BULK_VIEW_COUNT,
-		VIEW_CONTROL,
-
 		REPOSITORY,
 
 		IS_ERROR,
@@ -82,7 +77,7 @@ public class SimpleEntityInfoTreeDS extends AbstractAdminDataSource {
 			@Override
 			public void onSuccess(SimpleEntityTreeNode result) {
 				TreeNode root = createTreeNode(result);
-				response.setData(new Record[]{root});
+				response.setData(new Record[] { root });
 				processResponse(requestId, response);
 			}
 
@@ -98,7 +93,7 @@ public class SimpleEntityInfoTreeDS extends AbstractAdminDataSource {
 	private TreeNode createTreeNode(SimpleEntityTreeNode root) {
 		TreeNode rootNode = new TreeNode("root");
 		rootNode.setAttribute(FIELD_NAME.NAME.name(), root.getName());
-		rootNode.setAttribute(FIELD_NAME.DISPLAY_NAME.name(), root.getName());	//フォルダの場合はNameをセット
+		rootNode.setAttribute(FIELD_NAME.DISPLAY_NAME.name(), root.getName()); //フォルダの場合はNameをセット
 		rootNode.setAttribute(FIELD_NAME.IS_ERROR.name(), root.isError());
 		rootNode.setAttribute(FIELD_NAME.ERROR_MESSAGE.name(), root.getErrorMessage());
 
@@ -106,7 +101,7 @@ public class SimpleEntityInfoTreeDS extends AbstractAdminDataSource {
 		children.addAll(createChildrenTreeNodeList(root.getChildren()));
 		children.addAll(createEntityTreeNodeList(root.getItems()));
 		if (!children.isEmpty()) {
-			rootNode.setChildren(children.toArray(new TreeNode[]{}));
+			rootNode.setChildren(children.toArray(new TreeNode[] {}));
 		}
 		rootNode.setIsFolder(true);
 		return rootNode;
@@ -128,7 +123,7 @@ public class SimpleEntityInfoTreeDS extends AbstractAdminDataSource {
 	private TreeNode createChildTreeNode(SimpleEntityTreeNode metaNode) {
 		TreeNode node = new TreeNode(metaNode.getPath());
 		node.setAttribute(FIELD_NAME.NAME.name(), metaNode.getName());
-		node.setAttribute(FIELD_NAME.DISPLAY_NAME.name(), metaNode.getName());	//フォルダの場合はNameをセット
+		node.setAttribute(FIELD_NAME.DISPLAY_NAME.name(), metaNode.getName()); //フォルダの場合はNameをセット
 		node.setAttribute(FIELD_NAME.PATH.name(), metaNode.getPath());
 		node.setAttribute(FIELD_NAME.IS_ERROR.name(), metaNode.isError());
 		node.setAttribute(FIELD_NAME.ERROR_MESSAGE.name(), metaNode.getErrorMessage());
@@ -138,7 +133,7 @@ public class SimpleEntityInfoTreeDS extends AbstractAdminDataSource {
 		children.addAll(createChildrenTreeNodeList(metaNode.getChildren()));
 		children.addAll(createEntityTreeNodeList(metaNode.getItems()));
 		if (!children.isEmpty()) {
-			node.setChildren(children.toArray(new TreeNode[]{}));
+			node.setChildren(children.toArray(new TreeNode[] {}));
 			return node;
 		} else {
 			return null;
@@ -179,10 +174,6 @@ public class SimpleEntityInfoTreeDS extends AbstractAdminDataSource {
 		}
 		node.setAttribute(FIELD_NAME.LISTNER_COUNT.name(), item.getListenerCount());
 		node.setAttribute(FIELD_NAME.VERSIONING.name(), item.getVersionControlType());
-		node.setAttribute(FIELD_NAME.DETAIL_VIEW_COUNT.name(), item.getDetailFormViewCount());
-		node.setAttribute(FIELD_NAME.SEARCH_VIEW_COUNT.name(), item.getSearchFormViewCount());
-		node.setAttribute(FIELD_NAME.BULK_VIEW_COUNT.name(), item.getBulkFormViewCount());
-		node.setAttribute(FIELD_NAME.VIEW_CONTROL.name(), item.getViewControl());
 		node.setIsFolder(false);
 		return node;
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,20 +24,20 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import javax.servlet.ReadListener;
-import javax.servlet.ServletInputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.ReadListener;
+import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 
 public class LimitRequestBodyHttpServletRequest extends HttpServletRequestWrapper {
-	
+
 	private long maxBodySize;
 
 	public LimitRequestBodyHttpServletRequest(HttpServletRequest request, long maxBodySize) {
 		super(request);
 		this.maxBodySize = maxBodySize;
 	}
-	
+
 	public ServletInputStream getInputStream() throws IOException {
 		return new LimitRequestBodyServletInputStream(getRequest().getInputStream(), getContentLengthLong());
 	}
@@ -47,21 +47,21 @@ public class LimitRequestBodyHttpServletRequest extends HttpServletRequestWrappe
 		if (charset == null) {
 			charset = "utf-8";
 		}
-		
+
 		return new BufferedReader(new InputStreamReader(getInputStream(), charset));
 	}
-    
+
 	private class LimitRequestBodyServletInputStream extends ServletInputStream {
 
 		private long count;
 		private ServletInputStream actual;
 		private boolean contentLengthOver;
-		
+
 		private LimitRequestBodyServletInputStream(ServletInputStream actual, long contentLength) {
 			if (contentLength >= 0 && contentLength > maxBodySize) {
 				contentLengthOver = true;
 			}
-			
+
 			this.actual = actual;
 		}
 
@@ -87,9 +87,9 @@ public class LimitRequestBodyHttpServletRequest extends HttpServletRequestWrappe
 			if (i >= 0) {
 				countup(1);
 			}
-			return i;			
+			return i;
 		}
-	
+
 		@Override
 		public int read(final byte[] b) throws IOException {
 			checkContentLength();
@@ -132,7 +132,7 @@ public class LimitRequestBodyHttpServletRequest extends HttpServletRequestWrappe
 				throw ex;
 			}
 		}
-		
+
 		private void checkContentLength() {
 			if (contentLengthOver) {
 				RequestBodyTooLargeException ex = new RequestBodyTooLargeException("Request body too large. MaxBodySize:" + maxBodySize);
@@ -144,7 +144,7 @@ public class LimitRequestBodyHttpServletRequest extends HttpServletRequestWrappe
 				throw ex;
 			}
 		}
-		
+
 	}
 
 }

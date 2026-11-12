@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -48,7 +48,7 @@ public class HashingTableAllocator implements TableAllocator {
 	public int allocate(int tenantId, String metaId, StorageSpaceMap storage) {
 		return Math.abs(toKey(tenantId, metaId).hashCode() % storage.getTableCount());
 	}
-	
+
 	private String toKey(int tenantId, String metaId) {
 		if (useMetaDataId) {
 			if (useTenantId) {

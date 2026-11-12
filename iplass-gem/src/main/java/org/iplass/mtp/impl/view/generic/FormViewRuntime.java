@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -63,10 +63,11 @@ public class FormViewRuntime {
 		}
 
 		//Script用のKEYを設定
-		metaData.scriptKey = "FormView_ButtonStyle_" + GroovyTemplateCompiler.randomName().replace("-", "_");
+		metaData.scriptKey = "FormView_ButtonStyle_" + GroovyTemplateCompiler.randomName()
+				.replace("-", "_");
 
 		//EntityViewに登録
-		entityView.addCustomStyle(metaData.scriptKey , customStyleMap);
+		entityView.addCustomStyle(metaData.scriptKey, customStyleMap);
 	}
 
 	/**
@@ -77,4 +78,11 @@ public class FormViewRuntime {
 		return metaData;
 	}
 
+	/**
+	 * FormView セクションランタイムリストを取得します。
+	 * @return セクションランタイムリスト
+	 */
+	public List<SectionRuntime> getSections() {
+		return sections;
+	}
 }

@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 <%@ page import="java.util.Map"%>
 <%@ page import="org.iplass.mtp.entity.Entity"%>
@@ -53,7 +53,7 @@
 	String propName = editor.getPropertyName();
 	if (pd == null || !(pd instanceof StringProperty)) {
 		//定義がStringPropertyでなければ表示不可
-		throw new EntityViewRuntimeException(propName + " 's editor is unsupport " 
+		throw new EntityViewRuntimeException(propName + " 's editor is unsupport "
 				+ (pd != null ? pd.getClass().getSimpleName() : "(unknown)") + " type." );
 	}
 
@@ -77,7 +77,7 @@
 		}
 
 		if (editor.getDisplayType() != UserDisplayType.HIDDEN) {
-		
+
 			//カスタムスタイル
 			String customStyle = "";
 			if (type == OutputType.VIEW) {
@@ -150,7 +150,7 @@ $(function() {
 			//HIDDEN
 %>
 <input type="hidden" name="<c:out value="<%=propName %>"/>" value="<c:out value="<%=str %>"/>" />
-<%			
+<%
 		}
 	} else if (OutputType.SEARCHRESULT == type) {
 		//検索結果
@@ -184,4 +184,5 @@ $(function() {
 	request.removeAttribute(Constants.EDITOR_EDITOR);
 	request.removeAttribute(Constants.EDITOR_PROP_VALUE);
 	request.removeAttribute(Constants.EDITOR_PROPERTY_DEFINITION);
+	request.removeAttribute(Constants.EDITOR_DISPLAY_LABEL);
 %>

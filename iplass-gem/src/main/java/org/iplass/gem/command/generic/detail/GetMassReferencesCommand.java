@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,13 +27,10 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.iplass.gem.command.Constants;
 import org.iplass.gem.command.generic.HasDisplayScriptBindings;
@@ -86,17 +83,21 @@ import org.iplass.mtp.web.template.TemplateUtil;
 import org.iplass.mtp.webapi.definition.MethodType;
 import org.iplass.mtp.webapi.definition.RequestType;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 @WebApi(
-		name=GetMassReferencesCommand.WEBAPI_NAME,
-		displayName="大規模参照プロパティ検索",
-		accepts=RequestType.REST_JSON,
-		methods=MethodType.POST,
-		restJson=@RestJson(parameterName="param"),
-		results={"dispInfo", "count", "htmlData"},
-		checkXRequestedWithHeader=true
-	)
-@CommandClass(name="gem/generic/detail/GetMassReferencesCommand", displayName="参照プロパティ検索")
-public final class GetMassReferencesCommand extends DetailCommandBase implements HasDisplayScriptBindings{
+		name = GetMassReferencesCommand.WEBAPI_NAME,
+		displayName = "大規模参照プロパティ検索",
+		accepts = RequestType.REST_JSON,
+		methods = MethodType.POST,
+		restJson = @RestJson(parameterName = "param"),
+		results = { "dispInfo", "count", "htmlData" },
+		checkXRequestedWithHeader = true
+)
+@CommandClass(name = "gem/generic/detail/GetMassReferencesCommand", displayName = "参照プロパティ検索")
+public final class GetMassReferencesCommand extends DetailCommandBase implements HasDisplayScriptBindings {
 
 	public static final String WEBAPI_NAME = "gem/generic/detail/getMassReference";
 
@@ -113,9 +114,12 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 	 * コンストラクタ
 	 */
 	public GetMassReferencesCommand() {
-		edm = ManagerLocator.getInstance().getManager(EntityDefinitionManager.class);
-		evm = ManagerLocator.getInstance().getManager(EntityViewManager.class);
-		em = ManagerLocator.getInstance().getManager(EntityManager.class);
+		edm = ManagerLocator.getInstance()
+				.getManager(EntityDefinitionManager.class);
+		evm = ManagerLocator.getInstance()
+				.getManager(EntityViewManager.class);
+		em = ManagerLocator.getInstance()
+				.getManager(EntityManager.class);
 	}
 
 	@Override
@@ -154,7 +158,8 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 				//ElementIDで検索
 				for (MassReferenceSection _section : sections) {
 					if (elementId.equals(_section.getElementRuntimeId())) {
-						if (_section.getPropertyName().equals(rp.getName())) {
+						if (_section.getPropertyName()
+								.equals(rp.getName())) {
 							section = _section;
 						}
 						break;
@@ -163,7 +168,8 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 			} else {
 				//プロパティ名で検索
 				for (MassReferenceSection _section : sections) {
-					if (_section.getPropertyName().equals(rp.getName())) {
+					if (_section.getPropertyName()
+							.equals(rp.getName())) {
 						section = _section;
 						break;
 					}
@@ -180,16 +186,19 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 				for (NestProperty np : section.getProperties()) {
 					//表示設定確認
 					if (OutputType.EDIT == outputType) {
-						if (np.isHideDetail()) continue;
+						if (np.isHideDetail())
+							continue;
 					} else if (OutputType.VIEW == outputType) {
-						if (np.isHideView()) continue;
+						if (np.isHideView())
+							continue;
 					}
 
 					PropertyDefinition rpd = red.getProperty(np.getPropertyName());
 					if (rpd instanceof ReferenceProperty) {
 						addReferenceProperty(props, dispInfo, (ReferenceProperty) rpd, np, null, outputType);
 					} else {
-						if (!props.contains(np.getPropertyName())) {
+						// 検索するプロパティには仮想プロパティは含めない
+						if (!np.isVirtual() && !props.contains(np.getPropertyName())) {
 							props.add(np.getPropertyName());
 							if (np.getEditor() instanceof RangePropertyEditor) {
 								RangePropertyEditor rpe = (RangePropertyEditor) np.getEditor();
@@ -204,7 +213,8 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 							di.setDisplayName(TemplateUtil.getMultilingualString(rpd.getDisplayName(), rpd.getLocalizedDisplayNameList()));
 						}
 						di.setWidth(np.getWidth());
-						if (np.getEditor() != null && np.getEditor().isHide()) {
+						if (np.getEditor() != null && np.getEditor()
+								.isHide()) {
 							di.setHide(true);
 						} else {
 							di.setHide(false);
@@ -231,12 +241,13 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 				if (!section.isHidePaging()) {
 					// ページング非表示の場合、件数は不要で、limitもかけずに全件取得
 					if ("true".equals(isCount)) {
-						int count = countEntity(context.getLoadEntityInterrupterHandler(), query, outputType);
+						int count = countEntity(context.getLoadEntityInterrupterHandler(), query, rp, section, outputType);
 						request.setAttribute("count", count);
 					}
 
 					int limit = section.getLimit();
-					if (limit == 0) limit = 10;
+					if (limit == 0)
+						limit = 10;
 					query.limit(limit, offset);
 				}
 
@@ -245,13 +256,13 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 
 				//User名に変換が必要なプロパティを取得
 				final Set<String> userNameProperties = getUseUserPropertyEditorPropertyName(section.getProperties(),
-						OutputType.EDIT == outputType, Entity.LOCKED_BY, Entity.CREATE_BY, Entity.UPDATE_BY);
+						OutputType.EDIT == outputType);
 
 				//UserのOIDリスト
 				final List<String> userOids = new ArrayList<>();
 
 				List<Entity> entityList = search(context.getLoadEntityInterrupterHandler(),
-						query, outputType, userNameProperties, userOids);
+						query, rp, section, outputType, userNameProperties, userOids);
 
 				if (!userOids.isEmpty()) {
 					setUserInfoMap(context, userOids);
@@ -276,27 +287,30 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 		Set<String> addNames = new HashSet<>();
 		if (StringUtil.isNotEmpty(sortKey)) {
 			//パラメータで指定されている場合は先頭で適用
-			String key = getSortKey(red, sortKey);
+			String key = getSortKey(section, red, sortKey, true);
 			orderBy.add(new SortSpec(key, getSortType(sortType)));
 			addNames.add(key);
 		}
-		if (!section.getSortSetting().isEmpty()) {
+		if (!section.getSortSetting()
+				.isEmpty()) {
 			//デフォルトが指定されている場合は適用
 			List<SortSetting> setting = section.getSortSetting();
 			for (SortSetting ss : setting) {
 				if (ss.getSortKey() != null) {
-					String key = getSortKey(red, ss.getSortKey());
+					String key = getSortKey(section, red, ss.getSortKey(), false);
 					if (!addNames.contains(key)) {
-						orderBy.add(key, getSortType(ss.getSortType().name()), getNullOrderingSpec(ss.getNullOrderType()));
+						orderBy.add(key, getSortType(ss.getSortType()
+								.name()), getNullOrderingSpec(ss.getNullOrderType()));
 						addNames.add(key);
 					}
 				}
 			}
 		}
 
-		if (orderBy.getSortSpecList().isEmpty()) {
+		if (orderBy.getSortSpecList()
+				.isEmpty()) {
 			//ソート項目がない場合はデフォルト設定
-			orderBy.add(new SortSpec(getSortKey(red, null), getSortType(null)));
+			orderBy.add(new SortSpec(getSortKey(section, red, null, false), getSortType(null)));
 		}
 
 		return orderBy;
@@ -304,23 +318,34 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 
 	/**
 	 * ソートキーを取得
+	 * @param section
 	 * @param ed
 	 * @param sortKey
+	 * @param isRequestParam
 	 * @return
 	 */
-	private String getSortKey(EntityDefinition ed, String sortKey) {
+	private String getSortKey(MassReferenceSection section, EntityDefinition ed, String sortKey, boolean isRequestParam) {
 		String ret = sortKey;
-		if (StringUtil.isBlank(ret)) {
-			ret =  Entity.OID;
+		if (StringUtil.isBlank(sortKey)) {
+			return Entity.OID;
 		}
-		PropertyDefinition pd = ed.getProperty(ret);
+
+		NestProperty property = getLayoutNestProperty(section, sortKey);
+		// 当該項目がセクション上表示されない場合は、利用しない
+		if (isRequestParam && property == null) {
+			return Entity.OID;
+		}
+
+		PropertyDefinition pd = getPropertyDefinition(ed, sortKey);
 		if (pd == null) {
 			ret = Entity.OID;
 			pd = ed.getProperty(ret);
 		}
+
 		if (pd instanceof ReferenceProperty) {
-			ret = ret + "." + Entity.OID;
+			ret = sortKey + "." + getDisplayNestProperty(property);
 		}
+
 		return ret;
 	}
 
@@ -337,7 +362,8 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 	}
 
 	private NullOrderingSpec getNullOrderingSpec(NullOrderType type) {
-		if (type == null) return null;
+		if (type == null)
+			return null;
 		switch (type) {
 		case FIRST:
 			return NullOrderingSpec.FIRST;
@@ -349,12 +375,13 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 		return null;
 	}
 
-	private int countEntity(final LoadEntityInterrupterHandler handler, final Query query, final OutputType outputType) {
+	private int countEntity(final LoadEntityInterrupterHandler handler, final Query query,
+			final ReferenceProperty rp, final MassReferenceSection section, final OutputType outputType) {
 
- 		//検索前処理
-		final SearchQueryContext sqContext = handler.beforeSearchMassReference(query.copy(), outputType);
+		//検索前処理
+		final SearchQueryContext sqContext = handler.beforeSearchMassReference(query.copy(), rp, section, outputType);
 
- 		Integer count = null;
+		Integer count = null;
 		if (sqContext.isDoPrivileged()) {
 			//特権実行
 			count = AuthContext.doPrivileged(() -> em.count(sqContext.getQuery()));
@@ -366,44 +393,46 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 			}
 		}
 
- 		return count;
+		return count;
 	}
 
 	private List<Entity> search(final LoadEntityInterrupterHandler handler, final Query query,
-			final OutputType outputType, final Set<String> userNameProperties, final List<String> userOids) {
+			final ReferenceProperty rp, final MassReferenceSection section, final OutputType outputType,
+			final Set<String> userNameProperties, final List<String> userOids) {
 
- 		//検索前処理
-		final SearchQueryContext sqContext = handler.beforeSearchMassReference(query.copy(), outputType);
+		//検索前処理
+		final SearchQueryContext sqContext = handler.beforeSearchMassReference(query.copy(), rp, section, outputType);
 
- 		List<Entity> result = null;
+		List<Entity> result = null;
 		if (sqContext.isDoPrivileged()) {
 			//特権実行
 			result = AuthContext.doPrivileged(() -> {
-				return searchEntity(handler, sqContext.getQuery(), outputType, userNameProperties, userOids);
+				return searchEntity(handler, sqContext.getQuery(), rp, section, outputType, userNameProperties, userOids);
 			});
 		} else {
 			if (sqContext.getWithoutConditionReferenceName() != null) {
 				result = EntityPermission.doQueryAs(sqContext.getWithoutConditionReferenceName(), () -> {
-					return searchEntity(handler, sqContext.getQuery(), outputType, userNameProperties, userOids);
+					return searchEntity(handler, sqContext.getQuery(), rp, section, outputType, userNameProperties, userOids);
 				});
 			} else {
-				result = searchEntity(handler, sqContext.getQuery(), outputType, userNameProperties, userOids);
+				result = searchEntity(handler, sqContext.getQuery(), rp, section, outputType, userNameProperties, userOids);
 			}
 		}
 
- 		return result;
+		return result;
 	}
 
- 	private List<Entity> searchEntity(final LoadEntityInterrupterHandler handler, final Query query,
- 			final OutputType outputType, final Set<String> userNameProperties, final List<String> userOids) {
+	private List<Entity> searchEntity(final LoadEntityInterrupterHandler handler, final Query query,
+			final ReferenceProperty rp, final MassReferenceSection section,
+			final OutputType outputType, final Set<String> userNameProperties, final List<String> userOids) {
 
- 		final List<Entity> result = new ArrayList<>();
+		final List<Entity> result = new ArrayList<>();
 		em.searchEntity(query, (entity) -> {
 
- 			//検索後処理
-			handler.afterSearchMassReference(query, entity, outputType);
+			//検索後処理
+			handler.afterSearchMassReference(query, rp, section, entity, outputType);
 
- 			//User名が必要な値を取得
+			//User名が必要な値を取得
 			for (String propertyName : userNameProperties) {
 				String oid = entity.getValue(propertyName);
 				if (oid != null && !userOids.contains(oid)) {
@@ -411,11 +440,11 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 				}
 			}
 
- 			result.add(entity);
+			result.add(entity);
 			return true;
 		});
 
- 		return result;
+		return result;
 	}
 
 	/**
@@ -442,9 +471,10 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 		for (final Entity entity : result) {
 			final Map<String, String> eval = new LinkedHashMap<>();
 			eval.put("orgOid", entity.getOid());
-			eval.put("orgVersion", entity.getVersion().toString());
+			eval.put("orgVersion", entity.getVersion()
+					.toString());
 			for (NestProperty property : props) {
-				final PropertyDefinition pd = ed.getProperty(property.getPropertyName());
+				final PropertyDefinition pd = EntityViewUtil.getNestTablePropertyDefinition(property, ed);
 				if (isDispProperty(pd, property, outputType)) {
 					final PropertyEditor editor = property.getEditor();
 					String path = EntityViewUtil.getJspPath(editor, ViewConst.DESIGN_TYPE_GEM);
@@ -486,15 +516,21 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 
 						//HTML取得
 						if (property.getEditor() instanceof RangePropertyEditor) {
-							property.getEditor().setPropertyName(property.getPropertyName());
-						}else {
-							property.getEditor().setPropertyName(editorPrefix + property.getPropertyName());
+							property.getEditor()
+									.setPropertyName(property.getPropertyName());
+						} else {
+							property.getEditor()
+									.setPropertyName(editorPrefix + property.getPropertyName());
 						}
-						String html = ResponseUtil.getIncludeJspContents(path, beforeFunc, afterFunc) .replace("\r\n", "").replace("\n", "").replace("\r", "");
+						String html = ResponseUtil.getIncludeJspContents(path, beforeFunc, afterFunc)
+								.replace("\r\n", "")
+								.replace("\n", "")
+								.replace("\r", "");
 
 						WebRequestStack stack = WebRequestStack.getCurrent();
 						HttpServletRequest req = stack.getRequest();
-						Boolean isNest = (Boolean) req.getAttribute(Constants.EDITOR_REF_NEST_PROPERTY_PREFIX + editorPrefix + property.getPropertyName());
+						Boolean isNest = (Boolean) req
+								.getAttribute(Constants.EDITOR_REF_NEST_PROPERTY_PREFIX + editorPrefix + property.getPropertyName());
 						if (isNest != null && isNest) {
 							eval.put(property.getPropertyName() + ".name", html);
 						} else {
@@ -506,15 +542,19 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 
 			//参照プロパティに対するNestプロパティに対してJSPで生成されたhtmlのKEYに
 			//被参照のプロパティ名が付加されているので除去する
-			Map<String, String> ajustData = eval.entrySet().stream().collect(Collectors.toMap(
-					e -> {
-						if (e.getKey().startsWith(editorPrefix)) {
-							return e.getKey().substring(editorPrefix.length());
-						} else {
-							return e.getKey();
-						}
-					},
-					Map.Entry::getValue));
+			Map<String, String> ajustData = eval.entrySet()
+					.stream()
+					.collect(Collectors.toMap(
+							e -> {
+								if (e.getKey()
+										.startsWith(editorPrefix)) {
+									return e.getKey()
+											.substring(editorPrefix.length());
+								} else {
+									return e.getKey();
+								}
+							},
+							Map.Entry::getValue));
 
 			ret.add(ajustData);
 		}
@@ -530,11 +570,14 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 	 * @return
 	 */
 	private boolean isDispProperty(PropertyDefinition pd, NestProperty property, OutputType outputType) {
-		if (property.getEditor() == null) return false;
+		if (property.getEditor() == null)
+			return false;
 		if (OutputType.EDIT == outputType) {
-			if (property.isHideDetail()) return false;
+			if (property.isHideDetail())
+				return false;
 		} else if (OutputType.VIEW == outputType) {
-			if (property.isHideView()) return false;
+			if (property.isHideView())
+				return false;
 		}
 		return true;
 	}
@@ -579,7 +622,8 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 		return sections;
 	}
 
-	private void addReferenceProperty(List<String> select, List<DisplayInfo> dispInfo, ReferenceProperty rp, NestProperty np, String parent, OutputType outputType) {
+	private void addReferenceProperty(List<String> select, List<DisplayInfo> dispInfo, ReferenceProperty rp, NestProperty np, String parent,
+			OutputType outputType) {
 		boolean hasNest = false;
 		List<NestProperty> nest = null;
 		String dispLabelItem = null;
@@ -620,16 +664,19 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 			for (NestProperty _np : nest) {
 				//表示設定確認
 				if (OutputType.EDIT == outputType) {
-					if (_np.isHideDetail()) continue;
+					if (_np.isHideDetail())
+						continue;
 				} else if (OutputType.VIEW == outputType) {
-					if (_np.isHideView()) continue;
+					if (_np.isHideView())
+						continue;
 				}
 
 				PropertyDefinition rpd = red.getProperty(_np.getPropertyName());
 				if (rpd instanceof ReferenceProperty) {
 					addReferenceProperty(select, dispInfo, (ReferenceProperty) rpd, _np, name, outputType);
 				} else {
-					if (!select.contains(name + "." + _np.getPropertyName())) {
+					// 検索するプロパティには仮想プロパティは含めない
+					if (!_np.isVirtual() && !select.contains(name + "." + _np.getPropertyName())) {
 						select.add(name + "." + _np.getPropertyName());
 						if (_np.getEditor() instanceof RangePropertyEditor) {
 							RangePropertyEditor rpe = (RangePropertyEditor) _np.getEditor();
@@ -647,7 +694,8 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 					}
 					di.setWidth(_np.getWidth());
 
-					if (_np.getEditor() != null && _np.getEditor().isHide()) {
+					if (_np.getEditor() != null && _np.getEditor()
+							.isHide()) {
 						di.setHide(true);
 					} else {
 						di.setHide(false);
@@ -666,7 +714,8 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 				di.setDisplayName(TemplateUtil.getMultilingualString(rp.getDisplayName(), rp.getLocalizedDisplayNameList()));
 			}
 			di.setWidth(np.getWidth());
-			if (np.getEditor() != null && np.getEditor().isHide()) {
+			if (np.getEditor() != null && np.getEditor()
+					.isHide()) {
 				di.setHide(true);
 			} else {
 				di.setHide(false);
@@ -676,44 +725,33 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 	}
 
 	private EntityDefinition getReferenceEntityDefinition(ReferenceProperty pd) {
-		EntityDefinitionManager edm = ManagerLocator.getInstance().getManager(EntityDefinitionManager.class);
+		EntityDefinitionManager edm = ManagerLocator.getInstance()
+				.getManager(EntityDefinitionManager.class);
 		return edm.get(pd.getObjectDefinitionName());
 	}
 
-	private Set<String> getUseUserPropertyEditorPropertyName(List<NestProperty> nestProperties, boolean isDetail, String... propNames) {
+	private Set<String> getUseUserPropertyEditorPropertyName(List<NestProperty> nestProperties, boolean isDetail) {
 		Set<String> ret = new HashSet<>();
 		for (NestProperty property : nestProperties) {
-			if ((isDetail && property.isHideDetail()) || (!isDetail && property.isHideView())) continue;
+			if ((isDetail && property.isHideDetail()) || (!isDetail && property.isHideView()))
+				continue;
 
 			String propertyName = property.getPropertyName();
 
 			if (property.getEditor() instanceof ReferencePropertyEditor) {
-				//ネストの項目を確認
+				// ネストの項目を確認
 				ReferencePropertyEditor editor = (ReferencePropertyEditor) property.getEditor();
-				if (!editor.getNestProperties().isEmpty()) {
-					Set<String> nest = getUseUserPropertyEditorPropertyName(editor.getNestProperties(), isDetail, propNames);
+				if (!editor.getNestProperties()
+						.isEmpty()) {
+					Set<String> nest = getUseUserPropertyEditorPropertyName(editor.getNestProperties(), isDetail);
 					for (String nestPropertyName : nest) {
 						String _nestPropertyName = propertyName + "." + nestPropertyName;
 						ret.add(_nestPropertyName);
 					}
 				}
 			} else if (property.getEditor() instanceof UserPropertyEditor) {
-				//直接指定項目の確認
-				for (String propName : propNames) {
-					boolean isUserEditor = false;
-					if (propertyName.contains(".")) {
-						//ReferencePropertyの直接指定
-						isUserEditor = propertyName.endsWith("." + propName);
-					} else {
-						//通常Property
-						isUserEditor = propertyName.equals(propName);
-					}
-					if (isUserEditor) {
-						ret.add(propertyName);
-					}
-				}
+				ret.add(propertyName);
 			}
-
 		}
 		return ret;
 	}
@@ -723,20 +761,145 @@ public final class GetMassReferencesCommand extends DetailCommandBase implements
 		final Map<String, Entity> userMap = new HashMap<>();
 
 		Query q = new Query().select(Entity.OID, Entity.NAME)
-							 .from(User.DEFINITION_NAME)
-							 .where(new In(Entity.OID, userOidList.toArray()));
-		em.searchEntity(q, new Predicate<Entity>() {
+				.from(User.DEFINITION_NAME)
+				.where(new In(Entity.OID, userOidList.toArray()));
 
-			@Override
-			public boolean test(Entity dataModel) {
-				if (!userMap.containsKey(dataModel.getOid())) {
-					userMap.put(dataModel.getOid(), dataModel);
+		if (context.getView()
+				.isShowUserNameWithPrivilegedValue()) {
+			AuthContext.doPrivileged(() -> {
+				em.searchEntity(q, new Predicate<Entity>() {
+
+					@Override
+					public boolean test(Entity dataModel) {
+						if (!userMap.containsKey(dataModel.getOid())) {
+							userMap.put(dataModel.getOid(), dataModel);
+						}
+						return true;
+					}
+				});
+			});
+		} else {
+			em.searchEntity(q, new Predicate<Entity>() {
+
+				@Override
+				public boolean test(Entity dataModel) {
+					if (!userMap.containsKey(dataModel.getOid())) {
+						userMap.put(dataModel.getOid(), dataModel);
+					}
+					return true;
 				}
-				return true;
-			}
-		});
+			});
+		}
 
 		context.setAttribute(Constants.USER_INFO_MAP, userMap);
+	}
+
+	private NestProperty getLayoutNestProperty(MassReferenceSection section, String propName) {
+		// 直下に指定されているかチェック
+		Optional<NestProperty> property = section.getProperties()
+				.stream()
+				.filter(e -> propName.equals(e.getPropertyName()))
+				.findFirst();
+		if (property.isPresent()) {
+			return property.get();
+		}
+
+		// プロパティ名で一致する列がない場合、参照の各階層をチェック
+		int dotIndex = propName.indexOf(".");
+		if (dotIndex > -1) {
+			String topPropName = propName.substring(0, dotIndex);
+			String subPropName = propName.substring(dotIndex + 1);
+
+			// セクション直下を取得
+			Optional<NestProperty> opt = section.getProperties()
+					.stream()
+					.filter(np -> np.getPropertyName()
+							.equals(topPropName))
+					.findFirst();
+			if (!opt.isPresent())
+				return null;
+
+			// 参照の先の項目を取得
+			NestProperty subProp = opt.get();
+			if (subProp.getEditor() instanceof ReferencePropertyEditor) {
+				return findLayoutNestPropertyRecursive(subPropName, ((ReferencePropertyEditor) subProp.getEditor()).getNestProperties());
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * プロパティ名に一致するネストプロパティを再帰的に検索し取得する
+	 * @param propertyName プロパティ名
+	 * @param editor 参照プロパティエディタ
+	 * @return ネストプロパティ
+	 */
+	private NestProperty findLayoutNestPropertyRecursive(String propName, List<NestProperty> properties) {
+		if (properties == null || properties.isEmpty()) {
+			return null;
+		}
+
+		int dotIndex = propName.indexOf(".");
+		if (dotIndex > -1) {
+			// 子階層を再帰呼び出し
+			String topPropName = propName.substring(0, dotIndex);
+			String subPropName = propName.substring(dotIndex + 1);
+
+			Optional<NestProperty> opt = properties.stream()
+					.filter(np -> np.getPropertyName()
+							.equals(topPropName))
+					.findFirst();
+			if (!opt.isPresent())
+				return null;
+
+			NestProperty subProp = opt.get();
+			if (subProp.getEditor() instanceof ReferencePropertyEditor) {
+				return findLayoutNestPropertyRecursive(subPropName, ((ReferencePropertyEditor) subProp.getEditor()).getNestProperties());
+			}
+		}
+
+		// 一致するNestPropetyを取得
+		Optional<NestProperty> opt = properties.stream()
+				.filter(np -> np.getPropertyName()
+						.equals(propName))
+				.findFirst();
+		return opt.orElse(null);
+	}
+
+	/**
+	 * 参照プロパティで、セクションに表示されている項目を取得します。
+	 * @return 表示項目
+	 */
+	private String getDisplayNestProperty(NestProperty refProp) {
+		PropertyEditor editor = refProp != null ? refProp.getEditor() : null;
+
+		if (editor != null && editor instanceof ReferencePropertyEditor
+				&& StringUtil.isNotEmpty(((ReferencePropertyEditor) editor).getDisplayLabelItem())) {
+			return ((ReferencePropertyEditor) editor).getDisplayLabelItem();
+		} else {
+			return Entity.NAME;
+		}
+
+	}
+
+	private PropertyDefinition getPropertyDefinition(EntityDefinition definition, String propName) {
+		int firstDotIndex = propName.indexOf('.');
+		if (firstDotIndex > 0) {
+			String topPropName = propName.substring(0, firstDotIndex);
+			String subPropName = propName.substring(firstDotIndex + 1);
+			PropertyDefinition topProperty = definition.getProperty(topPropName);
+			if (topProperty instanceof ReferenceProperty) {
+				EntityDefinition red = getReferenceEntityDefinition((ReferenceProperty) topProperty);
+				if (red != null) {
+					PropertyDefinition pd = getPropertyDefinition(red, subPropName);
+					return pd;
+				}
+			}
+		} else {
+			return definition.getProperty(propName);
+		}
+		return null;
 	}
 
 	/**

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,12 +22,9 @@ package org.iplass.mtp.impl.view.top.parts;
 
 import java.io.IOException;
 import java.io.Writer;
-
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.PageContext;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.iplass.mtp.impl.metadata.MetaData;
 import org.iplass.mtp.impl.util.ObjectUtil;
@@ -36,6 +33,12 @@ import org.iplass.mtp.util.StringUtil;
 import org.iplass.mtp.view.generic.ViewConst;
 import org.iplass.mtp.view.top.parts.SeparatorParts;
 import org.iplass.mtp.view.top.parts.TopViewParts;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.jsp.PageContext;
 
 /**
  * 2分割パーツ
@@ -66,7 +69,7 @@ public class MetaSeparatorParts extends MetaTopViewContentParts {
 	 * @return 左エリアパーツ
 	 */
 	public MetaTopViewParts getLeftParts() {
-	    return leftParts;
+		return leftParts;
 	}
 
 	/**
@@ -74,7 +77,7 @@ public class MetaSeparatorParts extends MetaTopViewContentParts {
 	 * @param leftParts 左エリアパーツ
 	 */
 	public void setLeftParts(MetaTopViewParts leftParts) {
-	    this.leftParts = leftParts;
+		this.leftParts = leftParts;
 	}
 
 	/**
@@ -82,7 +85,7 @@ public class MetaSeparatorParts extends MetaTopViewContentParts {
 	 * @return 右エリアパーツ
 	 */
 	public MetaTopViewParts getRightParts() {
-	    return rightParts;
+		return rightParts;
 	}
 
 	/**
@@ -90,7 +93,7 @@ public class MetaSeparatorParts extends MetaTopViewContentParts {
 	 * @param rightParts 右エリアパーツ
 	 */
 	public void setRightParts(MetaTopViewParts rightParts) {
-	    this.rightParts = rightParts;
+		this.rightParts = rightParts;
 	}
 
 	@Override
@@ -99,9 +102,11 @@ public class MetaSeparatorParts extends MetaTopViewContentParts {
 		fillFrom(separator);
 
 		this.leftParts = MetaTopViewParts.createInstance(separator.getLeftParts());
-		if (leftParts != null) leftParts.applyConfig(separator.getLeftParts());
+		if (leftParts != null)
+			leftParts.applyConfig(separator.getLeftParts());
 		this.rightParts = MetaTopViewParts.createInstance(separator.getRightParts());
-		if (rightParts != null) rightParts.applyConfig(separator.getRightParts());
+		if (rightParts != null)
+			rightParts.applyConfig(separator.getRightParts());
 
 	}
 
@@ -112,11 +117,13 @@ public class MetaSeparatorParts extends MetaTopViewContentParts {
 
 		if (leftParts != null) {
 			TopViewParts lp = leftParts.currentConfig();
-			if (lp != null) parts.setLeftParts(lp);
+			if (lp != null)
+				parts.setLeftParts(lp);
 		}
 		if (rightParts != null) {
 			TopViewParts rp = rightParts.currentConfig();
-			if (rp != null) parts.setRightParts(rp);
+			if (rp != null)
+				parts.setRightParts(rp);
 		}
 		//
 		return parts;
@@ -136,7 +143,7 @@ public class MetaSeparatorParts extends MetaTopViewContentParts {
 	 * 2分割パーツランタイム
 	 * @author lis3wg
 	 */
-	public class SeparatorPartsHandler extends TopViewPartsHandler {
+	public class SeparatorPartsHandler extends TopViewPartsHandler implements HasNestPartsHandler {
 
 		/** 左エリアパーツ */
 		private TopViewPartsHandler leftParts;
@@ -150,8 +157,12 @@ public class MetaSeparatorParts extends MetaTopViewContentParts {
 		 */
 		public SeparatorPartsHandler(TopViewHandler topView, MetaSeparatorParts metadata) {
 			super(metadata);
-			if (metadata.getLeftParts() != null) leftParts = metadata.getLeftParts().createRuntime(topView);
-			if (metadata.getRightParts() != null) rightParts = metadata.getRightParts().createRuntime(topView);
+			if (metadata.getLeftParts() != null)
+				leftParts = metadata.getLeftParts()
+						.createRuntime(topView);
+			if (metadata.getRightParts() != null)
+				rightParts = metadata.getRightParts()
+						.createRuntime(topView);
 		}
 
 		@Override
@@ -161,20 +172,25 @@ public class MetaSeparatorParts extends MetaTopViewContentParts {
 			String separatorClass = null;
 			String separatorLeftClass = null;
 			String separatorRightClass = null;
+			Integer maxHeight = this.getMetaData()
+					.getMaxHeight();
 
 			String designType = (String) req.getAttribute(ViewConst.DESIGN_TYPE);
 			if (ViewConst.DESIGN_TYPE_GEM.equals(designType)) {
 				separatorClass = "col2-wrap";
-				if(StringUtil.isNotBlank(getStyle())) {
+				if (StringUtil.isNotBlank(getStyle())) {
 					separatorClass = separatorClass + " " + getStyle();
 				}
 				separatorLeftClass = "col-left";
 				separatorRightClass = "col-right";
 			}
 
-
 			Writer writer = page.getOut();
-			writer.write("<div class=\"" + separatorClass + "\">\n");
+			if (maxHeight != null && maxHeight.intValue() > 0) {
+				writer.write("<div class=\"" + separatorClass + "\" style=\"max-height:" + maxHeight.intValue() + "px; overflow-y:auto;\">\n");
+			} else {
+				writer.write("<div class=\"" + separatorClass + "\">\n");
+			}
 
 			writer.write("<div class=\"" + separatorLeftClass + "\">\n");
 			if (leftParts != null) {
@@ -220,5 +236,29 @@ public class MetaSeparatorParts extends MetaTopViewContentParts {
 			return rightParts;
 		}
 
+		@Override
+		public List<TopViewPartsHandler> getNestParts() {
+			List<TopViewPartsHandler> nestParts = new ArrayList<>();
+			if (leftParts != null) {
+				nestParts.addAll(getNestParts(leftParts));
+			}
+			if (rightParts != null) {
+				nestParts.addAll(getNestParts(rightParts));
+			}
+			return nestParts;
+		}
+
+		private List<TopViewPartsHandler> getNestParts(TopViewPartsHandler parts) {
+			if (parts instanceof HasNestPartsHandler) {
+				List<TopViewPartsHandler> nestParts = new ArrayList<>();
+				nestParts.add(parts);
+				nestParts.addAll(((HasNestPartsHandler) parts).getNestParts());
+				return nestParts;
+			} else {
+				return Arrays.asList(parts);
+			}
+		}
+
 	}
+
 }

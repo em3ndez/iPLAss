@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,6 +23,7 @@ package org.iplass.gem.command.generic.search.condition;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.iplass.gem.command.Constants;
 import org.iplass.gem.command.generic.search.SearchConditionDetail;
 import org.iplass.mtp.auth.User;
 import org.iplass.mtp.entity.Entity;
@@ -31,9 +32,14 @@ import org.iplass.mtp.entity.query.Query;
 import org.iplass.mtp.entity.query.SubQuery;
 import org.iplass.mtp.entity.query.condition.Condition;
 import org.iplass.mtp.entity.query.condition.expr.And;
+import org.iplass.mtp.entity.query.condition.predicate.Between;
 import org.iplass.mtp.entity.query.condition.predicate.Equals;
+import org.iplass.mtp.entity.query.condition.predicate.GreaterEqual;
 import org.iplass.mtp.entity.query.condition.predicate.In;
+import org.iplass.mtp.entity.query.condition.predicate.IsNull;
+import org.iplass.mtp.entity.query.condition.predicate.LesserEqual;
 import org.iplass.mtp.entity.query.condition.predicate.Like;
+import org.iplass.mtp.util.StringUtil;
 import org.iplass.mtp.view.generic.editor.PropertyEditor;
 import org.iplass.mtp.view.generic.editor.StringPropertyEditor;
 import org.iplass.mtp.view.generic.editor.StringPropertyEditor.StringDisplayType;
@@ -55,28 +61,68 @@ public class StringPropertySearchCondition extends PropertySearchCondition {
 	public List<Condition> convertNormalCondition() {
 		List<Condition> conditions = new ArrayList<>();
 		PropertyEditor editor = getEditor();
-		//like検索
 		if (editor instanceof StringPropertyEditor) {
 			StringPropertyEditor sp = (StringPropertyEditor) editor;
-			if ((sp.getDisplayType() != null && sp.getDisplayType() == StringDisplayType.SELECT)
-					|| sp.isSearchExactMatchCondition()) {
-				//選択時または完全一致有無にチェック時はEquals
-				conditions.add(new Equals(getPropertyName(), getValue()));
+			String[] values = (String[]) getValue();
+			if (sp.isSearchInRange()) {
+				//範囲検索
+				// From-To検索
+				// 2番目、3番目を利用
+				String from = null;
+				String to = null;
+				if (values.length > 1 && values[1] != null) {
+					from = values[1];
+				}
+				if (values.length > 2 && values[2] != null) {
+					to = values[2];
+				}
+				if (StringUtil.isNotEmpty(from) && StringUtil.isNotEmpty(to)) {
+					conditions.add(new Between(getPropertyName(), from, to));
+				} else if (StringUtil.isNotEmpty(from) && StringUtil.isEmpty(to)) {
+					conditions.add(new GreaterEqual(getPropertyName(), from));
+				} else if (StringUtil.isEmpty(from) && StringUtil.isNotEmpty(to)) {
+					conditions.add(new LesserEqual(getPropertyName(), to));
+				}
 			} else {
-				//like検索
-				//conditions.add(new Like(getPropertyName(), "%" + StringUtil.escapeEqlForLike(getValue().toString()) + "%"));
-				conditions.add(new Like(getPropertyName(), getValue().toString(), Like.MatchPattern.PARTIAL));
+				String strValue = getLikeSource();
+				if (StringUtil.isNotBlank(strValue)) {
+					if ((sp.getDisplayType() != null && sp.getDisplayType() == StringDisplayType.SELECT)
+							|| sp.isSearchExactMatchCondition()) {
+						// 「値なし」を検索条件の選択肢に追加するか
+						if (sp.isIsNullSearchEnabled() && Constants.ISNULL_VALUE.equals(strValue)) {
+							conditions.add(new IsNull(getPropertyName()));
+						} else {
+							//選択時または完全一致有無にチェック時はEquals
+							conditions.add(new Equals(getPropertyName(), strValue));
+						}
+					} else {
+						// like検索
+						// 1番目を利用
+						//conditions.add(new Like(getPropertyName(), "%" + StringUtil.escapeEqlForLike(getValue().toString()) + "%"));
+						//複数の場合は部分一致
+						conditions.add(new Like(getPropertyName(), strValue, Like.MatchPattern.PARTIAL));
+					}
+
+				}
 			}
 		} else if (editor instanceof UserPropertyEditor) {
-			//入力された内容(名前)でoid取得
-			//Like like = new Like(Entity.NAME, "%" + StringUtil.escapeEqlForLike(getValue().toString()) + "%");
-			Like like = new Like(Entity.NAME, getValue().toString(), Like.MatchPattern.PARTIAL);
-			conditions.add(new In(getPropertyName(), new SubQuery(
-					new Query().select(Entity.OID).from(User.DEFINITION_NAME).where(like))));
+			// 入力されたユーザー名を元にUserを検索し、該当ユーザーのOIDで絞り込む
+			String strValue = getLikeSource();
+			if (StringUtil.isNotBlank(strValue)) {
+				Like like = new Like(Entity.NAME, strValue, Like.MatchPattern.PARTIAL);
+				conditions.add(new In(getPropertyName(), new SubQuery(
+						new Query().select(Entity.OID)
+								.from(User.DEFINITION_NAME)
+								.where(like))));
+			}
 		} else {
 			//Template等のケース、likeで検索
 			//conditions.add(new Like(getPropertyName(), "%" + StringUtil.escapeEqlForLike(getValue().toString()) + "%"));
-			conditions.add(new Like(getPropertyName(), getValue().toString(), Like.MatchPattern.PARTIAL));
+
+			String strValue = getLikeSource();
+			if (StringUtil.isNotBlank(strValue)) {
+				conditions.add(new Like(getPropertyName(), strValue, Like.MatchPattern.PARTIAL));
+			}
 		}
 		return conditions;
 	}
@@ -85,7 +131,7 @@ public class StringPropertySearchCondition extends PropertySearchCondition {
 	public List<Condition> convertDetailCondition() {
 		PropertyEditor editor = getEditor();
 		if (editor instanceof UserPropertyEditor) {
-			//画面で指定された方法でユーザ検索
+			//画面で指定された方法でユーザー検索
 			List<Condition> conditions = new ArrayList<>();
 
 			//propertyName入れ替えて条件作成
@@ -96,10 +142,25 @@ public class StringPropertySearchCondition extends PropertySearchCondition {
 			detail.setPropertyName(_propName);
 
 			conditions.add(new In(getPropertyName(), new SubQuery(
-					new Query().select(Entity.OID).from(User.DEFINITION_NAME).where(new And(userSearchCondition)))));
+					new Query().select(Entity.OID)
+							.from(User.DEFINITION_NAME)
+							.where(new And(userSearchCondition)))));
 
 			return conditions;
 		}
 		return super.convertDetailCondition();
+	}
+
+	/**
+	 * LIKE条件の生成元となる検索文字列を取得します。
+	 * 検索値が配列の場合は先頭要素を、それ以外の場合は文字列表現を返します。
+	 * @return LIKE条件の生成元となる検索文字列。値がnullまたは空配列の場合はnull
+	 */
+	private String getLikeSource() {
+		Object value = getValue();
+		if (value instanceof String[] values) {
+			return values.length > 0 ? values[0] : null;
+		}
+		return value != null ? value.toString() : null;
 	}
 }

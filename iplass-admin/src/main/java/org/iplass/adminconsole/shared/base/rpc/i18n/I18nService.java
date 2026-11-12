@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -37,6 +37,7 @@ public interface I18nService extends XsrfProtectedService {
 
 	public Map<String, List<LocalizedStringDefinition>> getMultiLangItemInfoForDisp(int tenantId, Definition definition);
 
-	public Definition getMultiLangItemInfoForUpdate(int tenantId, Definition definition, Map<String, MultiLangFieldInfo> updateDefinitionInfo) throws RuntimeException;
+	public Definition getMultiLangItemInfoForUpdate(int tenantId, Definition definition, Map<String, MultiLangFieldInfo> updateDefinitionInfo)
+			throws RuntimeException;
 
 }

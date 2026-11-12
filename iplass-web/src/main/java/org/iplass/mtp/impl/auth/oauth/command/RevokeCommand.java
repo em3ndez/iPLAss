@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,32 +24,33 @@ import org.iplass.mtp.command.RequestContext;
 import org.iplass.mtp.command.annotation.CommandClass;
 import org.iplass.mtp.command.annotation.webapi.WebApi;
 import org.iplass.mtp.impl.auth.oauth.MetaOAuthClient.OAuthClientRuntime;
+import org.iplass.mtp.impl.auth.oauth.util.OAuthEndpointConstants;
 import org.iplass.mtp.util.StringUtil;
 import org.iplass.mtp.webapi.definition.MethodType;
 import org.iplass.mtp.webapi.definition.RequestType;
 import org.iplass.mtp.webapi.definition.StateType;
 
-@WebApi(name="oauth/revoke",
-	accepts=RequestType.REST_FORM,
-	methods=MethodType.POST,
-	checkXRequestedWithHeader=false,
-	privilaged=true,
-	state=StateType.STATELESS,
-	responseType="application/json"
+@WebApi(
+		name = "oauth/revoke",
+		accepts = RequestType.REST_FORM,
+		methods = MethodType.POST,
+		checkXRequestedWithHeader = false,
+		privileged = true,
+		state = StateType.STATELESS,
+		responseType = "application/json"
 )
-@CommandClass(name="mtp/oauth/RevokeCommand", displayName="OAuth2.0 Token Revocation Endpoint")
-public class RevokeCommand implements Command {
-	static final String PARAM_TOKEN = "token";
-	static final String PARAM_TOKEN_TYPE_HINT = "token_type_hint";
+@CommandClass(name = "mtp/oauth/RevokeCommand", displayName = "OAuth2.0 Token Revocation Endpoint")
+public class RevokeCommand implements Command, OAuthEndpointConstants {
 
 	static final String STAT_SUCCESS = "SUCCESS";
-	
+
 	@Override
 	public String execute(RequestContext request) {
 		OAuthClientRuntime clientRuntime = CommandUtil.validateClient(request, true);
 		String token = request.getParam(PARAM_TOKEN);
 		String tokenTypeHint = StringUtil.stripToNull(request.getParam(PARAM_TOKEN_TYPE_HINT));
-		clientRuntime.getAuthorizationServer().revoke(token, tokenTypeHint, clientRuntime);
+		clientRuntime.getAuthorizationServer()
+				.revoke(token, tokenTypeHint, clientRuntime);
 		return STAT_SUCCESS;
 	}
 }

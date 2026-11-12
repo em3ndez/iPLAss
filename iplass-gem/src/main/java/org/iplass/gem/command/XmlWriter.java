@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -70,7 +70,6 @@ public abstract class XmlWriter implements ResultStreamWriter {
 		stackTags.push(element);
 		add(getTagWithName(element, name));
 	}
-
 
 	protected void closeElement() throws IOException {
 		String element = stackTags.pop();
@@ -144,6 +143,7 @@ public abstract class XmlWriter implements ResultStreamWriter {
 
 		return sb.toString();
 	}
+
 	protected void addTabs() throws IOException {
 		int count = stackTags.size();
 		StringBuffer sb = new StringBuffer();

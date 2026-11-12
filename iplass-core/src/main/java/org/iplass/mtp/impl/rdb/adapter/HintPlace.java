@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,5 +21,5 @@
 package org.iplass.mtp.impl.rdb.adapter;
 
 public enum HintPlace {
-	HEAD_OF_SQL, AFTER_SELECT
+	HEAD_OF_SQL, AFTER_SELECT, END_OF_SQL
 }

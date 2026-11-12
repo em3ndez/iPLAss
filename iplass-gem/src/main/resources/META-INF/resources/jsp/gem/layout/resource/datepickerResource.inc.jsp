@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -19,7 +19,7 @@
  --%>
 <%@page import="org.iplass.mtp.util.StringUtil"%>
 <%@page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true" %>
-<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@page import="org.iplass.gem.GemConfigService"%>
 <%@page import="org.iplass.mtp.spi.ServiceRegistry"%>
@@ -32,7 +32,7 @@
 
 <%-- enの場合はデフォルトを利用 --%>
 <c:if test="${language != 'en'}" >
-<script src="${staticContentPath}/webjars/jquery-ui/1.12.1/ui/minified/i18n/datepicker-${language}.js?cv=${apiVersion}"></script>
+<script src="${staticContentPath}/webjars/jquery-ui/1.13.3/ui/i18n/datepicker-${language}.js?cv=${apiVersion}"></script>
 <script src="${staticContentPath}/webjars/jQuery-Timepicker-Addon/1.6.3/i18n/jquery-ui-timepicker-${language}.js?cv=${apiVersion}"></script>
 </c:if>
 <script src="${staticContentPath}/scripts/gem/plugin/jQuery-Timepicker-Addon/jquery-ui-timepicker-addon-mtp.js?cv=${apiVersion}"></script>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,7 +35,8 @@ public interface ReferenceRegistHandler {
 	 * @param inputEntity
 	 * @param loadEntity
 	 */
-	public default void regist(ReferenceRegistHandlerFunction function, Entity inputEntity, Entity loadEntity){};
+	public default void regist(ReferenceRegistHandlerFunction function, Entity inputEntity, Entity loadEntity) {
+	};
 
 	/**
 	 * 被参照の登録処理
@@ -43,7 +44,8 @@ public interface ReferenceRegistHandler {
 	 * @param inputEntity
 	 * @param loadEntity
 	 */
-	public default void registMappedby(ReferenceRegistHandlerFunction function, Entity inputEntity, Entity loadEntity){};
+	public default void registMappedby(ReferenceRegistHandlerFunction function, Entity inputEntity, Entity loadEntity) {
+	};
 
 	/**
 	 * 強制更新の設定

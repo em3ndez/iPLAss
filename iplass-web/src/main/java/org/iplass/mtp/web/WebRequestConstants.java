@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,9 +20,9 @@
 
 package org.iplass.mtp.web;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.iplass.mtp.web.actionmapping.RequestInfo;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Webからの呼び出しの際、RequestContextで取得可能なattributeの名前の定数。
@@ -49,7 +49,6 @@ public interface WebRequestConstants {
 
 	/** RedirectPathを取得する為のキー */
 	public static final String REDIRECT_PATH = "redirectPath";
-
 
 	/** HTTPヘッダ（リクエストの）が格納されているMapのインスタンス。*/
 	public static final String HTTP_HEADER = "header";

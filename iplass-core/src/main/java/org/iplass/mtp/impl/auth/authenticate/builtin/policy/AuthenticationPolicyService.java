@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,11 +27,13 @@ import org.iplass.mtp.definition.TypedDefinitionManager;
 import org.iplass.mtp.impl.auth.authenticate.builtin.policy.MetaAuthenticationPolicy.AuthenticationPolicyRuntime;
 import org.iplass.mtp.impl.definition.AbstractTypedMetaDataService;
 import org.iplass.mtp.impl.definition.DefinitionMetaDataTypeMap;
+import org.iplass.mtp.impl.definition.DefinitionNameChecker;
 import org.iplass.mtp.impl.metadata.MetaDataContext;
 import org.iplass.mtp.spi.Config;
 import org.iplass.mtp.spi.Service;
 
-public class AuthenticationPolicyService extends AbstractTypedMetaDataService<MetaAuthenticationPolicy, AuthenticationPolicyRuntime> implements Service {
+public class AuthenticationPolicyService extends AbstractTypedMetaDataService<MetaAuthenticationPolicy, AuthenticationPolicyRuntime>
+		implements Service {
 	public static final String AUTHN_POLICY_PATH = "/authNPolicy/";
 	public static final String DEFAULT_NAME = "DEFAULT";
 
@@ -39,9 +41,16 @@ public class AuthenticationPolicyService extends AbstractTypedMetaDataService<Me
 		public TypeMap() {
 			super(getFixedPath(), MetaAuthenticationPolicy.class, AuthenticationPolicyDefinition.class);
 		}
+
 		@Override
 		public TypedDefinitionManager<AuthenticationPolicyDefinition> typedDefinitionManager() {
-			return ManagerLocator.getInstance().getManager(AuthenticationPolicyDefinitionManager.class);
+			return ManagerLocator.getInstance()
+					.getManager(AuthenticationPolicyDefinitionManager.class);
+		}
+
+		@Override
+		protected DefinitionNameChecker createDefinitionNameChecker() {
+			return DefinitionNameChecker.getPathSlashDefinitionNameChecker();
 		}
 	}
 
@@ -61,9 +70,11 @@ public class AuthenticationPolicyService extends AbstractTypedMetaDataService<Me
 		if (name == null) {
 			name = DEFAULT_NAME;
 		}
-		AuthenticationPolicyRuntime r = MetaDataContext.getContext().getMetaDataHandler(AuthenticationPolicyRuntime.class, AUTHN_POLICY_PATH  + name);
+		AuthenticationPolicyRuntime r = MetaDataContext.getContext()
+				.getMetaDataHandler(AuthenticationPolicyRuntime.class, AUTHN_POLICY_PATH + name);
 		if (r == null && !DEFAULT_NAME.equals(name)) {
-			r = MetaDataContext.getContext().getMetaDataHandler(AuthenticationPolicyRuntime.class, AUTHN_POLICY_PATH  + DEFAULT_NAME);
+			r = MetaDataContext.getContext()
+					.getMetaDataHandler(AuthenticationPolicyRuntime.class, AUTHN_POLICY_PATH + DEFAULT_NAME);
 		}
 		return r;
 	}

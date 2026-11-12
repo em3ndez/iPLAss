@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,10 +31,11 @@ public class OIDCClaimScopeDefinition extends ScopeDefinition {
 	private static final long serialVersionUID = -3276795373511412049L;
 
 	private List<ClaimMappingDefinition> claims;
-	
+
 	public List<ClaimMappingDefinition> getClaims() {
 		return claims;
 	}
+
 	public void setClaims(List<ClaimMappingDefinition> claims) {
 		this.claims = claims;
 	}

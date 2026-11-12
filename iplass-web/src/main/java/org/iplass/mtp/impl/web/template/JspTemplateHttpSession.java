@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -19,16 +19,15 @@
  */
 package org.iplass.mtp.impl.web.template;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpSessionContext;
-
 import org.iplass.mtp.command.SessionContext;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpSession;
+//import jakarta.servlet.http.HttpSessionContext;
 
 @SuppressWarnings("deprecation")
 public class JspTemplateHttpSession implements HttpSession {
@@ -71,10 +70,10 @@ public class JspTemplateHttpSession implements HttpSession {
 		return session.getMaxInactiveInterval();
 	}
 
-	@Override
-	public HttpSessionContext getSessionContext() {
-		return session.getSessionContext();
-	}
+	//	@Override
+	//	public HttpSessionContext getSessionContext() {
+	//		return session.getSessionContext();
+	//	}
 
 	@Override
 	public Object getAttribute(String name) {
@@ -85,10 +84,10 @@ public class JspTemplateHttpSession implements HttpSession {
 		return ret;
 	}
 
-	@Override
-	public Object getValue(String name) {
-		return getAttribute(name);
-	}
+	//	@Override
+	//	public Object getValue(String name) {
+	//		return getAttribute(name);
+	//	}
 
 	@Override
 	public Enumeration<String> getAttributeNames() {
@@ -99,6 +98,7 @@ public class JspTemplateHttpSession implements HttpSession {
 				public boolean hasMoreElements() {
 					return it.hasNext();
 				}
+
 				@Override
 				public String nextElement() {
 					return it.next();
@@ -109,19 +109,19 @@ public class JspTemplateHttpSession implements HttpSession {
 		}
 	}
 
-	@Override
-	public String[] getValueNames() {
-		if (sessionContext != null) {
-			Iterator<String> it = sessionContext.getAttributeNames();
-			ArrayList<String> ret = new ArrayList<>();
-			while (it.hasNext()) {
-				ret.add(it.next());
-			}
-			return ret.toArray(new String[ret.size()]);
-		} else {
-			return new String[0];
-		}
-	}
+	//	@Override
+	//	public String[] getValueNames() {
+	//		if (sessionContext != null) {
+	//			Iterator<String> it = sessionContext.getAttributeNames();
+	//			ArrayList<String> ret = new ArrayList<>();
+	//			while (it.hasNext()) {
+	//				ret.add(it.next());
+	//			}
+	//			return ret.toArray(new String[ret.size()]);
+	//		} else {
+	//			return new String[0];
+	//		}
+	//	}
 
 	@Override
 	public void setAttribute(String name, Object value) {
@@ -130,10 +130,10 @@ public class JspTemplateHttpSession implements HttpSession {
 		}
 	}
 
-	@Override
-	public void putValue(String name, Object value) {
-		setAttribute(name, value);
-	}
+	//	@Override
+	//	public void putValue(String name, Object value) {
+	//		setAttribute(name, value);
+	//	}
 
 	@Override
 	public void removeAttribute(String name) {
@@ -142,10 +142,10 @@ public class JspTemplateHttpSession implements HttpSession {
 		}
 	}
 
-	@Override
-	public void removeValue(String name) {
-		removeAttribute(name);
-	}
+	//	@Override
+	//	public void removeValue(String name) {
+	//		removeAttribute(name);
+	//	}
 
 	@Override
 	public void invalidate() {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -101,7 +101,7 @@ public interface RequestContext {
 			return ret;
 		}
 	}
-	
+
 	/**
 	 * クライアントからの呼び出しパラメータを指定の型の配列として取得します。
 	 * typeにはプリミティブ側のラッパークラス、String、BigDecimal、SelectValue、
@@ -148,14 +148,14 @@ public interface RequestContext {
 				}
 			}
 		}
-		
+
 		if (ret == null) {
 			return defaultValues;
 		} else {
 			return ret;
 		}
 	}
-	
+
 	/**
 	 * クライアントからの呼び出しパラメータをBoolean型として取得します。
 	 * Boolean.valueOf(String)で変換します。
@@ -266,7 +266,8 @@ public interface RequestContext {
 		if (vals == null) {
 			return null;
 		}
-		if (vals.getClass().getComponentType() == Date.class) {
+		if (vals.getClass()
+				.getComponentType() == Date.class) {
 			return (Date[]) vals;
 		}
 		try {
@@ -309,7 +310,8 @@ public interface RequestContext {
 		if (vals == null) {
 			return null;
 		}
-		if (vals.getClass().getComponentType() == Timestamp.class) {
+		if (vals.getClass()
+				.getComponentType() == Timestamp.class) {
 			return (Timestamp[]) vals;
 		}
 		try {
@@ -352,7 +354,8 @@ public interface RequestContext {
 		if (vals == null) {
 			return null;
 		}
-		if (vals.getClass().getComponentType() == Time.class) {
+		if (vals.getClass()
+				.getComponentType() == Time.class) {
 			return (Time[]) vals;
 		}
 		try {

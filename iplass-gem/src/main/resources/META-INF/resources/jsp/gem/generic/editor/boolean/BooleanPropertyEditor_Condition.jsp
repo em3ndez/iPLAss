@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -121,6 +121,16 @@
 %>
 <select name="<c:out value="<%=propName %>"/>" class="form-size-02 inpbr" style="<c:out value="<%=customStyle%>"/>" size="1">
 <option value="" <%=checked3 %>><%=pleaseSelectLabel %></option>
+<%
+		
+		// 「値なし」を検索条件の選択肢に追加するか
+		if (editor.isIsNullSearchEnabled()) {
+			String selected = Constants.ISNULL_VALUE.equals(value) ? " selected" : "";
+%>
+<option value="<c:out value="<%=Constants.ISNULL_VALUE %>"/>" <c:out value="<%=selected %>"/>>${m:rs("mtp-gem-messages", "generic.editor.common.isNullDisplayName")}</option>
+<%
+		}
+%>
 <option value="true" <%=checked1 %>><c:out value="<%=trueLabel %>"/></option>
 <option value="false" <%=checked2 %>><c:out value="<%=falseLabel %>"/></option>
 </select>
@@ -171,19 +181,31 @@ $(function() {
 			}
 %>
 <ul class="list-radio-01">
-<li>
+<li <c:if test="<%=editor.isItemDirectionColumn() %>">style="display: block;"</c:if>>
 <label for="select-radio-<c:out value="<%=propName %>"/>01" style="<c:out value="<%=customStyle%>"/>" title="<c:out value="<%=trueLabel %>"/>" >
 <input id="select-radio-<c:out value="<%=propName %>"/>01" name="<c:out value="<%=propName %>"/>" class="radio" type="radio" value="true" <%=checked1 %>><c:out value="<%=trueLabel %>"/>
 </label>
 </li>
-<li>
+<li <c:if test="<%=editor.isItemDirectionColumn() %>">style="display: block;"</c:if>>
 <label for="select-radio-<c:out value="<%=propName %>"/>02" style="<c:out value="<%=customStyle%>"/>" title="<c:out value="<%=falseLabel %>"/>" >
 <input id="select-radio-<c:out value="<%=propName %>"/>02" name="<c:out value="<%=propName %>"/>" class="radio" type="radio" value="false"<%=checked2 %>><c:out value="<%=falseLabel %>"/>
 </label>
 </li>
+<%
+		if (editor.isIsNullSearchEnabled() && BooleanDisplayType.RADIO == editor.getDisplayType() ) {
+			String checked = Constants.ISNULL_VALUE.equals(value) ? " checked" : "";
+%>
+<li <c:if test="<%=editor.isItemDirectionColumn() %>">style="display: block;"</c:if>>
+<label for="select-radio-<c:out value="<%=propName %>"/>03" style="<c:out value="<%=customStyle%>"/>" title="${m:rs('mtp-gem-messages', 'generic.editor.common.isNullDisplayName')}" >
+<input id="select-radio-<c:out value="<%=propName %>"/>03" name="<c:out value="<%=propName %>"/>" class="radio" type="radio" value="<c:out value="<%=Constants.ISNULL_VALUE %>"/>"<%=checked %>>${m:rs("mtp-gem-messages", "generic.editor.common.isNullDisplayName")}
+</label>
+</li>
+<%
+		}
+%>
 <li class="unspecified-option" style="<c:out value="<%=unspecifiedOptionStyleContent %>" />">
-<label for="select-radio-<c:out value="<%=propName %>"/>03" style="<c:out value="<%=customStyle%>"/>" title="${m:rs('mtp-gem-messages', 'generic.editor.boolean.BooleanPropertyEditor_Condition.unspecified')}" >
-<input id="select-radio-<c:out value="<%=propName %>"/>03" name="<c:out value="<%=propName %>"/>" class="radio" type="radio" value="" <%=checked3 %>>${m:rs("mtp-gem-messages", "generic.editor.boolean.BooleanPropertyEditor_Condition.unspecified")}
+<label for="select-radio-<c:out value="<%=propName %>"/>04" style="<c:out value="<%=customStyle%>"/>" title="${m:rs('mtp-gem-messages', 'generic.editor.boolean.BooleanPropertyEditor_Condition.unspecified')}" >
+<input id="select-radio-<c:out value="<%=propName %>"/>04" name="<c:out value="<%=propName %>"/>" class="radio" type="radio" value="" <%=checked3 %>>${m:rs("mtp-gem-messages", "generic.editor.boolean.BooleanPropertyEditor_Condition.unspecified")}
 </label>
 </li>
 </ul>

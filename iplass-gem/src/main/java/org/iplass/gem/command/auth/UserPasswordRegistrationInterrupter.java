@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,10 +33,10 @@ import org.iplass.mtp.view.generic.FormView;
 import org.iplass.mtp.view.generic.RegistrationInterrupter;
 
 public class UserPasswordRegistrationInterrupter implements RegistrationInterrupter {
-	
+
 	@Override
-	public List<ValidateError> beforeRegist(Entity entity,
-			RequestContext request, EntityDefinition definition,
+	@Deprecated
+	public List<ValidateError> beforeRegist(Entity entity, RequestContext request, EntityDefinition definition,
 			FormView view, RegistrationType registrationType) {
 
 		if (StringUtil.isNotEmpty(request.getParam(AuthCommandConstants.PARAM_PASSWORD))) {

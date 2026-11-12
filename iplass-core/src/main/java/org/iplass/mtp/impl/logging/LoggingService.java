@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,8 +25,8 @@ import org.iplass.mtp.spi.Config;
 import org.iplass.mtp.spi.Service;
 
 public abstract class LoggingService implements Service {
-	
-	private Long maxAgeSecondsOfLogCondition; 
+
+	private Long maxAgeSecondsOfLogCondition;
 
 	public Long getMaxAgeSecondsOfLogCondition() {
 		return maxAgeSecondsOfLogCondition;
@@ -40,7 +40,7 @@ public abstract class LoggingService implements Service {
 	@Override
 	public void destroy() {
 	}
-	
+
 	protected abstract Object createRuntime(LogCondition logCondition);
 
 	public LoggingContext getLoggingContext(TenantContext tenantContext) {

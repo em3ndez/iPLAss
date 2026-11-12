@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,9 +22,7 @@ package org.iplass.adminconsole.server.base.service.auditlog;
 
 public enum MetaDataAction {
 
-	CREATE("store metadata")
-	,UPDATE("update metadata")
-	,DELETE("remove metadata")
+	CREATE("store metadata"), UPDATE("update metadata"), DELETE("remove metadata")
 //	,REFERENCE("reference metadata")
 	;
 

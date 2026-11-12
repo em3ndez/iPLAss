@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,16 +31,17 @@ import org.iplass.mtp.impl.auth.log.AuthLoggerService;
 import org.iplass.mtp.spi.ServiceRegistry;
 
 public class LoggingAccountManagementModule implements AccountManagementModule {
-	
+
 	private AccountManagementModule amm;
 	//TODO AccountNotificationListener経由に
-	private AuthLogger authLogger = ServiceRegistry.getRegistry().getService(AuthLoggerService.class).getAuthLogger(null);
-	
+	private AuthLogger authLogger = ServiceRegistry.getRegistry()
+			.getService(AuthLoggerService.class)
+			.getAuthLogger(null);
 
 	public LoggingAccountManagementModule(AccountManagementModule amm) {
 		this.amm = amm;
 	}
-	
+
 	@Override
 	public boolean canCreate() {
 		return amm.canCreate();
@@ -55,7 +56,7 @@ public class LoggingAccountManagementModule implements AccountManagementModule {
 	public boolean canRemove() {
 		return amm.canRemove();
 	}
-	
+
 	@Override
 	public boolean canRestore() {
 		return amm.canRestore();
@@ -80,7 +81,7 @@ public class LoggingAccountManagementModule implements AccountManagementModule {
 	public void create(User user) {
 		amm.create(user);
 	}
-	
+
 	@Override
 	public void afterCreate(User user) {
 		amm.afterCreate(user);
@@ -92,15 +93,20 @@ public class LoggingAccountManagementModule implements AccountManagementModule {
 	}
 
 	@Override
+	public void afterUpdate(User user, String policyName, List<String> updateProperties) {
+		amm.afterUpdate(user, policyName, updateProperties);
+	}
+
+	@Override
 	public void remove(User user) {
 		amm.remove(user);
 	}
-	
+
 	@Override
 	public void restore(User user) {
 		amm.restore(user);
 	}
-	
+
 	@Override
 	public void purge(User user) {
 		amm.purge(user);

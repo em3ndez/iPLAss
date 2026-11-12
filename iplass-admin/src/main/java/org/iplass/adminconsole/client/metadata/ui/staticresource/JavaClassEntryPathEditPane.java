@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -47,7 +47,7 @@ public class JavaClassEntryPathEditPane extends EntryPathTypeEditPane<JavaClassE
 		//入力部分
 		form = new DynamicForm();
 		form.setWidth100();
-		form.setNumCols(3);	//間延びしないように最後に１つ余分に作成
+		form.setNumCols(3); //間延びしないように最後に１つ余分に作成
 		form.setColWidths(100, "*", "*");
 
 		classNameField = new TextItem("className", "Java ClassName");

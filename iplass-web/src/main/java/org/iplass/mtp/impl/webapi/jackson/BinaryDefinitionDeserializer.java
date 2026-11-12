@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -39,19 +39,19 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
  *
  */
 public class BinaryDefinitionDeserializer extends JsonDeserializer<BinaryDefinition> {
-	
+
 	private static final String NAME = "name";
 	private static final String SIZE = "size";
 
 	@Override
 	public BinaryDefinition deserialize(JsonParser jp, DeserializationContext ctxt)
 			throws IOException, JsonProcessingException {
-		
+
 		JsonToken t = jp.getCurrentToken();
 		if (t == JsonToken.START_OBJECT) {
 			jp.nextToken();
 		}
-		
+
 		BinaryDefinitionJaxbRepresentation ret = new BinaryDefinitionJaxbRepresentation();
 
 		for (; jp.getCurrentToken() != JsonToken.END_OBJECT; jp.nextToken()) {

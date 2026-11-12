@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -75,8 +75,9 @@
 	viewType = StringUtil.escapeHtml(viewType);
 	if (viewType == null) viewType = "";
 	String refSectionIndex = request.getParameter(Constants.REF_SECTION_INDEX);
-	refSectionIndex = StringUtil.escapeHtml(refSectionIndex);
-	if (refSectionIndex == null) refSectionIndex = "";
+	if (StringUtil.isEmpty(refSectionIndex)) {
+		refSectionIndex = "";
+	}
 
 	//コマンドから
 	DetailFormViewData data = (DetailFormViewData) request.getAttribute(Constants.DATA);
@@ -168,13 +169,13 @@ function onclick_copy() {
 		$("#selectCopyTargetDialog").dialog("open");
 	} else {
 		var $form = $("#detailForm");
-		$form.append("<input type='hidden' name='copy' value='true' />");
+		$form.append("<input type='hidden' name='<%=Constants.COPY%>' value='true' />");
 		$("#detailForm").submit();
 	}
 }
 function onclick_newversion() {
 	var $form = $("#detailForm");
-	$form.append("<input type='hidden' name='newversion' value='true' />");
+	$form.append("<input type='hidden' name='<%=Constants.NEWVERSION%>' value='true' />");
 	$form.submit();
 }
 function viewref(defName, oid, action) {
@@ -287,6 +288,7 @@ function dataUnlock() {
 <div class="operation-bar operation-bar_bottom">
 <jsp:include page="viewButton.inc.jsp" />
 </div><!--operation-bar-->
+${m:outputToken('FORM_XHTML', true)}
 </form>
 </div>
 
@@ -309,7 +311,7 @@ $(function() {
 				$(":hidden[name='copyTarget']").val(copyTarget);
 				$(this).dialog("close");
 				var $form = $("#detailForm");
-				$form.append("<input type='hidden' name='copy' value='true' />");
+				$form.append("<input type='hidden' name='<%=Constants.COPY%>' value='true' />");
 				$("#detailForm").submit();
 			},
 			"${m:rs('mtp-gem-messages', 'generic.detail.ref.view.cancel')}": function() { $(this).dialog("close");}

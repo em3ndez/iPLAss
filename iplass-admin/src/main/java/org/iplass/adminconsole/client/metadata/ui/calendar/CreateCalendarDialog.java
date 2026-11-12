@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -88,7 +88,8 @@ public class CreateCalendarDialog extends MetaDataCreateDialog {
 			EntityCalendar definition = new EntityCalendar();
 
 			definition.setName(saveInfo.getName());
-			if (saveInfo.getDisplayName() == null || saveInfo.getDisplayName().isEmpty()) {
+			if (saveInfo.getDisplayName() == null || saveInfo.getDisplayName()
+					.isEmpty()) {
 				definition.setDisplayName(saveInfo.getName());
 			} else {
 				definition.setDisplayName(saveInfo.getDisplayName());

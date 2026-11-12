@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -108,48 +108,29 @@
 		} else {
 			wrapContent = "<span class='data-label'>" + content + "</span>";
 		}
+
+		request.setAttribute(Constants.EDITOR_RICHTEXT_LIBRARY, parts.getRichTextLibrary());
+		request.setAttribute(Constants.EDITOR_RICHTEXT_ALLOWED_CONTENT, enableHtmlTag);
+		request.setAttribute(Constants.EDITOR_RICHTEXT_HIDE_TOOL_BAR, true);
+		request.setAttribute(Constants.EDITOR_RICHTEXT_ALLOWED_LINK_ACTION, parts.isAllowRichTextEditorLinkAction());
+		request.setAttribute(Constants.EDITOR_RICHTEXT_EDITOR_OPTION, parts.getRichtextEditorOption());
+		request.setAttribute(Constants.EDITOR_RICHTEXT_TARGET_NAME, "infomation_content");
 %>
 <span class="data-label" style="<c:out value="<%=customStyle %>"/>">
-<textarea name="infomation_content" rows="5" cols="30" ><c:out value="<%=wrapContent %>"/></textarea>
+<textarea name="infomation_content" id="id_infomation_content" rows="5" cols="30" ><c:out value="<%=wrapContent %>"/></textarea>
 </span>
-<%
-		if (request.getAttribute(Constants.RICHTEXT_LIB_LOADED) == null) {
-			request.setAttribute(Constants.RICHTEXT_LIB_LOADED, true);
-%>
-<%@include file="../layout/resource/ckeditorResource.inc.jsp" %>
-<%
-		}
-%>
-<script type="text/javascript">
-$(function() {
-<%		if (StringUtil.isNotBlank(parts.getRichtextEditorOption())) { %>
-	var opt = <%=parts.getRichtextEditorOption()%>;
-	if (typeof opt.readOnly === "undefined") opt.readOnly = true;
-<%		} else { %>
-	var opt = { readOnly: true, allowedContent:<%=enableHtmlTag%> };
-<%		} %>
-	if (typeof opt.extraPlugins === "undefined") opt.extraPlugins = "autogrow";
-	if (typeof opt.autoGrow_onStartup === "undefined") opt.autoGrow_onStartup = true;
-	var readyOpt = {
-		on: {
-			instanceReady: function (evt) {
-				<%-- 全体border、ツールバーを非表示 --%>
-				var containerId = evt.editor.container.$.id;
-				var editorId = evt.editor.id;
-				$("#" + containerId).css("border", "none");
-				$("#" + editorId + "_top").hide();
-				$("#" + editorId + "_bottom").hide();
-			}
-		}
-	}
-	$.extend(opt, readyOpt);
-	$("textarea[name='infomation_content']").ckeditor(
-		function() {}, opt
-	);
-});
-</script>
+
+<%@include file="../layout/resource/richtextEditorResource.inc.jsp" %>
+<jsp:include page="../generic/editor/string/richtext/RichtextEditor_View.jsp" />
 
 <%
+		request.removeAttribute(Constants.EDITOR_RICHTEXT_LIBRARY);
+		request.removeAttribute(Constants.EDITOR_RICHTEXT_ALLOWED_CONTENT);
+		request.removeAttribute(Constants.EDITOR_RICHTEXT_HIDE_TOOL_BAR);
+		request.removeAttribute(Constants.EDITOR_RICHTEXT_ALLOWED_LINK_ACTION);
+		request.removeAttribute(Constants.EDITOR_RICHTEXT_EDITOR_OPTION);
+		request.removeAttribute(Constants.EDITOR_RICHTEXT_TARGET_NAME);
+
 	} else {
 		if(!content.isEmpty()){
 			if (!enableHtmlTag) {

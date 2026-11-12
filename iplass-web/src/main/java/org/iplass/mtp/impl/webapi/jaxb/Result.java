@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -19,29 +19,29 @@
  */
 package org.iplass.mtp.impl.webapi.jaxb;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlSeeAlso;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
 import org.iplass.mtp.command.beanmapper.MappingResult;
 
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
 @XmlSeeAlso({
-	JaxbListValue.class,
-	MappingResult.class
+		JaxbListValue.class,
+		MappingResult.class
 })
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Result {
 	@XmlAttribute
 	String key;
-	
+
 	@XmlJavaTypeAdapter(ResultValueXmlAdapter.class)
 	Object value;
-	
+
 	public Result() {
 	}
-	
+
 	public Result(String key, Object value) {
 		this.key = key;
 		this.value = value;

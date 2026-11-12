@@ -1,19 +1,19 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
- * 
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
+ *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
@@ -22,10 +22,6 @@ package org.iplass.mtp.impl.web;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
 
 import org.iplass.mtp.impl.async.rdb.RdbQueueService;
 import org.iplass.mtp.impl.cache.store.builtin.CacheEntryCleaner;
@@ -37,19 +33,23 @@ import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletContextEvent;
+import jakarta.servlet.ServletContextListener;
+
 public class ApplicationInitializer implements ServletContextListener {
 
 	private static Logger logger = LoggerFactory.getLogger(ApplicationInitializer.class);
-	
+
 	protected EntryPoint entryPoint;
 
 	@Override
 	public void contextDestroyed(ServletContextEvent event) {
-		
+
 		if (entryPoint != null) {
 			logger.info("destroy all service");
 			entryPoint.destroy();
-			
+
 			//Builtin CacheEntryCleaner
 			CacheEntryCleaner.shutdown();
 			//logback memory leak prevention
@@ -62,16 +62,17 @@ public class ApplicationInitializer implements ServletContextListener {
 						stopMethod.invoke(lf);
 					}
 				}
-			} catch (ClassNotFoundException | NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			} catch (ClassNotFoundException | NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException e) {
 				//ignore
 				e.printStackTrace();
 			}
 		}
 	}
-	
+
 	protected EntryPointBuilder createEntryPointBuilder(ServletContext sc) {
 		EntryPointBuilder builder = EntryPoint.builder();
-		
+
 		String serverEnvFileName = sc.getInitParameter(BootstrapProps.SERVER_ENV_PROP_FILE_NAME);
 		if (serverEnvFileName != null) {
 			logger.info("use " + serverEnvFileName + " as ServerEnvFile.");
@@ -97,26 +98,31 @@ public class ApplicationInitializer implements ServletContextListener {
 			logger.debug("use configLoader:" + loader);
 			builder.loader(loader);
 		}
-		
+
 		//TODO get all other InitParameters?
-		
+
 		return builder;
 	}
 
 	@Override
 	public void contextInitialized(ServletContextEvent e) {
-		if (!EntryPoint.isInited()) {
-			ServletContext sc = e.getServletContext();
-			EntryPointBuilder builder = createEntryPointBuilder(sc);
-			entryPoint = builder.build();
-		}
-		
-		//starting queue service or not
-		ServiceRegistry sr = ServiceRegistry.getRegistry();
-		if (sr.exists(RdbQueueService.class)) {
-			RdbQueueService qs = sr.getService(RdbQueueService.class);
-		}
+		try {
+			if (!EntryPoint.isInited()) {
+				ServletContext sc = e.getServletContext();
+				EntryPointBuilder builder = createEntryPointBuilder(sc);
+				entryPoint = builder.build();
+			}
 
+			//starting queue service or not
+			ServiceRegistry sr = ServiceRegistry.getRegistry();
+			if (sr.exists(RdbQueueService.class)) {
+				RdbQueueService qs = sr.getService(RdbQueueService.class);
+			}
+
+		} catch (Throwable t) {
+			logger.error("A fatal problem occurred during context initialization.", t);
+			throw t;
+		}
 	}
 
 }

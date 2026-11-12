@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -36,25 +36,11 @@ public interface ScriptEditorDialogConstants {
 
 	public static final String ENTITY_VALIDATION = "Entity.Validation";
 
+	public static final String ENTITY_VALIDATION_SKIP_SCRIPT = "Entity.ValidationSkipScriptItem";
+
 	public static final String ENTITY_NORMALIZER = "Entity.Normalizer";
 
-	public static final String ENTITY_LISTING_VIEW_NAME = "EntityListing.ViewName";
-
-	public static final String ENTITY_LISTING_CSV_NAME = "EntityListing.CsvFileName";
-
-	public static final String AGGREGATION_CSV_NAME = "Aggregation.CsvFileName";
-
-	public static final String AGGREGATION_RAWDATA_CSV_NAME = "Aggregation.RawDataCsvFileName";
-
 	public static final String MENU_ITEM_CUSTOMIZE_SCRIPT_NAME = "MenuItem.CustomizeScript";
-
-	public static final String SCHEDULING_CRON_EXPRESSION = "Scheduling.CronExpression";
-
-	public static final String SCHEDULING_CUSTOM_EXPRESSION = "Scheduling.CustomExpression";
-
-	public static final String SCHEDULING_WORKFLOW_START_PARAMETER = "Scheduling.WorkflowStartParameter";
-
-	public static final String SCHEDULING_USER_EXPRESSION = "Scheduling.UserExpression";
 
 	public static final String TEMPLATE_REPORT_OUTPUT_LOGIC = "Template.ReportOutputLogic";
 
@@ -64,8 +50,6 @@ public interface ScriptEditorDialogConstants {
 
 	public static final String TOPVIEW_SCRIPT_ITEM = "TopView.ScriptItem";
 
-	public static final String TOPVIEW_USER_TASK_VIEW_NAME = "TopView.UserTaskViewName";
-
 	public static final String TOPVIEW_INFORMATION_CUSTOM_STYLE = "TopView.InformationPartsCustomStyle";
 
 	public static final String UTILITY_SCRIPT = "UtilityClass.Script";
@@ -74,31 +58,17 @@ public interface ScriptEditorDialogConstants {
 
 	public static final String WEBAPI_PARAMMAP_CONDITION = "WebApi.ParamMapCondition";
 
-	public static final String WORKFLOW_QUEUE_CODE_EXPRESSION = "Workflow.QueueCodeExpression";
-
-	public static final String WORKFLOW_TIMER_DELAY_EXPRESSION = "Workflow.TimerDelayExpression";
-
-	public static final String WORKFLOW_TIMER_DATE_EXPRESSION = "Workflow.TimerDateExpression";
-
-	public static final String WORKFLOW_UPDATE_RULE_EXPRESSION = "Workflow.UpdateRuleExpression";
-
-	public static final String TENANT_AVAILABLE_ACTION_CONDITION_SCRIPT = "TenantAvailable.ActionConditionExpression";
-
-	public static final String TENANT_AVAILABLE_ACTION_UNAVAILABLE_MESSAGE = "TenantAvailable.ActionUnavailableMessage";
-
-	public static final String TENANT_AVAILABLE_WEBAPI_CONDITION_SCRIPT = "TenantAvailable.WebApiConditionExpression";
-
-	public static final String TENANT_AVAILABLE_WEBAPI_UNAVAILABLE_MESSAGE = "TenantAvailable.WebApiUnavailableMessage";
-
-	public static final String TENANT_AVAILABLE_ENTITY_READONLY_CONDITION_SCRIPT = "TenantAvailable.EntityReadOnlyConditionExpression";
-
-	public static final String TENANT_AVAILABLE_ENTITY_READONLY_MESSAGE = "TenantAvailable.EntityReadOnlyMessage";
-
 	public static final String CALENDAR_COLOR_CONFIG_SCRIPT = "Calendar.ColorConfig";
 
 	public static final String AUTHENTICATION_LISTENER_NOTIFICATION_SCRIPT = "Authentication.ListenerNotification";
 
 	public static final String PUSHNOTIFICATION_TEMPLATE_CONFIGSCRIPT = "PushNotificationTemplate.ConfigScript";
+
+	public static final String OPENID_CONNECT_RP_BACK_URL_AFTER_AUTH = "OpenIDConnect(RP).BackUrlAfterAuth";
+
+	public static final String OPENID_CONNECT_RP_BACK_URL_AFTER_CONNECT = "OpenIDConnect(RP).BackUrlAfterConnect";
+
+	public static final String PASSWORD_POLICY_CUSTOM_USER_END_DATE = "PasswordPolicy.CustomUserEndDate";
 
 	//TODO
 	//MetaFieldSettingPane

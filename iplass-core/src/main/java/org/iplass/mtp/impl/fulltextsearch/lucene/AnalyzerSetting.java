@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,7 +24,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.iplass.mtp.spi.ServiceInitListener;
 
 public interface AnalyzerSetting extends ServiceInitListener<LuceneFulltextSearchService> {
-	
+
 	public Analyzer getAnalyzer(int tenantId, String entityDefName);
 
 }

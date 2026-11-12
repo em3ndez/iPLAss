@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,8 +20,6 @@
 
 package org.iplass.mtp.impl.entity.normalizer;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
-
 import org.iplass.mtp.entity.ValidationContext;
 import org.iplass.mtp.entity.definition.NormalizerDefinition;
 import org.iplass.mtp.impl.entity.EntityContext;
@@ -29,28 +27,31 @@ import org.iplass.mtp.impl.entity.MetaEntity;
 import org.iplass.mtp.impl.entity.property.MetaProperty;
 import org.iplass.mtp.impl.metadata.MetaData;
 
+import jakarta.xml.bind.annotation.XmlSeeAlso;
+
 @XmlSeeAlso({
-	MetaICUTransliterator.class,
-	MetaJavaClassNormalizer.class,
-	MetaNewlineNormalizer.class,
-	MetaRegexReplace.class,
-	MetaScriptingNormalizer.class,
-	MetaUnicodeNormalizer.class,
-	MetaWhiteSpaceTrimmer.class})
+		MetaHtmlSanitizer.class,
+		MetaICUTransliterator.class,
+		MetaJavaClassNormalizer.class,
+		MetaNewlineNormalizer.class,
+		MetaRegexReplace.class,
+		MetaScriptingNormalizer.class,
+		MetaUnicodeNormalizer.class,
+		MetaWhiteSpaceTrimmer.class })
 public abstract class MetaNormalizer implements MetaData {
 	private static final long serialVersionUID = 5895313087859012114L;
 
 	@Override
 	public abstract MetaNormalizer copy();
-	
+
 	public abstract void applyConfig(NormalizerDefinition definition);
 
 	public abstract NormalizerDefinition currentConfig(EntityContext context);
 
 	public abstract NormalizerRuntime createRuntime(MetaEntity entity, MetaProperty property);
-	
+
 	public abstract class NormalizerRuntime {
-		
+
 		public abstract Object normalize(Object value, ValidationContext context);
 
 		public Object normalizeArray(Object[] values, ValidationContext context) {

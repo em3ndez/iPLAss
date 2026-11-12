@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,19 +22,19 @@ package org.iplass.mtp.impl.rdb.connection;
 import java.sql.Connection;
 
 public enum TransactionIsolationLevel {
-	
+
 	NONE(Connection.TRANSACTION_NONE),
-    READ_UNCOMMITTED(Connection.TRANSACTION_READ_UNCOMMITTED),
-    READ_COMMITTED(Connection.TRANSACTION_READ_COMMITTED),
-    REPEATABLE_READ(Connection.TRANSACTION_REPEATABLE_READ),
-    SERIALIZABLE(Connection.TRANSACTION_SERIALIZABLE);
-	
+	READ_UNCOMMITTED(Connection.TRANSACTION_READ_UNCOMMITTED),
+	READ_COMMITTED(Connection.TRANSACTION_READ_COMMITTED),
+	REPEATABLE_READ(Connection.TRANSACTION_REPEATABLE_READ),
+	SERIALIZABLE(Connection.TRANSACTION_SERIALIZABLE);
+
 	private final int sqlIntValue;
-	
+
 	private TransactionIsolationLevel(int sqlIntValue) {
 		this.sqlIntValue = sqlIntValue;
 	}
-	
+
 	public int sqlIntValue() {
 		return sqlIntValue;
 	}

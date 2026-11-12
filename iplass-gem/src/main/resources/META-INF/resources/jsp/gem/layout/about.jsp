@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 <%@ page import="org.iplass.gem.command.GemResourceBundleUtil"%>
@@ -41,7 +41,7 @@ var key = "<%=modalTarget%>";
 var modalTarget = key != "" ? key : null;
 $(function() {
 	var target = null;
-	var windowManager = document.rootWindow.scriptContext["windowManager"];
+	var windowManager = document.rootDocument.scriptContext["windowManager"];
 	if (modalTarget && windowManager && windowManager[document.targetName]) {
 		$("#modal-title-" + modalTarget, parent.document).text("${m:rsp("mtp-gem-messages", "layout.header.about", appName)}");
 		target = windowManager[modalTarget];

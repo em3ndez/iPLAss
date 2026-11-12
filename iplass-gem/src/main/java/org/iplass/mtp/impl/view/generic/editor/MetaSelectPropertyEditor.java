@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -67,6 +67,12 @@ public class MetaSelectPropertyEditor extends MetaPrimitivePropertyEditor {
 	/** Label形式の場合の更新制御 */
 	private boolean updateWithLabelValue = false;
 
+	/** RADIO、CHECKBOX形式の場合のアイテムを縦に並べるような表示するか */
+	private boolean itemDirectionColumn;
+
+	/** 「値なし」を検索条件の選択肢に追加するか */
+	private boolean isNullSearchEnabled;
+
 	/**
 	 * 表示タイプを取得します。
 	 * @return 表示タイプ
@@ -88,7 +94,8 @@ public class MetaSelectPropertyEditor extends MetaPrimitivePropertyEditor {
 	 * @return セレクトボックスの値
 	 */
 	public List<EditorValue> getValues() {
-		if (values == null) values = new ArrayList<>();
+		if (values == null)
+			values = new ArrayList<>();
 		return values;
 	}
 
@@ -154,6 +161,38 @@ public class MetaSelectPropertyEditor extends MetaPrimitivePropertyEditor {
 		this.updateWithLabelValue = updateWithLabelValue;
 	}
 
+	/**
+	 * RADIO、CHECKBOX形式の場合のアイテムを縦に並べるような表示するかを取得します。
+	 * @return RADIO、CHECKBOX形式の場合のアイテムを縦に並べるような表示するか
+	 */
+	public boolean isItemDirectionColumn() {
+		return itemDirectionColumn;
+	}
+
+	/**
+	 * RADIO、CHECKBOX形式の場合のアイテムを縦に並べるような表示するかを設定します。
+	 * @param itemDirectionColumn RADIO、CHECKBOX形式の場合のアイテムを縦に並べるような表示するか
+	 */
+	public void setItemDirectionColumn(boolean itemDirectionColumn) {
+		this.itemDirectionColumn = itemDirectionColumn;
+	}
+
+	/**
+	 * 「値なし」を検索条件の選択肢に追加するかを取得します。
+	 * @return 「値なし」を検索条件の選択肢に追加するか
+	 */
+	public boolean isIsNullSearchEnabled() {
+		return isNullSearchEnabled;
+	}
+
+	/**
+	 * 「値なし」を検索条件の選択肢に追加するかを設定します。
+	 * @param isNullSearchEnabled 「値なし」を検索条件の選択肢に追加するか
+	 */
+	public void setIsNullSearchEnabled(boolean isNullSearchEnabled) {
+		this.isNullSearchEnabled = isNullSearchEnabled;
+	}
+
 	@Override
 	public MetaSelectPropertyEditor copy() {
 		return ObjectUtil.deepCopy(this);
@@ -167,6 +206,8 @@ public class MetaSelectPropertyEditor extends MetaPrimitivePropertyEditor {
 		displayType = pe.getDisplayType();
 		values = pe.getValues();
 		sortCsvOutputValue = pe.isSortCsvOutputValue();
+		itemDirectionColumn = pe.isItemDirectionColumn();
+		isNullSearchEnabled = pe.isIsNullSearchEnabled();
 		insertWithLabelValue = pe.isInsertWithLabelValue();
 		updateWithLabelValue = pe.isUpdateWithLabelValue();
 	}
@@ -179,6 +220,8 @@ public class MetaSelectPropertyEditor extends MetaPrimitivePropertyEditor {
 		editor.setDisplayType(displayType);
 		editor.setValues(values);
 		editor.setSortCsvOutputValue(sortCsvOutputValue);
+		editor.setItemDirectionColumn(itemDirectionColumn);
+		editor.setIsNullSearchEnabled(isNullSearchEnabled);
 		editor.setInsertWithLabelValue(insertWithLabelValue);
 		editor.setUpdateWithLabelValue(updateWithLabelValue);
 		return editor;
@@ -197,7 +240,7 @@ public class MetaSelectPropertyEditor extends MetaPrimitivePropertyEditor {
 					return true;
 				}
 				if (pd instanceof ExpressionProperty) {
-					ExpressionProperty ep = (ExpressionProperty)pd;
+					ExpressionProperty ep = (ExpressionProperty) pd;
 					if (ep.getResultType() == PropertyDefinitionType.SELECT) {
 						return true;
 					}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,22 +21,22 @@ package org.iplass.mtp.impl.webapi.jaxb;
 
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name="list")
+@XmlType(name = "list")
 public class JaxbListValue {
 	private List<Object> item;
 
 	public JaxbListValue() {
 	}
-	
+
 	public JaxbListValue(List<Object> item) {
 		this.item = item;
 	}
-	
+
 	public List<Object> getItem() {
 		return item;
 	}

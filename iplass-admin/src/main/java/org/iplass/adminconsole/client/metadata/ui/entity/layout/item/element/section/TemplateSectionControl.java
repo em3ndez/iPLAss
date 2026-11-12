@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,7 +32,8 @@ public class TemplateSectionControl extends ItemControl implements SectionContro
 	public TemplateSectionControl(String defName, FieldReferenceType triggerType, TemplateSection section) {
 		super(defName, triggerType);
 
-		if (section.getTitle() != null && !section.getTitle().isEmpty()) {
+		if (section.getTitle() != null && !section.getTitle()
+				.isEmpty()) {
 			setTitle(section.getTitle());
 		} else {
 			setTitle("Template Section");
@@ -49,7 +50,8 @@ public class TemplateSectionControl extends ItemControl implements SectionContro
 			public void execute(MetaFieldUpdateEvent event) {
 				TemplateSection section = (TemplateSection) event.getValue();
 
-				if (section.getTitle() != null && !section.getTitle().isEmpty()) {
+				if (section.getTitle() != null && !section.getTitle()
+						.isEmpty()) {
 					setTitle(section.getTitle());
 				} else {
 					setTitle("Template Section");
@@ -58,7 +60,8 @@ public class TemplateSectionControl extends ItemControl implements SectionContro
 			}
 		});
 
-		setClassName(section.getClass().getName());
+		setClassName(section.getClass()
+				.getName());
 		setValueObject(section);
 	}
 

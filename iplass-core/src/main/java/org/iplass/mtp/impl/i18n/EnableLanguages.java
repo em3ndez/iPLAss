@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,7 +27,7 @@ public class EnableLanguages {
 	private String languageKey;
 
 	private String languageName;
-	
+
 	private List<String> otherLanguageKey;
 
 	public String getLanguageKey() {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -44,7 +44,7 @@ import org.iplass.mtp.command.RequestContext;
  *
  */
 public interface PoiReportOutputLogic {
-	
+
 	/**
 	 * <% if (doclang == "ja") {%>
 	 * POI帳票出力処理

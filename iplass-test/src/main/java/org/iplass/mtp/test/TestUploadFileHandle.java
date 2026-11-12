@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,7 +33,6 @@ import org.iplass.mtp.command.UploadFileHandle;
 import org.iplass.mtp.command.UploadFileSizeOverException;
 import org.iplass.mtp.entity.BinaryReference;
 import org.iplass.mtp.entity.EntityManager;
-import org.iplass.mtp.impl.util.UploadFileUtil;
 import org.iplass.mtp.impl.web.WebFrontendService;
 import org.iplass.mtp.impl.web.WebProcessRuntimeException;
 import org.iplass.mtp.spi.ServiceRegistry;
@@ -50,7 +49,8 @@ import org.slf4j.LoggerFactory;
 public class TestUploadFileHandle implements UploadFileHandle {
 	private static final Logger logger = LoggerFactory.getLogger(TestUploadFileHandle.class);
 
-	private WebFrontendService webFront = ServiceRegistry.getRegistry().getService(WebFrontendService.class);
+	private WebFrontendService webFront = ServiceRegistry.getRegistry()
+			.getService(WebFrontendService.class);
 
 	private File tempFile;
 	private String fileName;
@@ -107,16 +107,18 @@ public class TestUploadFileHandle implements UploadFileHandle {
 
 		// マジックバイトチェックを実施
 		if (webFront.isExecMagicByteCheck()) {
-			UploadFileUtil.checkMagicByte(tempFile, type, fileName);
+			webFront.getMagicByteChecker()
+					.checkMagicByte(tempFile, type, fileName);
 		}
 
 		FileInputStream is = null;
 		try {
 			is = new FileInputStream(tempFile);
-			EntityManager em = ManagerLocator.getInstance().getManager(EntityManager.class);
+			EntityManager em = ManagerLocator.getInstance()
+					.getManager(EntityManager.class);
 			return em.createBinaryReference(fileName, type, is);
 		} catch (FileNotFoundException e) {
-			logger.warn("upload file is externally deleted. maybe contains virus." , e);
+			logger.warn("upload file is externally deleted. maybe contains virus.", e);
 			return null;
 		} finally {
 			if (is != null) {
@@ -142,13 +144,14 @@ public class TestUploadFileHandle implements UploadFileHandle {
 
 		// マジックバイトチェックを実施
 		if (webFront.isExecMagicByteCheck()) {
-			UploadFileUtil.checkMagicByte(tempFile, type, fileName);
+			webFront.getMagicByteChecker()
+					.checkMagicByte(tempFile, type, fileName);
 		}
 
 		try {
 			return new FileInputStream(tempFile);
 		} catch (FileNotFoundException e) {
-			logger.warn("upload file is externally deleted. maybe contains virus." , e);
+			logger.warn("upload file is externally deleted. maybe contains virus.", e);
 			return null;
 		}
 	}
@@ -166,7 +169,8 @@ public class TestUploadFileHandle implements UploadFileHandle {
 
 		// マジックバイトチェックを実施
 		if (webFront.isExecMagicByteCheck()) {
-			UploadFileUtil.checkMagicByte(tempFile, type, fileName);
+			webFront.getMagicByteChecker()
+					.checkMagicByte(tempFile, type, fileName);
 		}
 
 		try {
@@ -184,7 +188,8 @@ public class TestUploadFileHandle implements UploadFileHandle {
 
 		// マジックバイトチェックを実施
 		if (webFront.isExecMagicByteCheck()) {
-			UploadFileUtil.checkMagicByte(tempFile, type, fileName);
+			webFront.getMagicByteChecker()
+					.checkMagicByte(tempFile, type, fileName);
 		}
 
 		try {

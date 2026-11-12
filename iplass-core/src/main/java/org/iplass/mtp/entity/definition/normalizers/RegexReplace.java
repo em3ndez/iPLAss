@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -37,7 +37,7 @@ public class RegexReplace extends NormalizerDefinition {
 
 	private String regex;
 	private String replacement;
-	
+
 	public RegexReplace() {
 	}
 
@@ -49,12 +49,15 @@ public class RegexReplace extends NormalizerDefinition {
 	public String getRegex() {
 		return regex;
 	}
+
 	public void setRegex(String regex) {
 		this.regex = regex;
 	}
+
 	public String getReplacement() {
 		return replacement;
 	}
+
 	public void setReplacement(String replacement) {
 		this.replacement = replacement;
 	}

@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,11 +18,12 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
 <%@ page import="org.iplass.mtp.util.StringUtil"%>
 <%@ page import="org.iplass.mtp.view.generic.editor.TimePropertyEditor" %>
+<%@ page import="org.iplass.mtp.view.generic.editor.DateTimePropertyEditor.DateTimeDisplayType"%>
 <%@ page import="org.iplass.gem.command.Constants"%>
 
 <%
@@ -32,33 +33,32 @@ Integer multiplicity = (Integer) request.getAttribute(Constants.AUTOCOMPLETION_M
 if (multiplicity == null) multiplicity = 1;
 //呼び出し元は/common/Autocompletion.jsp、以降はWebApiの結果を反映する部分のJavascript、結果の変数はvalue
 if (Constants.VIEW_TYPE_DETAIL.equals(viewType)) {
-	// 詳細画面
+	//編集画面
 %>
-var multiplicity = <%=multiplicity%>;
-if (multiplicity == 1) {
-	if (value instanceof Array) {
-		value = value.length > 0 ? value[0] : "";
-	}
-} else {
-	if (value instanceof Array) {
-		if (value.length > multiplicity) {
-			value = value.slice(0, multiplicity);
-		}
-	} else {
-		value = [value];
-	}
-}
+const multiplicity = <%=multiplicity%>;
+const inputLength = $("[name='" + propName + "']").length;
+value = normalizedDetailAutoCompletionValue(value, multiplicity, inputLength, "");
 <%
-	if (editor.isUseTimePicker()) {
-		if (multiplicity == 1) {
+	if (editor.getDisplayType() == DateTimeDisplayType.LABEL) {
+%>
+renderDetailAutoCompletionLabelTypeLabelFormat(value, multiplicity, propName);
+<%
+	} else if(editor.getDisplayType() == DateTimeDisplayType.HIDDEN) {
+%>
+renderDetailAutoCompletionHiddenType(value, multiplicity, propName);
+<% 
+	} else {
+		if (editor.isUseTimePicker()) {
+			if (multiplicity == 1) {
 %>
 var $time = $("#time_" + propName);
 var timeFormat = $time.attr("data-timeformat");
+var formatString = value.length > 0 ? dateUtil.newFormatString(value, dateUtil.getServerTimeFormat(), timeFormat) : "";
 
-$time.val(dateUtil.newFormatString(value, dateUtil.getServerTimeFormat(), timeFormat));
+$time.val(formatString);
 $("#i_" + propName).val(value);
 <%
-		} else  {
+			} else  {
 			//フィールドあるか、戻り値のサイズ、クリックして追加
 %>
 for (var i = 0; i < value.length; i++) {
@@ -67,21 +67,21 @@ for (var i = 0; i < value.length; i++) {
 	}
 	var $time = $("#time_" + propName + i);
 	var timeFormat = $time.attr("data-timeformat");
-	$time.val(dateUtil.newFormatString(value[i], dateUtil.getServerTimeFormat(), timeFormat));
+	var formatString = value[i].length > 0 ? dateUtil.newFormatString(value[i], dateUtil.getServerTimeFormat(), timeFormat) : "";
+	$time.val(formatString);
 	$("#i_" + propName + i).val(value[i]);
 }
 <%
-		}
-	} else {
-		if (multiplicity == 1) {
+			}
+		} else {
+			if (multiplicity == 1) {
 %>
 $("#h_" + propName).val(dateUtil.newFormatString(value, dateUtil.getServerTimeFormat(), dateUtil.getInputHourFormat()));
 $("#m_" + propName).val(dateUtil.newFormatString(value, dateUtil.getServerTimeFormat(), dateUtil.getInputMinFormat()));
 $("#s_" + propName).val(dateUtil.newFormatString(value, dateUtil.getServerTimeFormat(), dateUtil.getInputSecFormat()));
-$("#ms_" + propName).val(dateUtil.newFormatString(value, dateUtil.getServerTimeFormat(), "SSS"));
 $("#i_" + propName).val(value);
 <%
-		} else  {
+			} else {
 			//フィールドあるか、戻り値のサイズ、クリックして追加
 %>
 for (var i = 0; i < value.length; i++) {
@@ -91,10 +91,10 @@ for (var i = 0; i < value.length; i++) {
 	$("#h_" + propName + i).val(dateUtil.newFormatString(value[i], dateUtil.getServerTimeFormat(), dateUtil.getInputHourFormat()));
 	$("#m_" + propName + i).val(dateUtil.newFormatString(value[i], dateUtil.getServerTimeFormat(), dateUtil.getInputMinFormat()));
 	$("#s_" + propName + i).val(dateUtil.newFormatString(value[i], dateUtil.getServerTimeFormat(), dateUtil.getInputSecFormat()));
-	$("#ms_" + propName + i).val(dateUtil.newFormatString(value[i], dateUtil.getServerTimeFormat(), "SSS"));
 	$("#i_" + propName + i).val(value[i]);
 }
 <%
+			}
 		}
 	}
 } else {
@@ -107,6 +107,10 @@ if (value instanceof Array) {
 } else {
 	value = [value];
 }
+
+for (var i = 0; i < value.length; i++) {
+	if (value[i] == null) value[i] = "";
+}
 <%
 	boolean hideFrom = editor.isSingleDayCondition() ? false : editor.isHideSearchConditionFrom();
 	boolean hideTo = editor.isSingleDayCondition() ? true : editor.isHideSearchConditionTo();
@@ -118,7 +122,8 @@ if (value.length > 0) {
 	var $timeFrom = $("#time_" + propName + "0");
 	var timeFormatFrom = $timeFrom.attr("data-timeformat");
 
-	$timeFrom.val(dateUtil.newFormatString(value[0], dateUtil.getServerTimeFormat(), timeFormatFrom));
+	var formatTimeFromString = value[0].length > 0 ? dateUtil.newFormatString(value[0], dateUtil.getServerTimeFormat(), timeFormatFrom) : "";
+	$timeFrom.val(formatTimeFromString);
 	$("#i_" + propName + "0").val(value[0]);
 }
 <%
@@ -129,7 +134,8 @@ if (value.length > 1) {
 	var $timeTo = $("#time_" + propName + "1");
 	var timeFormatTo = $timeTo.attr("data-timeformat");
 
-	$timeTo.val(dateUtil.newFormatString(value[1], dateUtil.getServerTimeFormat(), timeFormatTo));
+	var formatTimeToString = value[1].length > 0 ? dateUtil.newFormatString(value[1], dateUtil.getServerTimeFormat(), timeFormatTo) : "";
+	$timeTo.val(formatTimeToString);
 	$("#i_" + propName + "1").val(value[1]);
 }
 <%
@@ -142,7 +148,6 @@ if (value.length > 0) {
 	$("#h_" + propName + "0").val(dateUtil.newFormatString(value[0], dateUtil.getServerTimeFormat(), dateUtil.getInputHourFormat()));
 	$("#m_" + propName + "0").val(dateUtil.newFormatString(value[0], dateUtil.getServerTimeFormat(), dateUtil.getInputMinFormat()));
 	$("#s_" + propName + "0").val(dateUtil.newFormatString(value[0], dateUtil.getServerTimeFormat(), dateUtil.getInputSecFormat()));
-	$("#ms_" + propName + "0").val(dateUtil.newFormatString(value[0], dateUtil.getServerTimeFormat(), "SSS"));
 	$("#i_" + propName + "0").val(value[0]);
 }
 <%
@@ -153,7 +158,6 @@ if (value.length > 1) {
 	$("#h_" + propName + "1").val(dateUtil.newFormatString(value[1], dateUtil.getServerTimeFormat(), dateUtil.getInputHourFormat()));
 	$("#m_" + propName + "1").val(dateUtil.newFormatString(value[1], dateUtil.getServerTimeFormat(), dateUtil.getInputMinFormat()));
 	$("#s_" + propName + "1").val(dateUtil.newFormatString(value[1], dateUtil.getServerTimeFormat(), dateUtil.getInputSecFormat()));
-	$("#ms_" + propName + "1").val(dateUtil.newFormatString(value[1], dateUtil.getServerTimeFormat(), "SSS"));
 	$("#i_" + propName + "1").val(value[1]);
 }
 <%

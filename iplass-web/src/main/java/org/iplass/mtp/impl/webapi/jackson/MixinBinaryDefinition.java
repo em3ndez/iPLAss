@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,15 +31,15 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * 
  * @author K.Higuchi
  */
-@JsonAutoDetect(getterVisibility=Visibility.NONE, isGetterVisibility=Visibility.NONE)
-@JsonPropertyOrder({"name","size"})
-@JsonDeserialize(using=BinaryDefinitionDeserializer.class)
+@JsonAutoDetect(getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE)
+@JsonPropertyOrder({ "name", "size" })
+@JsonDeserialize(using = BinaryDefinitionDeserializer.class)
 public interface MixinBinaryDefinition {
-	
+
 	@JsonProperty
 	public String getName();
-	
+
 	@JsonProperty
 	public long getSize();
-	
+
 }

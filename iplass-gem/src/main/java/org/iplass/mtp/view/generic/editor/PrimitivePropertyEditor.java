@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,15 +20,15 @@
 
 package org.iplass.mtp.view.generic.editor;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
 
 /**
  *
  * @author lis3wg
  */
-@XmlSeeAlso({AutoNumberPropertyEditor.class, BinaryPropertyEditor.class, BooleanPropertyEditor.class, DateTimePropertyEditor.class,
-	ExpressionPropertyEditor.class, NumberPropertyEditor.class, SelectPropertyEditor.class,
-	StringPropertyEditor.class})
+@XmlSeeAlso({ AutoNumberPropertyEditor.class, BinaryPropertyEditor.class, BooleanPropertyEditor.class, DateTimePropertyEditor.class,
+		ExpressionPropertyEditor.class, NumberPropertyEditor.class, SelectPropertyEditor.class,
+		StringPropertyEditor.class })
 public abstract class PrimitivePropertyEditor extends PropertyEditor {
 
 	/** シリアルバージョンUID */

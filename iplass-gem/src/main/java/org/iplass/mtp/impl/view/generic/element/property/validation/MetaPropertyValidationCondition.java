@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -43,7 +43,7 @@ public class MetaPropertyValidationCondition implements MetaData, HasEntityPrope
 	 * @return プロパティID
 	 */
 	public String getPropertyId() {
-	    return propertyId;
+		return propertyId;
 	}
 
 	/**
@@ -51,7 +51,7 @@ public class MetaPropertyValidationCondition implements MetaData, HasEntityPrope
 	 * @param propertyId プロパティID
 	 */
 	public void setPropertyId(String propertyId) {
-	    this.propertyId = propertyId;
+		this.propertyId = propertyId;
 	}
 
 	/**

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,11 +21,10 @@
 package org.iplass.adminconsole.client.tools.ui.metaexplorer;
 
 import org.iplass.adminconsole.client.base.i18n.AdminClientMessageUtil;
+import org.iplass.adminconsole.client.base.screen.ScreenModuleBasedUIFactoryHolder;
 import org.iplass.adminconsole.client.base.util.SmartGWTUtil;
-import org.iplass.adminconsole.client.metadata.data.tenant.TenantDS;
+import org.iplass.adminconsole.client.metadata.data.tenant.BaseTenantDS;
 import org.iplass.adminconsole.client.metadata.data.tenant.TenantDSCellFormatter;
-import org.iplass.adminconsole.client.metadata.data.tenant.TenantDS.Category;
-import org.iplass.adminconsole.client.tools.data.metaexplorer.TenantImportSelectDS;
 import org.iplass.mtp.tenant.Tenant;
 
 import com.smartgwt.client.data.Record;
@@ -59,7 +58,7 @@ public class MetaDataImportTenantPane extends VLayout {
 
 	private ListGrid grid;
 
-	private TenantImportSelectDS dataSource;
+	private BaseTenantDS dataSource;
 
 	private TenantSelectActionCallback callback;
 
@@ -81,23 +80,16 @@ public class MetaDataImportTenantPane extends VLayout {
 		title.setHeight(40);
 		title.setWidth100();
 
-		grid = new ListGrid(){
+		grid = new ListGrid() {
 			//TODO 差異があるところの強調表示
 			//実装自体はできているがもう少しテストするため
 			/*
-			@Override
-		    protected String getBaseStyle(ListGridRecord record, int rowNum, int colNum) {
-
-				if (colNum != 4) {
-					return super.getBaseStyle(record, rowNum, colNum);
-				}
-				if (record.getEnabled() && dataSource.isDiffImportProperty(record)){
-					return "cell importTenantPaneGridDiffRow";
-				} else {
-					return super.getBaseStyle(record, rowNum, colNum);
-				}
-			}
-			*/
+			 * @Override protected String getBaseStyle(ListGridRecord record, int rowNum, int colNum) {
+			 * 
+			 * if (colNum != 4) { return super.getBaseStyle(record, rowNum, colNum); } if (record.getEnabled() &&
+			 * dataSource.isDiffImportProperty(record)){ return "cell importTenantPaneGridDiffRow"; } else { return
+			 * super.getBaseStyle(record, rowNum, colNum); } }
+			 */
 		};
 		grid.setCanEdit(false);
 		grid.setWidth100();
@@ -120,7 +112,7 @@ public class MetaDataImportTenantPane extends VLayout {
 		grid.setShowSelectedStyle(false);
 
 		//一覧Group設定
-		grid.setGroupStartOpen(GroupStartOpen.ALL);	//グループ時に全部展開して表示
+		grid.setGroupStartOpen(GroupStartOpen.ALL); //グループ時に全部展開して表示
 		//grid.setGroupByField("title");	//これでグループ化すると選択状態が消えてしまうため、明示的にgroupByするように変更
 		//grid.setGroupIndentSize(100);	//インデントされないのでダミーフィールド作成
 
@@ -143,7 +135,7 @@ public class MetaDataImportTenantPane extends VLayout {
 			public String getGroupTitle(Object groupValue, GroupNode groupNode,
 					ListGridField field, String fieldName, ListGrid grid) {
 				//上で返すGroup値をタイトルに指定する
-				return TenantDS.getCategoryName(Category.valueOf((String)groupValue));
+				return BaseTenantDS.getTenantCategoryName((String) groupValue);
 			}
 		});
 
@@ -155,9 +147,10 @@ public class MetaDataImportTenantPane extends VLayout {
 
 		grid.setFields(indentField, titleField, valueField, fileValueField);
 
-		grid.setSelectionProperty("mySelected");	//選択状態保持用
+		grid.setSelectionProperty("mySelected"); //選択状態保持用
 
-		dataSource = TenantImportSelectDS.getInstance(fileTenant);
+		dataSource = ScreenModuleBasedUIFactoryHolder.getFactory()
+				.createTenantImportSelectDataSource(fileTenant);
 		grid.setDataSource(dataSource);
 		grid.setAutoFetchData(true);
 		grid.setShowAsynchGroupingPrompt(false);
@@ -176,78 +169,44 @@ public class MetaDataImportTenantPane extends VLayout {
 				//ただしgrid.setSelectionPropertyは描画前に行う必要がある
 
 				/*
-				//grid.setSelectionProperty("mySelected");	//これは描画前に行わないといけない
-				for (ListGridRecord record : grid.getRecords()) {
-					if (Category.BasicInfo == Category.valueOf(record.getAttribute("category"))) {
-						//基本情報は選択不可
-						record.setEnabled(false);
-					} else if (Category.MailSendSetting == Category.valueOf(record.getAttribute("category"))) {
-						//メール情報は初期未選択
-					} else if ("urlForRequest".equals(record.getAttribute("name"))) {
-						//リクエストパス構築用テナントURLは初期未選択
-					} else if ("usePreview".equals(record.getAttribute("name"))) {
-						//日付プレビュー表示機能は初期未選択
-					} else {
-						//それ以外はデフォルト選択
-						record.setAttribute("mySelected", true);
-					}
-				}
-				*/
+				 * //grid.setSelectionProperty("mySelected"); //これは描画前に行わないといけない for (ListGridRecord record :
+				 * grid.getRecords()) { if (Category.BasicInfo == Category.valueOf(record.getAttribute("category"))) {
+				 * //基本情報は選択不可 record.setEnabled(false); } else if (Category.MailSendSetting ==
+				 * Category.valueOf(record.getAttribute("category"))) { //メール情報は初期未選択 } else if
+				 * ("urlForRequest".equals(record.getAttribute("name"))) { //リクエストパス構築用テナントURLは初期未選択 } else if
+				 * ("usePreview".equals(record.getAttribute("name"))) { //日付プレビュー表示機能は初期未選択 } else { //それ以外はデフォルト選択
+				 * record.setAttribute("mySelected", true); } }
+				 */
 
 				/*
-				List<ListGridRecord> selectRecords = new ArrayList<ListGridRecord>();
-				//インポート用の設定を行う
-				for (ListGridRecord record : grid.getRecords()) {
-					if (TenantImportSelectDS.getRS("basicInfo").equals(record.getAttribute("category"))) {
-						//基本情報は選択不可
-						record.setEnabled(false);
-					} else if (TenantImportSelectDS.getRS("mailSendSetting").equals(record.getAttribute("category"))) {
-						//メール情報は初期未選択
-					} else {
-						//それ以外はデフォルト選択
-						//grid.selectRecord(record);	//遅い
-						selectRecords.add(record);
-					}
-				}
-				grid.selectRecords(selectRecords.toArray(new ListGridRecord[]{}));	//遅い
-				*/
+				 * List<ListGridRecord> selectRecords = new ArrayList<ListGridRecord>(); //インポート用の設定を行う for
+				 * (ListGridRecord record : grid.getRecords()) { if
+				 * (TenantImportSelectDS.getRS("basicInfo").equals(record.getAttribute("category"))) { //基本情報は選択不可
+				 * record.setEnabled(false); } else if
+				 * (TenantImportSelectDS.getRS("mailSendSetting").equals(record.getAttribute("category"))) {
+				 * //メール情報は初期未選択 } else { //それ以外はデフォルト選択 //grid.selectRecord(record); //遅い selectRecords.add(record); }
+				 * } grid.selectRecords(selectRecords.toArray(new ListGridRecord[]{})); //遅い
+				 */
 				/*
-				List<Integer> selectRecords = new ArrayList<Integer>();
-				for (ListGridRecord record : grid.getRecords()) {
-					if (TenantImportSelectDS.getRS("basicInfo").equals(record.getAttribute("category"))) {
-						//基本情報は選択不可
-						record.setEnabled(false);
-					} else if (TenantImportSelectDS.getRS("mailSendSetting").equals(record.getAttribute("category"))) {
-						//メール情報は初期未選択
-					} else {
-						//それ以外はデフォルト選択
-						selectRecords.add(grid.getRecordIndex(record));
-					}
-				}
-				int[] selectRecordsInt = new int[selectRecords.size()];
-				for (int i = 0; i < selectRecords.size(); i++) {
-					selectRecordsInt[i] = selectRecords.get(i).intValue();
-				}
-				grid.selectRecords(selectRecordsInt);	//遅い
-				*/
+				 * List<Integer> selectRecords = new ArrayList<Integer>(); for (ListGridRecord record :
+				 * grid.getRecords()) { if
+				 * (TenantImportSelectDS.getRS("basicInfo").equals(record.getAttribute("category"))) { //基本情報は選択不可
+				 * record.setEnabled(false); } else if
+				 * (TenantImportSelectDS.getRS("mailSendSetting").equals(record.getAttribute("category"))) {
+				 * //メール情報は初期未選択 } else { //それ以外はデフォルト選択 selectRecords.add(grid.getRecordIndex(record)); } } int[]
+				 * selectRecordsInt = new int[selectRecords.size()]; for (int i = 0; i < selectRecords.size(); i++) {
+				 * selectRecordsInt[i] = selectRecords.get(i).intValue(); } grid.selectRecords(selectRecordsInt); //遅い
+				 */
 				/*
-				StringBuilder sbSelectedState = new StringBuilder();
-				sbSelectedState.append("[");
-				for (ListGridRecord record : grid.getRecords()) {
-					if (TenantImportSelectDS.getRS("basicInfo").equals(record.getAttribute("category"))) {
-						//基本情報は選択不可
-						record.setEnabled(false);
-					} else if (TenantImportSelectDS.getRS("mailSendSetting").equals(record.getAttribute("category"))) {
-						//メール情報は初期未選択
-					} else {
-						//それ以外はデフォルト選択
-						sbSelectedState.append("{name:\"" + record.getAttribute("name") + "\"},");
-					}
-				}
-				sbSelectedState.deleteCharAt(sbSelectedState.length() - 1);
-				sbSelectedState.append("]");
-				grid.setSelectedState(sbSelectedState.toString());	//遅い
-				*/
+				 * StringBuilder sbSelectedState = new StringBuilder(); sbSelectedState.append("["); for (ListGridRecord
+				 * record : grid.getRecords()) { if
+				 * (TenantImportSelectDS.getRS("basicInfo").equals(record.getAttribute("category"))) { //基本情報は選択不可
+				 * record.setEnabled(false); } else if
+				 * (TenantImportSelectDS.getRS("mailSendSetting").equals(record.getAttribute("category"))) {
+				 * //メール情報は初期未選択 } else { //それ以外はデフォルト選択 sbSelectedState.append("{name:\"" + record.getAttribute("name")
+				 * + "\"},"); } } sbSelectedState.deleteCharAt(sbSelectedState.length() - 1);
+				 * sbSelectedState.append("]"); grid.setSelectedState(sbSelectedState.toString()); //遅い
+				 */
 			}
 		});
 
@@ -295,9 +254,10 @@ public class MetaDataImportTenantPane extends VLayout {
 	private void selectFinish() {
 
 //		if (grid.getSelectedRecords().length == 0) {	//setSelectionPropertyを指定しているとうまくいかない
-		Record[] selectedRecord = grid.getRecordList().findAll("mySelected", true);
+		Record[] selectedRecord = grid.getRecordList()
+				.findAll("mySelected", true);
 		if (selectedRecord == null || selectedRecord.length == 0) {
-			SC.ask(getResourceString("confirm"), getResourceString("excludeTenant"),  new BooleanCallback() {
+			SC.ask(getResourceString("confirm"), getResourceString("excludeTenant"), new BooleanCallback() {
 
 				@Override
 				public void execute(Boolean value) {
@@ -308,10 +268,13 @@ public class MetaDataImportTenantPane extends VLayout {
 				}
 			});
 		} else {
-			//選択項目を反映したTenantの取得
-			//Tenant importTenant = dataSource.getImportData(grid.getSelectedRecords());
-			Tenant importTenant = dataSource.getImportData(selectedRecord);
-			callback.selected(importTenant);
+			Tenant tenant = dataSource.getUpdateData();
+
+			for (Record record : selectedRecord) {
+				String name = record.getAttribute("name");
+				dataSource.applyToTenantField(tenant, name, "fileValue");
+			}
+			callback.selected(tenant);
 		}
 	}
 

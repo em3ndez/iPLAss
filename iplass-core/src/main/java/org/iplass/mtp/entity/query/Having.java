@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,18 +32,18 @@ public class Having implements ASTNode {
 	private static final long serialVersionUID = -2306091495633643396L;
 
 	private Condition condition;
-	
+
 	public Having() {
 	}
-	
+
 	public Having(Condition condition) {
 		this.condition = condition;
 	}
-	
+
 	public void setCondition(Condition condition) {
 		this.condition = condition;
 	}
-	
+
 	public Condition getCondition() {
 		return condition;
 	}
@@ -63,6 +63,7 @@ public class Having implements ASTNode {
 			}
 		}
 	}
+
 	public ASTNode accept(ASTTransformer transformer) {
 		return transformer.visit(this);
 	}

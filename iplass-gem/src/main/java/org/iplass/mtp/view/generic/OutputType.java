@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,11 +26,18 @@ package org.iplass.mtp.view.generic;
  *
  */
 public enum OutputType {
-	/** 詳細表示 */ VIEW,
-	/** 詳細編集 */ EDIT,
-	/** 検索条件 */ SEARCHCONDITION,
-	/** 検索結果 */ SEARCHRESULT,
-	/** 単一選択 */ SINGLESELECT,
-	/** 複数選択 */ MULTISELECT,
-	/** 一括更新 */ BULK
+	/** 詳細表示 */
+	VIEW,
+	/** 詳細編集 */
+	EDIT,
+	/** 検索条件 */
+	SEARCHCONDITION,
+	/** 検索結果 */
+	SEARCHRESULT,
+	/** 単一選択 */
+	SINGLESELECT,
+	/** 複数選択 */
+	MULTISELECT,
+	/** 一括更新 */
+	BULK
 }

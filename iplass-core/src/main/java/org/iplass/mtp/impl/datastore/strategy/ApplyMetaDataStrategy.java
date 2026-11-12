@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,8 +29,11 @@ public interface ApplyMetaDataStrategy extends StoreStrategy {
 //	public void createSystemDefault(MetaEntity definition);
 
 	public boolean isLocked(MetaEntity definition, EntityContext context);
+
 	public boolean prepare(MetaEntity newOne, MetaEntity previous, EntityContext context);
+
 	public boolean modify(MetaEntity newOne, MetaEntity previous, EntityContext context, int[] targetTenantIds);
+
 	public void finish(boolean modifyResult, MetaEntity newOne, MetaEntity previous, EntityContext context);
 
 	public void patchData(MetaEntity newOne, MetaEntity previous, EntityContext context, int targetTenantId);

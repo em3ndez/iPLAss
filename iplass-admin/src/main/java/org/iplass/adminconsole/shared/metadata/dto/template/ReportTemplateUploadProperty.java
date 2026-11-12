@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -59,8 +59,12 @@ public interface ReportTemplateUploadProperty extends UploadProperty {
 
 	/** Jasper DataSourceAttributeName */
 	public static final String JASPER_DATASOURCE_ATTRIBUTE_NAME = "jasperDataSourceAttributeName";
+
 	/** Jasper PasswordAttributeName */
 	public static final String JASPER_PASSWORD_ATTRIBUTE_NAME = "jasperPasswordAttributeName";
+
+	/** Jasper OwnerPasswordAttributeName */
+	public static final String JASPER_OWNER_PASSWORD_ATTRIBUTE_NAME = "jasperOwnerPasswordAttributeName";
 
 	/** Poiレポート出力ロジック形式 */
 	public static final String POI_LOGIC_NAME = "poiLogicName";
@@ -76,7 +80,7 @@ public interface ReportTemplateUploadProperty extends UploadProperty {
 
 	/** Poi PasswordAttributeName */
 	public static final String POI_PASSWORD_ATTRIBUTE_NAME = "poiPasswordAttributeName";
-	
+
 	/** Jxlsレポート出力ロジック形式 */
 	public static final String JXLS_LOGIC_NAME = "jxlsLogicName";
 
@@ -91,19 +95,22 @@ public interface ReportTemplateUploadProperty extends UploadProperty {
 
 	/** Jxls PasswordAttributeName */
 	public static final String JXLS_PASSWORD_ATTRIBUTE_NAME = "jxlsPasswordAttributeName";
-	
+
+	/** Jxls OwnerPasswordAttributeName */
+	public static final String JXLS_OWNER_PASSWORD_ATTRIBUTE_NAME = "jxlsOwnerPasswordAttributeName";
+
 	/** Jxls ParamMapKey */
 	public static final String JXLS_PARAM_MAP_NAME = "jxlsParamMapName";
 
 	/** Jxls ParamMapValue */
 	public static final String JXLS_PARAM_MAP_VALUE = "jxlsParamMapValue ";
-	
+
 	/** Jxls ParamMapToMap */
 	public static final String JXLS_PARAM_MAP_TO_MAP = "jxlsParamMapToMap ";
-	
+
 	/** Jxls ParamMapCount */
 	public static final String JXLS_PARAM_MAP_CNT = "jxlsParamMapCnt";
-	
+
 	/** 多言語用変更前Locale名 */
 	public static final String LOCALE_BEFORE = "beforeLocale";
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -71,6 +71,7 @@ import org.iplass.mtp.impl.tools.entityport.EntityDataExportCondition;
 import org.iplass.mtp.impl.tools.entityport.EntityDataImportCondition;
 import org.iplass.mtp.impl.tools.entityport.EntityDataImportResult;
 import org.iplass.mtp.impl.tools.entityport.EntityPortingService;
+import org.iplass.mtp.impl.tools.metaport.MetaDataCheckResult;
 import org.iplass.mtp.impl.tools.metaport.MetaDataImportResult;
 import org.iplass.mtp.impl.tools.metaport.MetaDataPortingService;
 import org.iplass.mtp.impl.tools.metaport.MetaDataTagEntity;
@@ -110,7 +111,8 @@ public class PackageService implements Service {
 		entityService = config.getDependentService(EntityPortingService.class);
 		asyncService = config.getDependentService(AsyncTaskService.class);
 
-		em = ManagerLocator.getInstance().getManager(EntityManager.class);
+		em = ManagerLocator.getInstance()
+				.getManager(EntityManager.class);
 
 		nonSupportEntityPathList = Arrays.asList("/entity/mtp/maintenance/Package");
 	}
@@ -158,48 +160,51 @@ public class PackageService implements Service {
 
 		final PackageInfo info = new PackageInfo();
 
-		try (ZipFile zip = new ZipFile(archive)){
+		try (ZipFile zip = new ZipFile(archive)) {
 			zip.stream()
-				.filter(entry -> !entry.isDirectory())
-				.forEach(entry -> {
+					.filter(entry -> !entry.isDirectory())
+					.forEach(entry -> {
 
-					try {
-						//CRCチェック
-						if (!checkSum(zip, entry)) {
-							throw new PackageRuntimeException(rs("pack.fileCorrupted", entry.getName()));
-						}
-
-						if (META_DATA_FILE_NAME.equals(entry.getName())) {
-							//MetaData
-							try (InputStream is = zip.getInputStream(entry)){
-								PackageMetaDataInfo metaDataInfo = getMetaDataList(is);
-								info.setMetaDataPaths(metaDataInfo.entryList);
-								info.setTenant(metaDataInfo.tenant);
-								info.setWarningTenant(metaDataInfo.warningTenant);
+						try {
+							//CRCチェック
+							if (!checkSum(zip, entry)) {
+								throw new PackageRuntimeException(rs("pack.fileCorrupted", entry.getName()));
 							}
 
-						} else if (entry.getName().startsWith(EntityPortingService.ENTITY_LOB_DIR)) {
-							//LOBデータ
-							info.setHasLobData(true);
-						} else if (entry.getName().endsWith("csv")) {
-							//Entityデータ
-							info.addEntityPaths(entry.getName());
-						} else {
-							throw new PackageRuntimeException(rs("pack.canNotParse", entry.getName()));
+							if (META_DATA_FILE_NAME.equals(entry.getName())) {
+								//MetaData
+								try (InputStream is = zip.getInputStream(entry)) {
+									PackageMetaDataInfo metaDataInfo = getMetaDataList(is);
+									info.setMetaDataPaths(metaDataInfo.entryList);
+									info.setTenant(metaDataInfo.tenant);
+									info.setWarningTenant(metaDataInfo.warningTenant);
+								}
+
+							} else if (entry.getName()
+									.startsWith(EntityPortingService.ENTITY_LOB_DIR)) {
+								//LOBデータ
+								info.setHasLobData(true);
+							} else if (entry.getName()
+									.endsWith("csv")) {
+								//Entityデータ
+								info.addEntityPaths(entry.getName());
+							} else {
+								throw new PackageRuntimeException(rs("pack.canNotParse", entry.getName()));
+							}
+						} catch (IOException e) {
+							throw new PackageRuntimeException(rs("pack.canNotParseCorrupted"), e);
 						}
-					} catch (IOException e) {
-						throw new PackageRuntimeException(rs("pack.canNotParseCorrupted"), e);
-					}
-				});
+					});
 		} catch (IOException e) {
 			throw new PackageRuntimeException(rs("pack.canNotParseCorrupted"), e);
 		}
 
 		if (info.getEntityPaths() != null) {
-			info.getEntityPaths().sort((String o1, String o2) -> {
-				//大文字・小文字区別しない
-				return o1.compareToIgnoreCase(o2);
-			});
+			info.getEntityPaths()
+					.sort((String o1, String o2) -> {
+						//大文字・小文字区別しない
+						return o1.compareToIgnoreCase(o2);
+					});
 		}
 
 		return info;
@@ -213,16 +218,17 @@ public class PackageService implements Service {
 	 */
 	public InputStream getMetaDataInputStream(File archive) {
 
-		try (ZipFile zip = new ZipFile(archive)){
+		try (ZipFile zip = new ZipFile(archive)) {
 			Optional<? extends ZipEntry> meta = zip.stream()
-				.filter(entry -> !entry.isDirectory())
-				.filter(entry -> META_DATA_FILE_NAME.equals(entry.getName()))
-				.findFirst();
+					.filter(entry -> !entry.isDirectory())
+					.filter(entry -> META_DATA_FILE_NAME.equals(entry.getName()))
+					.findFirst();
 
 			if (meta.isPresent()) {
 				//CRCチェック
 				if (!checkSum(zip, meta.get())) {
-					throw new PackageRuntimeException(rs("pack.fileCorrupted", meta.get().getName()));
+					throw new PackageRuntimeException(rs("pack.fileCorrupted", meta.get()
+							.getName()));
 				}
 
 				return zip.getInputStream(meta.get());
@@ -249,11 +255,12 @@ public class PackageService implements Service {
 			return true; //判定できないけど、とりあえずtrue
 		}
 
-		try (CheckedInputStream is = new CheckedInputStream(zipFile.getInputStream(zipEntry), new CRC32())){
+		try (CheckedInputStream is = new CheckedInputStream(zipFile.getInputStream(zipEntry), new CRC32())) {
 			byte[] buf = new byte[1024];
 			while ((is.read(buf)) >= 0) {
 			}
-			if (is.getChecksum().getValue() == expected) {
+			if (is.getChecksum()
+					.getValue() == expected) {
 				return true;
 			}
 			return false;
@@ -269,7 +276,8 @@ public class PackageService implements Service {
 	private PackageMetaDataInfo getMetaDataList(InputStream is) {
 
 		XMLEntryInfo entryInfo = metaService.getXMLMetaDataEntryInfo(is);
-		List<String> entryPathList = new ArrayList<>(entryInfo.getPathEntryMap().keySet());
+		List<String> entryPathList = new ArrayList<>(entryInfo.getPathEntryMap()
+				.keySet());
 
 		entryPathList.sort((String o1, String o2) -> {
 			//大文字・小文字区別しない
@@ -279,9 +287,11 @@ public class PackageService implements Service {
 		//テナントのチェック
 		Tenant tenant = null;
 		boolean warningTenant = false;
-		for (Map.Entry<String, MetaDataEntry> entry : entryInfo.getPathEntryMap().entrySet()) {
+		for (Map.Entry<String, MetaDataEntry> entry : entryInfo.getPathEntryMap()
+				.entrySet()) {
 			if (metaService.isTenantMeta(entry.getKey())) {
-				MetaTenant importMetaTenant = (MetaTenant) entry.getValue().getMetaData();
+				MetaTenant importMetaTenant = (MetaTenant) entry.getValue()
+						.getMetaData();
 				tenant = new Tenant();
 				importMetaTenant.applyToTenant(tenant);
 
@@ -289,8 +299,10 @@ public class PackageService implements Service {
 				tenant.setName(importMetaTenant.getName()); //nameはapplyToTenantでセットされないのでセット(DB側優先)
 				tenant.setDescription(importMetaTenant.getDescription()); //descriptionはapplyToTenantでセットされないのでセット(DB側優先)
 
-				Tenant currentTenant = ExecuteContext.getCurrentContext().getCurrentTenant();
-				if (!currentTenant.getName().equals(importMetaTenant.getName())) {
+				Tenant currentTenant = ExecuteContext.getCurrentContext()
+						.getCurrentTenant();
+				if (!currentTenant.getName()
+						.equals(importMetaTenant.getName())) {
 					//名前が違う場合はWarning対象
 					warningTenant = true;
 				}
@@ -353,7 +365,8 @@ public class PackageService implements Service {
 		entity.setValue(PackageEntity.COMPLETE_TASK_COUNT, 1);
 
 		//実行開始・終了日設定
-		Timestamp timestamp = ExecuteContext.getCurrentContext().getCurrentTimestamp();
+		Timestamp timestamp = ExecuteContext.getCurrentContext()
+				.getCurrentTimestamp();
 		entity.setValue(PackageEntity.EXEC_START_DATE, timestamp);
 		entity.setValue(PackageEntity.EXEC_END_DATE, timestamp);
 
@@ -362,7 +375,8 @@ public class PackageService implements Service {
 		entity.setValue(PackageEntity.ARCHIVE, br);
 
 		//Entityに登録
-		EntityManager em = ManagerLocator.getInstance().getManager(EntityManager.class);
+		EntityManager em = ManagerLocator.getInstance()
+				.getManager(EntityManager.class);
 		String oid = em.insert(entity);
 
 		return oid;
@@ -378,8 +392,9 @@ public class PackageService implements Service {
 	private BinaryReference toBinaryReference(String name, File file) {
 		// マジックバイトチェックは特にしない
 
-		try (FileInputStream is = new FileInputStream(file)){
-			EntityManager em = ManagerLocator.getInstance().getManager(EntityManager.class);
+		try (FileInputStream is = new FileInputStream(file)) {
+			EntityManager em = ManagerLocator.getInstance()
+					.getManager(EntityManager.class);
 			return em.createBinaryReference(name, PACKAGE_FILE_TYPE, is);
 		} catch (IOException e) {
 			throw new SystemException("not found import file.", e);
@@ -429,11 +444,14 @@ public class PackageService implements Service {
 
 		//タスク数の計算
 		int taskCount = 0;
-		if (condition.getMetaDataPaths() != null && !condition.getMetaDataPaths().isEmpty()) {
+		if (condition.getMetaDataPaths() != null && !condition.getMetaDataPaths()
+				.isEmpty()) {
 			taskCount++; //メタデータ生成は１タスク
 		}
-		if (condition.getEntityPaths() != null && !condition.getEntityPaths().isEmpty()) {
-			taskCount += condition.getEntityPaths().size(); //Entityデータ生成はEntityごと
+		if (condition.getEntityPaths() != null && !condition.getEntityPaths()
+				.isEmpty()) {
+			taskCount += condition.getEntityPaths()
+					.size(); //Entityデータ生成はEntityごと
 		}
 		//Archiveするためタスクを１追加
 		taskCount++;
@@ -441,7 +459,8 @@ public class PackageService implements Service {
 		entity.setValue(PackageEntity.COMPLETE_TASK_COUNT, 0);
 
 		//Entityに登録
-		EntityManager em = ManagerLocator.getInstance().getManager(EntityManager.class);
+		EntityManager em = ManagerLocator.getInstance()
+				.getManager(EntityManager.class);
 		String oid = em.insert(entity);
 
 		return oid;
@@ -547,15 +566,15 @@ public class PackageService implements Service {
 	public void write(OutputStream os, final PackageCreateCondition condition, final PackageCreateResult result, final Entity packEntity) {
 
 		try (
-			ZipOutputStream zos = new ZipOutputStream(os, StandardCharsets.UTF_8);
-		) {
+				ZipOutputStream zos = new ZipOutputStream(os, StandardCharsets.UTF_8);) {
 
 			//Package更新(開始)
 			if (packEntity != null) {
 				Transaction.requiresNew(transaction -> {
 
 					packEntity.setValue(PackageEntity.STATUS, new SelectValue(PackageEntity.STATUS_ACTIVE));
-					packEntity.setValue(PackageEntity.EXEC_START_DATE, ExecuteContext.getCurrentContext().getCurrentTimestamp());
+					packEntity.setValue(PackageEntity.EXEC_START_DATE, ExecuteContext.getCurrentContext()
+							.getCurrentTimestamp());
 					UpdateOption option = new UpdateOption(false);
 					option.setUpdateProperties(PackageEntity.STATUS, PackageEntity.EXEC_START_DATE);
 					em.update(packEntity, option);
@@ -564,22 +583,25 @@ public class PackageService implements Service {
 				});
 			}
 
-			if (condition.getMetaDataPaths() != null && !condition.getMetaDataPaths().isEmpty()) {
-				logger.debug("pack metadata path count : " + condition.getMetaDataPaths().size());
+			if (condition.getMetaDataPaths() != null && !condition.getMetaDataPaths()
+					.isEmpty()) {
+				logger.debug("pack metadata path count : " + condition.getMetaDataPaths()
+						.size());
 
 				result.addMessages(rs("pack.startExportMetaData"));
 
 				//MetaDataをtempに出力
 				File metadataFile = File.createTempFile("tmp", ".tmp");
 				try {
-					try (PrintWriter writer = new PrintWriter(metadataFile, "UTF-8")){
+					try (PrintWriter writer = new PrintWriter(metadataFile, "UTF-8")) {
 
 						metaService.write(writer, condition.getMetaDataPaths(), new MetaDataWriteCallback() {
 
 							@Override
 							public void onWrited(String path, String version) {
 								result.addMessages(rs("pack.outputMetaData", path));
-								auditLogger.info("create package metadata," + META_DATA_FILE_NAME + ",path:" + path + " packageOid:" + (packEntity != null ? packEntity.getOid() : "direct"));
+								auditLogger.info("create package metadata," + META_DATA_FILE_NAME + ",path:" + path + " packageOid:"
+										+ (packEntity != null ? packEntity.getOid() : "direct"));
 							}
 
 							@Override
@@ -649,10 +671,13 @@ public class PackageService implements Service {
 				logger.debug("pack metadata path count : 0");
 			}
 
-			if (condition.getEntityPaths() != null && !condition.getEntityPaths().isEmpty()) {
-				logger.debug("pack entity path count : " + condition.getEntityPaths().size());
+			if (condition.getEntityPaths() != null && !condition.getEntityPaths()
+					.isEmpty()) {
+				logger.debug("pack entity path count : " + condition.getEntityPaths()
+						.size());
 
-				Map<String, EntityDataExportCondition> entityConditions = condition.getEntityConditions() != null ? condition.getEntityConditions() : Collections.emptyMap();
+				Map<String, EntityDataExportCondition> entityConditions = condition.getEntityConditions() != null ? condition.getEntityConditions()
+						: Collections.emptyMap();
 
 				result.addMessages(rs("pack.startExportEntity"));
 
@@ -665,22 +690,26 @@ public class PackageService implements Service {
 					}
 
 					//MetaDataEntryの取得
-					MetaDataEntry entry = MetaDataContext.getContext().getMetaDataEntry(path);
+					MetaDataEntry entry = MetaDataContext.getContext()
+							.getMetaDataEntry(path);
 					if (entry == null) {
 						result.addMessages(rs("pack.skipExportEntity", path));
 						logger.warn("warning entity data write proccess. path = " + path + ". message = not found metadata configure.");
 						continue;
 					}
 
-					String fileName = entry.getMetaData().getName() + ".csv";
-					auditLogger.info("create package entity," + fileName + ",entityName:" + entry.getMetaData().getName() + " packageOid:" + (packEntity != null ? packEntity.getOid() : "direct"));
+					String fileName = entry.getMetaData()
+							.getName() + ".csv";
+					auditLogger.info("create package entity," + fileName + ",entityName:" + entry.getMetaData()
+							.getName() + " packageOid:" + (packEntity != null ? packEntity.getOid() : "direct"));
 
-					EntityDataExportCondition entityCond = entityConditions.getOrDefault(entry.getMetaData().getName(), new EntityDataExportCondition());
+					EntityDataExportCondition entityCond = entityConditions.getOrDefault(entry.getMetaData()
+							.getName(), new EntityDataExportCondition());
 
 					long count = 0;
 					File entityCsvFile = File.createTempFile("tmp", ".tmp");
 					try {
-						try (OutputStream csvOS = new FileOutputStream(entityCsvFile)){
+						try (OutputStream csvOS = new FileOutputStream(entityCsvFile)) {
 							count = entityService.writeWithBinary(csvOS, entry, entityCond, zos);
 						}
 
@@ -709,7 +738,8 @@ public class PackageService implements Service {
 							});
 						}
 
-						result.addMessages(rs("pack.outputEntity", entry.getMetaData().getName(), count));
+						result.addMessages(rs("pack.outputEntity", entry.getMetaData()
+								.getName(), count));
 
 					} finally {
 						//エラーが発生して削除できていない可能性があるのでチェック
@@ -731,7 +761,8 @@ public class PackageService implements Service {
 			}
 
 		} catch (Exception e) {
-			throw new PackageRuntimeException(e.getMessage() == null ? e.getClass().getName() : e.getMessage(), e);
+			throw new PackageRuntimeException(e.getMessage() == null ? e.getClass()
+					.getName() : e.getMessage(), e);
 		}
 	}
 
@@ -744,9 +775,8 @@ public class PackageService implements Service {
 	private BinaryReference toBinaryReference(PackageCreateCondition condition) {
 
 		try (
-			ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-			ObjectOutputStream out = new ObjectOutputStream(byteOut);
-		){
+				ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+				ObjectOutputStream out = new ObjectOutputStream(byteOut);) {
 			out.writeObject(condition);
 
 			try (ByteArrayInputStream byteIn = new ByteArrayInputStream(byteOut.toByteArray())) {
@@ -767,9 +797,8 @@ public class PackageService implements Service {
 	private PackageCreateCondition toCreatePackageCondition(BinaryReference binary) {
 		if (binary != null) {
 			try (
-				InputStream dis = em.getInputStream(binary);
-				ObjectInputStream ois = new ObjectInputStream(dis);
-			){
+					InputStream dis = em.getInputStream(binary);
+					ObjectInputStream ois = new ObjectInputStream(dis);) {
 				return (PackageCreateCondition) ois.readObject();
 			} catch (IOException e) {
 				throw new RuntimeException(e);
@@ -810,7 +839,8 @@ public class PackageService implements Service {
 			long curCompleteCount = packEntity.getValueAs(Long.class, PackageEntity.COMPLETE_TASK_COUNT);
 			packEntity.setValue(PackageEntity.COMPLETE_TASK_COUNT, curCompleteCount + 1);
 			packEntity.setValue(PackageEntity.STATUS, new SelectValue(PackageEntity.STATUS_COMPLETED));
-			packEntity.setValue(PackageEntity.EXEC_END_DATE, ExecuteContext.getCurrentContext().getCurrentTimestamp());
+			packEntity.setValue(PackageEntity.EXEC_END_DATE, ExecuteContext.getCurrentContext()
+					.getCurrentTimestamp());
 			UpdateOption option = new UpdateOption(false);
 			option.setUpdateProperties(PackageEntity.ARCHIVE, PackageEntity.COMPLETE_TASK_COUNT, PackageEntity.STATUS, PackageEntity.EXEC_END_DATE);
 			em.update(packEntity, option);
@@ -827,7 +857,8 @@ public class PackageService implements Service {
 			Transaction.requiresNew(transaction -> {
 
 				packEntity.setValue(PackageEntity.STATUS, new SelectValue(PackageEntity.STATUS_ERROR));
-				packEntity.setValue(PackageEntity.EXEC_END_DATE, ExecuteContext.getCurrentContext().getCurrentTimestamp());
+				packEntity.setValue(PackageEntity.EXEC_END_DATE, ExecuteContext.getCurrentContext()
+						.getCurrentTimestamp());
 				UpdateOption option = new UpdateOption(false);
 				option.setUpdateProperties(PackageEntity.STATUS, PackageEntity.EXEC_END_DATE);
 				em.update(packEntity, option);
@@ -837,7 +868,8 @@ public class PackageService implements Service {
 			});
 
 			result.setError(true);
-			result.addMessages(e.getMessage() == null ? e.getClass().getName() : e.getMessage());
+			result.addMessages(e.getMessage() == null ? e.getClass()
+					.getName() : e.getMessage());
 		}
 
 		return result;
@@ -854,7 +886,8 @@ public class PackageService implements Service {
 	 * @return BinaryReference
 	 */
 	private BinaryReference createZipBinaryReference(String name) {
-		EntityManager em = ManagerLocator.getInstance().getManager(EntityManager.class);
+		EntityManager em = ManagerLocator.getInstance()
+				.getManager(EntityManager.class);
 		return em.createBinaryReference(name, PACKAGE_FILE_TYPE, null);
 	}
 
@@ -865,7 +898,8 @@ public class PackageService implements Service {
 	 * @return OutputStream
 	 */
 	private OutputStream getZipBinaryOutputStream(BinaryReference bin) {
-		EntityManager em = ManagerLocator.getInstance().getManager(EntityManager.class);
+		EntityManager em = ManagerLocator.getInstance()
+				.getManager(EntityManager.class);
 		return em.getOutputStream(bin);
 	}
 
@@ -880,7 +914,7 @@ public class PackageService implements Service {
 	private void addZipEntry(ZipOutputStream zos, File file, String entryName) throws IOException {
 		ZipEntry zentry = new ZipEntry(entryName);
 		zos.putNextEntry(zentry);
-		try (InputStream bis = new BufferedInputStream(new FileInputStream(file))){
+		try (InputStream bis = new BufferedInputStream(new FileInputStream(file))) {
 			byte[] buf = new byte[1024];
 			int len = 0;
 			while ((len = bis.read(buf)) >= 0) {
@@ -1053,7 +1087,8 @@ public class PackageService implements Service {
 		EntityDataImportResult result = null;
 		try {
 			//Entity定義の存在チェック
-			MetaDataEntry entry = MetaDataContext.getContext().getMetaDataEntry(path);
+			MetaDataEntry entry = MetaDataContext.getContext()
+					.getMetaDataEntry(path);
 			if (entry == null) {
 				result = new EntityDataImportResult();
 				result.setError(true);
@@ -1062,21 +1097,24 @@ public class PackageService implements Service {
 			}
 
 			//PackageEntityのチェック（PackageEntityは取り込ませない）
-			if (PackageEntity.ENTITY_DEFINITION_NAME.equals(entry.getMetaData().getName())) {
+			if (PackageEntity.ENTITY_DEFINITION_NAME.equals(entry.getMetaData()
+					.getName())) {
 				result = new EntityDataImportResult();
 				result.addMessages(rs("pack.cantImportEntity", PackageEntity.ENTITY_DEFINITION_NAME));
 				return result;
 			}
 
 			//MetaDataTagEntityのチェック（MetaDataTagEntityは取り込ませない）
-			if (MetaDataTagEntity.ENTITY_DEFINITION_NAME.equals(entry.getMetaData().getName())) {
+			if (MetaDataTagEntity.ENTITY_DEFINITION_NAME.equals(entry.getMetaData()
+					.getName())) {
 				result = new EntityDataImportResult();
 				result.addMessages(rs("pack.cantImportEntity", MetaDataTagEntity.ENTITY_DEFINITION_NAME));
 				return result;
 			}
 
 			//Entityのチェック（Entityは取り込ませない）
-			if (EntityService.ENTITY_NAME.equals(entry.getMetaData().getName())) {
+			if (EntityService.ENTITY_NAME.equals(entry.getMetaData()
+					.getName())) {
 				result = new EntityDataImportResult();
 				result.addMessages(rs("pack.cantImportEntity", EntityService.ENTITY_NAME));
 				return result;
@@ -1084,7 +1122,8 @@ public class PackageService implements Service {
 
 			//CSVファイルの取得
 			try (ZipFile zf = new ZipFile(archive)) {
-				ZipEntry ze = zf.getEntry(entry.getMetaData().getName() + ".csv");
+				ZipEntry ze = zf.getEntry(entry.getMetaData()
+						.getName() + ".csv");
 				try (InputStream is = zf.getInputStream(ze)) {
 					//インポート処理の実行
 					result = entityService.importEntityData(packName, is, entry, condition, zf);
@@ -1096,6 +1135,59 @@ public class PackageService implements Service {
 			}
 		} finally {
 			toolLogger.info("finish package entity import. {target:{}, entity:{}, result:{}}", packName, path,
+					(result == null ? "failed" : result.isError() ? "failed" : "success"));
+		}
+	}
+
+	/**
+	 * <p>Packageのメタデータの整合性チェックを行います。</p>
+	 *
+	 * @param packOid PackageエンティティOID
+	 */
+	public MetaDataCheckResult checkPackageMetaData(final String packOid) {
+		Entity packEntity = null;
+		try {
+			// 対象ファイルの取得
+			packEntity = loadWithCheckExist(packOid);
+		} catch (PackageRuntimeException e) {
+			// Entityが取得できないのでOIDをログ出力する
+			toolLogger.info("start package metadata check. {target:{}}", packOid);
+			toolLogger.info("finish package metadata check. {target:{}, result:{}}", packOid, "failed");
+			throw e;
+		}
+
+		File archive = getPackageArchiveFile(packEntity);
+		return checkPackageMetaData(archive, packEntity.getName());
+	}
+
+	/**
+	 * <p>Packageのメタデータの整合性チェックを行います。</p>
+	 *
+	 * @param archive Packageファイル
+	 * @param packName Package名
+	 */
+	public MetaDataCheckResult checkPackageMetaData(final File archive, final String packName) {
+		toolLogger.info("start package metadata check. {target:{}}", packName);
+		auditLogger.info("check package metadata," + packName);
+
+		//メタデータ定義ファイルの取得
+		MetaDataCheckResult result = null;
+		try (ZipFile zf = new ZipFile(archive)) {
+			ZipEntry ze = zf.getEntry(META_DATA_FILE_NAME);
+
+			try (InputStream is = zf.getInputStream(ze)) {
+				// ファイルに含まれるMetaData情報を取得
+				XMLEntryInfo entryInfo = metaService.getXMLMetaDataEntryInfo(is);
+
+				// メタデータ整合性チェック
+				result = metaService.checkMetaData(packName, entryInfo);
+
+				return result;
+			}
+		} catch (IOException e) {
+			throw new PackageRuntimeException("failed to read metadata configure. packName=" + packName, e);
+		} finally {
+			toolLogger.info("finish package metadata check. {target:{}, result:{}}", packName,
 					(result == null ? "failed" : result.isError() ? "failed" : "success"));
 		}
 	}
@@ -1133,9 +1225,8 @@ public class PackageService implements Service {
 		try {
 			File archive = File.createTempFile("tmp", ".tmp");
 			try (
-				FileOutputStream fos = new FileOutputStream(archive);
-				InputStream is = em.getInputStream(archiveRef);
-			) {
+					FileOutputStream fos = new FileOutputStream(archive);
+					InputStream is = em.getInputStream(archiveRef);) {
 
 				IOUtils.copy(is, fos);
 			}

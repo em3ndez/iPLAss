@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -46,7 +46,12 @@ public class PasswordPolicyDefinition implements Serializable {
 	/** パスワードの拒否リスト。複数指定する場合は改行で区切ってください。 */
 	private String denyList;
 	/** パスワードの複雑度エラーのメッセージ */
-	@MultiLang(itemKey="passwordPatternErrorMessage", itemGetter="getPasswordPatternErrorMessage", itemSetter="setPasswordPatternErrorMessage", multiLangGetter="getLocalizedPasswordPatternErrorMessageList", multiLangSetter="setLocalizedPasswordPatternErrorMessageList")
+	@MultiLang(
+			itemKey = "passwordPatternErrorMessage",
+			itemGetter = "getPasswordPatternErrorMessage",
+			itemSetter = "setPasswordPatternErrorMessage",
+			multiLangGetter = "getLocalizedPasswordPatternErrorMessageList",
+			multiLangSetter = "setLocalizedPasswordPatternErrorMessageList")
 	private String passwordPatternErrorMessage;
 	/** パスワードの複雑度エラーのメッセージ(Localized) */
 	private List<LocalizedStringDefinition> localizedPasswordPatternErrorMessageList;
@@ -66,6 +71,10 @@ public class PasswordPolicyDefinition implements Serializable {
 	private String randomPasswordExcludeChars;
 	/** 自動生成パスワードの長さ */
 	private int randomPasswordLength;
+	/** 自動生成パスワードが有効な最大期間 （日）。0は無限。*/
+	private int maximumRandomPasswordAge;
+	/** ユーザー終了日をカスタムで設定するScript */
+	private String customUserEndDate;
 
 	/**
 	 * パスワードが有効な最大期間 （日）。0は無限。
@@ -201,7 +210,7 @@ public class PasswordPolicyDefinition implements Serializable {
 	public void setPasswordHistoryCount(int passwordHistoryCount) {
 		this.passwordHistoryCount = passwordHistoryCount;
 	}
-	
+
 	/**
 	 * 過去入力したパスワードを覚えておく期間（日）。
 	 * 履歴に残っているパスワードは設定できない。
@@ -309,6 +318,38 @@ public class PasswordPolicyDefinition implements Serializable {
 	 */
 	public void setRandomPasswordLength(int randomPasswordLength) {
 		this.randomPasswordLength = randomPasswordLength;
+	}
+
+	/**
+	 * 自動生成パスワードが有効な最大期間 （日）。0は無限。
+	 * @return
+	 */
+	public int getMaximumRandomPasswordAge() {
+		return maximumRandomPasswordAge;
+	}
+
+	/**
+	 * @see #getMaximumRandomPasswordAge()
+	 * @param maximumRandomPasswordAge
+	 */
+	public void setMaximumRandomPasswordAge(int maximumRandomPasswordAge) {
+		this.maximumRandomPasswordAge = maximumRandomPasswordAge;
+	}
+
+	/**
+	 * ユーザー終了日をカスタムで設定するScript
+	 * @return
+	 */
+	public String getCustomUserEndDate() {
+		return customUserEndDate;
+	}
+
+	/**
+	 * @see #getCustomUserEndDate()
+	 * @param customUserEndDate
+	 */
+	public void setCustomUserEndDate(String customUserEndDate) {
+		this.customUserEndDate = customUserEndDate;
 	}
 
 }

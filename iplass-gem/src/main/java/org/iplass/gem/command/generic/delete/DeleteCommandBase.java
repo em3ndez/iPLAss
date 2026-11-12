@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -57,9 +57,12 @@ public abstract class DeleteCommandBase implements Command {
 	 * コンストラクタ
 	 */
 	public DeleteCommandBase() {
-		em = ManagerLocator.getInstance().getManager(EntityManager.class);
-		evm = ManagerLocator.getInstance().getManager(EntityViewManager.class);
-		edm = ManagerLocator.getInstance().getManager(EntityDefinitionManager.class);
+		em = ManagerLocator.getInstance()
+				.getManager(EntityManager.class);
+		evm = ManagerLocator.getInstance()
+				.getManager(EntityViewManager.class);
+		edm = ManagerLocator.getInstance()
+				.getManager(EntityDefinitionManager.class);
 	}
 
 	public DeleteCommandContext getContext(RequestContext request) {
@@ -107,7 +110,9 @@ public abstract class DeleteCommandBase implements Command {
 		DeleteResult ret = new DeleteResult();
 		try {
 			DeleteOption option = new DeleteOption(false, targetVersion);
-			option.setPurge(isPurge);
+			if (targetVersion == DeleteTargetVersion.ALL) {
+				option.setPurge(isPurge);
+			}
 			em.delete(entity, option);
 			ret.setResultType(ResultType.SUCCESS);
 		} catch (ApplicationException e) {
@@ -134,7 +139,8 @@ public abstract class DeleteCommandBase implements Command {
 		private String message;
 
 		/** コンストラクタ */
-		public DeleteResult() {}
+		public DeleteResult() {
+		}
 
 		/**
 		 * 結果を取得します。

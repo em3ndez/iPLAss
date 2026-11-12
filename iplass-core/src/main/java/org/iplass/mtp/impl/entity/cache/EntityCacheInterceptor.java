@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -38,7 +38,6 @@ import org.iplass.mtp.entity.interceptor.EntityUpdateAllInvocation;
 import org.iplass.mtp.entity.interceptor.EntityUpdateInvocation;
 import org.iplass.mtp.entity.interceptor.EntityValidateInvocation;
 
-
 /**
  * EntityのキャッシュInterceptor。
  *
@@ -47,11 +46,12 @@ import org.iplass.mtp.entity.interceptor.EntityValidateInvocation;
  */
 public class EntityCacheInterceptor extends EntityInterceptorAdapter {
 	public static final String QUERY_CACHE_NAMESPACE_PREFIX = "mtp.entity.queryCache/";
+	public static final String KEEP_QUERY_CACHE_NAMESPACE_PREFIX = "mtp.entity.keepQueryCache/";
 	public static final String LOCAL_QUERY_CACHE_NAMESPACE = "mtp.entity.transactionLocalQueryCache";
 	public static final String LOCAL_LOAD_CACHE_NAMESPACE = "mtp.entity.transactionLocalCache";
 
 	TransactionLocalLoadCacheInterceptor transactionLocalLoadCacheInterceptor;
-	
+
 	public EntityCacheInterceptor() {
 		transactionLocalLoadCacheInterceptor = new TransactionLocalLoadCacheInterceptor();
 	}
@@ -125,5 +125,5 @@ public class EntityCacheInterceptor extends EntityInterceptorAdapter {
 	public void bulkUpdate(EntityBulkUpdateInvocation invocation) {
 		transactionLocalLoadCacheInterceptor.bulkUpdate(invocation);
 	}
-	
+
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -70,6 +70,9 @@ public class MetaEntityCalendarItem implements MetaData {
 
 	/** 追加アクション名 */
 	private String addAction;
+
+	/** レコードの新規登録を許可するか */
+	private Boolean allowNewRecordRegistration;
 
 	/** ビュー名 */
 	private String viewName;
@@ -247,11 +250,27 @@ public class MetaEntityCalendarItem implements MetaData {
 	}
 
 	/**
+	 * レコードの新規登録を許可するかを取得します。
+	 * @return レコードの新規登録を許可するか
+	 */
+	public Boolean getAllowNewRecordRegistration() {
+		return allowNewRecordRegistration;
+	}
+
+	/**
+	 * レコードの新規登録を許可するかを設定します。
+	 * @param allowNewRecordRegistration レコードの新規登録を許可するか
+	 */
+	public void setAllowNewRecordRegistration(Boolean allowNewRecordRegistration) {
+		this.allowNewRecordRegistration = allowNewRecordRegistration;
+	}
+
+	/**
 	 * 検索上限を取得します。
 	 * @return 検索上限
 	 */
 	public Integer getLimit() {
-	    return limit;
+		return limit;
 	}
 
 	/**
@@ -259,7 +278,7 @@ public class MetaEntityCalendarItem implements MetaData {
 	 * @param limit 検索上限
 	 */
 	public void setLimit(Integer limit) {
-	    this.limit = limit;
+		this.limit = limit;
 	}
 
 	/**
@@ -294,7 +313,6 @@ public class MetaEntityCalendarItem implements MetaData {
 		this.colorConfig = colorConfig;
 	}
 
-
 	/**
 	 * カレンダーに表示するEntityの設定の内容を自身に反映します。
 	 * @param item カレンダーに表示するEntityの設定
@@ -302,24 +320,29 @@ public class MetaEntityCalendarItem implements MetaData {
 	public void applyConfig(EntityCalendarItem item) {
 		EntityContext metaContext = EntityContext.getCurrentContext();
 		EntityHandler entity = metaContext.getHandlerByName(item.getDefinitionName());
-		this.definitionId = entity.getMetaData().getId();
+		this.definitionId = entity.getMetaData()
+				.getId();
 		this.entityColor = item.getEntityColor();
 		if (item.getPropertyName() != null) {
 			PropertyHandler property = entity.getProperty(item.getPropertyName(), metaContext);
-			if (property != null) this.propertyId = property.getId();
+			if (property != null)
+				this.propertyId = property.getId();
 		}
 		if (item.getFromPropertyName() != null) {
 			PropertyHandler property = entity.getProperty(item.getFromPropertyName(), metaContext);
-			if (property != null) this.fromPropertyId = property.getId();
+			if (property != null)
+				this.fromPropertyId = property.getId();
 		}
 		if (item.getToPropertyName() != null) {
 			PropertyHandler property = entity.getProperty(item.getToPropertyName(), metaContext);
-			if (property != null) this.toPropertyId = property.getId();
+			if (property != null)
+				this.toPropertyId = property.getId();
 		}
 
 		this.calendarSearchType = item.getCalendarSearchType();
 		this.viewAction = item.getViewAction();
 		this.addAction = item.getAddAction();
+		this.allowNewRecordRegistration = item.getAllowNewRecordRegistration();
 		this.viewName = item.getViewName();
 		this.displayTime = item.getDisplayTime();
 		this.limit = item.getLimit();
@@ -342,19 +365,22 @@ public class MetaEntityCalendarItem implements MetaData {
 			item.setDefinitionName(entity.getName());
 
 			if (propertyId != null) {
-				MetaProperty property = eHandler.getPropertyById(propertyId, metaContext).getMetaData();
+				MetaProperty property = eHandler.getPropertyById(propertyId, metaContext)
+						.getMetaData();
 				if (property != null) {
 					item.setPropertyName(property.getName());
 				}
 			}
 			if (fromPropertyId != null) {
-				MetaProperty property = eHandler.getPropertyById(fromPropertyId, metaContext).getMetaData();
+				MetaProperty property = eHandler.getPropertyById(fromPropertyId, metaContext)
+						.getMetaData();
 				if (property != null) {
 					item.setFromPropertyName(property.getName());
 				}
 			}
 			if (toPropertyId != null) {
-				MetaProperty property = eHandler.getPropertyById(toPropertyId, metaContext).getMetaData();
+				MetaProperty property = eHandler.getPropertyById(toPropertyId, metaContext)
+						.getMetaData();
 				if (property != null) {
 					item.setToPropertyName(property.getName());
 				}
@@ -365,6 +391,7 @@ public class MetaEntityCalendarItem implements MetaData {
 		item.setCalendarSearchType(calendarSearchType);
 		item.setViewAction(viewAction);
 		item.setAddAction(addAction);
+		item.setAllowNewRecordRegistration(allowNewRecordRegistration);
 		item.setViewName(viewName);
 		item.setDisplayTime(displayTime);
 		item.setLimit(limit);
@@ -372,7 +399,6 @@ public class MetaEntityCalendarItem implements MetaData {
 		item.setColorConfig(colorConfig);
 		return item;
 	}
-
 
 	@Override
 	public MetaData copy() {
@@ -400,11 +426,14 @@ public class MetaEntityCalendarItem implements MetaData {
 			}
 
 			if (StringUtil.isNotEmpty(colorConfig)) {
-				ScriptEngine scriptEngine = ExecuteContext.getCurrentContext().getTenantContext().getScriptEngine();
+				ScriptEngine scriptEngine = ExecuteContext.getCurrentContext()
+						.getTenantContext()
+						.getScriptEngine();
 				colorConfigScript = scriptEngine.createScript(colorConfig, SCRIPT_PREFIX);
 			}
 
-			definitionName = eHandler.getMetaData().getName();
+			definitionName = eHandler.getMetaData()
+					.getName();
 		}
 
 		public MetaEntityCalendarItem getMetaData() {
@@ -416,12 +445,21 @@ public class MetaEntityCalendarItem implements MetaData {
 		}
 
 		public String getColor(Entity entity) {
-			ScriptContext sc = ExecuteContext.getCurrentContext().getTenantContext().getScriptEngine().newScriptContext();
+			ScriptContext sc = ExecuteContext.getCurrentContext()
+					.getTenantContext()
+					.getScriptEngine()
+					.newScriptContext();
 
 			sc.setAttribute("today", DateUtil.getCurrentTimestamp());
-			sc.setAttribute("propertyName", this.getMetaData().currentConfig().getPropertyName());
-			sc.setAttribute("fromPropertyName", this.getMetaData().currentConfig().getFromPropertyName());
-			sc.setAttribute("toPropertyName", this.getMetaData().currentConfig().getToPropertyName());
+			sc.setAttribute("propertyName", this.getMetaData()
+					.currentConfig()
+					.getPropertyName());
+			sc.setAttribute("fromPropertyName", this.getMetaData()
+					.currentConfig()
+					.getFromPropertyName());
+			sc.setAttribute("toPropertyName", this.getMetaData()
+					.currentConfig()
+					.getToPropertyName());
 			sc.setAttribute("entity", entity);
 
 			Object color = colorConfigScript.eval(sc);

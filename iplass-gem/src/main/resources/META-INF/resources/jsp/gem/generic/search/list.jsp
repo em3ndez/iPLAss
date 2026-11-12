@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -27,6 +27,8 @@
 <%@ page import="java.util.Date"%>
 <%@ page import="java.util.List" %>
 <%@ page import="org.iplass.mtp.auth.AuthContext" %>
+<%@ page import="org.iplass.mtp.auth.User" %>
+<%@ page import="org.iplass.mtp.tenant.Tenant" %>
 <%@ page import="org.iplass.mtp.entity.permission.EntityPermission" %>
 <%@ page import="org.iplass.mtp.entity.definition.*" %>
 <%@ page import="org.iplass.mtp.entity.definition.properties.*" %>
@@ -59,10 +61,10 @@
 	}
 %>
 <%
-	EntityListParts parts = (EntityListParts) request.getAttribute("entityListParts");
+	EntityListParts parts = (EntityListParts) request.getAttribute("MetaEntityListParts_entityListParts");
 	if (parts == null) return;
 
-	SearchFormView form = (SearchFormView) request.getAttribute("searchFormView");
+	SearchFormView form = (SearchFormView) request.getAttribute("MetaEntityListParts_searchFormView");
 
 	String topViewListOffsetInfo = request.getParameter(Constants.TOPVIEW_LIST_OFFSET);
 
@@ -124,26 +126,39 @@
 	if (gridHeight == null || gridHeight < 0) {
 		gridHeight = 160;
 	}
+	
+	// searchAsync
+	boolean searchAsync = parts.isSearchAsync();
 
 	AuthContext auth = AuthContext.getCurrentContext();
 	boolean canUpdate = auth.checkPermission(new EntityPermission(ed.getName(), EntityPermission.Action.UPDATE));
 	boolean canDelete = auth.checkPermission(new EntityPermission(ed.getName(), EntityPermission.Action.DELETE));
+
+	// カラム固定の永続化キー接頭辞(tenant/user 単位で分離)
+	Tenant frozenTenant = auth.getTenant();
+	User frozenUser = auth.getUser();
+	String frozenKeyPrefix = (frozenTenant != null ? frozenTenant.getId() : -1)
+			+ "." + (frozenUser != null ? frozenUser.getOid() : "anonymous");
+	frozenKeyPrefix = StringUtil.escapeJavaScript(frozenKeyPrefix);
 
 	//スタイルシートのクラス名
 	String cellStyle = "entity-list topview-parts";
 	if (StringUtil.isNotBlank(parts.getStyle())) {
 		cellStyle = cellStyle + " " + parts.getStyle();
 	}
+	
+	//パーツの高さスタイル属性
+	String styleAttr = ViewUtil.buildHeightStyleAttr(parts.getMaxHeight());
 %>
 <div class="<c:out value="<%=cellStyle %>"/>" id="topview-parts-id_${partsCnt}" style="display:none;">
 <h3 class="hgroup-02">
-${entityListParts.iconTag}
-${m:esc(title)}
+${MetaEntityListParts_entityListParts.iconTag}
+${m:esc(MetaEntityListParts_title)}
 </h3>
 <%
 	String id = ((int)(Math.random() * 1000) + "_" + new Date().getTime());
 %>
-<form id="form_<c:out value="<%=id%>"/>" class="flat-block-top">
+<form id="form_<c:out value="<%=id%>"/>" class="flat-block-top" style="<%=styleAttr%>">
 <table id="searchResult_<c:out value="<%=id%>"/>"></table>
 </form>
 <script type="text/javascript">
@@ -163,7 +178,8 @@ $(function() {
 			if (row.orgOid != beforeRow.orgOid || row.orgVersion != beforeRow.orgVersion || row[colName] != beforeRow[colName]) {
 				dif = true;
 			}
-			if (!dif) return " style=\"display:none;\" ";//同じ場合は非表示にする
+			//同じ場合は非表示にする、タイトルを指定しないと(""含む)CELL値が設定されるので指定
+			if (!dif) return " title=\"&nbsp;\" style=\"display:none;\" ";
 		}
 		//この行から何行分rowspanを設定するか計算
 		var count = 0;
@@ -178,8 +194,16 @@ $(function() {
 			if (!dif) count++;
 			else break;
 		}
-		if (count > 1) return " style=\"vertical-align: center !important;\" rowspan=\"" + count + "\"";
-		else return null;
+		if (count > 1) {
+			var label = $.jgrid.stripHtml(rdata[colModel.name]).replace(/'/g, "&apos;");
+			if (!label || typeof label === "undefined") {
+				//タイトルを指定しないと(""含む)CELL値が設定されるので指定
+				label = "&nbsp;";
+			}
+			return " title=\"" + label + "\" style=\"vertical-align: center !important;\" rowspan=\"" + count + "\"";
+		} else {
+			return null;
+		}
 <%
 	} else {
 %>
@@ -200,7 +224,6 @@ $(function() {
 	}
 
 	var colModel = new Array();
-	var isloaded = false;
 	colModel.push({name:"orgOid", idnex:"orgOid", sortable:false, hidden:true, frozen:true, label:"oid", formatter:oidCellFormatter});
 	colModel.push({name:"orgVersion", idnex:"orgVersion", sortable:false, hidden:true, frozen:true, label:"version"});
 	colModel.push({name:'_mtpDetailLink', index:'_mtpDetailLink', width:${m:rs("mtp-gem-messages", "generic.search.list.detailLinkWidth")}, sortable:false, align:'center', frozen:true, label:"", classes:"detail-links", cellattr: cellAttrFunc});
@@ -214,6 +237,8 @@ $(function() {
 			String displayLabel = TemplateUtil.getMultilingualString(property.getDisplayLabel(), property.getLocalizedDisplayLabelList(), pd.getDisplayName(), pd.getLocalizedDisplayNameList());
 
 			if (isDispProperty(defName, pd, property)) {
+				// Section の「固定指定を許可」が ON の場合のみ「列を固定」指定列に frozen:true を出力する(初期固定の指定。frozenColumns.js 参照)
+				String frozen = section.isFrozenEnabled() && property.isFrozen() ? ", frozen:true" : "";
 				if (!(pd instanceof ReferenceProperty)) {
 					String sortPropName = StringUtil.escapeHtml(propName);
 					String width = "";
@@ -226,7 +251,7 @@ $(function() {
 					}
 					String style = property.getStyle() != null ? property.getStyle() : "";
 					String sortable = "sortable:true";
-					if (!ViewUtil.getEntityViewHelper().isSortable(pd)) {
+					if (!property.isSortable() || !ViewUtil.getEntityViewHelper().isSortable(pd)) {
 						sortable = "sortable:false";
 					}
 					String hidden = ", hidden:false";
@@ -234,7 +259,7 @@ $(function() {
 						hidden = ", hidden:true";
 					}
 %>
-	colModel.push({name:"<%=sortPropName%>", index:"<%=sortPropName%>", label:"<p class='title'><%=displayLabel%></p>", <%=sortable%><%=hidden%><%=width%>, cellattr: cellAttrFunc});
+	colModel.push({name:"<%=sortPropName%>", index:"<%=sortPropName%>", label:"<p class='title'><%=displayLabel%></p>", <%=sortable%><%=hidden%><%=frozen%><%=width%>, cellattr: cellAttrFunc});
 <%
 				} else if (property.getEditor() instanceof ReferencePropertyEditor) {
 					//参照型のName以外を表示する場合
@@ -251,7 +276,7 @@ $(function() {
 						}
 						String style = property.getStyle() != null ? property.getStyle() : "";
 						String sortable = "sortable:true";
-						if (!ViewUtil.getEntityViewHelper().isSortable(pd)) {
+						if (!property.isSortable() || !ViewUtil.getEntityViewHelper().isSortable(pd)) {
 							sortable = "sortable:false";
 						}
 						String hidden = ", hidden:false";
@@ -259,7 +284,7 @@ $(function() {
 							hidden = ", hidden:true";
 						}
 %>
-	colModel.push({name:"<%=sortPropName%>", index:"<%=sortPropName%>", label:"<p class='title'><%=displayLabel%></p>", <%=sortable%><%=hidden%><%=width%>});
+	colModel.push({name:"<%=sortPropName%>", index:"<%=sortPropName%>", label:"<p class='title'><%=displayLabel%></p>", <%=sortable%><%=hidden%><%=frozen%><%=width%>, cellattr: cellAttrFunc});
 <%
 					} else if (nest.size() > 0) {
 						String style = property.getStyle() != null ? property.getStyle() : "";
@@ -274,7 +299,6 @@ $(function() {
 						request.removeAttribute("nestProperty");
 						request.removeAttribute("nestStyle");
 						request.removeAttribute("nestEditor");
-						request.removeAttribute("frozenColNum");
 					}
 				}
 			}
@@ -297,7 +321,7 @@ $(function() {
 			String style = property.getStyle() != null ? property.getStyle() : "";
 %>
 <%-- XSS対応-メタの設定のため対応なし(displayLabel,style) --%>
-colModel.push({name:"<%=propName%>", index:"<%=propName%>", classes:"<%=style%>", label:"<p class='title'><%=displayLabel%></p>", sortable:false <%=hidden%><%=width%><%=align%>});
+colModel.push({name:"<%=propName%>", index:"<%=propName%>", classes:"<%=style%>", label:"<p class='title'><%=displayLabel%></p>", sortable:false <%=hidden%><%=width%><%=align%>, cellattr: cellAttrFunc});
 <%
 		}
 	}
@@ -354,6 +378,14 @@ colModel.push({name:"<%=propName%>", index:"<%=propName%>", classes:"<%=style%>"
 		}
 	});
 
+	// カラム固定: colModel 確定後に初期化する(固定の適用は検索結果の描画後)。Section がカラム固定を許可していない場合は初期化しない
+	// freezeLabel/unfreezeLabel は Pin の操作ラベル({0}=表示列名。frozenColumns.js で埋め込む)
+	const frozenColumns = <%=section.isFrozenEnabled()%> ? $table.frozenColumns({
+		storageKey: "frozenColumns_topview_<%=frozenKeyPrefix%>_${m:escJs(MetaEntityListParts_entityListParts.defName)}_${m:escJs(MetaEntityListParts_entityListParts.viewName)}_${m:escJs(MetaEntityListParts_entityListParts.filterName)}",
+		freezeLabel: "${m:escJs(m:rs('mtp-gem-messages', 'generic.element.section.SearchResultSection.freezeColumn'))}",
+		unfreezeLabel: "${m:escJs(m:rs('mtp-gem-messages', 'generic.element.section.SearchResultSection.unfreezeColumn'))}"
+	}) : null;
+
 	var offset = 0;
 	var limit = <%=limit%>;
 
@@ -382,16 +414,50 @@ colModel.push({name:"<%=propName%>", index:"<%=propName%>", classes:"<%=style%>"
 		nextFunc: function() {
 			offset += limit;
 			search();
+		},
+		hasNextFunc: function(offset, length, count, limit, notCount) {
+			return length > limit;
 		}
 	});
 
 	search();
 
 	function search() {
+
+		var searchAsync = "<%=searchAsync%>" == "true" ? true : false;
+
+		var entityListLink = $("#topview-parts-id_${partsCnt} ").find('.link-list-01.entity-list');
+
+		// 非同期の場合のみ読み込み中の表示設定をする
+		if (searchAsync) {
+			// "読み込み中"の表示と被らないようにデータをクリア
+			grid.clearGridData(true);
+
+			var topviewParts = $("#topview-parts-id_${partsCnt}");
+			topviewParts.show();
+
+			var loading = $("#load_searchResult_<%=id%>");
+			loading.removeClass("ui-state-active");
+			loading.removeClass("ui-state-default");
+			loading.show();
+			
+			//　読み込み中はボタン行を非表示にする
+			entityListLink.hide();
+		}
+
 		var sortKey = $table.attr("data-sortKey");
 		var sortType = $table.attr("data-sortType");
-		searchEntityList("<%=SearchListCommand.WEBAPI_NAME%>", "${m:escJs(entityListParts.defName)}", "${m:escJs(entityListParts.viewName)}", "${m:escJs(entityListParts.filterName)}", offset, sortKey, sortType, function(count, list) {
-			$pager.setPage(offset, list.length, count);
+		searchEntityList("<%=SearchListCommand.WEBAPI_NAME%>", "${m:escJs(MetaEntityListParts_entityListParts.defName)}", "${m:escJs(MetaEntityListParts_entityListParts.viewName)}", "${m:escJs(MetaEntityListParts_entityListParts.filterName)}", offset, sortKey, sortType, "<%=searchAsync%>", function(list) {
+			$pager.setPage(offset, list.length, null);
+			// listのサイズを表示件数設定に従い補正
+			if (list.length > limit) {
+				list = list.slice(0, limit);
+			}
+
+			if (searchAsync) {
+				// 検索後にボタン行を表示する
+				entityListLink.show();
+			}
 
 			grid.clearGridData(true);
 			grid.setGridParam({"_data": list}).trigger("reloadGrid");
@@ -463,6 +529,10 @@ colModel.push({name:"<%=propName%>", index:"<%=propName%>", classes:"<%=style%>"
 
 			$("#topview-parts-id_${partsCnt}").show();
 			$(".fixHeight").fixHeight();
+			// カラム固定: 行内リンクのイベント設定後・パーツ表示後に適用する(固定列の clone にイベントを複製し、表示状態で寸法を同期するため)
+			if (frozenColumns != null) {
+				frozenColumns.refresh();
+			}
 		});
 	}
 });

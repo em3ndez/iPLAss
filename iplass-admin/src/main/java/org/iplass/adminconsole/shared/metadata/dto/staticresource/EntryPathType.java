@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -48,7 +48,10 @@ public enum EntryPathType {
 
 	public static EntryPathType valueOf(EntryPathTranslatorDefinition definition) {
 		for (EntryPathType type : values()) {
-			if (definition.getClass().getName().equals(type.definitionClass().getName())) {
+			if (definition.getClass()
+					.getName()
+					.equals(type.definitionClass()
+							.getName())) {
 				return type;
 			}
 		}
@@ -56,11 +59,14 @@ public enum EntryPathType {
 	}
 
 	public static EntryPathTranslatorDefinition typeOfDefinition(EntryPathType type) {
-		if (type.definitionClass().equals(JavaClassEntryPathTranslatorDefinition.class)) {
+		if (type.definitionClass()
+				.equals(JavaClassEntryPathTranslatorDefinition.class)) {
 			return new JavaClassEntryPathTranslatorDefinition();
-		} else if (type.definitionClass().equals(PrefixEntryPathTranslatorDefinition.class)) {
+		} else if (type.definitionClass()
+				.equals(PrefixEntryPathTranslatorDefinition.class)) {
 			return new PrefixEntryPathTranslatorDefinition();
-		} else if (type.definitionClass().equals(ScriptingEntryPathTranslatorDefinition.class)) {
+		} else if (type.definitionClass()
+				.equals(ScriptingEntryPathTranslatorDefinition.class)) {
 			return new ScriptingEntryPathTranslatorDefinition();
 		}
 		return null;

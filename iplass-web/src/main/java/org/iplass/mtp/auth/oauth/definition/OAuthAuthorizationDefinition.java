@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -48,23 +48,24 @@ public class OAuthAuthorizationDefinition implements Definition {
 	private SubjectIdentifierTypeDefinition subjectIdentifierType;
 
 	private String issuerUri;
-	
+
 	public List<String> getAvailableRoles() {
 		return availableRoles;
 	}
-	
+
 	/**
 	 * OAuth2によるアクセスを許可するroleを指定します。
-	 * すべてのユーザに許可する場合は、*を指定します。
+	 * すべてのユーザーに許可する場合は、*を指定します。
 	 * @param availableRoles
 	 */
 	public void setAvailableRoles(List<String> availableRoles) {
 		this.availableRoles = availableRoles;
 	}
+
 	public List<ScopeDefinition> getScopes() {
 		return scopes;
 	}
-	
+
 	/**
 	 * 利用可能なスコープの定義を設定します。
 	 * 
@@ -73,10 +74,11 @@ public class OAuthAuthorizationDefinition implements Definition {
 	public void setScopes(List<ScopeDefinition> scopes) {
 		this.scopes = scopes;
 	}
+
 	public String getConsentTemplateName() {
 		return consentTemplateName;
 	}
-	
+
 	/**
 	 * スコープ承認画面のテンプレート名を指定します。
 	 * 未指定の場合は、デフォルトの簡易な承認画面が利用されます。
@@ -86,22 +88,27 @@ public class OAuthAuthorizationDefinition implements Definition {
 	public void setConsentTemplateName(String consentTemplateName) {
 		this.consentTemplateName = consentTemplateName;
 	}
+
 	public List<ClientPolicyDefinition> getClientPolicies() {
 		return clientPolicies;
 	}
+
 	public void setClientPolicies(List<ClientPolicyDefinition> clientPolicies) {
 		this.clientPolicies = clientPolicies;
 	}
+
 	public SubjectIdentifierTypeDefinition getSubjectIdentifierType() {
 		return subjectIdentifierType;
 	}
+
 	public void setSubjectIdentifierType(SubjectIdentifierTypeDefinition subjectIdentifierType) {
 		this.subjectIdentifierType = subjectIdentifierType;
 	}
+
 	public String getIssuerUri() {
 		return issuerUri;
 	}
-	
+
 	/**
 	 * issuerのuriを指定します。
 	 * 未指定の場合は、iPLAssがHost名などを元に自動で生成しますが、
@@ -112,26 +119,32 @@ public class OAuthAuthorizationDefinition implements Definition {
 	public void setIssuerUri(String issuerUri) {
 		this.issuerUri = issuerUri;
 	}
+
 	@Override
 	public String getName() {
 		return name;
 	}
+
 	@Override
 	public void setName(String name) {
 		this.name = name;
 	}
+
 	@Override
 	public String getDisplayName() {
 		return displayName;
 	}
+
 	@Override
 	public void setDisplayName(String displayName) {
 		this.displayName = displayName;
 	}
+
 	@Override
 	public String getDescription() {
 		return description;
 	}
+
 	@Override
 	public void setDescription(String description) {
 		this.description = description;

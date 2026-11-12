@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -56,9 +56,13 @@ public class TenantEnv implements Serializable {
 	/** DateTime出力用書式 */
 	private String outputDateTimeSecFormat;
 
+	/** RdbAdapter名 */
+	private String rdbAdapterName;
+
 	public Tenant getTenant() {
 		return tenant;
 	}
+
 	public void setTenant(Tenant tenant) {
 		this.tenant = tenant;
 	}
@@ -66,6 +70,7 @@ public class TenantEnv implements Serializable {
 	public String getTenantLocale() {
 		return tenantLocale;
 	}
+
 	public void setTenantLocale(String tenantLocale) {
 		this.tenantLocale = tenantLocale;
 	}
@@ -73,12 +78,15 @@ public class TenantEnv implements Serializable {
 	public String getTenantTimeZoneInfo() {
 		return tenantTimeZoneInfo;
 	}
+
 	public void setTenantTimeZoneInfo(String tenantTimeZoneInfo) {
 		this.tenantTimeZoneInfo = tenantTimeZoneInfo;
 	}
+
 	public int getTenantTimeZoneOffsetInMinutes() {
 		return tenantTimeZoneOffsetInMinutes;
 	}
+
 	public void setTenantTimeZoneOffsetInMinutes(int tenantTimeZoneOffsetInMinutes) {
 		this.tenantTimeZoneOffsetInMinutes = tenantTimeZoneOffsetInMinutes;
 	}
@@ -86,12 +94,15 @@ public class TenantEnv implements Serializable {
 	public String getServerTimeZoneInfo() {
 		return serverTimeZoneInfo;
 	}
+
 	public void setServerTimeZoneInfo(String serverTimeZoneInfo) {
 		this.serverTimeZoneInfo = serverTimeZoneInfo;
 	}
+
 	public int getServerTimeZoneOffsetInMinutes() {
 		return serverTimeZoneOffsetInMinutes;
 	}
+
 	public void setServerTimeZoneOffsetInMinutes(int serverTimeZoneOffsetInMinutes) {
 		this.serverTimeZoneOffsetInMinutes = serverTimeZoneOffsetInMinutes;
 	}
@@ -99,6 +110,7 @@ public class TenantEnv implements Serializable {
 	public String getInputLocale() {
 		return inputLocale;
 	}
+
 	public void setInputLocale(String inputLocale) {
 		this.inputLocale = inputLocale;
 	}
@@ -106,6 +118,7 @@ public class TenantEnv implements Serializable {
 	public String getOutputDateFormat() {
 		return outputDateFormat;
 	}
+
 	public void setOutputDateFormat(String outputDateFormat) {
 		this.outputDateFormat = outputDateFormat;
 	}
@@ -113,6 +126,7 @@ public class TenantEnv implements Serializable {
 	public String getOutputTimeSecFormat() {
 		return outputTimeSecFormat;
 	}
+
 	public void setOutputTimeSecFormat(String outputTimeSecFormat) {
 		this.outputTimeSecFormat = outputTimeSecFormat;
 	}
@@ -120,8 +134,16 @@ public class TenantEnv implements Serializable {
 	public String getOutputDateTimeSecFormat() {
 		return outputDateTimeSecFormat;
 	}
+
 	public void setOutputDateTimeSecFormat(String outputDateTimeSecFormat) {
 		this.outputDateTimeSecFormat = outputDateTimeSecFormat;
 	}
 
+	public String getRdbAdapterName() {
+		return rdbAdapterName;
+	}
+
+	public void setRdbAdapterName(String rdbAdapterName) {
+		this.rdbAdapterName = rdbAdapterName;
+	}
 }

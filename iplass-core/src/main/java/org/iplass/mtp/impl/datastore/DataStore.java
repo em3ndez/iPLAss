@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,12 +26,20 @@ import org.iplass.mtp.impl.entity.MetaStoreMapping;
 import org.iplass.mtp.spi.ServiceInitListener;
 
 public abstract class DataStore implements ServiceInitListener<StoreService> {
-	
+
 	public abstract ApplyMetaDataStrategy getApplyMetaDataStrategy();
+
 	public abstract EntityStoreStrategy getEntityStoreStrategy();
-	
+
 	public abstract MetaEntityStore newEntityStoreInstance();
+
 	public abstract Class<? extends MetaEntityStore> getEntityStoreType();
-	
+
 	public abstract int stringPropertyStoreMaxLength(MetaStoreMapping metaStoreMapping);
+
+	/**
+	 * SELECT DISTINCT時に、ORDER BYで指定した式（列そのものでなく式自体）がSELECT句に
+	 * 含まれていないとエラーとなるDataStoreを利用している場合に<code>true</code>を返却。
+	 */
+	public abstract boolean isRequireOrderByExpressionInSelectForDistinct();
 }

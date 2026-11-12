@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 <%@ page import="java.sql.Time" %>
 <%@ page import="java.text.*" %>
@@ -63,7 +63,6 @@
 		return value;
 	}
 	String format(Time time) {
-// 		SimpleDateFormat format = new SimpleDateFormat("HHmmssSSS");
 		SimpleDateFormat format = DateUtil.getSimpleDateFormat("HHmmssSSS", false);
 		return time != null ? format.format(time) : "";
 	}
@@ -106,7 +105,7 @@
 		if (isMultiple) {
 			//複数
 %>
-<ul class="data-label" style="<c:out value="<%=customStyle %>"/>">
+<ul name="data-label-<c:out value="<%=propName %>"/>" class="data-label" style="<c:out value="<%=customStyle %>"/>">
 <%
 			Time[] array = propValue instanceof Time[] ? (Time[]) propValue : null;
 			if (array != null) {
@@ -134,7 +133,7 @@
 			//単一
 			Time t = propValue instanceof Time ? (Time) propValue : null;
 %>
-<span class="data-label" style="<c:out value="<%=customStyle %>"/>" data-time-range="<c:out value="<%=editor.getDispRange() %>"/>">
+<span name="data-label-<c:out value="<%=propName %>"/>" class="data-label" style="<c:out value="<%=customStyle %>"/>" data-time-range="<c:out value="<%=editor.getDispRange() %>"/>">
 <c:out value="<%=displayFormat(t, formatInfo.getDatetimeFormat(), formatInfo.getDatetimeLocale(), editor.getDispRange()) %>"/>
 <%
 			if (outputHidden) {
@@ -153,16 +152,24 @@
 
 		if (isMultiple) {
 			//複数
+%>
+<ul name="data-hidden-<c:out value="<%=propName %>"/>">
+<%
 			Time[] array = propValue instanceof Time[] ? (Time[]) propValue : null;
 			if (array != null) {
 				for (int i = 0; i < array.length; i++) {
 					Time t = array[i];
 					String strHidden = format(t);
 %>
+<li>
 <input type="hidden" name="<c:out value="<%=propName %>"/>" value="<c:out value="<%=strHidden %>"/>" />
+</li>
 <%
 				}
 			}
+%>
+</ul>
+<%
 		} else {
 			//単一
 			Time t = propValue instanceof Time ? (Time) propValue : null;

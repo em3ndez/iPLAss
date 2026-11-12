@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,11 +20,12 @@
 
 package org.iplass.mtp.impl.view.generic.editor;
 
+import java.util.regex.Pattern;
+
 import org.iplass.mtp.entity.definition.PropertyDefinition;
 import org.iplass.mtp.entity.definition.properties.BinaryProperty;
 import org.iplass.mtp.impl.entity.EntityContext;
 import org.iplass.mtp.impl.entity.EntityHandler;
-import org.iplass.mtp.impl.metadata.MetaDataRuntime;
 import org.iplass.mtp.impl.util.ObjectUtil;
 import org.iplass.mtp.impl.view.generic.EntityViewRuntime;
 import org.iplass.mtp.impl.view.generic.FormViewRuntime;
@@ -37,8 +38,8 @@ import org.iplass.mtp.view.generic.editor.PropertyEditor;
  * バイナリ型プロパティエディタのメタデータ
  * @author lis3wg
  */
-public class MetaBinaryPropertyEditor extends MetaPrimitivePropertyEditor {
 
+public class MetaBinaryPropertyEditor extends MetaPrimitivePropertyEditor {
 	/** シリアルバージョンUID */
 	private static final long serialVersionUID = 8428866745088395378L;
 
@@ -85,12 +86,15 @@ public class MetaBinaryPropertyEditor extends MetaPrimitivePropertyEditor {
 	/** Label形式の場合の更新制御 */
 	private boolean updateWithLabelValue = false;
 
+	/** アップロード受け入れ可能な MIME Type 正規表現パターン */
+	private String uploadAcceptMimeTypesPattern;
+
 	/**
 	 * 表示タイプを取得します。
 	 * @return 表示タイプ
 	 */
 	public BinaryDisplayType getDisplayType() {
-	    return displayType;
+		return displayType;
 	}
 
 	/**
@@ -98,7 +102,7 @@ public class MetaBinaryPropertyEditor extends MetaPrimitivePropertyEditor {
 	 * @param displayType 表示タイプ
 	 */
 	public void setDisplayType(BinaryDisplayType displayType) {
-	    this.displayType = displayType;
+		this.displayType = displayType;
 	}
 
 	/**
@@ -218,7 +222,7 @@ public class MetaBinaryPropertyEditor extends MetaPrimitivePropertyEditor {
 	 * @return PDF表示時にPDF.jsを利用
 	 */
 	public boolean isUsePdfjs() {
-	    return usePdfjs;
+		return usePdfjs;
 	}
 
 	/**
@@ -226,7 +230,7 @@ public class MetaBinaryPropertyEditor extends MetaPrimitivePropertyEditor {
 	 * @param usePdfjs PDF表示時にPDF.jsを利用
 	 */
 	public void setUsePdfjs(boolean usePdfjs) {
-	    this.usePdfjs = usePdfjs;
+		this.usePdfjs = usePdfjs;
 	}
 
 	/**
@@ -297,6 +301,22 @@ public class MetaBinaryPropertyEditor extends MetaPrimitivePropertyEditor {
 		this.updateWithLabelValue = updateWithLabelValue;
 	}
 
+	/**
+	 * アップロード受け入れ可能な MIME Type 正規表現パターンを取得します。
+	 * @return アップロード受け入れ可能な MIME Type 正規表現パターン
+	 */
+	public String getUploadAcceptMimeTypesPattern() {
+		return uploadAcceptMimeTypesPattern;
+	}
+
+	/**
+	 * アップロード受け入れ可能な MIME Type 正規表現パターンを設定します
+	 * @param uploadAcceptMimeTypesPattern アップロード受け入れ可能な MIME Type 正規表現パターン
+	 */
+	public void setUploadAcceptMimeTypesPattern(String uploadAcceptMimeTypesPattern) {
+		this.uploadAcceptMimeTypesPattern = uploadAcceptMimeTypesPattern;
+	}
+
 	@Override
 	public MetaBinaryPropertyEditor copy() {
 		return ObjectUtil.deepCopy(this);
@@ -320,6 +340,7 @@ public class MetaBinaryPropertyEditor extends MetaPrimitivePropertyEditor {
 		hideDeleteButton = e.isHideDeleteButton();
 		insertWithLabelValue = e.isInsertWithLabelValue();
 		updateWithLabelValue = e.isUpdateWithLabelValue();
+		uploadAcceptMimeTypesPattern = e.getUploadAcceptMimeTypesPattern();
 	}
 
 	@Override
@@ -340,18 +361,51 @@ public class MetaBinaryPropertyEditor extends MetaPrimitivePropertyEditor {
 		editor.setHideDeleteButton(hideDeleteButton);
 		editor.setInsertWithLabelValue(insertWithLabelValue);
 		editor.setUpdateWithLabelValue(updateWithLabelValue);
+		editor.setUploadAcceptMimeTypesPattern(uploadAcceptMimeTypesPattern);
+
 		return editor;
 	}
 
 	@Override
-	public MetaDataRuntime createRuntime(EntityViewRuntime entityView, FormViewRuntime formView,
+	public BinaryPropertyEditorRuntime createRuntime(EntityViewRuntime entityView, FormViewRuntime formView,
 			MetaPropertyLayout propertyLayout, EntityContext context, EntityHandler eh) {
-		return new PropertyEditorRuntime(entityView, formView, propertyLayout, context, eh) {
-			@Override
-			protected boolean checkPropertyType(PropertyDefinition pd) {
-				return pd == null || pd instanceof BinaryProperty;
-			}
+		return new BinaryPropertyEditorRuntime(entityView, formView, propertyLayout, context, eh);
+	}
 
-		};
+	/**
+	 * バイナリプロパティエディターランタイム
+	 */
+	public class BinaryPropertyEditorRuntime extends PropertyEditorRuntime {
+		/** コンパイル済みアップロード受け入れ可能な MIME Type 正規表現パターン */
+		private Pattern uploadAcceptMimeTypesPattern;
+
+		/**
+		 * コンストラクタ
+		 * @param entityView エンティティビューランタイム
+		 * @param formView FormViewランタイム
+		 * @param propertyLayout プロパティレイアウトメタ情報
+		 * @param context エンティティコンテキスト
+		 * @param eh エンティティハンドラー
+		 */
+		public BinaryPropertyEditorRuntime(EntityViewRuntime entityView, FormViewRuntime formView,
+				MetaPropertyLayout propertyLayout, EntityContext context, EntityHandler eh) {
+			super(entityView, formView, propertyLayout, context, eh);
+			this.uploadAcceptMimeTypesPattern = null != MetaBinaryPropertyEditor.this.uploadAcceptMimeTypesPattern
+					? Pattern.compile(MetaBinaryPropertyEditor.this.uploadAcceptMimeTypesPattern)
+					: null;
+		}
+
+		@Override
+		protected boolean checkPropertyType(PropertyDefinition pd) {
+			return pd == null || pd instanceof BinaryProperty;
+		}
+
+		/**
+		 * コンパイル済みアップロード受け入れ可能な MIME Type 正規表現パターンを取得する
+		 * @return コンパイル済みアップロード受け入れ可能な MIME Type 正規表現パターン
+		 */
+		public Pattern getUploadAcceptMimeTypesPattern() {
+			return uploadAcceptMimeTypesPattern;
+		}
 	}
 }

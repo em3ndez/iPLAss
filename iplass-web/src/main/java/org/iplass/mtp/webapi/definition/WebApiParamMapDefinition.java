@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -91,7 +91,7 @@ public class WebApiParamMapDefinition implements Serializable {
 
 	private String name;
 	private String mapFrom;
-	
+
 	private String condition;
 
 	/**

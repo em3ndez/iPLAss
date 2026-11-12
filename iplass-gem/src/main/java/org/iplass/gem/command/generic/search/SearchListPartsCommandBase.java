@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,6 +35,7 @@ import org.iplass.mtp.entity.Entity;
 import org.iplass.mtp.entity.EntityManager;
 import org.iplass.mtp.entity.SearchResult;
 import org.iplass.mtp.entity.permission.EntityPermission;
+import org.iplass.mtp.entity.query.Limit;
 import org.iplass.mtp.entity.query.Query;
 import org.iplass.mtp.entity.query.condition.predicate.In;
 import org.iplass.mtp.view.generic.SearchQueryContext;
@@ -49,7 +50,8 @@ public abstract class SearchListPartsCommandBase implements Command {
 	private EntityManager em;
 
 	public SearchListPartsCommandBase() {
-		em = ManagerLocator.getInstance().getManager(EntityManager.class);
+		em = ManagerLocator.getInstance()
+				.getManager(EntityManager.class);
 	}
 
 	protected Query toQuery(SearchContext context) {
@@ -58,27 +60,9 @@ public abstract class SearchListPartsCommandBase implements Command {
 		query.setSelect(context.getSelect());
 		query.setFrom(context.getFrom());
 		query.setWhere(context.getWhere());
-		query.setVersiond(context.isVersioned());
+		query.setVersioned(context.isVersioned());
 
 		return query;
-	}
-
-	protected int count(SearchContext context, Query query) {
-		final SearchContextBase _context = (SearchContextBase) context;
-
-		//検索前処理
-		final SearchQueryContext sqContext = _context.beforeSearch(query, SearchQueryType.SEACH);
-
-		if (sqContext.isDoPrivileged()) {
-			//特権実行
-			return AuthContext.doPrivileged(() -> em.count(sqContext.getQuery()));
-		} else {
-			if (sqContext.getWithoutConditionReferenceName() != null) {
-				return EntityPermission.doQueryAs(sqContext.getWithoutConditionReferenceName(), () -> em.count(sqContext.getQuery()));
-			} else {
-				return em.count(sqContext.getQuery());
-			}
-		}
 	}
 
 	protected SearchResult<Entity> search(SearchContext context, Query query) {
@@ -94,14 +78,22 @@ public abstract class SearchListPartsCommandBase implements Command {
 			result = AuthContext.doPrivileged(() -> searchEntity(_context, userOidList, sqContext.getQuery()));
 		} else {
 			if (sqContext.getWithoutConditionReferenceName() != null) {
-				result = EntityPermission.doQueryAs(sqContext.getWithoutConditionReferenceName(), () -> searchEntity(_context, userOidList, sqContext.getQuery()));
+				result = EntityPermission.doQueryAs(sqContext.getWithoutConditionReferenceName(),
+						() -> searchEntity(_context, userOidList, sqContext.getQuery()));
 			} else {
 				result = searchEntity(_context, userOidList, sqContext.getQuery());
 			}
 		}
 
 		if (!userOidList.isEmpty()) {
-			setUserInfoMap(context, userOidList);
+			if (_context.getForm()
+					.isShowUserNameWithPrivilegedValue()) {
+				AuthContext.doPrivileged(() -> {
+					setUserInfoMap(context, userOidList);
+				});
+			} else {
+				setUserInfoMap(context, userOidList);
+			}
 		}
 		return result;
 	}
@@ -135,8 +127,8 @@ public abstract class SearchListPartsCommandBase implements Command {
 		final Map<String, Entity> userMap = new HashMap<>();
 
 		Query q = new Query().select(Entity.OID, Entity.NAME)
-							 .from(User.DEFINITION_NAME)
-							 .where(new In(Entity.OID, userOidList.toArray()));
+				.from(User.DEFINITION_NAME)
+				.where(new In(Entity.OID, userOidList.toArray()));
 		em.searchEntity(q, new Predicate<Entity>() {
 
 			@Override
@@ -148,7 +140,19 @@ public abstract class SearchListPartsCommandBase implements Command {
 			}
 		});
 
-		context.getRequest().setAttribute(Constants.USER_INFO_MAP, userMap);
+		context.getRequest()
+				.setAttribute(Constants.USER_INFO_MAP, userMap);
 	}
 
+	protected Limit getLimitForPaging(SearchContext context) {
+		Limit origin = context.getLimit();
+		if (origin == null) {
+			return null;
+		}
+
+		// 次ページの存在判定のためLimitを1つ増やす
+		Limit result = (Limit) origin.copy();
+		result.setLimit(origin.getLimit() + 1);
+		return result;
+	}
 }

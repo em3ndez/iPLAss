@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -40,6 +40,7 @@
 <%@ page import="org.iplass.mtp.web.template.TemplateUtil"%>
 <%@ page import="org.iplass.mtp.ManagerLocator" %>
 <%@ page import="org.iplass.gem.command.fulltext.FullTextSearchCommand"%>
+<%@ page import="org.iplass.gem.command.fulltext.FullTextSearchViewCommand"%>
 <%@ page import="org.iplass.gem.command.Constants"%>
 <%@ page import="org.iplass.gem.command.ViewUtil"%>
 <%
@@ -188,6 +189,7 @@ $(function(){
 	execSearch(param);
 });
 
+var gridList = [];
 function execSearch(param) {
 	$("div.result-block").show();
 	$(".searching").show();
@@ -212,7 +214,7 @@ function execSearch(param) {
 					setData(grid, "list" + i, entityResult.values, entityResult.viewAction, entityResult.detailAction, entityResult.showDetailLink);
 				}
 				var message = commandResult.message;
-				if (typeof message !== "undeined" && message != null) {
+				if (message != null) {
 					$("div.message-block").append(message);
 					$("div.message-block").show();
 				}
@@ -236,7 +238,7 @@ function execSearch(param) {
 			} catch (e) {
 			}
 
-			if (typeof res !== "undeined" && res != null
+			if (res != null
 					&& res.exceptionType == "org.iplass.mtp.auth.NoPermissionException") {
 				alert(scriptContext.gem.locale.error.permissionErrOccurred);
 			} else {
@@ -262,7 +264,11 @@ function createTemplate(listId, defName, displayName, crawlDate, colModels) {
 		$(colModels).each(function(index) {
 			if (this.name === "orgOid") {
 				this.formatter = oidCellFormatter;
-				return false;
+			}
+			if (this.grouping === true) {
+				this.cellattr = groupingCellAttr;
+			} else {
+				this.cellattr = noneGroupingCellAttr;
 			}
 		});
 	}
@@ -306,14 +312,34 @@ function createTemplate(listId, defName, displayName, crawlDate, colModels) {
 			if (curSortKey !== "" && curSortType !== "") {
 				$("#" + listId).sortGrid(curSortKey, false, curSortType.toLowerCase());
 			}
+		},
+		onSelectRow: function(rowid, e) {
+			var row = grid.getRowData(rowid);
+			var id = row.orgOid + "_" + row.orgVersion;
+			var rowIndex = parseInt(rowid) - 1;
+
+			clearRowHighlight(grid, rowIndex);
+
+			if (e) {
+				$("tr[id]", grid).each(function() {
+					var _rowid = $(this).attr("id");
+					if (_rowid == rowid) return;
+					var _row = grid.getRowData(_rowid);
+					var _id = _row.orgOid + "_" + _row.orgVersion;
+					if (id == _id) $(this).addClass("ui-state-highlight");
+				});
+			}
 		}
+
 	});
+	gridList.push({id:listId, grid: grid});
 	return grid;
 }
 
 function setData(grid, listId, data, viewUrl, editUrl, showEditLink) {
 
 	grid.clearGridData();
+	grid.setGridParam({"_data": data}).trigger("reloadGrid");
 
 	//リンク生成
 	var $detailLink = $("<p/>");
@@ -348,7 +374,7 @@ function setData(grid, listId, data, viewUrl, editUrl, showEditLink) {
 		a.modalWindow();
 	}
 	$(".fixHeight").fixHeight();
-	var option = {"<%=Constants.BACK_PATH%>":"<%=FullTextSearchCommand.SEARCH_VIEW_ACTION_NAME%>"};
+	var option = {"<%=Constants.BACK_PATH%>":"<%=FullTextSearchViewCommand.SEARCH_VIEW_ACTION_NAME%>"};
 	$(".detailLink", $("#" + listId)).click(function(e) {
 		var action = $(this).attr("action");
 		var oid = $(this).attr("oid");
@@ -412,5 +438,72 @@ function resetSortCondition() {
 	$(":hidden[name^='sortKey_']", $form).val("");
 	$(":hidden[name^='sortType_']", $form).val("");
 }
+function getGrid(id) {
+	var ret = null;
+	$(gridList).each(function() {
+		var gridData = this;
+		if (gridData.id === id) {
+			ret = gridData.grid;
+			return false;
+		}
+	});
+	return ret;
+}
+function groupingCellAttr(rowId, val, rowObject, colModel, rdata) {
+	var rowIndex = parseInt(rowId) - 1;
+	var grid = getGrid(this.id);
+	var data = grid.getGridParam("_data");
+	var row = data[rowIndex];
+	var colName = colModel.name;
+
+	if (rowIndex > 0) {
+		var beforeRow = data[rowIndex - 1];
+		//前の行と値が同じか確認
+		var dif = false;
+		if (row.orgOid != beforeRow.orgOid || row.orgVersion != beforeRow.orgVersion || row[colName] != beforeRow[colName]) {
+			dif = true;
+		}
+		//同じ場合は非表示にする、タイトルを指定しないと(""含む)CELL値が設定されるので指定
+		if (!dif) return " title=\"&nbsp;\" style=\"display:none;\" ";
+	}
+
+	//この行から何行分rowspanを設定するか計算
+	var count = 0;
+	for (var i = rowIndex; i < data.length; i++) {
+		if (i >= data.length) break;
+		var nextRow = data[i];
+		var dif = false;
+		if (row.orgOid != nextRow.orgOid || row.orgVersion != nextRow.orgVersion || row[colName] != nextRow[colName]) {
+			dif = true;
+			break;
+		}
+		if (!dif) count++;
+		else break;
+	}
+	if (count > 1) {
+		var label = $.jgrid.stripHtml(rdata[colModel.name]).replace(/'/g, "&apos;");
+		if (!label || typeof label === "undefined") {
+			//タイトルを指定しないと(""含む)CELL値が設定されるので指定
+			label = "&nbsp;";
+		}
+		return " title=\"" + label + "\" style=\"vertical-align: center !important;\" rowspan=\"" + count + "\"";
+	} else {
+		return null;
+	}
+}
+
+function noneGroupingCellAttr(rowId, val, rowObject, colModel, rdata) {
+	return null;
+}
+
+function clearRowHighlight(grid, rowIndex) {
+	var $rows = $("tr.jqgrow", grid);
+	if (rowIndex >= $rows.length) return;
+	//選択された行以外にハイライトをクリアします。
+	$rows.each(function(index) {
+		if (index != rowIndex) $(this).removeClass("ui-state-highlight");
+	});
+}
+
 </script>
 </div>

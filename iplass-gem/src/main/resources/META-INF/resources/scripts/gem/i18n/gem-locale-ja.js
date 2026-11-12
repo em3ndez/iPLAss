@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,6 +24,12 @@ scriptContext.gem.locale.common.name = "名前";
 scriptContext.gem.locale.common.numcheckMsg = "数値を入力してください。";
 scriptContext.gem.locale.common.pleaseSelect = "選択してください";
 scriptContext.gem.locale.common.requiredMsg = "{0}を入力してください。";
+scriptContext.gem.locale.common.numFormatErrorMsg = "{0}は数値を入力してください。";
+scriptContext.gem.locale.common.stringFormatErrorMsg = "{0}は条件に合う文字列を入力してください。 "
+scriptContext.gem.locale.common.dateFormatErrorMsg = "{0}は日付を正しく入力してください。({1})";
+scriptContext.gem.locale.common.timeFormatErrorMsg = "{0}は時間を正しく入力してください。({1})";
+scriptContext.gem.locale.common.timestampFormatErrorMsg = "{0}は日付もしくは時間を正しく入力してください。({1})";
+scriptContext.gem.locale.common.maxOfDetailSearchItemsWarningMsg = "検索条件の上限数に達したので、これ以上は追加できません。";
 
 scriptContext.gem.locale.apendCategory("binary");
 scriptContext.gem.locale.binary.deleteLink = "削除";
@@ -34,6 +40,7 @@ scriptContext.gem.locale.binary.notVewFlash = "Flashを表示できません。"
 scriptContext.gem.locale.apendCategory("date");
 scriptContext.gem.locale.date.datepickerBtn = "カレンダーから入力";
 scriptContext.gem.locale.date.timepickerBtn = "スライダーから入力";
+scriptContext.gem.locale.date.pickerClearBtn = "クリア";
 scriptContext.gem.locale.date.validateDateErrMsg = "日付を正しく入力してください。({0})";
 scriptContext.gem.locale.date.validateTimeErrMsg = "時間を正しく入力してください。({0})";
 scriptContext.gem.locale.date.validateTimestampErrMsg = "日付もしくは時間を正しく入力してください。({0})";
@@ -43,6 +50,7 @@ scriptContext.gem.locale.reference.deleteBtn = "削除";
 scriptContext.gem.locale.reference.deleteLabel = "削除";
 scriptContext.gem.locale.reference.detail = "詳細";
 scriptContext.gem.locale.reference.duplicateData = "重複のデータ。";
+scriptContext.gem.locale.reference.notSelectedData = "対象データが未選択です。";
 scriptContext.gem.locale.reference.edit = "編集";
 scriptContext.gem.locale.reference.noResult = "データが見つかりません。";
 scriptContext.gem.locale.reference.pleaseSelectAny = "{0} を選択してください";

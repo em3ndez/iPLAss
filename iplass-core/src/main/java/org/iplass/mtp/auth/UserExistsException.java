@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,7 +23,7 @@ package org.iplass.mtp.auth;
 import org.iplass.mtp.entity.EntityDuplicateValueException;
 
 /**
- * User作成の際、すでに同一アカウントのユーザが存在する場合、スローされる例外。<br>
+ * User作成の際、すでに同一アカウントのユーザーが存在する場合、スローされる例外。<br>
  * 
  * @author K.Higuchi
  *

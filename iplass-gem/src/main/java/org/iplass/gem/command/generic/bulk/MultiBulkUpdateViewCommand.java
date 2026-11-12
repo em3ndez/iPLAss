@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -41,33 +41,42 @@ import org.iplass.mtp.view.generic.BulkFormView;
 import org.iplass.mtp.view.generic.element.section.SearchResultSection.ExclusiveControlPoint;
 
 @ActionMappings({
-	@ActionMapping(name=MultiBulkUpdateViewCommand.BULK_EDIT_ACTION_NAME,
-			displayName="一括詳細編集",
-			paramMapping={
-				@ParamMapping(name=Constants.DEF_NAME, mapFrom="${0}", condition="subPath.length==1"),
-				@ParamMapping(name=Constants.VIEW_NAME, mapFrom="${0}", condition="subPath.length==2"),
-				@ParamMapping(name=Constants.DEF_NAME, mapFrom="${1}", condition="subPath.length==2"),
-			},
-			command=@CommandConfig(commandClass=MultiBulkUpdateViewCommand.class),
-			result={
-				@Result(status=Constants.CMD_EXEC_SUCCESS, type=Type.TEMPLATE,
-						value=Constants.TEMPLATE_BULK_MULTI_EDIT),
-				@Result(status=Constants.CMD_EXEC_ERROR_VALIDATE, type=Type.TEMPLATE,
-						value=Constants.TEMPLATE_BULK_MULTI_EDIT),
-				@Result(status=Constants.CMD_EXEC_ERROR_VIEW, type=Type.TEMPLATE,
-						value=Constants.TEMPLATE_COMMON_ERROR,
-						layoutActionName=Constants.LAYOUT_POPOUT_ACTION),
-				@Result(status=Constants.CMD_EXEC_ERROR_NODATA, type=Type.TEMPLATE,
-						value=Constants.TEMPLATE_COMMON_ERROR,
-						layoutActionName=Constants.LAYOUT_POPOUT_ACTION)
-			}
+		@ActionMapping(
+				name = MultiBulkUpdateViewCommand.BULK_EDIT_ACTION_NAME,
+				displayName = "一括詳細編集",
+				paramMapping = {
+						@ParamMapping(name = Constants.DEF_NAME, mapFrom = "${0}", condition = "subPath.length==1"),
+						@ParamMapping(name = Constants.VIEW_NAME, mapFrom = "${0}", condition = "subPath.length==2"),
+						@ParamMapping(name = Constants.DEF_NAME, mapFrom = "${1}", condition = "subPath.length==2"),
+				},
+				command = @CommandConfig(commandClass = MultiBulkUpdateViewCommand.class),
+				result = {
+						@Result(
+								status = Constants.CMD_EXEC_SUCCESS,
+								type = Type.TEMPLATE,
+								value = Constants.TEMPLATE_BULK_MULTI_EDIT),
+						@Result(
+								status = Constants.CMD_EXEC_ERROR_VALIDATE,
+								type = Type.TEMPLATE,
+								value = Constants.TEMPLATE_BULK_MULTI_EDIT),
+						@Result(
+								status = Constants.CMD_EXEC_ERROR_VIEW,
+								type = Type.TEMPLATE,
+								value = Constants.TEMPLATE_COMMON_ERROR,
+								layoutActionName = Constants.LAYOUT_POPOUT_ACTION),
+						@Result(
+								status = Constants.CMD_EXEC_ERROR_NODATA,
+								type = Type.TEMPLATE,
+								value = Constants.TEMPLATE_COMMON_ERROR,
+								layoutActionName = Constants.LAYOUT_POPOUT_ACTION)
+				}
 		)
 })
 @CommandClass(name = "gem/generic/bulk/MultiBulkUpdateViewCommand", displayName = "一括詳細表示")
 @Template(
-		name=Constants.TEMPLATE_BULK_MULTI_EDIT,
-		path=Constants.CMD_RSLT_JSP_BULK_MULTI_EDIT,
-		layoutActionName=Constants.LAYOUT_POPOUT_ACTION
+		name = Constants.TEMPLATE_BULK_MULTI_EDIT,
+		path = Constants.CMD_RSLT_JSP_BULK_MULTI_EDIT,
+		layoutActionName = Constants.LAYOUT_POPOUT_ACTION
 )
 public class MultiBulkUpdateViewCommand extends MultiBulkCommandBase {
 
@@ -104,7 +113,7 @@ public class MultiBulkUpdateViewCommand extends MultiBulkCommandBase {
 			if (oid != null && oid.length() > 0) {
 				for (Long targetVersion : context.getVersions(oid)) {
 					Integer targetRow = context.getRow(oid, targetVersion);
-					Entity entity = loadViewEntity(context, oid, targetVersion, context.getDefinitionName(), (List<String>) null);
+					Entity entity = loadViewEntity(context, oid, targetVersion, context.getDefinitionName(), (List<String>) null, false);
 					if (entity == null) {
 						request.setAttribute(Constants.MESSAGE, resourceString("command.generic.bulk.BulkUpdateViewCommand.noPermission"));
 						return Constants.CMD_EXEC_ERROR_NODATA;
@@ -112,7 +121,8 @@ public class MultiBulkUpdateViewCommand extends MultiBulkCommandBase {
 					if (context.getExclusiveControlPoint() == ExclusiveControlPoint.WHEN_SEARCH) {
 						Timestamp targetTimestamp = context.getTimestamp(oid, targetVersion);
 						// 更新日時をチェックします、一致しなければ、行番号を保持します。
-						if (!entity.getUpdateDate().equals(targetTimestamp)) {
+						if (!entity.getUpdateDate()
+								.equals(targetTimestamp)) {
 							alreadyUpdated.add(targetRow);
 							// 最新の更新日時を隠すために、クライアント側の更新日時をセットします。
 							entity.setUpdateDate(targetTimestamp);

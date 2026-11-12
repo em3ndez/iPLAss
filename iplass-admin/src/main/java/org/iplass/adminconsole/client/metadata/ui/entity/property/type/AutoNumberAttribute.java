@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -42,7 +42,7 @@ public class AutoNumberAttribute implements PropertyAttribute {
 	@Override
 	public void applyFrom(PropertyDefinition property, EntityDefinition entity) {
 
-		AutoNumberProperty autoNumber = (AutoNumberProperty)property;
+		AutoNumberProperty autoNumber = (AutoNumberProperty) property;
 
 		setAutoNumberStartWith(autoNumber.getStartsWith());
 		setAutoNumberFixedNumber(autoNumber.getFixedNumberOfDigits());
@@ -53,7 +53,7 @@ public class AutoNumberAttribute implements PropertyAttribute {
 	@Override
 	public void applyTo(PropertyDefinition property, EntityDefinition entity) {
 
-		AutoNumberProperty autoNumber = (AutoNumberProperty)property;
+		AutoNumberProperty autoNumber = (AutoNumberProperty) property;
 
 		autoNumber.setStartsWith(getAutoNumberStartWith());
 		autoNumber.setFixedNumberOfDigits(getAutoNumberFixedNumber());

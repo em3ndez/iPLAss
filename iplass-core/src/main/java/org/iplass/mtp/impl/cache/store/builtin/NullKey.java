@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,17 +25,18 @@ import java.util.UUID;
 
 public final class NullKey implements Serializable {
 	private static final long serialVersionUID = -7126286882742712184L;
-	
+
 	private final String uuid;
-	
+
 	public NullKey() {
-		uuid = UUID.randomUUID().toString();
+		uuid = UUID.randomUUID()
+				.toString();
 	}
 
 	NullKey(String uuid) {
 		this.uuid = uuid;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;

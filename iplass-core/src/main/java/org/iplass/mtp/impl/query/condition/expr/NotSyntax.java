@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,7 +29,7 @@ import org.iplass.mtp.impl.parser.SyntaxContext;
 import org.iplass.mtp.impl.query.QueryConstants;
 
 public class NotSyntax implements Syntax<Condition>, QueryConstants {
-	
+
 	private ParenSyntax bracket;
 
 	public void init(SyntaxContext context) {
@@ -37,12 +37,12 @@ public class NotSyntax implements Syntax<Condition>, QueryConstants {
 	}
 
 	public Condition parse(ParseContext str) throws ParseException {
-		
+
 		if (str.equalsNextToken(NOT, ParseContext.TOKEN_DELIMITERS)) {
-			
+
 			str.consumeChars(NOT.length());
 			str.consumeChars(ParseContext.WHITE_SPACES);
-			
+
 			return new Not(bracket.parse(str));
 		} else {
 			return bracket.parse(str);

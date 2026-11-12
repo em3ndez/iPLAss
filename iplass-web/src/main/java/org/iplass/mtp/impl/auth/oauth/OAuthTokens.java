@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,14 +25,17 @@ import org.iplass.mtp.impl.auth.oauth.token.AccessToken;
 public class OAuthTokens {
 	private final AccessToken accessToken;
 	private final IdToken idToken;
+
 	public OAuthTokens(AccessToken accessToken, IdToken idToken) {
 		super();
 		this.accessToken = accessToken;
 		this.idToken = idToken;
 	}
+
 	public AccessToken getAccessToken() {
 		return accessToken;
 	}
+
 	public IdToken getIdToken() {
 		return idToken;
 	}

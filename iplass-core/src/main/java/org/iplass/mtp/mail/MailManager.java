@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,8 +24,6 @@ import java.util.Map;
 
 import org.iplass.mtp.Manager;
 
-
-
 /**
  * メールを送信する際利用するインタフェース。
  * 
@@ -39,7 +37,7 @@ public interface MailManager extends Manager {
 	 * @return メール送信情報
 	 */
 	public Mail createMail();
-	
+
 	/**
 	 * tmplDefNameで指定されるMailTemplateを利用して、Mailのを生成する。
 	 * 
@@ -55,5 +53,5 @@ public interface MailManager extends Manager {
 	 * @param mail メール送信情報
 	 */
 	public void sendMail(Mail mail);
-	
+
 }

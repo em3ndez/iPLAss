@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -52,14 +52,12 @@ public class RdbLobData implements LobData {
 
 	private long sizeCache = -1;
 
-
 	public RdbLobData(int tenantId, long lobDataId, boolean manageLobSizeOnRdb, RdbAdapter rdb) {
 		this.tenantId = tenantId;
 		this.lobDataId = lobDataId;
 		this.manageLobSizeOnRdb = manageLobSizeOnRdb;
 		this.rdb = rdb;
 	}
-
 
 	@Override
 	public long getLobDataId() {
@@ -127,7 +125,7 @@ public class RdbLobData implements LobData {
 	public OutputStream getBinaryOutputStream() {
 		return new LobOutputStream();
 	}
-	
+
 	@Override
 	public void transferFrom(File file) throws IOException {
 		byte[] buf = new byte[8192];
@@ -387,7 +385,6 @@ public class RdbLobData implements LobData {
 			return Boolean.TRUE;
 		}
 
-
 		private Boolean storeBlob() throws SQLException {
 
 			InputStream is = null;
@@ -401,7 +398,11 @@ public class RdbLobData implements LobData {
 						stmt.setLong(i++, blob.length());
 					}
 				} else {
-					stmt.setBytes(i++, ((ByteArrayOutputStream) os).toByteArray());
+					byte[] lobBytes = ((ByteArrayOutputStream) os).toByteArray();
+					stmt.setBytes(i++, lobBytes);
+					if (manageLobSizeOnRdb) {
+						stmt.setLong(i++, lobBytes.length);
+					}
 				}
 				stmt.setInt(i++, tenantId);
 				stmt.setLong(i++, lobDataId);

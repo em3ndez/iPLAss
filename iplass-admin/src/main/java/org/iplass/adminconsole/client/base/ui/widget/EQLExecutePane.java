@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -50,8 +50,8 @@ public class EQLExecutePane extends VLayout {
 
 		resultTabSet = new EQLResultTabSet();
 		resultTabSet.setHeight("70%");
-		resultTabSet.setShowResizeBar(true);		//リサイズ可能
-		resultTabSet.setResizeBarTarget("next");	//リサイズバーをダブルクリックした際、下を収縮
+		resultTabSet.setShowResizeBar(true); //リサイズ可能
+		resultTabSet.setResizeBarTarget("next"); //リサイズバーをダブルクリックした際、下を収縮
 
 		messageTabSet = new MessageTabSet();
 		messageTabSet.setHeight("30%");
@@ -177,7 +177,9 @@ public class EQLExecutePane extends VLayout {
 					ds = EqlDS.getInstance(result);
 
 					//行番号列が行数によりつぶれるので再設定
-					int rownoSize = String.valueOf(result.getRecords().size()).length() * 11;
+					int rownoSize = String.valueOf(result.getRecords()
+							.size())
+							.length() * 11;
 					grid.setRowNumberFieldProperties(new ListGridField("autorownumber", rownoSize));
 
 					//グリッド表示
@@ -185,34 +187,35 @@ public class EQLExecutePane extends VLayout {
 					grid.fetchData();
 
 				} else {
-					grid = new ListGrid();
+					grid = new MtpListGrid();
 					grid.setWidth100();
 					grid.setHeight100();
-					grid.setShowAllRecords(false);		//データ件数が多い場合を考慮し、false
-					grid.setLeaveScrollbarGap(false);	//falseで縦スクロールバー領域が自動表示制御される
 
-					grid.setAutoFitFieldWidths(true);							//データにより幅自動調節
-					grid.setAutoFitWidthApproach(AutoFitWidthApproach.BOTH);	//幅の調節をタイトルとデータに設定
-					grid.setAutoFitFieldsFillViewport(false);					//幅が足りないときに先頭行の自動的に伸ばさない
+					//データ件数が多い場合を考慮し、false
+					grid.setShowAllRecords(false);
+					//列数が多い場合を考慮し、false
+					grid.setShowAllColumns(false);
 
-					grid.setShowRowNumbers(true);		//行番号表示
-					int rownoSize = String.valueOf(result.getRecords().size()).length() * 11;
+					//列幅自動調節（タイトルに設定）
+					grid.setAutoFitFieldWidths(true);
+					grid.setAutoFitWidthApproach(AutoFitWidthApproach.TITLE);
+					//幅が足りないときに先頭行を自動的に伸ばさない
+					grid.setAutoFitFieldsFillViewport(false);
+
+					//行番号表示
+					grid.setShowRowNumbers(true);
+					int rownoSize = String.valueOf(result.getRecords()
+							.size())
+							.length() * 11;
 					grid.setRowNumberFieldProperties(new ListGridField("autorownumber", rownoSize));
 
 					grid.setDataFetchMode(FetchMode.PAGED);
 					grid.setDataPageSize(10);
-					//grid.setDrawAheadRatio(drawAheadRatio)
-
-					grid.setCanDragSelectText(true);	//セルの値をドラッグで選択可能（コピー用）にする
 
 					ds = EqlDS.getInstance(result);
 
 					grid.setDataSource(ds);
 					grid.setAutoFetchData(true);
-
-					//（参考）関連イベント
-					//onFilterData(setDataSource後) -> onDataArrived(DSのfetch処理後)
-					//onDrawAreaChanged -> onFilterData -> onDataArrived
 
 					addMember(grid);
 				}

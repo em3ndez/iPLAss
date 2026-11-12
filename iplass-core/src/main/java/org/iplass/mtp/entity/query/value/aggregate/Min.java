@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -37,11 +37,11 @@ public class Min extends Aggregate {
 
 	public Min() {
 	}
-	
+
 	public Min(String propertyName) {
 		setValue(new EntityField(propertyName));
 	}
-	
+
 	public Min(ValueExpression value) {
 		setValue(value);
 	}
@@ -58,7 +58,7 @@ public class Min extends Aggregate {
 	protected String getFuncName() {
 		return "min";
 	}
-	
+
 	public ASTNode accept(ASTTransformer transformer) {
 		return transformer.visit(this);
 	}

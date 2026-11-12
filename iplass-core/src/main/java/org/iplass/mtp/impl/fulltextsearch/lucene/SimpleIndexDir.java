@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -38,28 +38,27 @@ class SimpleIndexDir implements IndexDir {
 	private FSDirectory directory;
 	private volatile SearcherManager searcherManager;
 	private RefreshSearcherTimerTask timerTask;
-	
-	
+
 	SimpleIndexDir(int tenantId, String defId, FSDirectory directory, long searcherAutoRefreshTimeMinutes, Timer timer) {
 		this.tenantId = tenantId;
 		this.defId = defId;
 		this.directory = directory;
-		
+
 		if (searcherAutoRefreshTimeMinutes > 0) {
 			timerTask = new RefreshSearcherTimerTask();
 			timer.scheduleAtFixedRate(timerTask, TimeUnit.MINUTES.toMillis(searcherAutoRefreshTimeMinutes),
 					TimeUnit.MINUTES.toMillis(searcherAutoRefreshTimeMinutes));
 		}
 	}
-	
+
 	public String getDefId() {
 		return defId;
 	}
-	
+
 	public FSDirectory getDirectory() {
 		return directory;
 	}
-	
+
 	public SearcherManager getSearcherManager() throws IOException {
 		SearcherManager sm = searcherManager;
 		//dcl with volatile
@@ -68,19 +67,21 @@ class SimpleIndexDir implements IndexDir {
 				if (searcherManager == null) {
 					sm = new SearcherManager(directory, null);
 					searcherManager = sm;
+				} else {
+					sm = searcherManager;
 				}
 			}
 		}
 		return sm;
 	}
-	
+
 	public void refresh() throws IOException {
 		SearcherManager sm = searcherManager;
 		if (sm != null) {
 			sm.maybeRefreshBlocking();
 		}
 	}
-	
+
 	private class RefreshSearcherTimerTask extends TimerTask {
 
 		@Override
@@ -98,15 +99,15 @@ class SimpleIndexDir implements IndexDir {
 			}
 		}
 	}
-	
+
 	public void close() throws IOException {
 		if (logger.isDebugEnabled()) {
-			logger.debug("close IndexDir of "  + tenantId + "/" + defId);
+			logger.debug("close IndexDir of " + tenantId + "/" + defId);
 		}
 		if (timerTask != null) {
 			timerTask.cancel();
 		}
-		
+
 		IOException ex = null;
 		try {
 			synchronized (this) {
@@ -119,7 +120,7 @@ class SimpleIndexDir implements IndexDir {
 		} finally {
 			try {
 				directory.close();
-				
+
 			} catch (IOException e) {
 				if (ex != null) {
 					ex.addSuppressed(e);
@@ -127,11 +128,11 @@ class SimpleIndexDir implements IndexDir {
 					ex = e;
 				}
 			}
-			
+
 			if (ex != null) {
 				throw ex;
 			}
 		}
 	}
-	
+
 }

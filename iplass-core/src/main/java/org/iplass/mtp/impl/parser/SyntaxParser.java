@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,42 +26,66 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SyntaxParser {
-	
+
 	private static Logger logger = LoggerFactory.getLogger(SyntaxParser.class);
-	
+
 	private SyntaxContext sc;
-	
+
 	public SyntaxParser(String contextName) {
-		SyntaxService service = ServiceRegistry.getRegistry().getService(SyntaxService.class);
+		SyntaxService service = ServiceRegistry.getRegistry()
+				.getService(SyntaxService.class);
 		sc = service.getSyntaxContext(contextName);
 	}
-	
+
+	/**
+	 * パース処理を行います。パース処理が終わっていない場合はエラーとします。
+	 * 
+	 * @param src 文字列
+	 * @param parseAs 構文
+	 * @return ASTNode
+	 * @throws ParseException
+	 */
 	public <T extends ASTNode> T parse(String src, Class<? extends Syntax<T>> parseAs) throws ParseException {
-		
+		ParseContext ctx = new ParseContext(src);
+		return parseContext(ctx, parseAs, false);
+
+	}
+
+	/**
+	 * パース処理を行います。パース処理が終わっていない場合もエラーとはしません。
+	 * 
+	 * @param src 文字列
+	 * @param parseAs 構文
+	 * @return ASTNode
+	 * @throws ParseException
+	 */
+	public <T extends ASTNode> T parse(ParseContext ctx, Class<? extends Syntax<T>> parseAs) throws ParseException {
+		return parseContext(ctx, parseAs, true);
+
+	}
+
+	private <T extends ASTNode> T parseContext(ParseContext ctx, Class<? extends Syntax<T>> parseAs, boolean isContinueParse) throws ParseException {
 		long time = 0;
 		if (logger.isTraceEnabled()) {
 			time = System.nanoTime();
 		}
-		
+
 		Syntax<T> syntax = sc.getSyntax(parseAs);
-		ParseContext ctx = new ParseContext(src);
-		
+
 		ctx.consumeChars(ParseContext.WHITE_SPACES);
-		
+
 		T node = syntax.parse(ctx);
-		
+
 		ctx.consumeChars(ParseContext.WHITE_SPACES);
-		
+
 		if (logger.isTraceEnabled()) {
-			logger.trace("parse query:time=" + ((double) (System.nanoTime() - time)/1000000) + "ms.");
+			logger.trace("parse query:time=" + ((double) (System.nanoTime() - time) / 1000000) + "ms.");
 		}
-		
-		if (!ctx.isEnd()) {
+
+		if (!ctx.isEnd() && !isContinueParse) {
 			throw new ParseException(new EvalError("Cant handle next token.", syntax, ctx));
 		}
-		
 		return node;
-		
 	}
 
 }

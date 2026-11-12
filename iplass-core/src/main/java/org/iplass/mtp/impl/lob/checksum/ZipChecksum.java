@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,9 +21,9 @@
 package org.iplass.mtp.impl.lob.checksum;
 
 public class ZipChecksum implements Checksum {
-	
+
 	private java.util.zip.Checksum cksm;
-	
+
 	public ZipChecksum(java.util.zip.Checksum cksm) {
 		this.cksm = cksm;
 	}

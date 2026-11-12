@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,6 +35,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 
 import org.iplass.mtp.ManagerLocator;
 import org.iplass.mtp.entity.definition.EntityDefinition;
@@ -44,12 +45,19 @@ import org.iplass.mtp.entity.definition.stores.SchemalessRdbStore;
 import org.iplass.mtp.impl.datastore.RdbDataStore;
 import org.iplass.mtp.impl.datastore.StoreService;
 import org.iplass.mtp.impl.datastore.grdb.GRdbDataStore;
+import org.iplass.mtp.impl.datastore.grdb.MetaGRdbEntityStore;
+import org.iplass.mtp.impl.datastore.grdb.MetaGRdbEntityStore.GRdbEntityStoreRuntime;
 import org.iplass.mtp.impl.datastore.grdb.StorageSpaceMap;
+import org.iplass.mtp.impl.datastore.grdb.sql.table.ObjIndexTable;
+import org.iplass.mtp.impl.datastore.grdb.sql.table.ObjRefTable;
+import org.iplass.mtp.impl.datastore.grdb.sql.table.ObjStoreTable;
+import org.iplass.mtp.impl.entity.EntityHandler;
 import org.iplass.mtp.impl.entity.EntityService;
 import org.iplass.mtp.impl.entity.MetaEntity;
 import org.iplass.mtp.impl.metadata.MetaDataContext;
 import org.iplass.mtp.impl.metadata.MetaDataEntry;
 import org.iplass.mtp.impl.rdb.SqlExecuter;
+import org.iplass.mtp.impl.rdb.adapter.BaseRdbTypeAdapter;
 import org.iplass.mtp.impl.rdb.adapter.RdbAdapter;
 import org.iplass.mtp.impl.rdb.adapter.RdbAdapterService;
 import org.iplass.mtp.impl.tools.ToolsResourceBundleUtil;
@@ -58,49 +66,62 @@ import org.iplass.mtp.impl.tools.entityport.EntityDataImportCondition;
 import org.iplass.mtp.impl.tools.entityport.EntityDataImportResult;
 import org.iplass.mtp.impl.tools.entityport.EntityPortingService;
 import org.iplass.mtp.spi.Config;
+import org.iplass.mtp.spi.ServiceRegistry;
 import org.iplass.mtp.transaction.Transaction;
 import org.iplass.mtp.util.StringUtil;
 
 public class StorageSpaceServiceImpl implements StorageSpaceService {
 
-	private static final String TBL_OBJ_STORE = "obj_store";
-	private static final String TBL_OBJ_STORE_RB = "obj_store_rb";
+	private static final String TBL_OBJ_STORE = ObjStoreTable.TABLE_NAME;
+	private static final String TBL_OBJ_STORE_RB = ObjStoreTable.TABLE_NAME_RB;
 
 	private static final String COL_TENANT_ID = "tenant_id";
 	private static final String COL_OBJ_DEF_ID = "obj_def_id";
 	private static final String COL_OBJ_ID = "obj_id";
 
+	private static final String TBL_OBJ_INDEX_DATE = ObjIndexTable.TABLE_INDEX_PREFIX_NAME + BaseRdbTypeAdapter.ColumnIndexType.DATE;
+	private static final String TBL_OBJ_INDEX_DOUBLE = ObjIndexTable.TABLE_INDEX_PREFIX_NAME + BaseRdbTypeAdapter.ColumnIndexType.DOUBLE;
+	private static final String TBL_OBJ_INDEX_NUMBER = ObjIndexTable.TABLE_INDEX_PREFIX_NAME + BaseRdbTypeAdapter.ColumnIndexType.NUMBER;
+	private static final String TBL_OBJ_INDEX_STRING = ObjIndexTable.TABLE_INDEX_PREFIX_NAME + BaseRdbTypeAdapter.ColumnIndexType.STRING;
+	private static final String TBL_OBJ_INDEX_TIMESTAMP = ObjIndexTable.TABLE_INDEX_PREFIX_NAME + BaseRdbTypeAdapter.ColumnIndexType.TIMESTAMP;
+
+	private static final String TBL_OBJ_UNIQUE_DATE = ObjIndexTable.TABLE_UNIQUE_PREFIX_NAME + BaseRdbTypeAdapter.ColumnIndexType.DATE;
+	private static final String TBL_OBJ_UNIQUE_DOUBLE = ObjIndexTable.TABLE_UNIQUE_PREFIX_NAME + BaseRdbTypeAdapter.ColumnIndexType.DOUBLE;
+	private static final String TBL_OBJ_UNIQUE_NUMBER = ObjIndexTable.TABLE_UNIQUE_PREFIX_NAME + BaseRdbTypeAdapter.ColumnIndexType.NUMBER;
+	private static final String TBL_OBJ_UNIQUE_STRING = ObjIndexTable.TABLE_UNIQUE_PREFIX_NAME + BaseRdbTypeAdapter.ColumnIndexType.STRING;
+	private static final String TBL_OBJ_UNIQUE_TIMESTAMP = ObjIndexTable.TABLE_UNIQUE_PREFIX_NAME + BaseRdbTypeAdapter.ColumnIndexType.TIMESTAMP;
+
 	private static final String[] CLEANUP_TABLES = {
-			"obj_index_date",
-			"obj_index_dbl",
-			"obj_index_num",
-			"obj_index_str",
-			"obj_index_ts",
-			"obj_ref",
-			"obj_ref_rb",
+			TBL_OBJ_INDEX_DATE,
+			TBL_OBJ_INDEX_DOUBLE,
+			TBL_OBJ_INDEX_NUMBER,
+			TBL_OBJ_INDEX_STRING,
+			TBL_OBJ_INDEX_TIMESTAMP,
+			ObjRefTable.TABLE_NAME,
+			ObjRefTable.TABLE_NAME_RB,
 			TBL_OBJ_STORE,
 			TBL_OBJ_STORE_RB,
-			"obj_unique_date",
-			"obj_unique_dbl",
-			"obj_unique_num",
-			"obj_unique_str",
-			"obj_unique_ts"
+			TBL_OBJ_UNIQUE_DATE,
+			TBL_OBJ_UNIQUE_DOUBLE,
+			TBL_OBJ_UNIQUE_NUMBER,
+			TBL_OBJ_UNIQUE_STRING,
+			TBL_OBJ_UNIQUE_TIMESTAMP
 	};
-	
+
 	private static final String[] INDEX_TABLES = {
-			"obj_index_date",
-			"obj_index_dbl",
-			"obj_index_num",
-			"obj_index_str",
-			"obj_index_ts"
+			TBL_OBJ_INDEX_DATE,
+			TBL_OBJ_INDEX_DOUBLE,
+			TBL_OBJ_INDEX_NUMBER,
+			TBL_OBJ_INDEX_STRING,
+			TBL_OBJ_INDEX_TIMESTAMP
 	};
-	
+
 	private static final String[] UNIQUE_TABLES = {
-			"obj_unique_date",
-			"obj_unique_dbl",
-			"obj_unique_num",
-			"obj_unique_str",
-			"obj_unique_ts"
+			TBL_OBJ_UNIQUE_DATE,
+			TBL_OBJ_UNIQUE_DOUBLE,
+			TBL_OBJ_UNIQUE_NUMBER,
+			TBL_OBJ_UNIQUE_STRING,
+			TBL_OBJ_UNIQUE_TIMESTAMP
 	};
 
 	private StoreService storeService;
@@ -117,8 +138,8 @@ public class StorageSpaceServiceImpl implements StorageSpaceService {
 
 	@Override
 	public void init(Config config) {
-		storeService =  config.getDependentService(StoreService.class);
-		rdbAdapterService =  config.getDependentService(RdbAdapterService.class);
+		storeService = config.getDependentService(StoreService.class);
+		rdbAdapterService = config.getDependentService(RdbAdapterService.class);
 		entityPortingService = config.getDependentService(EntityPortingService.class);
 
 		if (config.getValue("migrateCommitLimit") != null) {
@@ -129,7 +150,8 @@ public class StorageSpaceServiceImpl implements StorageSpaceService {
 			cleanupCommitLimit = Integer.parseInt(config.getValue("cleanupCommitLimit"));
 		}
 
-		edm = ManagerLocator.getInstance().getManager(EntityDefinitionManager.class);
+		edm = ManagerLocator.getInstance()
+				.getManager(EntityDefinitionManager.class);
 	}
 
 	@Override
@@ -150,25 +172,31 @@ public class StorageSpaceServiceImpl implements StorageSpaceService {
 			throw new IllegalArgumentException(getRS("noStorageSpace", storageSpaceName));
 		}
 
-		// StorageSpace同一チェック
-		String currentStorageSpaceName = ((SchemalessRdbStore) edm.get(entityDefinition.getName()).getStoreDefinition()).getStorageSpace();
-		if (storageSpaceName.equals(currentStorageSpaceName)) {
-			throw new IllegalArgumentException(getRS("sameStorageSpace", storageSpaceName));
-		}
-
 		// MetaDataEntry取得
-		MetaDataEntry entry = MetaDataContext.getContext().getMetaDataEntry(EntityService.ENTITY_META_PATH + entityDefinition.getName().replace(".", "/"));
+		MetaDataEntry entry = MetaDataContext.getContext()
+				.getMetaDataEntry(EntityService.ENTITY_META_PATH + entityDefinition.getName()
+						.replace(".", "/"));
 
 		File tempFile = null;
 		try {
-			tempFile = Files.createTempFile("mtp", ".csv").toFile();
+			tempFile = Files.createTempFile("mtp", ".csv")
+					.toFile();
 
 			// EntityCSVデータエクスポート
 			exportCSV(tempFile, entry);
 
 			// StorageSpace変更
+			String beforeTableNamePostfix = getTableNamePostfix(entityDefinition.getName());
+			// changeStorageSpace メソッドを超えた場合、エンティティ定義に更新が入っている
 			if (!changeStorageSpace(edm.get(entityDefinition.getName()), storageSpaceName)) {
 				throw new StorageSpaceRuntimeException(getRS("failedChangeStorageSpace"));
+			}
+			String afterTableNamePostfix = getTableNamePostfix(entityDefinition.getName());
+
+			// tableNamePostfix 同一チェック
+			if (StringUtil.equals(beforeTableNamePostfix, afterTableNamePostfix)) {
+				// 変更前後でテーブルスペース位置が同じ場合、処理を終了する
+				throw new IllegalArgumentException(getRS("sameTableNamePostfix", afterTableNamePostfix));
 			}
 
 			// EntityCSVデータインポート
@@ -186,13 +214,41 @@ public class StorageSpaceServiceImpl implements StorageSpaceService {
 
 	@Override
 	public void cleanup(int tenantId, String storageSpaceName, MetaEntity metaEntity) {
+		cleanupInner(tenantId, storageSpaceName, metaEntity, (ssm) -> ssm.allTableNamePostfix());
+	}
+
+	@Override
+	public void cleanup(int tenantId, String storageSpaceName, MetaEntity metaEntity, String tableNamePostfix) {
+		cleanupInner(tenantId, storageSpaceName, metaEntity, (ssm) -> Arrays.asList(new String[] { tableNamePostfix }));
+	}
+
+	@Override
+	public String getTableNamePostfix(String entityName) {
+		EntityService entityService = ServiceRegistry.getRegistry()
+				.getService(EntityService.class);
+		EntityHandler entityHandler = entityService.getRuntimeByName(entityName);
+		GRdbEntityStoreRuntime entityStoreRuntime = (GRdbEntityStoreRuntime) entityHandler.getEntityStoreRuntime();
+
+		MetaGRdbEntityStore metaEntityStore = (MetaGRdbEntityStore) entityStoreRuntime.getMetaData();
+		return metaEntityStore.getTableNamePostfix();
+	}
+
+	/**
+	 * ストレージスペースクリーン内部処理
+	 * @param tenantId テナントID
+	 * @param storageSpaceName ストレージスペース名
+	 * @param metaEntity Entityメタデータ
+	 * @param postfixListFn テーブル名接尾辞取得ファンクション
+	 */
+	private void cleanupInner(int tenantId, String storageSpaceName, MetaEntity metaEntity, Function<StorageSpaceMap, List<String>> postfixListFn) {
 		// StorageSpace存在チェック
 		StorageSpaceMap ssm = ((GRdbDataStore) storeService.getDataStore()).getStorageSpaceMapOrDefault(storageSpaceName);
-		if (!ssm.getStorageSpaceName().equals(storageSpaceName)) {
+		if (!ssm.getStorageSpaceName()
+				.equals(storageSpaceName)) {
 			// 指定のStorageSpaceが存在しない
 			throw new IllegalArgumentException(getRS("noStorageSpace", storageSpaceName));
 		}
-		List<String> postfixList = ssm.allTableNamePostfix();
+		List<String> postfixList = postfixListFn.apply(ssm);
 
 		final String objDefId = metaEntity.getId();
 		final List<String> objIdList = findObjId(tenantId, objDefId, postfixList, rdbAdapterService.getRdbAdapter());
@@ -202,7 +258,8 @@ public class StorageSpaceServiceImpl implements StorageSpaceService {
 		int index = 0;
 		boolean exists = !objIdList.isEmpty();
 		while (exists) {
-			int toIndex = cleanupCommitLimit > 0 ? index + cleanupCommitLimit > objIdList.size() ? objIdList.size() : index + (cleanupCommitLimit) : objIdList.size();
+			int toIndex = cleanupCommitLimit > 0 ? index + cleanupCommitLimit > objIdList.size() ? objIdList.size() : index + (cleanupCommitLimit)
+					: objIdList.size();
 			final List<String> objIdSubList = objIdList.subList(index, toIndex);
 
 			Transaction.requiresNew(t -> {
@@ -211,10 +268,17 @@ public class StorageSpaceServiceImpl implements StorageSpaceService {
 						@Override
 						public int[] logic() throws SQLException {
 							StringBuilder sbSql = new StringBuilder();
-							sbSql.append("DELETE FROM ").append(table);
-							sbSql.append(" WHERE ").append(COL_TENANT_ID).append("=?");
-							sbSql.append(" AND ").append(COL_OBJ_DEF_ID).append("=?");
-							sbSql.append(" AND ").append(COL_OBJ_ID).append("=?");
+							sbSql.append("DELETE FROM ")
+									.append(table);
+							sbSql.append(" WHERE ")
+									.append(COL_TENANT_ID)
+									.append("=?");
+							sbSql.append(" AND ")
+									.append(COL_OBJ_DEF_ID)
+									.append("=?");
+							sbSql.append(" AND ")
+									.append(COL_OBJ_ID)
+									.append("=?");
 
 							PreparedStatement ps = getPreparedStatement(sbSql.toString());
 
@@ -262,7 +326,7 @@ public class StorageSpaceServiceImpl implements StorageSpaceService {
 	}
 
 	private boolean changeStorageSpace(EntityDefinition ed, String storageSpaceName) {
-		SchemalessRdbStore sd = (SchemalessRdbStore)ed.getStoreDefinition();
+		SchemalessRdbStore sd = (SchemalessRdbStore) ed.getStoreDefinition();
 		sd.setStorageSpace(storageSpaceName);
 		EntityDefinitionModifyResult result = edm.update(ed);
 		return result.isSuccess();
@@ -280,28 +344,70 @@ public class StorageSpaceServiceImpl implements StorageSpaceService {
 						if (sbSql.length() > 0) {
 							sbSql.append(" UNION ");
 						}
-						sbSql.append("SELECT ").append(COL_OBJ_ID).append(" FROM ").append(TBL_OBJ_STORE);
+						sbSql.append("SELECT ")
+								.append(COL_OBJ_ID)
+								.append(" FROM ")
+								.append(TBL_OBJ_STORE);
 						if (StringUtil.isNotBlank(postfix)) {
-							sbSql.append(StorageSpaceMap.TABLE_NAME_SEPARATOR).append(postfix);
+							sbSql.append(StorageSpaceMap.TABLE_NAME_SEPARATOR)
+									.append(postfix);
 						}
-						sbSql.append(" WHERE ").append(COL_TENANT_ID).append("=").append(tenantId);
-						sbSql.append(" AND ").append(COL_OBJ_DEF_ID).append("='").append(sanitizedObjDefId).append("'");
+						sbSql.append(" WHERE ")
+								.append(COL_TENANT_ID)
+								.append("=")
+								.append(tenantId);
+						sbSql.append(" AND ")
+								.append(COL_OBJ_DEF_ID)
+								.append("='")
+								.append(sanitizedObjDefId)
+								.append("'");
 						sbSql.append(" UNION ");
-						sbSql.append("SELECT ").append(COL_OBJ_ID).append(" FROM ").append(TBL_OBJ_STORE_RB);
+						sbSql.append("SELECT ")
+								.append(COL_OBJ_ID)
+								.append(" FROM ")
+								.append(TBL_OBJ_STORE_RB);
 						if (StringUtil.isNotBlank(postfix)) {
-							sbSql.append(StorageSpaceMap.TABLE_NAME_SEPARATOR).append(postfix);
+							sbSql.append(StorageSpaceMap.TABLE_NAME_SEPARATOR)
+									.append(postfix);
 						}
-						sbSql.append(" WHERE ").append(COL_TENANT_ID).append("=").append(tenantId);
-						sbSql.append(" AND ").append(COL_OBJ_DEF_ID).append("='").append(sanitizedObjDefId).append("'");
+						sbSql.append(" WHERE ")
+								.append(COL_TENANT_ID)
+								.append("=")
+								.append(tenantId);
+						sbSql.append(" AND ")
+								.append(COL_OBJ_DEF_ID)
+								.append("='")
+								.append(sanitizedObjDefId)
+								.append("'");
 					});
 				} else {
-					sbSql.append("SELECT ").append(COL_OBJ_ID).append(" FROM ").append(TBL_OBJ_STORE);
-					sbSql.append(" WHERE ").append(COL_TENANT_ID).append("=").append(tenantId);
-					sbSql.append(" AND ").append(COL_OBJ_DEF_ID).append("='").append(sanitizedObjDefId).append("'");
+					sbSql.append("SELECT ")
+							.append(COL_OBJ_ID)
+							.append(" FROM ")
+							.append(TBL_OBJ_STORE);
+					sbSql.append(" WHERE ")
+							.append(COL_TENANT_ID)
+							.append("=")
+							.append(tenantId);
+					sbSql.append(" AND ")
+							.append(COL_OBJ_DEF_ID)
+							.append("='")
+							.append(sanitizedObjDefId)
+							.append("'");
 					sbSql.append(" UNION ");
-					sbSql.append("SELECT ").append(COL_OBJ_ID).append(" FROM ").append(TBL_OBJ_STORE_RB);
-					sbSql.append(" WHERE ").append(COL_TENANT_ID).append("=").append(tenantId);
-					sbSql.append(" AND ").append(COL_OBJ_DEF_ID).append("='").append(sanitizedObjDefId).append("'");
+					sbSql.append("SELECT ")
+							.append(COL_OBJ_ID)
+							.append(" FROM ")
+							.append(TBL_OBJ_STORE_RB);
+					sbSql.append(" WHERE ")
+							.append(COL_TENANT_ID)
+							.append("=")
+							.append(tenantId);
+					sbSql.append(" AND ")
+							.append(COL_OBJ_DEF_ID)
+							.append("='")
+							.append(sanitizedObjDefId)
+							.append("'");
 				}
 
 				List<String> ret = new ArrayList<String>();
@@ -328,10 +434,12 @@ public class StorageSpaceServiceImpl implements StorageSpaceService {
 		postfixList.forEach(postfix -> {
 			for (String table : CLEANUP_TABLES) {
 				if (StringUtil.isNotBlank(postfix)) {
-					if(!useExternalIndexedTable && Arrays.asList(INDEX_TABLES).contains(table)) {
+					if (!useExternalIndexedTable && Arrays.asList(INDEX_TABLES)
+							.contains(table)) {
 						//接尾語付きIndexテーブルを利用しない場合は削除対象のテーブルに含まない。
 						continue;
-					} else if(!useExternalUniqueIndexedTable && Arrays.asList(UNIQUE_TABLES).contains(table)) {
+					} else if (!useExternalUniqueIndexedTable && Arrays.asList(UNIQUE_TABLES)
+							.contains(table)) {
 						//接尾語付きUnique Indexテーブルを利用しない場合は削除対象のテーブルに含まない。
 						continue;
 					}

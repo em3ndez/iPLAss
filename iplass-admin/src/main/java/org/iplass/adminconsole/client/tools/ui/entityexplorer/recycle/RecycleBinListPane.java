@@ -9,6 +9,7 @@ import org.iplass.adminconsole.client.base.i18n.AdminClientMessageUtil;
 import org.iplass.adminconsole.client.base.ui.widget.GridActionImgButton;
 import org.iplass.adminconsole.client.base.ui.widget.MessageTabSet;
 import org.iplass.adminconsole.client.base.ui.widget.MetaDataViewGridButton;
+import org.iplass.adminconsole.client.base.ui.widget.MtpListGrid;
 import org.iplass.adminconsole.client.base.util.SmartGWTUtil;
 import org.iplass.adminconsole.client.tools.data.entityexplorer.RecycleBinEntityInfoDS;
 import org.iplass.mtp.entity.definition.EntityDefinition;
@@ -31,6 +32,8 @@ import com.smartgwt.client.widgets.grid.ListGridField;
 import com.smartgwt.client.widgets.grid.ListGridRecord;
 import com.smartgwt.client.widgets.grid.events.DataArrivedEvent;
 import com.smartgwt.client.widgets.grid.events.DataArrivedHandler;
+import com.smartgwt.client.widgets.grid.events.RecordDoubleClickEvent;
+import com.smartgwt.client.widgets.grid.events.RecordDoubleClickHandler;
 import com.smartgwt.client.widgets.layout.VLayout;
 import com.smartgwt.client.widgets.toolbar.ToolStrip;
 import com.smartgwt.client.widgets.toolbar.ToolStripButton;
@@ -43,12 +46,12 @@ public class RecycleBinListPane extends VLayout {
 	private static final String REFRESH_ICON = "[SKIN]/actions/refresh.png";
 	private static final String ERROR_ICON = "[SKINIMG]/actions/exclamation.png";
 
-	private DateItem purgeTargetDateItem;
-	private CheckboxItem showCountItem;
-	private Label countLabel;
-	private ListGrid grid;
+	private final DateItem purgeTargetDateItem;
+	private final CheckboxItem showCountItem;
+	private final Label countLabel;
+	private final ListGrid grid;
 
-	private MessageTabSet messageTabSet;
+	private final MessageTabSet messageTabSet;
 
 	public RecycleBinListPane(RecycleBinMainPane mainPane) {
 		// レイアウト設定
@@ -62,7 +65,7 @@ public class RecycleBinListPane extends VLayout {
 
 		purgeTargetDateItem = SmartGWTUtil.createDateItem();
 		purgeTargetDateItem.setValue(new Timestamp(System.currentTimeMillis()));
-		purgeTargetDateItem.setTitle("Purge target date");
+		purgeTargetDateItem.setTitle("Purge target date (To)");
 		purgeTargetDateItem.setWrapTitle(false);
 		toolStrip.addFormItem(purgeTargetDateItem);
 
@@ -113,14 +116,15 @@ public class RecycleBinListPane extends VLayout {
 		});
 		toolStrip.addButton(refreshButton);
 
-		grid = new ListGrid() {
+		grid = new MtpListGrid() {
 			@Override
 			protected Canvas createRecordComponent(final ListGridRecord record, Integer colNum) {
 				final String fieldName = this.getFieldName(colNum);
 				if ("explorerButton".equals(fieldName)) {
 					if (!record.getAttributeAsBoolean(RecycleBinEntityInfoDS.FIELD_NAME.IS_ERROR.name())) {
 						MetaDataViewGridButton button = new MetaDataViewGridButton(EntityDefinition.class.getName());
-						button.setActionButtonPrompt(SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString(RESOURCE_PREFIX + "showMetaDataEditScreen")));
+						button.setActionButtonPrompt(
+								SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString(RESOURCE_PREFIX + "showMetaDataEditScreen")));
 						button.setMetaDataShowClickHandler(new MetaDataViewGridButton.MetaDataShowClickHandler() {
 							@Override
 							public String targetDefinitionName() {
@@ -144,20 +148,19 @@ public class RecycleBinListPane extends VLayout {
 
 		grid.setWidth100();
 		grid.setHeight100();
-		// grid.setShowAllRecords(true); //これをtrueにすると件数が多い場合に全て表示されない不具合発生
-		grid.setLeaveScrollbarGap(false); // falseで縦スクロールバー領域が自動表示制御される
-		grid.setShowRowNumbers(true); // 行番号表示
 
-		grid.setCanFreezeFields(false);
-		grid.setShowSelectedStyle(false);
-		grid.setCanGroupBy(false);
-		grid.setCanPickFields(false);
+		//データ件数が多い場合を考慮し、false
+		grid.setShowAllRecords(false);
 
-		grid.setCanDragSelectText(true); // セルの値をドラッグで選択可能（コピー用）にする
+		//行番号表示
+		grid.setShowRowNumbers(true);
 
 		// CheckBox選択設定
 		grid.setSelectionType(SelectionStyle.SIMPLE);
 		grid.setSelectionAppearance(SelectionAppearance.CHECKBOX);
+
+		//ソートを許可
+		grid.setCanSort(true);
 
 		// この２つを指定することでcreateRecordComponentが有効
 		grid.setShowRecordComponents(true);
@@ -169,6 +172,26 @@ public class RecycleBinListPane extends VLayout {
 			public void onDataArrived(DataArrivedEvent event) {
 				setRecordCount(grid.getTotalRows());
 				finishClean();
+			}
+		});
+		grid.addRecordDoubleClickHandler(new RecordDoubleClickHandler() {
+
+			@Override
+			public void onRecordDoubleClick(RecordDoubleClickEvent event) {
+				if (event.getRecord()
+						.getAttributeAsBoolean(RecycleBinEntityInfoDS.FIELD_NAME.IS_ERROR.name())) {
+					return;
+				}
+
+				Date purgeTimeDate = getPurgeTargetDate();
+				if (purgeTimeDate == null) {
+					SC.say(AdminClientMessageUtil.getString(RESOURCE_PREFIX + "specifyPurgeTargetDate"));
+					return;
+				}
+
+				String entityName = event.getRecord()
+						.getAttributeAsString(RecycleBinEntityInfoDS.FIELD_NAME.NAME.name());
+				mainPane.showDataListPane(entityName, purgeTimeDate);
 			}
 		});
 		grid.setShowResizeBar(true); // リサイズ可能
@@ -229,24 +252,25 @@ public class RecycleBinListPane extends VLayout {
 			SC.say(AdminClientMessageUtil.getString(RESOURCE_PREFIX + "specifyPurgeTargetDate"));
 			return;
 		}
-		final Timestamp ts = new Timestamp(purgeTimeDate.getTime());
+		final Timestamp ts = new Timestamp(getPurgeTargetCutoff(purgeTimeDate).getTime());
 
-		SC.ask(AdminClientMessageUtil.getString(RESOURCE_PREFIX + "confirmTitle"), AdminClientMessageUtil.getString(RESOURCE_PREFIX + "cleanConfirm"), new BooleanCallback() {
+		SC.ask(AdminClientMessageUtil.getString(RESOURCE_PREFIX + "confirmTitle"), AdminClientMessageUtil.getString(RESOURCE_PREFIX + "cleanConfirm"),
+				new BooleanCallback() {
 
-			@Override
-			public void execute(Boolean value) {
+					@Override
+					public void execute(Boolean value) {
 
-				if (value) {
-					RecycleBinCleanProgressDialog dialog = new RecycleBinCleanProgressDialog(RecycleBinListPane.this, defNames, ts);
-					dialog.show();
-				}
-			}
-		});
+						if (value) {
+							RecycleBinCleanProgressDialog dialog = new RecycleBinCleanProgressDialog(RecycleBinListPane.this, defNames, ts);
+							dialog.show();
+						}
+					}
+				});
 	}
 
 	private void refreshGrid() {
 
-		Date purgeTimeDate = SmartGWTUtil.getDateTimeValue(purgeTargetDateItem.getValueAsDate(), null, false, "00:00", "00", "000");
+		Date purgeTimeDate = getPurgeTargetDate();
 		if (purgeTimeDate == null) {
 			SC.say(AdminClientMessageUtil.getString(RESOURCE_PREFIX + "specifyPurgeTargetDate"));
 			return;
@@ -254,7 +278,7 @@ public class RecycleBinListPane extends VLayout {
 
 		startClean();
 
-		Timestamp ts = new Timestamp(purgeTimeDate.getTime());
+		Timestamp ts = new Timestamp(getPurgeTargetCutoff(purgeTimeDate).getTime());
 		boolean isGetDataCount = showCountItem.getValueAsBoolean();
 		RecycleBinEntityInfoDS ds = RecycleBinEntityInfoDS.getInstance(ts, isGetDataCount);
 		grid.setDataSource(ds);
@@ -274,6 +298,16 @@ public class RecycleBinListPane extends VLayout {
 		grid.setFields(explorerField, errorField, nameField, displayNameField, countField);
 
 		grid.fetchData();
+	}
+
+	private Date getPurgeTargetDate() {
+		return SmartGWTUtil.getDateTimeValue(purgeTargetDateItem.getValueAsDate(), null, false, "00:00", "00", "000");
+	}
+
+	private static Date getPurgeTargetCutoff(Date purgeTargetDate) {
+		Date purgeTargetCutoff = new Date(purgeTargetDate.getTime());
+		purgeTargetCutoff.setDate(purgeTargetCutoff.getDate() + 1);
+		return purgeTargetCutoff;
 	}
 
 	private void startClean() {

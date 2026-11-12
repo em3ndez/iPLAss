@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,13 +25,14 @@ import java.util.List;
 import org.iplass.mtp.auth.policy.definition.NotificationType;
 
 public class PropertyNotification extends AccountNotification {
-	
+
 	private List<String> updatedPropertyNames;
 
 	public PropertyNotification(NotificationType type, String userOid, List<String> updatedPropertyNames) {
 		super(type, userOid);
+		this.updatedPropertyNames = updatedPropertyNames;
 	}
-	
+
 	public List<String> getUpdatedPropertyNames() {
 		return updatedPropertyNames;
 	}

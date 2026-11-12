@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,8 +26,8 @@ import org.iplass.mtp.auth.oauth.definition.ConsentTypeDefinition;
 import org.iplass.mtp.auth.oauth.definition.consents.OnceConsentTypeDefinition;
 import org.iplass.mtp.command.RequestContext;
 import org.iplass.mtp.impl.auth.oauth.MetaConsentType;
-import org.iplass.mtp.impl.auth.oauth.OAuthConstants;
 import org.iplass.mtp.impl.auth.oauth.token.AccessToken;
+import org.iplass.mtp.impl.auth.oauth.util.OAuthConstants;
 
 /**
  * 一度承認済みのscopeに関しては承認画面を出さないMetaConsentType。
@@ -43,7 +43,7 @@ public class MetaOnceConsentType extends MetaConsentType {
 	public OnceConsentTypeRuntime createRuntime(String metaId, ClientType ct) {
 		return new OnceConsentTypeRuntime();
 	}
-	
+
 	public class OnceConsentTypeRuntime extends ConsentTypeRuntime {
 
 		@Override
@@ -51,13 +51,14 @@ public class MetaOnceConsentType extends MetaConsentType {
 			if (currentToken == null || currentToken.getGrantedScopes() == null) {
 				return true;
 			}
-			
+
 			//offline_accessを含む場合は、承認画面を出す
 			if (scopes.contains(OAuthConstants.SCOPE_OFFLINE_ACCESS)) {
 				return true;
 			}
-			
-			return currentToken.getGrantedScopes().containsAll(scopes) == false;
+
+			return currentToken.getGrantedScopes()
+					.containsAll(scopes) == false;
 		}
 	}
 

@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -69,7 +69,7 @@ $(function() {
 	var key = "${m:escJs(modalTarget)}";
 	var modalTarget = key != "" ? key : null;
 	var target = null;
-	var windowManager = document.rootWindow.scriptContext["windowManager"];
+	var windowManager = document.rootDocument.scriptContext["windowManager"];
 	if (modalTarget && windowManager && windowManager[document.targetName]) {
 		$("#modal-title-" + modalTarget, parent.document).text("${m:escJs(previewDateTitle)}");
 		target = windowManager[modalTarget];

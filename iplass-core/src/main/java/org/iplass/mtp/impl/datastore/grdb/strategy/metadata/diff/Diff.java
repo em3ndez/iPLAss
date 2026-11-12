@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,13 +25,12 @@ import java.sql.Statement;
 
 import org.iplass.mtp.impl.rdb.adapter.RdbAdapter;
 
-
 public abstract class Diff {
-	
+
 	public abstract void modifyMetaData();
-	
+
 	public abstract void applyToData(Statement stmt, RdbAdapter rdb, int tenantId) throws SQLException;
-	
+
 	public abstract boolean needDataModify();
-	
+
 }

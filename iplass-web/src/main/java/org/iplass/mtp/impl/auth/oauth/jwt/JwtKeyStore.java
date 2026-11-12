@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,8 +25,9 @@ import org.iplass.mtp.impl.auth.oauth.OAuthAuthorizationService;
 import org.iplass.mtp.spi.ServiceInitListener;
 
 public interface JwtKeyStore extends ServiceInitListener<OAuthAuthorizationService> {
-	
+
 	public CertificateKeyPair getCertificateKeyPair();
+
 	public List<CertificateKeyPair> list();
 
 }

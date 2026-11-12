@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,8 +23,6 @@ package org.iplass.mtp.impl.view.menu;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.iplass.mtp.impl.definition.DefinableMetaData;
 import org.iplass.mtp.impl.i18n.I18nUtil;
 import org.iplass.mtp.impl.metadata.BaseMetaDataRuntime;
@@ -34,6 +32,8 @@ import org.iplass.mtp.impl.metadata.MetaDataRuntime;
 import org.iplass.mtp.impl.util.ObjectUtil;
 import org.iplass.mtp.view.menu.MenuItem;
 import org.iplass.mtp.view.menu.MenuTree;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class MetaTreeMenu extends BaseRootMetaData implements DefinableMetaData<MenuTree> {
@@ -68,7 +68,8 @@ public class MetaTreeMenu extends BaseRootMetaData implements DefinableMetaData<
 		showMenuDisplayName = definition.isShowMenuDisplayName();
 
 		if (definition.getMenuItems() != null) {
-			childs = new ArrayList<MetaMenuItem>(definition.getMenuItems().size());
+			childs = new ArrayList<MetaMenuItem>(definition.getMenuItems()
+					.size());
 			for (MenuItem item : definition.getMenuItems()) {
 				MetaMenuItem child = new MetaMenuItem();
 				child.applyConfig(item);
@@ -122,7 +123,7 @@ public class MetaTreeMenu extends BaseRootMetaData implements DefinableMetaData<
 	 * @return 表示順序
 	 */
 	public Integer getDisplayOrder() {
-	    return displayOrder;
+		return displayOrder;
 	}
 
 	/**
@@ -130,7 +131,7 @@ public class MetaTreeMenu extends BaseRootMetaData implements DefinableMetaData<
 	 * @param displayOrder 表示順序
 	 */
 	public void setDisplayOrder(Integer displayOrder) {
-	    this.displayOrder = displayOrder;
+		this.displayOrder = displayOrder;
 	}
 
 	/**
@@ -138,15 +139,15 @@ public class MetaTreeMenu extends BaseRootMetaData implements DefinableMetaData<
 	 * @return 定義の表示名を表示かどうか
 	 */
 	public boolean isShowMenuDisplayName() {
-	    return showMenuDisplayName;
+		return showMenuDisplayName;
 	}
 
 	/**
 	 * 定義の表示名を表示かどうかを設定します。
 	 * @param showMenuDisplayName 定義の表示名を表示かどうか
 	 */
-	public void setIsShowMenuDisplayName(boolean showMenuDisplayName) {
-	    this.showMenuDisplayName = showMenuDisplayName;
+	public void setShowMenuDisplayName(boolean showMenuDisplayName) {
+		this.showMenuDisplayName = showMenuDisplayName;
 	}
 
 	/**
@@ -155,7 +156,7 @@ public class MetaTreeMenu extends BaseRootMetaData implements DefinableMetaData<
 	 * @return 子階層メニュ
 	 */
 	public List<MetaMenuItem> getChilds() {
-	    return childs;
+		return childs;
 	}
 
 	/**
@@ -164,7 +165,7 @@ public class MetaTreeMenu extends BaseRootMetaData implements DefinableMetaData<
 	 * @param childs 子階層メニュ
 	 */
 	public void setChilds(List<MetaMenuItem> childs) {
-	    this.childs = childs;
+		this.childs = childs;
 	}
 
 	/**
@@ -173,7 +174,7 @@ public class MetaTreeMenu extends BaseRootMetaData implements DefinableMetaData<
 	 * @param metaMenuItem 子階層メニュ
 	 */
 	public void addChild(MetaMenuItem metaMenuItem) {
-		if(childs == null) {
+		if (childs == null) {
 			childs = new ArrayList<MetaMenuItem>();
 		}
 		childs.add(metaMenuItem);

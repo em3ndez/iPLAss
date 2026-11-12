@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,7 +25,6 @@ import java.math.BigDecimal;
 import org.iplass.mtp.entity.definition.PropertyDefinition;
 import org.iplass.mtp.entity.definition.PropertyDefinitionType;
 
-
 /**
  * 固定小数点を表すプロパティ定義。
  * 
@@ -33,19 +32,19 @@ import org.iplass.mtp.entity.definition.PropertyDefinitionType;
  *
  */
 public class DecimalProperty extends PropertyDefinition {
-	
+
 	private static final long serialVersionUID = 5033289491264936255L;
-	
+
 	private int scale;
 	private RoundingMode roundingMode = RoundingMode.HALF_EVEN;
-	
-	public DecimalProperty(){
+
+	public DecimalProperty() {
 	}
-	
-	public DecimalProperty(String name){
+
+	public DecimalProperty(String name) {
 		setName(name);
 	}
-	
+
 	public int getScale() {
 		return scale;
 	}
@@ -66,7 +65,7 @@ public class DecimalProperty extends PropertyDefinition {
 	public Class<?> getJavaType() {
 		return BigDecimal.class;
 	}
-	
+
 	@Override
 	public PropertyDefinitionType getType() {
 		return PropertyDefinitionType.DECIMAL;

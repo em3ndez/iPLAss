@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -51,11 +51,6 @@ public class SimpleEntityInfoDS extends AbstractAdminDataSource {
 		LISTENER_COUNT,
 		VERSIONING,
 
-		DETAIL_VIEW_COUNT,
-		SEARCH_VIEW_COUNT,
-		BULK_VIEW_COUNT,
-		VIEW_CONTROL,
-
 		REPOSITORY,
 
 		IS_ERROR,
@@ -87,16 +82,9 @@ public class SimpleEntityInfoDS extends AbstractAdminDataSource {
 		DataSourceField listenerCount = new DataSourceTextField(FIELD_NAME.LISTENER_COUNT.name());
 		DataSourceField versioning = new DataSourceTextField(FIELD_NAME.VERSIONING.name());
 
-		DataSourceField detailViewCount = new DataSourceTextField(FIELD_NAME.DETAIL_VIEW_COUNT.name());
-		DataSourceField searchViewCount = new DataSourceTextField(FIELD_NAME.SEARCH_VIEW_COUNT.name());
-		DataSourceField bulkViewCount = new DataSourceTextField(FIELD_NAME.BULK_VIEW_COUNT.name());
-		DataSourceField viewControl = new DataSourceTextField(FIELD_NAME.VIEW_CONTROL.name());
-
 		DataSourceField repository = new DataSourceTextField(FIELD_NAME.REPOSITORY.name());
 
-		setFields(name, displayName, count, listenerCount, versioning,
-				detailViewCount, searchViewCount, bulkViewCount, viewControl,
-				repository);
+		setFields(name, displayName, count, listenerCount, versioning, repository);
 	}
 
 	@Override
@@ -109,7 +97,7 @@ public class SimpleEntityInfoDS extends AbstractAdminDataSource {
 			@Override
 			public void onSuccess(List<SimpleEntityInfo> entities) {
 				List<ListGridRecord> records = createRecord(entities);
-				response.setData(records.toArray(new ListGridRecord[]{}));
+				response.setData(records.toArray(new ListGridRecord[] {}));
 				response.setTotalRows(records.size());
 				response.setStartRow(0);
 				processResponse(requestId, response);
@@ -119,7 +107,8 @@ public class SimpleEntityInfoDS extends AbstractAdminDataSource {
 			public void onFailure(Throwable caught) {
 				GWT.log("error!!!", caught);
 
-				SC.warn(AdminClientMessageUtil.getString("datasource_tools_entityexplorer_SimpleEntityInfoDS_failedToGetEntityList") + caught.getMessage());
+				SC.warn(AdminClientMessageUtil.getString("datasource_tools_entityexplorer_SimpleEntityInfoDS_failedToGetEntityList")
+						+ caught.getMessage());
 
 				response.setStatus(RPCResponse.STATUS_FAILURE);
 				processResponse(requestId, response);
@@ -144,10 +133,6 @@ public class SimpleEntityInfoDS extends AbstractAdminDataSource {
 				}
 				record.setAttribute(FIELD_NAME.LISTENER_COUNT.name(), entity.getListenerCount());
 				record.setAttribute(FIELD_NAME.VERSIONING.name(), entity.getVersionControlType());
-				record.setAttribute(FIELD_NAME.DETAIL_VIEW_COUNT.name(), entity.getDetailFormViewCount());
-				record.setAttribute(FIELD_NAME.SEARCH_VIEW_COUNT.name(), entity.getSearchFormViewCount());
-				record.setAttribute(FIELD_NAME.BULK_VIEW_COUNT.name(), entity.getBulkFormViewCount());
-				record.setAttribute(FIELD_NAME.VIEW_CONTROL.name(), entity.getViewControl());
 				record.setAttribute(FIELD_NAME.REPOSITORY.name(), entity.getRepository());
 
 				record.setAttribute(FIELD_NAME.IS_ERROR.name(), entity.isError());

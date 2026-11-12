@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -36,7 +36,7 @@ import org.iplass.mtp.entity.query.value.ValueExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gwt.user.server.rpc.XsrfProtectedServiceServlet;
+import com.google.gwt.user.server.rpc.jakarta.XsrfProtectedServiceServlet;
 
 /**
  * Eql用Service実装クラス
@@ -52,40 +52,41 @@ public class EqlServiceImpl extends XsrfProtectedServiceServlet implements EqlSe
 
 	@Override
 	public EqlResultInfo execute(int tenantId, final String eql, final boolean isSearchAllVersion) {
-		return AuthUtil.authCheckAndInvoke(getServletContext(), this.getThreadLocalRequest(), this.getThreadLocalResponse(), tenantId, new AuthUtil.Callable<EqlResultInfo>() {
-			@Override
-			public EqlResultInfo call() {
+		return AuthUtil.authCheckAndInvoke(getServletContext(), this.getThreadLocalRequest(), this.getThreadLocalResponse(), tenantId,
+				new AuthUtil.Callable<EqlResultInfo>() {
+					@Override
+					public EqlResultInfo call() {
 
-				EqlResultInfo result = new EqlResultInfo();
+						EqlResultInfo result = new EqlResultInfo();
 
-				result.setEql(eql);
-				result.setSearchAllVersion(isSearchAllVersion);
-				result.addLogMessage(rs("tools.eql.EqlServiceImpl.runEql") + eql + (isSearchAllVersion ? " versioned" : ""));
+						result.setEql(eql);
+						result.setSearchAllVersion(isSearchAllVersion);
+						result.addLogMessage(rs("tools.eql.EqlServiceImpl.runEql") + eql + (isSearchAllVersion ? " versioned" : ""));
 
-				Query query = null;
-				try {
+						Query query = null;
+						try {
 //					query = Query.newQuery(eql);
-					query = new PreparedQuery(eql).query(null);
-					if (!query.isVersiond() && isSearchAllVersion) {
-						query.setVersiond(true);
-					}
-				} catch (QueryException e) {
-					logger.warn(e.getMessage(), e);
-					result.addLogMessage(rs("tools.eql.EqlServiceImpl.errEqlAnalysis"));
-					result.addLogMessage(e.getMessage());
-					result.setError(true);
-					return result;
-				} catch (Throwable e) {
-				    if (e instanceof Error) {
-				        fatalLogger.error(e.getMessage(), e);
-				    } else {
-				        logger.error(e.getMessage(), e);
-				    }
-					result.addLogMessage(rs("tools.eql.EqlServiceImpl.errEqlAnalysis"));
-					result.addLogMessage(e.getMessage());
-					result.setError(true);
-					return result;
-				}
+							query = new PreparedQuery(eql).query(null);
+							if (!query.isVersioned() && isSearchAllVersion) {
+								query.setVersioned(true);
+							}
+						} catch (QueryException e) {
+							logger.warn(e.getMessage(), e);
+							result.addLogMessage(rs("tools.eql.EqlServiceImpl.errEqlAnalysis"));
+							result.addLogMessage(e.getMessage());
+							result.setError(true);
+							return result;
+						} catch (Throwable e) {
+							if (e instanceof Error) {
+								fatalLogger.error(e.getMessage(), e);
+							} else {
+								logger.error(e.getMessage(), e);
+							}
+							result.addLogMessage(rs("tools.eql.EqlServiceImpl.errEqlAnalysis"));
+							result.addLogMessage(e.getMessage());
+							result.setError(true);
+							return result;
+						}
 
 //TODO 現在「*」は、Query.newQuery(eql)でエラーとなるためコメント化
 //				List<ValueExpression> list = query.select().getSelectValues();
@@ -111,54 +112,69 @@ public class EqlServiceImpl extends XsrfProtectedServiceServlet implements EqlSe
 //				}
 //				query.select().setSelectValues(list);
 
-				//検索結果をObjectからString形式に変換するCallbackを生成(GWTのSerialize対応)
-				EqlSearchPredicate callback = new EqlSearchPredicate();
-				long start = System.nanoTime();
-				try {
-					em.search(query, callback);
-				} catch (QueryException e) {
-					logger.warn(e.getMessage(), e);
-					result.addLogMessage(rs("tools.eql.EqlServiceImpl.errRunEql"));
-					result.addLogMessage(e.getMessage());
-					result.setError(true);
-					return result;
-				} catch (Throwable e) {
-				    if (e instanceof Error) {
-				        fatalLogger.error(e.getMessage(), e);
-				    } else {
-				        logger.error(e.getMessage(), e);
-				    }
-					result.addLogMessage(rs("tools.eql.EqlServiceImpl.errRunEql"));
-					result.addLogMessage(e.getMessage());
-					result.setError(true);
-					return result;
-				}
-				result.addLogMessage(rs("tools.eql.EqlServiceImpl.runTime") + ((double)(System.nanoTime() - start)) / 1000000 + "ms");
+						//検索結果をObjectからString形式に変換するCallbackを生成(GWTのSerialize対応)
+						EqlSearchPredicate callback = new EqlSearchPredicate();
+						long startSearchTime = System.nanoTime();
+						try {
+							em.search(query, callback);
+						} catch (QueryException e) {
+							logger.warn(e.getMessage(), e);
+							result.addLogMessage(rs("tools.eql.EqlServiceImpl.errRunEql"));
+							result.addLogMessage(e.getMessage());
+							result.setError(true);
+							return result;
+						} catch (Throwable e) {
+							if (e instanceof Error) {
+								fatalLogger.error(e.getMessage(), e);
+							} else {
+								logger.error(e.getMessage(), e);
+							}
+							result.addLogMessage(rs("tools.eql.EqlServiceImpl.errRunEql"));
+							result.addLogMessage(e.getMessage());
+							result.setError(true);
+							return result;
+						}
+						long endSearchTime = System.nanoTime();
+						if (callback.getStartFetchTime() < 0) {
+							//該当データなし
+							result.addLogMessage(
+									rs("tools.eql.EqlServiceImpl.runQueryTime") + ((double) (endSearchTime - startSearchTime)) / 1000000 + "ms");
+							result.addLogMessage(rs("tools.eql.EqlServiceImpl.runFetchTime") + "0ms");
+						} else {
+							result.addLogMessage(rs("tools.eql.EqlServiceImpl.runQueryTime")
+									+ ((double) (callback.getStartFetchTime() - startSearchTime)) / 1000000 + "ms");
+							result.addLogMessage(
+									rs("tools.eql.EqlServiceImpl.runFetchTime") + ((double) (endSearchTime - callback.getStartFetchTime())) / 1000000
+											+ "ms");
+						}
 
-				//クライアントに返すためValueExpressionをStringに変換
-				List<ValueExpression> colValues = query.getSelect().getSelectValues();
-				List<String> colList = new ArrayList<>(colValues.size());
-				for (ValueExpression colValue : colValues) {
-					colList.add(colValue.toString());
-				}
-				result.setColumns(colList);
+						//クライアントに返すためValueExpressionをStringに変換
+						List<ValueExpression> colValues = query.getSelect()
+								.getSelectValues();
+						List<String> colList = new ArrayList<>(colValues.size());
+						for (ValueExpression colValue : colValues) {
+							colList.add(colValue.toString());
+						}
+						result.setColumns(colList);
 
-				//検索結果を格納
-				result.setRecords(callback.getStrRecordList());
+						//検索結果を格納
+						result.setRecords(callback.getStrRecordList());
 
-				if (callback.getStrRecordList().isEmpty()) {
-					result.addLogMessage(rs("tools.eql.EqlServiceImpl.noData"));
-				} else {
-					if (callback.isLimitSearchResult()) {
-						result.addLogMessage(rs("tools.eql.EqlServiceImpl.resultOutput", String.valueOf(callback.getLimitSize())));
+						if (callback.getStrRecordList()
+								.isEmpty()) {
+							result.addLogMessage(rs("tools.eql.EqlServiceImpl.noData"));
+						} else {
+							if (callback.isLimitSearchResult()) {
+								result.addLogMessage(rs("tools.eql.EqlServiceImpl.resultOutput", String.valueOf(callback.getLimitSize())));
+							}
+
+							result.addLogMessage(rs("tools.eql.EqlServiceImpl.exeResult") + result.getRecords()
+									.size());
+						}
+
+						return result;
 					}
-
-					result.addLogMessage(rs("tools.eql.EqlServiceImpl.exeResult") + result.getRecords().size());
-				}
-
-				return result;
-			}
-		});
+				});
 	}
 
 	private static String rs(String key, Object... arguments) {

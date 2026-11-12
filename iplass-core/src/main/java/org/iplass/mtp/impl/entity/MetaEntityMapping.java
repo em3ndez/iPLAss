@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,12 +24,12 @@ import org.iplass.mtp.impl.metadata.MetaData;
 
 public class MetaEntityMapping implements MetaData {
 	private static final long serialVersionUID = 3653948484919058222L;
-	
+
 	private String mappingClass;
-	
+
 	public MetaEntityMapping() {
 	}
-	
+
 	public MetaEntityMapping(String mappingClass) {
 		this.mappingClass = mappingClass;
 	}

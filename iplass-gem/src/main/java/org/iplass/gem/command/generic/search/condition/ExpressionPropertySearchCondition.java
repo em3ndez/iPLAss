@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -111,7 +111,8 @@ public class ExpressionPropertySearchCondition extends PropertySearchCondition {
 	}
 
 	private PropertySearchCondition createSearchCondition(ExpressionSearchConditionType type, Object value) {
-		if (value == null) return null;
+		if (value == null)
+			return null;
 
 		PropertyEditor editor = ((ExpressionPropertyEditor) getEditor()).getEditor();
 		//SelectProperty以外DefinitionをcastしてないのでとりあえずExpressionを渡しても問題はないはず
@@ -137,72 +138,127 @@ public class ExpressionPropertySearchCondition extends PropertySearchCondition {
 		return null;
 	}
 
+	/**
+	 * NormarSearchContext#getExpressionValueで取得した値を型に合わせて変換
+	 *
+	 * @param type 型
+	 * @return 型に合わせて変換された値
+	 */
 	private Object getNormalTypeValue(ExpressionSearchConditionType type) {
 		PropertyEditor editor = ((ExpressionPropertyEditor) getEditor()).getEditor();
 		if (type == ExpressionSearchConditionType.BOOLEAN) {
 			String value = (String) getValue();
-			if (value == null || value.trim().length() == 0) return null;
-			return Boolean.parseBoolean((String) getValue());
+			if (value == null || value.trim()
+					.length() == 0)
+				return null;
+			return value;
 		} else if (type == ExpressionSearchConditionType.DATE) {
 			String[] value = (String[]) getValue();
 			//2番目(From)、3番目(To)を利用
 			Date from = null;
 			Date to = null;
 			if (value.length > 1 && value[1] != null) {
-				from = ConvertUtil.convertToDate(Date.class, value[1], TemplateUtil.getLocaleFormat().getServerDateFormat(), false);
+				from = ConvertUtil.convertToDate(Date.class, value[1], TemplateUtil.getLocaleFormat()
+						.getServerDateFormat(), false);
 			}
 			if (value.length > 2 && value[2] != null) {
-				to = ConvertUtil.convertToDate(Date.class, value[2], TemplateUtil.getLocaleFormat().getServerDateFormat(), false);
+				to = ConvertUtil.convertToDate(Date.class, value[2], TemplateUtil.getLocaleFormat()
+						.getServerDateFormat(), false);
 			}
-			return (from == null && to == null) ? null : new Date[]{from, to};
+			return (from == null && to == null) ? null : new Date[] { from, to };
 		} else if (type == ExpressionSearchConditionType.DATETIME) {
 			String[] value = (String[]) getValue();
 			//2番目(From)、3番目(To)を利用
 			Timestamp from = null;
 			Timestamp to = null;
 			if (value.length > 1 && value[1] != null) {
-				from = ConvertUtil.convertToDate(Timestamp.class, value[1], TemplateUtil.getLocaleFormat().getServerDateTimeFormat(), false);
+				from = ConvertUtil.convertToDate(Timestamp.class, value[1], TemplateUtil.getLocaleFormat()
+						.getServerDateTimeFormat(), false);
 			}
 			if (value.length > 2 && value[2] != null) {
-				to = ConvertUtil.convertToDate(Timestamp.class, value[2], TemplateUtil.getLocaleFormat().getServerDateTimeFormat(), false);
+				to = ConvertUtil.convertToDate(Timestamp.class, value[2], TemplateUtil.getLocaleFormat()
+						.getServerDateTimeFormat(), false);
 			}
-			return (from == null && to == null) ? null : new Timestamp[]{from, to};
+			return (from == null && to == null) ? null : new Timestamp[] { from, to };
 		} else if (type == ExpressionSearchConditionType.DECIMAL) {
 			String[] value = (String[]) getValue();
-			BigDecimal from = null;
-			BigDecimal to = null;
-			if (value.length > 0 && value[0] != null) {
-				from = ConvertUtil.convertFromString(BigDecimal.class, value[0]);
+			DecimalPropertyEditor dpe = (DecimalPropertyEditor) editor;
+			if (!dpe.isSearchInRange()) {
+				// 単一検索
+				// 1番目を利用
+				BigDecimal single = null;
+				if (value.length > 0 && value[0] != null) {
+					single = ConvertUtil.convertFromString(BigDecimal.class, value[0]);
+				}
+				return single == null ? null : new BigDecimal[] { single };
+			} else {
+				// 範囲検索
+				// 2番目(From)、3番目(To)を利用
+				BigDecimal from = null;
+				BigDecimal to = null;
+				if (value.length > 1 && value[1] != null) {
+					from = ConvertUtil.convertFromString(BigDecimal.class, value[1]);
+				}
+				if (value.length > 2 && value[2] != null) {
+					to = ConvertUtil.convertFromString(BigDecimal.class, value[2]);
+				}
+				// 長さ3の配列で返す
+				return (from == null && to == null) ? null : new BigDecimal[] { null, from, to };
 			}
-			if (value.length > 1 && value[1] != null) {
-				to = ConvertUtil.convertFromString(BigDecimal.class, value[1]);
-			}
-			return (from == null && to == null) ? null : new BigDecimal[]{from, to};
 		} else if (type == ExpressionSearchConditionType.FLOAT) {
 			String[] value = (String[]) getValue();
-			Double from = null;
-			Double to = null;
-			if (value.length > 0 && value[0] != null) {
-				from = ConvertUtil.convertFromString(Double.class, value[0]);
+			FloatPropertyEditor fpe = (FloatPropertyEditor) editor;
+			if (!fpe.isSearchInRange()) {
+				// 単一検索
+				// 1番目を利用
+				Double single = null;
+				if (value.length > 0 && value[0] != null) {
+					single = ConvertUtil.convertFromString(Double.class, value[0]);
+				}
+				return single == null ? null : new Double[] { single };
+			} else {
+				// 範囲検索
+				// 2番目(From)、3番目(To)を利用
+				Double from = null;
+				Double to = null;
+				if (value.length > 1 && value[1] != null) {
+					from = ConvertUtil.convertFromString(Double.class, value[1]);
+				}
+				if (value.length > 2 && value[2] != null) {
+					to = ConvertUtil.convertFromString(Double.class, value[2]);
+				}
+				// 長さ3の配列で返す
+				return (from == null && to == null) ? null : new Double[] { null, from, to };
 			}
-			if (value.length > 1 && value[1] != null) {
-				to = ConvertUtil.convertFromString(Double.class, value[1]);
-			}
-			return (from == null && to == null) ? null : new Double[]{from, to};
 		} else if (type == ExpressionSearchConditionType.INTEGER) {
 			String[] value = (String[]) getValue();
-			Long from = null;
-			Long to = null;
-			if (value.length > 0 && value[0] != null) {
-				from = ConvertUtil.convertFromString(Long.class, value[0]);
+			IntegerPropertyEditor ipe = (IntegerPropertyEditor) editor;
+			if (!ipe.isSearchInRange()) {
+				// 単一検索
+				// 1番目を利用
+				Long single = null;
+				if (value.length > 0 && value[0] != null) {
+					single = ConvertUtil.convertFromString(Long.class, value[0]);
+				}
+				return single == null ? null : new Long[] { single };
+			} else {
+				// 範囲検索
+				// 2番目(From)、3番目(To)を利用
+				Long from = null;
+				Long to = null;
+				if (value.length > 1 && value[1] != null) {
+					from = ConvertUtil.convertFromString(Long.class, value[1]);
+				}
+				if (value.length > 2 && value[2] != null) {
+					to = ConvertUtil.convertFromString(Long.class, value[2]);
+				}
+				// 長さ3の配列で返す
+				return (from == null && to == null) ? null : new Long[] { null, from, to };
 			}
-			if (value.length > 1 && value[1] != null) {
-				to = ConvertUtil.convertFromString(Long.class, value[1]);
-			}
-			return (from == null && to == null) ? null : new Long[]{from, to};
 		} else if (type == ExpressionSearchConditionType.SELECT) {
 			String[] value = (String[]) getValue();
-			if (value == null || value.length == 0) return null;
+			if (value == null || value.length == 0)
+				return null;
 			SelectPropertyEditor se = (SelectPropertyEditor) editor;
 			if (se.getDisplayType() == SelectDisplayType.CHECKBOX
 					|| se.getDisplayType() == SelectDisplayType.HIDDEN) {
@@ -219,36 +275,56 @@ public class ExpressionPropertySearchCondition extends PropertySearchCondition {
 				}
 			}
 		} else if (type == ExpressionSearchConditionType.STRING) {
-			String value = (String) getValue();
-			if (value == null || value.trim().length() == 0) return null;
-			return value;
+			String[] value = (String[]) getValue();
+			StringPropertyEditor spe = (StringPropertyEditor) editor;
+			if (!spe.isSearchInRange()) {
+				// 単一検索
+				// 1番目を利用
+				String single = null;
+				if (value.length > 0 && value[0] != null) {
+					single = value[0];
+				}
+				return (single == null || single.trim()
+						.length() == 0) ? null : new String[] { single };
+			} else {
+				// 範囲検索
+				// 2番目(From)、3番目(To)を利用
+				String from = null;
+				String to = null;
+				if (value.length > 1 && value[1] != null) {
+					from = value[1];
+				}
+				if (value.length > 2 && value[2] != null) {
+					to = value[2];
+				}
+				// 長さ3の配列で返す
+				return ((from == null || from.trim()
+						.length() == 0) && (to == null
+								|| to.trim()
+										.length() == 0)) ? null
+												: new String[] { null, from, to };
+			}
+
 		} else if (type == ExpressionSearchConditionType.TIME) {
 			String[] value = (String[]) getValue();
 			//2番目(From)、3番目(To)を利用
 			Time from = null;
 			Time to = null;
 			if (value.length > 1 && value[1] != null) {
-				from = ConvertUtil.convertToDate(Time.class, value[1], TemplateUtil.getLocaleFormat().getServerTimeFormat(), false);
+				from = ConvertUtil.convertToDate(Time.class, value[1], TemplateUtil.getLocaleFormat()
+						.getServerTimeFormat(), false);
 			}
 			if (value.length > 2 && value[2] != null) {
-				to = ConvertUtil.convertToDate(Time.class, value[2], TemplateUtil.getLocaleFormat().getServerTimeFormat(), false);
+				to = ConvertUtil.convertToDate(Time.class, value[2], TemplateUtil.getLocaleFormat()
+						.getServerTimeFormat(), false);
 			}
-			return (from == null && to == null) ? null : new Time[]{from, to};
+			return (from == null && to == null) ? null : new Time[] { from, to };
 		}
 		return null;
 	}
 
-	enum ExpressionSearchConditionType{
-		BOOLEAN,
-		DATE,
-		DATETIME,
-		DECIMAL,
-		EXPRESSION,
-		FLOAT,
-		INTEGER,
-		SELECT,
-		STRING,
-		TIME;
+	enum ExpressionSearchConditionType {
+		BOOLEAN, DATE, DATETIME, DECIMAL, EXPRESSION, FLOAT, INTEGER, SELECT, STRING, TIME;
 
 		public static ExpressionSearchConditionType createSearchCondition(
 				ExpressionProperty ep, PropertyEditor editor) {

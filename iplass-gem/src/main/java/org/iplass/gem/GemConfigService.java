@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,12 +26,17 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.iplass.gem.AutoGenerateSetting.DisplayPosition;
 import org.iplass.mtp.entity.Entity;
 import org.iplass.mtp.spi.Config;
 import org.iplass.mtp.spi.Service;
+import org.iplass.mtp.util.StringUtil;
+import org.iplass.mtp.view.generic.editor.StringPropertyEditor.RichTextLibrary;
+import org.iplass.mtp.view.generic.element.section.SearchConditionSection.FileSupportType;
+import org.iplass.mtp.view.generic.element.section.SearchResultSection.AutoHeightAdjustMode;
 
 /**
  * gem固有の設定など
@@ -39,14 +44,23 @@ import org.iplass.mtp.spi.Service;
  */
 public class GemConfigService implements Service {
 
-	/** リクエストのパラメータを基に参照データをロードする際、参照プロパティも合わせてロードするか */
+	/** リクエストのパラメータをもとに参照データを更新する際に、参照データをロードしなおすか。*/
+	private boolean mustLoadWithReference;
+
+	/** リクエストのパラメータを基に参照データを更新する際に、参照エンティティの参照プロパティも合わせてロードするか */
 	private boolean loadWithReference;
 
 	/** 詳細表示画面で数値プロパティの値をカンマでフォーマットするか */
 	private boolean formatNumberWithComma;
 
+	/** デフォルトのEntityデータファイルの形式 */
+	private FileSupportType fileSupportType;
+
 	/** CSVダウンロード件数上限 */
 	private int csvDownloadMaxCount;
+
+	/** Upload形式のCSVダウンロード時の一括ロード件数 */
+	private int uploadableCsvDownloadLoadSize;
 
 	/** CSVダウンロード選択可能文字コード */
 	private List<String> csvDownloadCharacterCode;
@@ -54,8 +68,11 @@ public class GemConfigService implements Service {
 	/** CSVダウンロード常時ダブルクォート出力 */
 	private boolean csvDownloadQuoteAll;
 
-	/** CSVダウンロード参照項目バージョン出力 */
+	/** Upload形式のCSVダウンロード参照項目バージョン出力 */
 	private boolean csvDownloadReferenceVersion;
+
+	/** Upload形式のCSVダウンロード時に被参照プロパティも出力する */
+	private boolean uploadableCsvDownloadWithMappedByReference;
 
 	/** CSVアップロードコミット単位 */
 	private int csvUploadCommitCount;
@@ -85,6 +102,12 @@ public class GemConfigService implements Service {
 	/** 検索画面で表示する検索結果の件数*/
 	private int searchResultDispRowCount;
 
+	/** 検索画面のテーブル高さ自動調節モード*/
+	private AutoHeightAdjustMode searchResultAutoHeightAdjustMode;
+
+	/** 詳細検索における検索項目の上限数 */
+	private int maxOfDetailSearchItems;
+
 	/** 検索処理のインターバル */
 	private int searchInterval;
 
@@ -97,8 +120,17 @@ public class GemConfigService implements Service {
 	/** 汎用検索のCSVダウンロードのフッター文言 */
 	private String csvDownloadFooter;
 
+	/** 検索処理で表示ラベルとして扱うプロパティを検索条件に利用するか */
+	private boolean useDisplayLabelItemInSearch;
+
+	/** CSVダウンロード処理で表示ラベルとして扱うプロパティを出力するか */
+	private boolean useDisplayLabelItemInCsvDownload;
+
 	/** プルダウンの「選択してください」を表示するか */
 	private boolean showPulldownPleaseSelectLabel;
+
+	/** binaryファイルアップロード非同期 */
+	private boolean binaryUploadAsync;
 
 	/** DatePickerのデフォルトオプション */
 	private String datePickerDefaultOption;
@@ -112,11 +144,23 @@ public class GemConfigService implements Service {
 	/** 一括更新のコミット件数 */
 	private int bulkUpdateAllCommandBatchSize;
 
+	/** 参照型（SelectFilter）毎回検索件数 */
+	private int selectFilterSearchPageSize;
+
+	/** ReferencePropertyEditorのモーダル初期表示設定 */
+	private ReferenceModal referenceModal;
+
 	/** エンティティをコピーする際にLobデータをシャッローコピーするか */
 	private boolean shallowCopyLobData;
 
+	/** デフォルトのRichTextライブラリ */
+	private RichTextLibrary richTextLibrary;
+
 	/** Binaryダウンロード時のログ出力設定 */
 	private List<BinaryDownloadLoggingTargetProperty> binaryDownloadLoggingTargetProperty;
+
+	/** エンティティのバイナリプロパティにアップロード受け入れ可能な MIME Types  正規表現パターン */
+	private Pattern binaryUploadAcceptMimeTypesPattern;
 
 	/** カラー */
 	private List<ImageColorSetting> imageColors;
@@ -142,56 +186,38 @@ public class GemConfigService implements Service {
 	@Override
 	public void init(Config config) {
 		binaryDownloadLoggingTargetProperty = config.getValues("binaryDownloadLoggingTargetProperty", BinaryDownloadLoggingTargetProperty.class);
+		String binaryUploadAcceptMimeTypesPattern = config.getValue("binaryUploadAcceptMimeTypesPattern");
+		this.binaryUploadAcceptMimeTypesPattern = StringUtil.isNotBlank(binaryUploadAcceptMimeTypesPattern)
+				? Pattern.compile(binaryUploadAcceptMimeTypesPattern)
+				: null;
+
 		imageColors = config.getValues("imageColors", ImageColorSetting.class);
-		loadWithReference = Boolean.valueOf(config.getValue("loadWithReference"));
-		formatNumberWithComma = Boolean.valueOf(config.getValue("formatNumberWithComma"));
-		String csvdownloadMaxCount = config.getValue("csvDownloadMaxCount");
-		if (csvdownloadMaxCount != null) {
-			this.csvDownloadMaxCount = Integer.parseInt(csvdownloadMaxCount);
-		} else {
-			this.csvDownloadMaxCount = 65535;
-		}
+		mustLoadWithReference = config.getValue("mustLoadWithReference", Boolean.class, true);
+		loadWithReference = config.getValue("loadWithReference", Boolean.class, false);
+		formatNumberWithComma = config.getValue("formatNumberWithComma", Boolean.class, false);
+
+		fileSupportType = config.getValue("fileSupportType", FileSupportType.class, FileSupportType.CSV);
+		csvDownloadMaxCount = config.getValue("csvDownloadMaxCount", Integer.class, 65535);
+		uploadableCsvDownloadLoadSize = config.getValue("uploadableCsvDownloadLoadSize", Integer.class, 1);
 		csvDownloadCharacterCode = config.getValues("csvDownloadCharacterCode");
 		if (csvDownloadCharacterCode == null) {
 			csvDownloadCharacterCode = new ArrayList<>();
 			csvDownloadCharacterCode.add("UTF-8");
 		}
 
-		if (config.getValue("csvDownloadQuoteAll") != null) {
-			csvDownloadQuoteAll = Boolean.valueOf(config.getValue("csvDownloadQuoteAll"));
-		} else {
-			csvDownloadQuoteAll = true;
-		}
+		csvDownloadQuoteAll = config.getValue("csvDownloadQuoteAll", Boolean.class, true);
 
-		String csvdownloadReferenceVersion = config.getValue("csvDownloadReferenceVersion");
-		if (csvdownloadReferenceVersion != null) {
-			csvDownloadReferenceVersion = Boolean.valueOf(csvdownloadReferenceVersion);
-		} else {
-			csvDownloadReferenceVersion = true;
-		}
+		csvDownloadReferenceVersion = config.getValue("csvDownloadReferenceVersion", Boolean.class, true);
 
-		String csvUploadCommitCount = config.getValue("csvUploadCommitCount");
-		if (csvUploadCommitCount != null) {
-			this.csvUploadCommitCount = Integer.parseInt(csvUploadCommitCount);
-		} else {
-			this.csvUploadCommitCount = 1000;
-		}
+		uploadableCsvDownloadWithMappedByReference = config.getValue("uploadableCsvDownloadWithMappedByReference", Boolean.class, false);
+
+		csvUploadCommitCount = config.getValue("csvUploadCommitCount", Integer.class, 1000);
 
 		csvUploadAsync = Boolean.valueOf(config.getValue("csvUploadAsync"));
 
-		String csvUploadStatusPollingInterval = config.getValue("csvUploadStatusPollingInterval");
-		if (csvUploadStatusPollingInterval != null) {
-			this.csvUploadStatusPollingInterval = Integer.parseInt(csvUploadStatusPollingInterval);
-		} else {
-			this.csvUploadStatusPollingInterval = 10000;
-		}
+		csvUploadStatusPollingInterval = config.getValue("csvUploadStatusPollingInterval", Integer.class, 10000);
 
-		String searchResultCacheLimit = config.getValue("searchResultCacheLimit");
-		if (searchResultCacheLimit != null) {
-			this.searchResultCacheLimit = Integer.parseInt(searchResultCacheLimit);
-		} else {
-			this.searchResultCacheLimit = 300;
-		}
+		searchResultCacheLimit = config.getValue("searchResultCacheLimit", Integer.class, 300);
 
 		confirmEditSave = Boolean.valueOf(config.getValue("confirmEditSave"));
 
@@ -201,69 +227,52 @@ public class GemConfigService implements Service {
 
 		showSeachCondResetButton = Boolean.valueOf(config.getValue("showSeachCondResetButton"));
 
-		String searchResultDispRowCount = config.getValue("searchResultDispRowCount");
-		if (searchResultDispRowCount != null) {
-			this.searchResultDispRowCount = Integer.parseInt(searchResultDispRowCount);
-		} else {
-			this.searchResultDispRowCount = 10;
-		}
+		searchResultDispRowCount = config.getValue("searchResultDispRowCount", Integer.class, 10);
 
-		String searchInterval = config.getValue("searchInterval");
-		if (searchInterval != null) {
-			this.searchInterval = Integer.parseInt(searchInterval);
-		} else {
-			this.searchInterval = 1000;
-		}
+		String searchResultAutoHeightAdjustMode = config.getValue("searchResultAutoHeightAdjustMode");
+		this.searchResultAutoHeightAdjustMode = searchResultAutoHeightAdjustMode != null
+				? AutoHeightAdjustMode.valueOf(searchResultAutoHeightAdjustMode)
+				: AutoHeightAdjustMode.FIT_TO_ROW_COUNT;
 
-		String csvDownloadInterval = config.getValue("csvDownloadInterval");
-		if (csvDownloadInterval != null) {
-			this.csvDownloadInterval = Integer.parseInt(csvDownloadInterval);
-		} else {
-			this.csvDownloadInterval = 1000;
-		}
+		maxOfDetailSearchItems = config.getValue("maxOfDetailSearchItems", Integer.class, 100);
 
-		if (config.getValue("csvDownloadWithFooter") != null) {
-			csvDownloadWithFooter = Boolean.valueOf(config.getValue("csvDownloadWithFooter"));
-		} else {
-			csvDownloadWithFooter = false;
-		}
+		searchInterval = config.getValue("searchInterval", Integer.class, 1000);
+
+		csvDownloadInterval = config.getValue("csvDownloadInterval", Integer.class, 1000);
+
+		csvDownloadWithFooter = config.getValue("csvDownloadWithFooter", Boolean.class, false);
 		csvDownloadFooter = config.getValue("csvDownloadFooter");
 		if (csvDownloadFooter == null) {
 			csvDownloadFooter = "";
 		}
 
-		if (config.getValue("showPulldownPleaseSelectLabel") != null) {
-			showPulldownPleaseSelectLabel = Boolean.valueOf(config.getValue("showPulldownPleaseSelectLabel"));
-		} else {
-			showPulldownPleaseSelectLabel = true;
-		}
+		useDisplayLabelItemInSearch = config.getValue("useDisplayLabelItemInSearch", Boolean.class, false);
+
+		useDisplayLabelItemInCsvDownload = config.getValue("useDisplayLabelItemInCsvDownload", Boolean.class, false);
+
+		showPulldownPleaseSelectLabel = config.getValue("showPulldownPleaseSelectLabel", Boolean.class, true);
+
+		binaryUploadAsync = config.getValue("binaryUploadAsync", Boolean.class, true);
 
 		datePickerDefaultOption = config.getValue("datePickerDefaultOption", String.class, null);
 
-		if (config.getValue("recycleBinMaxCount") != null) {
-			recycleBinMaxCount = Integer.valueOf(config.getValue("recycleBinMaxCount"));
-		} else {
-			this.recycleBinMaxCount = 100;
-		}
+		recycleBinMaxCount = config.getValue("recycleBinMaxCount", Integer.class, 100);
 
-		String deleteAllCommandBatchSize = config.getValue("deleteAllCommandBatchSize");
-		if (deleteAllCommandBatchSize != null){
-			this.deleteAllCommandBatchSize = Integer.parseInt(deleteAllCommandBatchSize);
-		} else {
-			this.deleteAllCommandBatchSize = 100;
-		}
+		deleteAllCommandBatchSize = config.getValue("deleteAllCommandBatchSize", Integer.class, 100);
 
-		String bulkUpdateAllCommandBatchSize = config.getValue("bulkUpdateAllCommandBatchSize");
-		if (bulkUpdateAllCommandBatchSize != null){
-			this.bulkUpdateAllCommandBatchSize = Integer.parseInt(bulkUpdateAllCommandBatchSize);
-		} else {
-			this.bulkUpdateAllCommandBatchSize = 100;
-		}
+		bulkUpdateAllCommandBatchSize = config.getValue("bulkUpdateAllCommandBatchSize", Integer.class, 100);
 
-		if (config.getValue("shallowCopyLobData") != null) {
-			this.shallowCopyLobData = Boolean.valueOf(config.getValue("shallowCopyLobData"));
+		selectFilterSearchPageSize = config.getValue("selectFilterSearchPageSizeDefault", Integer.class, 40);
+
+		referenceModal = config.getValue("referenceModal", ReferenceModal.class);
+
+		shallowCopyLobData = config.getValue("shallowCopyLobData", Boolean.class, false);
+
+		if (config.getValue("richTextLibrary") != null) {
+			String strRichTextLibrary = config.getValue("richTextLibrary");
+			richTextLibrary = RichTextLibrary.valueOf(strRichTextLibrary);
 		} else {
-			this.shallowCopyLobData = false;
+			richTextLibrary = RichTextLibrary.QUILL;
 		}
 
 		skins = config.getValues("skins", Skin.class);
@@ -282,8 +291,7 @@ public class GemConfigService implements Service {
 						Entity.CREATE_DATE,
 						Entity.UPDATE_BY,
 						Entity.UPDATE_DATE,
-						Entity.LOCKED_BY
-						));
+						Entity.LOCKED_BY));
 				String systemPropertiesStr = config.getValue("autoGenerateSystemProperties");
 				String[] inputArray = systemPropertiesStr.split(",");
 				String[] validArray = Arrays.stream(inputArray)
@@ -309,8 +317,16 @@ public class GemConfigService implements Service {
 	}
 
 	/**
-	 * リクエストのパラメータを基に参照データをロードする際、参照プロパティも合わせてロードするかを取得します。
-	 * @return リクエストのパラメータを基に参照データをロードする際、参照プロパティも合わせてロードするか
+	 * リクエストのパラメータをもとに参照データを更新する際に、参照データをロードしなおすかを取得します。
+	 * @return リクエストのパラメータをもとに参照データを更新する際に、参照データをロードしなおすか
+	 */
+	public boolean isMustLoadWithReference() {
+		return mustLoadWithReference;
+	}
+
+	/**
+	 * リクエストのパラメータを基に参照データを更新する際に、参照エンティティの参照プロパティも合わせてロードするかを取得します。
+	 * @return リクエストのパラメータを基に参照データを更新する際に、参照エンティティの参照プロパティも合わせてロードするか
 	 */
 	public boolean isLoadWithReference() {
 		return loadWithReference;
@@ -325,11 +341,27 @@ public class GemConfigService implements Service {
 	}
 
 	/**
+	 * デフォルトのEntityデータファイルの形式を取得します。
+	 * @return デフォルトのEntityデータファイルの形式
+	 */
+	public FileSupportType getFileSupportType() {
+		return fileSupportType;
+	}
+
+	/**
 	 * CSVダウンロード件数の上限値を取得します。
 	 * @return CSVダウンロード件数上限
 	 */
 	public int getCsvDownloadMaxCount() {
 		return csvDownloadMaxCount;
+	}
+
+	/**
+	 * Upload形式のCSVダウンロード時の一括ロード件数を取得します。
+	 * @return Upload形式のCSVダウンロード時の一括ロード件数
+	 */
+	public int getUploadableCsvDownloadLoadSize() {
+		return uploadableCsvDownloadLoadSize;
 	}
 
 	/**
@@ -353,7 +385,15 @@ public class GemConfigService implements Service {
 	 * @return CSVダウンロード参照項目バージョン出力
 	 */
 	public boolean isCsvDownloadReferenceVersion() {
-	    return csvDownloadReferenceVersion;
+		return csvDownloadReferenceVersion;
+	}
+
+	/**
+	 * Upload形式のCSVダウンロード時に被参照プロパティも出力を取得します。
+	 * @return Upload形式のCSVダウンロード時に被参照プロパティも出力
+	 */
+	public boolean isUploadableCsvDownloadWithMappedByReference() {
+		return uploadableCsvDownloadWithMappedByReference;
 	}
 
 	/**
@@ -431,11 +471,27 @@ public class GemConfigService implements Service {
 	}
 
 	/**
+	 * 検索画面のテーブル高さ自動調節モードを取得します。
+	 * @return テーブル高さ自動調節モード（既定: FIT_TO_ROW_COUNT）
+	 */
+	public AutoHeightAdjustMode getSearchResultAutoHeightAdjustMode() {
+		return searchResultAutoHeightAdjustMode;
+	}
+
+	/**
+	 * 詳細検索における検索項目の上限数を取得します。
+	 * @return 詳細検索における検索項目の上限数
+	 */
+	public int getMaxOfDetailSearchItems() {
+		return maxOfDetailSearchItems;
+	}
+
+	/**
 	 * 検索処理のインターバルを取得します。
 	 * @return 検索処理のインターバル
 	 */
 	public int getSearchInterval() {
-	    return searchInterval;
+		return searchInterval;
 	}
 
 	/**
@@ -443,7 +499,7 @@ public class GemConfigService implements Service {
 	 * @return CSVダウンロードのインターバル
 	 */
 	public int getCsvDownloadInterval() {
-	    return csvDownloadInterval;
+		return csvDownloadInterval;
 	}
 
 	/**
@@ -451,7 +507,7 @@ public class GemConfigService implements Service {
 	 * @return 汎用検索のCSVダウンロードでフッターを出力するか
 	 */
 	public boolean isCsvDownloadWithFooter() {
-	    return csvDownloadWithFooter;
+		return csvDownloadWithFooter;
 	}
 
 	/**
@@ -459,7 +515,23 @@ public class GemConfigService implements Service {
 	 * @return 汎用検索のCSVダウンロードのフッター文言
 	 */
 	public String getCsvDownloadFooter() {
-	    return csvDownloadFooter;
+		return csvDownloadFooter;
+	}
+
+	/**
+	 * 検索処理で表示ラベルとして扱うプロパティを検索条件に利用するかを取得します。
+	 * @return 検索処理で表示ラベルとして扱うプロパティを検索条件に利用するか
+	 */
+	public boolean isUseDisplayLabelItemInSearch() {
+		return useDisplayLabelItemInSearch;
+	}
+
+	/**
+	 * CSVダウンロード処理で表示ラベルとして扱うプロパティを出力するかを取得します。
+	 * @return CSVダウンロード処理で表示ラベルとして扱うプロパティを出力するか
+	 */
+	public boolean isUseDisplayLabelItemInCsvDownload() {
+		return useDisplayLabelItemInCsvDownload;
 	}
 
 	/**
@@ -468,6 +540,15 @@ public class GemConfigService implements Service {
 	 */
 	public boolean isShowPulldownPleaseSelectLabel() {
 		return showPulldownPleaseSelectLabel;
+	}
+
+	/**
+	 * binaryファイルアップロードを非同期で行うかを取得します。
+	 * 
+	 * @return binaryファイルアップロードを非同期で行うか
+	 */
+	public boolean isBinaryUploadAsync() {
+		return binaryUploadAsync;
 	}
 
 	/**
@@ -483,13 +564,23 @@ public class GemConfigService implements Service {
 		return binaryDownloadLoggingTargetProperty;
 	}
 
+	/**
+	 * エンティティのバイナリプロパティにアップロード受け入れ可能なMIME Types 正規表現パターンを取得します。
+	 * @return エンティティのバイナリプロパティにアップロード可能なMIME Types 正規表現パターン
+	 */
+	public Pattern getBinaryUploadAcceptMimeTypesPattern() {
+		return binaryUploadAcceptMimeTypesPattern;
+	}
+
 	public List<ImageColorSetting> getImageColors() {
 		return imageColors;
 	}
 
 	public List<String> getImageColorNames() {
 		if (imageColors != null && !imageColors.isEmpty()) {
-			List<String> imageColorNames = imageColors.stream().map(s -> s.getColorName()).collect(Collectors.toList());
+			List<String> imageColorNames = imageColors.stream()
+					.map(s -> s.getColorName())
+					.collect(Collectors.toList());
 			return imageColorNames;
 		} else {
 			return Collections.emptyList();
@@ -499,7 +590,8 @@ public class GemConfigService implements Service {
 	public List<String> getCssPathList(String skinName) {
 		if (imageColors != null && !imageColors.isEmpty()) {
 			List<String> imageColorNames = imageColors.stream()
-					.flatMap(s -> s.getCssSettings().stream()
+					.flatMap(s -> s.getCssSettings()
+							.stream()
 							.filter(c -> skinName.equals(c.getSkinName()))
 							.map(c -> c.getCssPath()))
 					.collect(Collectors.toList());
@@ -510,7 +602,7 @@ public class GemConfigService implements Service {
 	}
 
 	public List<Skin> getSkins() {
-	    return skins;
+		return skins;
 	}
 
 	public List<Theme> getThemes() {
@@ -549,12 +641,48 @@ public class GemConfigService implements Service {
 		return bulkUpdateAllCommandBatchSize;
 	}
 
+	/** 
+	 * 選択フィルターの毎回検索件数を取得する
+	 * @return 毎回検索件数
+	 */
+	public int getSelectFilterSearchPageSizeDefault() {
+		return selectFilterSearchPageSize;
+	}
+
+	/**
+	 * ReferencePropertyEditorのモーダル初期表示幅を取得します。
+	 *
+	 * @return 幅（未設定または不正値の場合はnull）
+	 */
+	public Integer getReferenceModalWidth() {
+		Integer width = referenceModal == null ? null : referenceModal.getWidth();
+		return width == null || width <= 0 ? null : width;
+	}
+
+	/**
+	 * ReferencePropertyEditorのモーダル初期表示高さを取得します。
+	 *
+	 * @return 高さ（未設定または不正値の場合はnull）
+	 */
+	public Integer getReferenceModalHeight() {
+		Integer height = referenceModal == null ? null : referenceModal.getHeight();
+		return height == null || height <= 0 ? null : height;
+	}
+
 	/**
 	 * エンティティをコピーする際にLobデータをシャッローコピーするかを取得します。
 	 * @return エンティティをコピーする際にLobデータをシャッローコピーするか
 	 */
 	public boolean isShallowCopyLobData() {
 		return shallowCopyLobData;
+	}
+
+	/**
+	 * デフォルトのRichTextライブラリを取得します。
+	 * @return デフォルトのRichTextライブラリ
+	 */
+	public RichTextLibrary getRichTextLibrary() {
+		return richTextLibrary;
 	}
 
 	/**
@@ -570,7 +698,7 @@ public class GemConfigService implements Service {
 	 * @return Gem許可ロール
 	 */
 	public List<String> getPermitRolesToGem() {
-	    return permitRolesToGem;
+		return permitRolesToGem;
 	}
 
 	/**
@@ -578,7 +706,33 @@ public class GemConfigService implements Service {
 	 * @return EntityViewが未定義の場合の許可ロール
 	 */
 	public List<String> getPermitRolesToNoView() {
-	    return permitRolesToNoView;
+		return permitRolesToNoView;
 	}
 
+	/**
+	 * ReferencePropertyEditorで参照データを選択するモーダルの初期表示サイズを定義する設定クラスです。
+	 * 幅と高さはピクセル単位で指定します。未設定または0以下の場合は、モーダルの既定サイズが使用されます。
+	 */
+	public static class ReferenceModal {
+		/** モーダルの初期表示幅（ピクセル）。 */
+		private Integer width;
+		/** モーダルの初期表示高さ（ピクセル）。 */
+		private Integer height;
+
+		public Integer getWidth() {
+			return width;
+		}
+
+		public void setWidth(Integer width) {
+			this.width = width;
+		}
+
+		public Integer getHeight() {
+			return height;
+		}
+
+		public void setHeight(Integer height) {
+			this.height = height;
+		}
+	}
 }

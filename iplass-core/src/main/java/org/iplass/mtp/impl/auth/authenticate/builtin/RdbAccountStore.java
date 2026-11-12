@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.iplass.mtp.auth.login.CredentialUpdateException;
+import org.iplass.mtp.impl.auth.authenticate.AuthenticationProvider;
 import org.iplass.mtp.impl.auth.authenticate.builtin.sql.AccountControlSQL;
 import org.iplass.mtp.impl.auth.authenticate.builtin.sql.AccountSelectSQL;
 import org.iplass.mtp.impl.auth.authenticate.builtin.sql.PasswordHistorySelectSQL;
@@ -51,8 +52,9 @@ public class RdbAccountStore implements AccountStore {
 	private RdbAdapter rdb;
 
 	@Override
-	public void inited(BuiltinAuthenticationProvider provider, Config config) {
-		rdb = config.getDependentService(RdbAdapterService.class).getRdbAdapter();
+	public void inited(AuthenticationProvider provider, Config config) {
+		rdb = config.getDependentService(RdbAdapterService.class)
+				.getRdbAdapter();
 		accountSelect = rdb.getQuerySqlCreator(AccountSelectSQL.class);
 		accountControl = rdb.getUpdateSqlCreator(AccountControlSQL.class);
 		passSelect = rdb.getQuerySqlCreator(PasswordHistorySelectSQL.class);
@@ -84,9 +86,11 @@ public class RdbAccountStore implements AccountStore {
 				PreparedStatement ps = getPreparedStatement(accountControl.createUpdatePasswordSQL(rdb));
 				Date date = null;
 				if (pass.getUpdateDate() != null) {
-					date = new Date(pass.getUpdateDate().getTime());
+					date = new Date(pass.getUpdateDate()
+							.getTime());
 				}
-				accountControl.setUpdatePasswordParameter(rdb, ps, pass.getTenantId(), pass.getUid(), pass.getConvertedPassword(), pass.getSalt(), date, updateUser);
+				accountControl.setUpdatePasswordParameter(rdb, ps, pass.getTenantId(), pass.getUid(), pass.getConvertedPassword(), pass.getSalt(), date,
+						updateUser);
 				int cnt = ps.executeUpdate();
 				if (cnt != 1) {
 					throw new CredentialUpdateException(resourceString("impl.auth.authenticate.updateCredential.updateErr"));

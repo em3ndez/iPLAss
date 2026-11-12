@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,10 +20,14 @@
 
 package org.iplass.adminconsole.client.tools.ui.logexplorer;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.iplass.adminconsole.client.base.i18n.AdminClientMessageUtil;
 import org.iplass.adminconsole.client.base.io.download.PostDownloadFrame;
 import org.iplass.adminconsole.client.base.tenant.TenantInfoHolder;
 import org.iplass.adminconsole.client.base.ui.widget.GridActionImgButton;
+import org.iplass.adminconsole.client.base.ui.widget.MtpListGrid;
 import org.iplass.adminconsole.client.base.util.SmartGWTUtil;
 import org.iplass.adminconsole.client.tools.data.logexplorer.LogFileDS;
 import org.iplass.adminconsole.client.tools.data.logexplorer.LogFileDS.FIELD_NAME;
@@ -39,12 +43,13 @@ import com.smartgwt.client.widgets.Canvas;
 import com.smartgwt.client.widgets.Label;
 import com.smartgwt.client.widgets.events.ClickEvent;
 import com.smartgwt.client.widgets.events.ClickHandler;
+import com.smartgwt.client.widgets.form.fields.ComboBoxItem;
 import com.smartgwt.client.widgets.grid.CellFormatter;
 import com.smartgwt.client.widgets.grid.ListGrid;
 import com.smartgwt.client.widgets.grid.ListGridField;
 import com.smartgwt.client.widgets.grid.ListGridRecord;
-import com.smartgwt.client.widgets.grid.events.DataArrivedEvent;
-import com.smartgwt.client.widgets.grid.events.DataArrivedHandler;
+import com.smartgwt.client.widgets.grid.events.FilterEditorSubmitEvent;
+import com.smartgwt.client.widgets.grid.events.FilterEditorSubmitHandler;
 import com.smartgwt.client.widgets.grid.events.SortChangedHandler;
 import com.smartgwt.client.widgets.grid.events.SortEvent;
 import com.smartgwt.client.widgets.layout.VLayout;
@@ -55,6 +60,19 @@ public class LogExplorerFileListPane extends VLayout {
 
 	private static final String REFRESH_ICON = "[SKIN]/actions/refresh.png";
 	private static final String EXPORT_ICON = "[SKINIMG]/actions/download.png";
+
+	/** Limit選択用Map */
+	private static LinkedHashMap<Integer, String> limitValueMap;
+	static {
+		limitValueMap = new LinkedHashMap<Integer, String>();
+		limitValueMap.put(-1, "-1");
+		limitValueMap.put(50, "50");
+		limitValueMap.put(100, "100");
+		limitValueMap.put(200, "200");
+		limitValueMap.put(500, "500");
+	}
+
+	private ComboBoxItem limitItem;
 
 	private ListGrid grid;
 
@@ -81,9 +99,17 @@ public class LogExplorerFileListPane extends VLayout {
 
 		toolStrip.addFill();
 
+		limitItem = new ComboBoxItem();
+		limitItem.setTitle("Limit");
+		limitItem.setValueMap(limitValueMap);
+		// limitItem.setValidators(new IsIntegerValidator());
+		limitItem.setValue(100);
+		toolStrip.addFormItem(limitItem);
+
 		final ToolStripButton refreshButton = new ToolStripButton();
 		refreshButton.setIcon(REFRESH_ICON);
-		refreshButton.setTooltip(SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_tools_logexplorer_LogExplorerListPane_refreshFileList")));
+		refreshButton.setTooltip(
+				SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_tools_logexplorer_LogExplorerListPane_refreshFileList")));
 		refreshButton.addClickHandler(new ClickHandler() {
 
 			@Override
@@ -93,7 +119,7 @@ public class LogExplorerFileListPane extends VLayout {
 		});
 		toolStrip.addButton(refreshButton);
 
-		grid = new ListGrid(){
+		grid = new MtpListGrid() {
 			@Override
 			protected Canvas createRecordComponent(final ListGridRecord record, Integer colNum) {
 				String fieldName = this.getFieldName(colNum);
@@ -101,7 +127,8 @@ public class LogExplorerFileListPane extends VLayout {
 
 					GridActionImgButton recordCanvas = new GridActionImgButton();
 					recordCanvas.setActionButtonSrc(EXPORT_ICON);
-					recordCanvas.setActionButtonPrompt(SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_tools_logexplorer_LogExplorerListPane_fileDownload")));
+					recordCanvas.setActionButtonPrompt(
+							SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_tools_logexplorer_LogExplorerListPane_fileDownload")));
 					recordCanvas.addActionClickHandler(new ClickHandler() {
 
 						@Override
@@ -119,17 +146,16 @@ public class LogExplorerFileListPane extends VLayout {
 
 		grid.setWidth100();
 		grid.setHeight100();
-		grid.setShowAllRecords(true);
-		grid.setLeaveScrollbarGap(false);	//falseで縦スクロールバー領域が自動表示制御される
 
-		grid.setCanFreezeFields(false);
-		grid.setCanPickFields(false);
-		grid.setCanCollapseGroup(false);
-		grid.setCanGroupBy(false);
-		grid.setCanMultiSort(false);
-		grid.setCanAutoFitFields(false);
-		grid.setShowHeaderMenuButton(false);
+		//ソートを許可
+		grid.setCanSort(true);
 
+		//Filterを許可
+		grid.setShowFilterEditor(true);
+		//正規表現でFilterするため標準の機能を非表示にする
+		grid.setShowFilterEditorHovers(false);
+		grid.setCanShowFilterEditor(false);
+		grid.setAllowFilterOperators(false);
 
 		//この２つを指定することでcreateRecordComponentが有効
 		grid.setShowRecordComponents(true);
@@ -137,19 +163,22 @@ public class LogExplorerFileListPane extends VLayout {
 
 		grid.setInitialSort(new SortSpecifier(FIELD_NAME.SIZE.name(), SortDirection.ASCENDING));
 
-		grid.addDataArrivedHandler(new DataArrivedHandler() {
-
-			@Override
-			public void onDataArrived(DataArrivedEvent event) {
-			}
-		});
-
 		grid.addSortChangedHandler(new SortChangedHandler() {
 
 			@Override
 			public void onSortChanged(SortEvent event) {
-				Criteria dummy = new Criteria("dummy", String.valueOf(System.currentTimeMillis()));
-				grid.fetchData(dummy);
+				// 標準のSort処理を行わず明示的にFetchする
+				fetchGrid(grid.getFilterEditorCriteria());
+			}
+		});
+
+		grid.addFilterEditorSubmitHandler(new FilterEditorSubmitHandler() {
+
+			@Override
+			public void onFilterEditorSubmit(FilterEditorSubmitEvent event) {
+				// 標準のFilter処理を行わず明示的にFetchする
+				event.cancel();
+				fetchGrid(event.getCriteria());
 			}
 		});
 
@@ -157,6 +186,35 @@ public class LogExplorerFileListPane extends VLayout {
 		addMember(grid);
 
 		refreshGrid();
+	}
+
+	/**
+	 * 一覧のFetch処理
+	 *
+	 * @param filter フィルタ条件
+	 */
+	private void fetchGrid(Criteria filter) {
+
+		// サーバーにリクエストが飛ぶように一意の条件を付与
+		Criteria condition = new Criteria("dummy", String.valueOf(System.currentTimeMillis()));
+
+		// Limit指定。未指定または文字列など変換不可の場合は-1
+		if (limitItem.getValueAsInteger() == null) {
+			limitItem.setValue(-1);
+		}
+		condition.addCriteria(LogFileDS.LIMIT, limitItem.getValueAsInteger());
+
+		// 画面上でのフィルタ条件
+		if (filter != null) {
+			Map<?, ?> criteriaMap = filter.getValues();
+			for (Object key : criteriaMap.keySet()) {
+				if (!key.equals("dummy")) {
+					condition.addCriteria((String) key, criteriaMap.get(key));
+				}
+			}
+		}
+
+		grid.fetchData(condition);
 	}
 
 	/**
@@ -171,11 +229,14 @@ public class LogExplorerFileListPane extends VLayout {
 
 		//ボタンを表示したいためListGridFieldを指定
 		ListGridField pathField = new ListGridField(FIELD_NAME.PATH.name(), "Path");
+		pathField.setCanFilter(true);
 		ListGridField lastModifiedField = new ListGridField(FIELD_NAME.LAST_MODIFIED.name(), "Last Modified");
 		lastModifiedField.setWidth(120);
+		lastModifiedField.setCanFilter(true);
 		ListGridField sizeField = new ListGridField(FIELD_NAME.SIZE.name(), "Size");
 		sizeField.setWidth(100);
 		sizeField.setAlign(Alignment.RIGHT);
+		sizeField.setCanFilter(false);
 		sizeField.setCellFormatter(new CellFormatter() {
 			@Override
 			public String format(Object value, ListGridRecord record, int rowNum, int colNum) {
@@ -186,6 +247,7 @@ public class LogExplorerFileListPane extends VLayout {
 		ListGridField downloadField = new ListGridField("download", " ");
 		downloadField.setWidth(25);
 		downloadField.setCanSort(false);
+		downloadField.setCanFilter(false);
 
 		grid.setFields(pathField, lastModifiedField, sizeField, downloadField);
 
@@ -212,9 +274,9 @@ public class LogExplorerFileListPane extends VLayout {
 
 		PostDownloadFrame frame = new PostDownloadFrame();
 		frame.setAction(GWT.getModuleBaseURL() + LogFileDownloadProperty.ACTION_URL)
-			.addParameter(LogFileDownloadProperty.TENANT_ID, String.valueOf(TenantInfoHolder.getId()))
-			.addParameter(LogFileDownloadProperty.TARGET_PATH, fullPath)
-			.execute();
+				.addParameter(LogFileDownloadProperty.TENANT_ID, String.valueOf(TenantInfoHolder.getId()))
+				.addParameter(LogFileDownloadProperty.TARGET_PATH, fullPath)
+				.execute();
 
 	}
 }

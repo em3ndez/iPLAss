@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,10 +26,16 @@ import org.w3c.dom.Node;
 
 public interface ExternalRefPath {
 	List<Node> getNodeList(Document doc);
+
 	String getTagName();
+
 	String getFileExtention(Node node);
+
 	String getTemplateType(Node node);
+
 	boolean isBase64Tag(Node node);
+
 	String getLocaleName(Node node);
+
 	String getSequenceNumber(int index);
 }

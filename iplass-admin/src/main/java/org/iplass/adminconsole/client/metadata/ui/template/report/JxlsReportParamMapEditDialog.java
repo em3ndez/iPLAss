@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -42,10 +42,10 @@ public class JxlsReportParamMapEditDialog extends MtpDialog {
 	private TextItem keyField;
 	private TextItem mapFromField;
 	private CheckboxItem toMapField;
-	
+
 	/** データ変更ハンドラ */
 	private List<DataChangedHandler> handlers = new ArrayList<DataChangedHandler>();
-	
+
 	public JxlsReportParamMapEditDialog() {
 
 		setHeight(200);
@@ -57,7 +57,7 @@ public class JxlsReportParamMapEditDialog extends MtpDialog {
 
 		mapFromField = new MtpTextItem("mapFrom", "Value");
 		SmartGWTUtil.setRequired(mapFromField);
-		
+
 		toMapField = new CheckboxItem("toMap", "To Map (Only for mapping GenericEntity or lists of them)");
 		SmartGWTUtil.addHoverToFormItem(toMapField, AdminClientMessageUtil.getString("ui_metadata_template_report_JxlsReportParamMapEditGrid_toMap"));
 
@@ -70,7 +70,7 @@ public class JxlsReportParamMapEditDialog extends MtpDialog {
 		IButton save = new IButton("OK");
 		save.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
-				if (form.validate()){
+				if (form.validate()) {
 					saveMap();
 				}
 			}

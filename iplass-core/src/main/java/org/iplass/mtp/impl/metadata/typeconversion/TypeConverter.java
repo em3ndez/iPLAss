@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,9 +30,14 @@ import org.iplass.mtp.impl.metadata.MetaDataEntryInfo;
  */
 public interface TypeConverter {
 	public boolean hasFallbackPath(String path);
+
 	public String fallbackPath(String path);
+
 	public boolean isConvertTarget(MetaDataEntry entry);
+
 	public void convert(MetaDataEntry entry);
+
 	public boolean isConvertTarget(MetaDataEntryInfo entryInfo);
+
 	public void convert(MetaDataEntryInfo entryInfo);
 }

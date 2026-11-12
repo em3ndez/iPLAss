@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -56,8 +56,8 @@ public class LookAndFeelMenu extends JMenu {
 						logger.debug("set LookAndFeel :" + info.getName());
 						try {
 							UIManager.setLookAndFeel(info.getClassName());
-							for(Window window: Frame.getWindows()) {
-							    SwingUtilities.updateComponentTreeUI(window);
+							for (Window window : Frame.getWindows()) {
+								SwingUtilities.updateComponentTreeUI(window);
 							}
 						} catch (Exception e1) {
 							e1.printStackTrace();
@@ -67,8 +67,9 @@ public class LookAndFeelMenu extends JMenu {
 				group.add(item);
 
 				add(item);
-				if (UIManager.getSystemLookAndFeelClassName().equals(info.getClassName())) {
-					item.setSelected(true);	//イベント発生せず
+				if (UIManager.getSystemLookAndFeelClassName()
+						.equals(info.getClassName())) {
+					item.setSelected(true); //イベント発生せず
 				}
 			}
 		}

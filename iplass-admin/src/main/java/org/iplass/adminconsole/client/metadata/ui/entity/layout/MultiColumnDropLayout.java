@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -60,7 +60,8 @@ public abstract class MultiColumnDropLayout extends HLayout {
 	 * @param colNum
 	 */
 	public void addElement(Canvas component, int colNum) {
-		cols.get(colNum).addMember(component);
+		cols.get(colNum)
+				.addMember(component);
 	}
 
 	/**

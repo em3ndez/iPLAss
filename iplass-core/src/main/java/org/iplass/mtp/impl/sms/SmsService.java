@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -40,5 +40,6 @@ public interface SmsService extends TypedMetaDataService<MetaSmsMailTemplate, Sm
 	 * @param mail 送信するメール情報
 	 */
 	void sendSmsMail(Tenant tenant, SmsMail sms);
+
 	SmsMail createMail(Tenant tenant);
 }

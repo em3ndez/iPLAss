@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,7 +33,7 @@ public class SearchFormViewAdapter implements SearchFormViewHandler {
 
 	@Override
 	final public void onCreateSearchResult(FormViewEvent event) {
-		onCreateSearchResult((CreateSearchResultEvent)event);
+		onCreateSearchResult((CreateSearchResultEvent) event);
 	}
 
 	/**

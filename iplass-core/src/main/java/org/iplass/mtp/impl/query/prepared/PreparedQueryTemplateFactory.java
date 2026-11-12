@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,10 +21,10 @@
 package org.iplass.mtp.impl.query.prepared;
 
 public class PreparedQueryTemplateFactory {
-	
+
 	//TODO キャッシュ（テナント単位で？）
 	//TODO サービス化？
-	
+
 	public static PreparedQueryTemplate createPreparedQueryTemplate(String queryString) {
 		return new PreparedQueryTemplate(queryString);
 	}

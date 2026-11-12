@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -37,7 +37,7 @@ public class Lesser extends ComparisonPredicate {
 
 	public Lesser() {
 	}
-	
+
 	public Lesser(String propertyName, Object valueLiteral) {
 		super(propertyName, valueLiteral);
 	}
@@ -63,10 +63,9 @@ public class Lesser extends ComparisonPredicate {
 	protected String getOpString() {
 		return "<";
 	}
+
 	public ASTNode accept(ASTTransformer transformer) {
 		return transformer.visit(this);
 	}
-
-	
 
 }

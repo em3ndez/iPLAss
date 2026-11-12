@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -46,14 +46,14 @@ import org.iplass.mtp.webapi.definition.RequestType;
  *
  */
 @WebApi(
-		name=SetPreviewDateTimeCommand.WEBAPI_NAME,
-		accepts=RequestType.REST_JSON,
-		methods=MethodType.POST,
-		restJson=@RestJson(parameterName="param"),
-		results=SetPreviewDateTimeCommand.KEY_DATE_TIME,
-		checkXRequestedWithHeader=true
-	)
-@CommandClass(name="gem/preview/SetPreviewDateTimeCommand", displayName="プレビュー日時変更")
+		name = SetPreviewDateTimeCommand.WEBAPI_NAME,
+		accepts = RequestType.REST_JSON,
+		methods = MethodType.POST,
+		restJson = @RestJson(parameterName = "param"),
+		results = SetPreviewDateTimeCommand.KEY_DATE_TIME,
+		checkXRequestedWithHeader = true
+)
+@CommandClass(name = "gem/preview/SetPreviewDateTimeCommand", displayName = "プレビュー日時変更")
 public final class SetPreviewDateTimeCommand implements Command {
 
 	public static final String WEBAPI_NAME = "gem/preview/setPreviewDateTime";

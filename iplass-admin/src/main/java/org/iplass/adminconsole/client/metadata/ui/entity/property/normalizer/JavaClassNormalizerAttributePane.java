@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -57,8 +57,8 @@ public class JavaClassNormalizerAttributePane extends NormalizerAttributePane {
 	@Override
 	public void setDefinition(NormalizerDefinition definition) {
 		if (definition instanceof JavaClassNormalizer) {
-			txtClassName.setValue(((JavaClassNormalizer)definition).getClassName());
-			chkBindAsArray.setValue(((JavaClassNormalizer)definition).isAsArray());
+			txtClassName.setValue(((JavaClassNormalizer) definition).getClassName());
+			chkBindAsArray.setValue(((JavaClassNormalizer) definition).isAsArray());
 		} else {
 			form.clearValues();
 		}

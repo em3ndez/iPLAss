@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -56,14 +56,17 @@ import org.slf4j.Logger;
 
 /**
  * 詳細画面用コマンドのスーパークラス
+ * 
  * <pre>
  * 本クラスはマルチテナント基盤用の基底コマンドです。
  * 予告なくインターフェースが変わる可能性があるため、
  * 継承は出来る限り行わないでください。
  * </pre>
+ * 
  * @author lis3wg
  */
-public abstract class RegistrationCommandBase<T extends RegistrationCommandContext, V extends PropertyBase> implements Command {
+public abstract class RegistrationCommandBase<T extends RegistrationCommandContext, V extends PropertyBase>
+		implements Command {
 
 	/** EntityDefinitionManager */
 	protected EntityDefinitionManager edm = null;
@@ -80,13 +83,17 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 	 * コンストラクタ
 	 */
 	public RegistrationCommandBase() {
-		edm = ManagerLocator.getInstance().getManager(EntityDefinitionManager.class);
-		evm = ManagerLocator.getInstance().getManager(EntityViewManager.class);
-		em = ManagerLocator.getInstance().getManager(EntityManager.class);
+		edm = ManagerLocator.getInstance()
+				.getManager(EntityDefinitionManager.class);
+		evm = ManagerLocator.getInstance()
+				.getManager(EntityViewManager.class);
+		em = ManagerLocator.getInstance()
+				.getManager(EntityManager.class);
 	}
 
 	/**
 	 * コンテキストを取得します。
+	 * 
 	 * @param request リクエスト
 	 * @return コンテキスト
 	 */
@@ -94,30 +101,34 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 
 	/**
 	 * Entityをロードします。
-	 * @param context コンテキスト
-	 * @param oid OID
-	 * @param version データのバージョン
-	 * @param defName Entity定義名
+	 * 
+	 * @param context    コンテキスト
+	 * @param oid        OID
+	 * @param version    データのバージョン
+	 * @param defName    Entity定義名
 	 * @param loadOption ロード時のオプション
-	 * @param type ロード処理の種類
+	 * @param type       ロード処理の種類
 	 * @return Entity
 	 */
 	protected Entity loadEntity(T context, final String oid, final Long version, final String defName,
 			LoadOption loadOption, LoadType type) {
 		Entity e = null;
 		if (oid != null) {
-			final LoadEntityContext leContext = context.getLoadEntityInterrupterHandler().beforeLoadEntity(defName, loadOption, type);
+			final LoadEntityContext leContext = context.getLoadEntityInterrupterHandler()
+					.beforeLoadEntity(defName,
+							loadOption, type);
 			if (leContext.isDoPrivileged()) {
-				//特権実行
+				// 特権実行
 				e = AuthContext.doPrivileged(() -> {
-					//データ取得
-					return em.load(oid, version ,defName, leContext.getLoadOption());
+					// データ取得
+					return em.load(oid, version, defName, leContext.getLoadOption());
 				});
 			} else {
-				//データ取得
-				e = em.load(oid, version ,defName, leContext.getLoadOption());
+				// データ取得
+				e = em.load(oid, version, defName, leContext.getLoadOption());
 			}
-			context.getLoadEntityInterrupterHandler().afterLoadEntity(e, loadOption, type);
+			context.getLoadEntityInterrupterHandler()
+					.afterLoadEntity(e, loadOption, type);
 		}
 		return e;
 	}
@@ -125,41 +136,48 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 	/**
 	 * 画面表示用のEntityをロードします。
 	 *
-	 * @param context コンテキスト
-	 * @param oid OID
-	 * @param version データのバージョン
-	 * @param defName Entity定義名
+	 * @param context        コンテキスト
+	 * @param oid            OID
+	 * @param version        データのバージョン
+	 * @param defName        Entity定義名
 	 * @param loadReferences ロードする参照プロパティ
+	 * @param loadVersioned  バージョン検索するか
 	 * @return Entity
 	 */
-	protected Entity loadViewEntity(T context, String oid, Long version, String defName, List<String> loadReferences) {
-		return loadEntity(context, oid, version, defName, new LoadOption(loadReferences), LoadType.VIEW);
+	protected Entity loadViewEntity(T context, String oid, Long version, String defName, List<String> loadReferences,
+			boolean loadVersioned) {
+		LoadOption option = new LoadOption(loadReferences);
+		option.setVersioned(loadVersioned);
+		return loadEntity(context, oid, version, defName, option, LoadType.VIEW);
 	}
 
 	/**
-	 * 更新処理時の対象Entityをロードします。
-	 * 更新Entity生成時に表示判定のためのバインド用です。
+	 * 更新処理時の対象Entityをロードします。 更新Entity生成時に表示判定のためのバインド用です。
 	 *
-	 * @param context コンテキスト
-	 * @param oid OID
-	 * @param version データのバージョン
-	 * @param defName Entity定義名
+	 * @param context        コンテキスト
+	 * @param oid            OID
+	 * @param version        データのバージョン
+	 * @param defName        Entity定義名
 	 * @param loadReferences ロードする参照プロパティ
+	 * @param loadVersioned  バージョン検索するか
 	 * @return Entity
 	 */
-	protected Entity loadBeforeUpdateEntity(T context, String oid, Long version, String defName, List<String> loadReferences) {
-		return loadEntity(context, oid, version, defName, new LoadOption(loadReferences), LoadType.BEFORE_UPDATE);
+	protected Entity loadBeforeUpdateEntity(T context, String oid, Long version, String defName,
+			List<String> loadReferences, boolean loadVersioned) {
+		LoadOption option = new LoadOption(loadReferences);
+		option.setVersioned(loadVersioned);
+		return loadEntity(context, oid, version, defName, option, LoadType.BEFORE_UPDATE);
 	}
 
 	/**
-	 * ロックユーザを取得します。
+	 * ロックユーザーを取得します。
 	 *
 	 * @param target ロック対象Entity
-	 * @return ロックユーザ
+	 * @return ロックユーザー
 	 */
 	protected Entity getLockedByUser(Entity target) {
 		if (target.getLockedBy() != null) {
-			Entity user = em.load(target.getLockedBy(), null ,User.DEFINITION_NAME, new LoadOption(false, false));
+			Entity user = em.load(target.getLockedBy(), null, User.DEFINITION_NAME, new LoadOption(false, false));
 			return user;
 		}
 		return null;
@@ -167,19 +185,22 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 
 	/**
 	 * 更新処理のEntityをロードします。
-	 * @param context コンテキスト
-	 * @param entity Entity
+	 * 
+	 * @param context    コンテキスト
+	 * @param entity     Entity
 	 * @param loadOption ロード時のオプション
 	 * @return Entity
 	 */
 	private Entity loadUpdateEntity(T context, Entity entity, LoadOption loadOption) {
-		return loadEntity(context, entity.getOid(), entity.getVersion(), entity.getDefinitionName(), loadOption, LoadType.UPDATE);
+		return loadEntity(context, entity.getOid(), entity.getVersion(), entity.getDefinitionName(), loadOption,
+				LoadType.UPDATE);
 	}
 
 	/**
 	 * Entityを更新します。
+	 * 
 	 * @param context コンテキスト
-	 * @param entity 画面で入力したデータ
+	 * @param entity  画面で入力したデータ
 	 * @return 更新結果
 	 */
 	protected EditResult updateEntity(T context, Entity entity) {
@@ -187,21 +208,24 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 		List<ValidateError> errors = new ArrayList<>();
 		context.setAttribute(Constants.VALID_ERROR_LIST, errors);
 		try {
-			//参照型の登録
-			Entity loadEntity = loadUpdateEntity(context, entity, new LoadOption(true, context.hasUpdatableMappedByReference()));
+			// 参照型の登録
+			Entity loadEntity = loadUpdateEntity(context, entity,
+					new LoadOption(true, context.hasUpdatableMappedByReference()));
 			errors.addAll(beforeRegistRefEntity(context, entity, loadEntity));
 
-			//カスタム登録前処理
-			errors.addAll(context.getRegistrationInterrupterHandler().beforeRegist(entity, RegistrationType.UPDATE));
+			// カスタム登録前処理
+			errors.addAll(context.getRegistrationInterrupterHandler()
+					.beforeRegister(entity, RegistrationType.UPDATE));
 
-			//本データの更新
+			// 本データの更新
 			errors.addAll(update(context, entity));
 
-			//被参照の参照型の登録
+			// 被参照の参照型の登録
 			errors.addAll(afterRegistRefEntity(context, entity, loadEntity));
 
-			//カスタム登録後処理
-			errors.addAll(context.getRegistrationInterrupterHandler().afterRegist(entity, RegistrationType.UPDATE));
+			// カスタム登録後処理
+			errors.addAll(context.getRegistrationInterrupterHandler()
+					.afterRegister(entity, RegistrationType.UPDATE));
 
 			if (errors.isEmpty()) {
 				ret.setResultType(ResultType.SUCCESS);
@@ -229,22 +253,26 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 
 	/**
 	 * Entityを更新します。
+	 * 
 	 * @param context コンテキスト
-	 * @param entity 画面で入力したデータ
+	 * @param entity  画面で入力したデータ
 	 * @return 入力エラーリスト
 	 */
 	@SuppressWarnings("unchecked")
 	private List<ValidateError> update(T context, Entity entity) {
 		List<ValidateError> errors = new ArrayList<>();
 
-		//画面に表示してるものだけ更新
+		// 画面に表示してるものだけ更新
 		List<String> updatePropNames = new ArrayList<>();
 		List<V> propList = context.getUpdateProperty();
 		for (V prop : propList) {
-			if (!context.getRegistrationPropertyBaseHandler().isDispProperty(prop)) continue;
+			if (!context.getRegistrationPropertyBaseHandler()
+					.isDispProperty(prop)) {
+				continue;
+			}
 			PropertyDefinition pd = context.getProperty(prop.getPropertyName());
 			if (pd != null && pd.isUpdatable()) {
-				//被参照は更新しない
+				// 被参照は更新しない
 				if (pd instanceof ReferenceProperty) {
 					String mappedBy = ((ReferenceProperty) pd).getMappedBy();
 					if (mappedBy == null || mappedBy.isEmpty()) {
@@ -256,20 +284,40 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 			}
 		}
 
-		TargetVersion targetVersion = TargetVersion.CURRENT_VALID;
+		TargetVersion targetVersion = null;
 		if (context.isVersioned()) {
-			//バージョン番号更新かそのまま更新か
+			// バージョン番号更新かそのまま更新か
 			if (context.isNewVersion()) {
 				targetVersion = TargetVersion.NEW;
 			} else {
+				// 強制的に最新バージョンを指定するかをチェック（下位互換対応）
+				if (context.isLoadLatestVersionedEntity()) {
+					// 旧型式のSPECIFICを指定
+					targetVersion = TargetVersion.SPECIFIC;
+				} else {
+					// バージョン指定か
+					if (context.isLoadVersioned()) {
+						targetVersion = TargetVersion.SPECIFIC;
+					} else {
+						targetVersion = TargetVersion.CURRENT_VALID;
+					}
+				}
+			}
+		} else {
+			// 保存時バージョン指定か
+			if (context.isLoadVersioned()) {
 				targetVersion = TargetVersion.SPECIFIC;
+			} else {
+				targetVersion = TargetVersion.CURRENT_VALID;
 			}
 		}
 
 		List<ValidateError> occurredErrors = (List<ValidateError>) context.getAttribute(Constants.VALID_ERROR_LIST);
 		if (occurredErrors.isEmpty()) {
 			UpdateOption option = new UpdateOption(true, targetVersion);
-			option.setUpdateProperties(context.getRegistrationInterrupterHandler().getAdditionalProperties(updatePropNames));
+			option.setUpdateProperties(
+					context.getRegistrationInterrupterHandler()
+							.getAdditionalProperties(updatePropNames));
 			option.setPurgeCompositionedEntity(context.isPurgeCompositionedEntity());
 			option.setLocalized(context.isLocalizationData());
 			option.setForceUpdate(context.isForceUpadte());
@@ -283,7 +331,7 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 				errors.addAll(e.getValidateResults());
 			}
 		} else {
-			//既にエラーが発生してたら入力チェックのみ実施
+			// 既にエラーが発生してたら入力チェックのみ実施
 			ValidateResult vr = em.validate(entity, updatePropNames);
 			if (vr != null && vr.hasError()) {
 				errors.addAll(vr.getErrors());
@@ -294,18 +342,20 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 
 	/**
 	 * UpdateOptionのチェックを行う。
+	 * 
 	 * @param context コンテキスト
-	 * @param option 更新する際のオプション
+	 * @param option  更新する際のオプション
 	 */
-	protected void checkUpdateOption(T context, UpdateOption option){
+	protected void checkUpdateOption(T context, UpdateOption option) {
 		// デフォルトでは何もしない。必要に応じてサブクラスでオーバーライドする
 
 	}
 
 	/**
 	 * Entityを追加します。
+	 * 
 	 * @param context コンテキスト
-	 * @param entity 画面で入力したデータ
+	 * @param entity  画面で入力したデータ
 	 * @return 追加結果
 	 */
 	protected EditResult insertEntity(T context, Entity entity) {
@@ -313,20 +363,23 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 		List<ValidateError> errors = new ArrayList<>();
 		context.setAttribute(Constants.VALID_ERROR_LIST, errors);
 		try {
-			//参照型の登録
+			// 参照型の登録
 			errors.addAll(beforeRegistRefEntity(context, entity, null));
 
-			//カスタム登録前処理
-			errors.addAll(context.getRegistrationInterrupterHandler().beforeRegist(entity, RegistrationType.INSERT));
+			// カスタム登録前処理
+			errors.addAll(context.getRegistrationInterrupterHandler()
+					.beforeRegister(entity, RegistrationType.INSERT));
 
-			//本データの追加
+			// 本データの追加
 			errors.addAll(insert(context, entity));
 
-			//被参照の参照型の登録、新規で登録したデータなので被参照はいない→ロード対象から外す
-			errors.addAll(afterRegistRefEntity(context, entity, loadUpdateEntity(context, entity, new LoadOption(true, false))));
+			// 被参照の参照型の登録、新規で登録したデータなので被参照はいない→ロード対象から外す
+			errors.addAll(afterRegistRefEntity(context, entity,
+					loadUpdateEntity(context, entity, new LoadOption(true, false))));
 
-			//カスタム登録後処理
-			errors.addAll(context.getRegistrationInterrupterHandler().afterRegist(entity, RegistrationType.INSERT));
+			// カスタム登録後処理
+			errors.addAll(context.getRegistrationInterrupterHandler()
+					.afterRegister(entity, RegistrationType.INSERT));
 
 			if (errors.isEmpty()) {
 				ret.setResultType(ResultType.SUCCESS);
@@ -355,6 +408,7 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 
 	/**
 	 * Entityを追加します。
+	 * 
 	 * @param entity 画面で入力したデータ
 	 * @return 入力エラーリスト
 	 */
@@ -366,7 +420,8 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 		if (occurredErrors.isEmpty()) {
 			try {
 				InsertOption option = new InsertOption();
-				option.setLocalized(context.getView().isLocalizationData());
+				option.setLocalized(context.getView()
+						.isLocalizationData());
 				em.insert(entity, option);
 			} catch (EntityValidationException e) {
 				if (getLogger().isDebugEnabled()) {
@@ -375,7 +430,7 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 				errors.addAll(e.getValidateResults());
 			}
 		} else {
-			//既にエラーが発生してたら入力チェックのみ実施
+			// 既にエラーが発生してたら入力チェックのみ実施
 			ValidateResult vr = em.validate(entity);
 			if (vr != null && vr.hasError()) {
 				errors.addAll(vr.getErrors());
@@ -386,12 +441,16 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 
 	/**
 	 * 登録・更新失敗時のロールバックを行います。
+	 * 
 	 * @param context コンテキスト
-	 * @param entity 画面で入力したデータ
+	 * @param entity  画面で入力したデータ
 	 */
 	private void rollBack(T context, Entity entity) {
 		// ロールバックフラグON
-		ManagerLocator.getInstance().getManager(TransactionManager.class).currentTransaction().setRollbackOnly();
+		ManagerLocator.getInstance()
+				.getManager(TransactionManager.class)
+				.currentTransaction()
+				.setRollbackOnly();
 
 		// OIDリセット
 		resetOid(context, entity);
@@ -399,8 +458,9 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 
 	/**
 	 * ロールバック時に参照EntityのOIDをリセットします。
+	 * 
 	 * @param context コンテキスト
-	 * @param entity 画面で入力したデータ
+	 * @param entity  画面で入力したデータ
 	 */
 	private void resetOid(T context, Entity entity) {
 		// 参照型で新規追加されたものからOIDを削除する
@@ -413,7 +473,7 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 						Boolean deleteOidFlag = rEntity.getValue(Constants.DELETE_OID_FLAG);
 						if (deleteOidFlag != null && deleteOidFlag) {
 							rEntity.setOid(null);
-							resetAutoNumber(rEntity, (ReferenceProperty)pd);
+							resetAutoNumber(rEntity, (ReferenceProperty) pd);
 						}
 					} else if (val instanceof Entity[]) {
 						Entity[] rEntities = (Entity[]) val;
@@ -421,7 +481,7 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 							Boolean deleteOidFlag = rEntity.getValue(Constants.DELETE_OID_FLAG);
 							if (deleteOidFlag != null && deleteOidFlag) {
 								rEntity.setOid(null);
-								resetAutoNumber(rEntity, (ReferenceProperty)pd);
+								resetAutoNumber(rEntity, (ReferenceProperty) pd);
 							}
 						}
 					}
@@ -434,7 +494,7 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 	 * ロールバック時に参照EntityのAutoNumberプロパティをリセットします。
 	 *
 	 * @param entity 参照Entity
-	 * @param rp ReferenceProperty
+	 * @param rp     ReferenceProperty
 	 */
 	private void resetAutoNumber(Entity entity, ReferenceProperty rp) {
 		EntityDefinition ned = edm.get(rp.getObjectDefinitionName());
@@ -447,8 +507,9 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 
 	/**
 	 * 本データ登録前の参照データ登録処理を行います。
-	 * @param context コンテキスト
-	 * @param entity 画面で入力したデータ
+	 * 
+	 * @param context      コンテキスト
+	 * @param entity       画面で入力したデータ
 	 * @param loadedEntity ロードしたデータ
 	 * @return 入力エラーリスト
 	 */
@@ -461,8 +522,9 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 
 	/**
 	 * 本データ登録後の参照データ(被参照)登録処理を行います。
-	 * @param context コンテキスト
-	 * @param entity 画面で入力したデータ
+	 * 
+	 * @param context      コンテキスト
+	 * @param entity       画面で入力したデータ
 	 * @param loadedEntity ロードしたデータ
 	 * @return 入力エラーリスト
 	 */
@@ -475,6 +537,7 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 
 	/**
 	 * 編集結果
+	 * 
 	 * @author lis3wg
 	 */
 	protected class EditResult {
@@ -494,6 +557,7 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 
 		/**
 		 * 結果を取得します。
+		 * 
 		 * @return 結果
 		 */
 		public ResultType getResultType() {
@@ -502,6 +566,7 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 
 		/**
 		 * 結果を設定します。
+		 * 
 		 * @param resultType 結果
 		 */
 		public void setResultType(ResultType resultType) {
@@ -510,6 +575,7 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 
 		/**
 		 * 入力エラーを取得します。
+		 * 
 		 * @return 入力エラー
 		 */
 		public ValidateError[] getErrors() {
@@ -518,6 +584,7 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 
 		/**
 		 * 入力エラーを設定します。
+		 * 
 		 * @param errors 入力エラー
 		 */
 		public void setErrors(ValidateError[] errors) {
@@ -526,6 +593,7 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 
 		/**
 		 * エラーメッセージを取得します。
+		 * 
 		 * @return エラーメッセージ
 		 */
 		public String getMessage() {
@@ -534,6 +602,7 @@ public abstract class RegistrationCommandBase<T extends RegistrationCommandConte
 
 		/**
 		 * エラーメッセージを設定します。
+		 * 
 		 * @param message エラーメッセージ
 		 */
 		public void setMessage(String message) {

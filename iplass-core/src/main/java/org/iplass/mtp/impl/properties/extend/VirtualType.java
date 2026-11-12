@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,13 +29,14 @@ public abstract class VirtualType extends ExtendType {
 	private static final long serialVersionUID = -7322533318695639725L;
 
 	public abstract ValueExpression translate(EntityField field);
-	
+
 	@Override
 	public boolean isCompatibleTo(PropertyType another) {
 		return equals(another);
 	}
-	
+
 	public abstract Object toVirtualTypeValue(Object value, PrimitivePropertyHandler ph);
+
 	public abstract Object[] newVirtualTypeArray(int size);
 
 }

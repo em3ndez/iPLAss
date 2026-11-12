@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -39,30 +39,39 @@ public class LocalizedStaticResourceInfo implements Definition {
 	public String getName() {
 		return name;
 	}
+
 	public void setName(String name) {
 		this.name = name;
 	}
+
 	public String getLocaleName() {
 		return localeName;
 	}
+
 	public void setLocaleName(String localeName) {
 		this.localeName = localeName;
 	}
+
 	public String getBinaryName() {
 		return binaryName;
 	}
+
 	public void setBinaryName(String binaryName) {
 		this.binaryName = binaryName;
 	}
+
 	public String getStoredBinaryName() {
 		return storedBinaryName;
 	}
+
 	public void setStoredBinaryName(String storedBinaryName) {
 		this.storedBinaryName = storedBinaryName;
 	}
+
 	public FileType getFileType() {
 		return fileType;
 	}
+
 	public void setFileType(FileType fileType) {
 		this.fileType = fileType;
 	}

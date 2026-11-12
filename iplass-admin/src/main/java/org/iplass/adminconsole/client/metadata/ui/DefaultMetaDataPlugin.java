@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -49,7 +49,6 @@ import com.smartgwt.client.widgets.menu.events.ClickHandler;
 import com.smartgwt.client.widgets.menu.events.MenuItemClickEvent;
 import com.smartgwt.client.widgets.tab.Tab;
 import com.smartgwt.client.widgets.tree.TreeNode;
-
 
 public abstract class DefaultMetaDataPlugin extends DefaultAdminPlugin implements MetaDataPlugin {
 
@@ -175,7 +174,19 @@ public abstract class DefaultMetaDataPlugin extends DefaultAdminPlugin implement
 	@Override
 	public AdminMenuTreeNode createPluginRootNode() {
 		rootNode = new AdminMenuTreeNode(nodeName(), nodeIcon(), nodeTypeRoot());
+		rootNode.setTitle(rootNodeDisplayName());
 		return rootNode;
+	}
+
+	/**
+	 * ルートノードの表示名を指定したい場合にカスタマイズしてください。
+	 * アルファベット以外の文字を利用する場合などを想定しています。
+	 * デフォルトではnodeNameを設定します。
+	 *
+	 * @return ルートノードの表示名
+	 */
+	protected String rootNodeDisplayName() {
+		return nodeName();
 	}
 
 	/**
@@ -188,8 +199,8 @@ public abstract class DefaultMetaDataPlugin extends DefaultAdminPlugin implement
 	 */
 	@Override
 	public void onNodeDoubleClick(AdminMenuTreeNode node) {
-		if (isNodeTypeItem(node)){
-			addTab((MetaDataItemMenuTreeNode)node);
+		if (isNodeTypeItem(node)) {
+			addTab((MetaDataItemMenuTreeNode) node);
 		}
 	}
 
@@ -204,21 +215,21 @@ public abstract class DefaultMetaDataPlugin extends DefaultAdminPlugin implement
 	@Override
 	public void onNodeContextClick(final AdminMenuTreeNode node) {
 
-
-
-		if (isNodeTypeRoot(node)){
+		if (isNodeTypeRoot(node)) {
 
 			if (rootContextMenu == null) {
 				rootContextMenu = new Menu();
 
-				MenuItem newMenuItem = new MenuItem(rs("ui_metadata_DefaultMetaDataPluginManager_create", nodeDisplayName()), MetaDataConstants.CONTEXT_MENU_ICON_ADD);
+				MenuItem newMenuItem = new MenuItem(rs("ui_metadata_DefaultMetaDataPluginManager_create", nodeDisplayName()),
+						MetaDataConstants.CONTEXT_MENU_ICON_ADD);
 				newMenuItem.addClickHandler(new ClickHandler() {
 					@Override
 					public void onClick(MenuItemClickEvent event) {
 						itemCreateAction("");
 					}
 				});
-				MenuItem refreshMenuItem = new MenuItem(rs("ui_metadata_DefaultMetaDataPluginManager_refreshMetadataList"), MetaDataConstants.CONTEXT_MENU_ICON_REFRESH);
+				MenuItem refreshMenuItem = new MenuItem(rs("ui_metadata_DefaultMetaDataPluginManager_refreshMetadataList"),
+						MetaDataConstants.CONTEXT_MENU_ICON_REFRESH);
 				refreshMenuItem.addClickHandler(new ClickHandler() {
 					@Override
 					public void onClick(MenuItemClickEvent event) {
@@ -238,14 +249,16 @@ public abstract class DefaultMetaDataPlugin extends DefaultAdminPlugin implement
 
 			//nodeを参照するため毎回作り直し
 
-			MenuItem newMenuItem = new MenuItem(rs("ui_metadata_DefaultMetaDataPluginManager_create", nodeDisplayName()), MetaDataConstants.CONTEXT_MENU_ICON_ADD);
+			MenuItem newMenuItem = new MenuItem(rs("ui_metadata_DefaultMetaDataPluginManager_create", nodeDisplayName()),
+					MetaDataConstants.CONTEXT_MENU_ICON_ADD);
 			newMenuItem.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(MenuItemClickEvent event) {
 					itemCreateAction(getFolderPath(node));
 				}
 			});
-			MenuItem refreshMenuItem = new MenuItem(rs("ui_metadata_DefaultMetaDataPluginManager_refreshMetadataList"), MetaDataConstants.CONTEXT_MENU_ICON_REFRESH);
+			MenuItem refreshMenuItem = new MenuItem(rs("ui_metadata_DefaultMetaDataPluginManager_refreshMetadataList"),
+					MetaDataConstants.CONTEXT_MENU_ICON_REFRESH);
 			refreshMenuItem.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(MenuItemClickEvent event) {
@@ -270,36 +283,39 @@ public abstract class DefaultMetaDataPlugin extends DefaultAdminPlugin implement
 			editItem.addClickHandler(new com.smartgwt.client.widgets.menu.events.ClickHandler() {
 				@Override
 				public void onClick(MenuItemClickEvent event) {
-					itemOpenAction((MetaDataItemMenuTreeNode)node);
+					itemOpenAction((MetaDataItemMenuTreeNode) node);
 				}
 			});
 
 			// 右クリックメニュー項目2
-			MenuItem renameItem = new MenuItem(rs("ui_metadata_DefaultMetaDataPluginManager_rename", nodeDisplayName()), MetaDataConstants.CONTEXT_MENU_ICON_RENAME);
+			MenuItem renameItem = new MenuItem(rs("ui_metadata_DefaultMetaDataPluginManager_rename", nodeDisplayName()),
+					MetaDataConstants.CONTEXT_MENU_ICON_RENAME);
 			renameItem.addClickHandler(new com.smartgwt.client.widgets.menu.events.ClickHandler() {
 				@Override
 				public void onClick(MenuItemClickEvent event) {
-					itemRenameAction((MetaDataItemMenuTreeNode)node);
+					itemRenameAction((MetaDataItemMenuTreeNode) node);
 				}
 			});
-			renameItem.setEnabled(((MetaDataItemMenuTreeNode)node).isCanRename());
+			renameItem.setEnabled(((MetaDataItemMenuTreeNode) node).isCanRename());
 
 			// 右クリックメニュー項目3
-			MenuItem deleteItem = new MenuItem(rs("ui_metadata_DefaultMetaDataPluginManager_delete", nodeDisplayName()), MetaDataConstants.CONTEXT_MENU_ICON_DEL);
+			MenuItem deleteItem = new MenuItem(rs("ui_metadata_DefaultMetaDataPluginManager_delete", nodeDisplayName()),
+					MetaDataConstants.CONTEXT_MENU_ICON_DEL);
 			deleteItem.addClickHandler(new com.smartgwt.client.widgets.menu.events.ClickHandler() {
 				@Override
 				public void onClick(MenuItemClickEvent event) {
-					itemDeleteAction((MetaDataItemMenuTreeNode)node);
+					itemDeleteAction((MetaDataItemMenuTreeNode) node);
 				}
 			});
-			deleteItem.setEnabled(((MetaDataItemMenuTreeNode)node).isCanDelete());
+			deleteItem.setEnabled(((MetaDataItemMenuTreeNode) node).isCanDelete());
 
 			// 右クリックメニュー項目4
-			MenuItem copyItem = new MenuItem(rs("ui_metadata_DefaultMetaDataPluginManager_copy", nodeDisplayName()), MetaDataConstants.CONTEXT_MENU_ICON_COPY);
+			MenuItem copyItem = new MenuItem(rs("ui_metadata_DefaultMetaDataPluginManager_copy", nodeDisplayName()),
+					MetaDataConstants.CONTEXT_MENU_ICON_COPY);
 			copyItem.addClickHandler(new com.smartgwt.client.widgets.menu.events.ClickHandler() {
 				@Override
 				public void onClick(MenuItemClickEvent event) {
-					itemCopyAction((MetaDataItemMenuTreeNode)node);
+					itemCopyAction((MetaDataItemMenuTreeNode) node);
 				}
 			});
 
@@ -319,7 +335,7 @@ public abstract class DefaultMetaDataPlugin extends DefaultAdminPlugin implement
 	 */
 	@Override
 	public void onFolderOpened(AdminMenuTreeNode node) {
-		if (isNodeTypeRoot(node) && !isInitializeNode){
+		if (isNodeTypeRoot(node) && !isInitializeNode) {
 			searchMetaNode();
 			tree.openFolder(node);
 		}
@@ -408,11 +424,12 @@ public abstract class DefaultMetaDataPlugin extends DefaultAdminPlugin implement
 	 * @param event {@link ContentSelectedEvent}
 	 */
 	@Override
-	public void onContentSelected(ContentSelectedEvent event){
+	public void onContentSelected(ContentSelectedEvent event) {
 		Class<?>[] contentsClasses = workspaceContentsPaneClass();
 		if (contentsClasses != null) {
 			for (Class<?> contentsClass : contentsClasses) {
-				if (contentsClass == event.getSource().getClass()) {
+				if (contentsClass == event.getSource()
+						.getClass()) {
 					selectDefNameNode(event.getDefinitionName(), null);
 				}
 			}
@@ -433,7 +450,8 @@ public abstract class DefaultMetaDataPlugin extends DefaultAdminPlugin implement
 	 */
 	@Override
 	public boolean isEditSupportMetaData(ViewMetaDataEvent event) {
-		return event.getDefinitionClassName().equals(definitionClassName());
+		return event.getDefinitionClassName()
+				.equals(definitionClassName());
 	}
 
 	protected void showEditPaneOnViewMetaDataEvent(ViewMetaDataEvent event) {
@@ -500,7 +518,7 @@ public abstract class DefaultMetaDataPlugin extends DefaultAdminPlugin implement
 				//フォルダ要素
 				entries[i] = createChildNode(child);
 				//entries[i].setChildren(convertNode(grid, parent, child));
-				tree.add(entries[i], parent);	//node.setChildrenだとツリーのIndentがうまくいかない。treeに対して操作する
+				tree.add(entries[i], parent); //node.setChildrenだとツリーのIndentがうまくいかない。treeに対して操作する
 				convertNode(entries[i], child);
 				i++;
 			}
@@ -538,7 +556,7 @@ public abstract class DefaultMetaDataPlugin extends DefaultAdminPlugin implement
 	protected MetaDataItemMenuTreeNode createItemNode(MetaDataInfo item) {
 		MetaDataItemMenuTreeNode itemNode = new MetaDataItemMenuTreeNode(item.getName(), item.getPath(),
 				getItemIcon(item), nodeTypeItem(),
-				item.isShared() ,item.isSharedOverwrite(),
+				item.isShared(), item.isSharedOverwrite(),
 				item.isSharable(), item.isOverwritable(), item.isDataSharable(), item.isPermissionSharable());
 		itemNode.setDefinitionClassName(item.getDefinitionClassName());
 		return itemNode;
@@ -627,13 +645,13 @@ public abstract class DefaultMetaDataPlugin extends DefaultAdminPlugin implement
 		SC.ask(rs("ui_metadata_DefaultMetaDataPluginManager_deleteConfirm"),
 				rs("ui_metadata_DefaultMetaDataPluginManager_deleteConfirm2", nodeDisplayName(), itemNode.getName()), new BooleanCallback() {
 
-			@Override
-			public void execute(Boolean value) {
-				if(value) {
-					itemDelete(itemNode);
-				}
-			}
-		});
+					@Override
+					public void execute(Boolean value) {
+						if (value) {
+							itemDelete(itemNode);
+						}
+					}
+				});
 	}
 
 	/**
@@ -650,7 +668,7 @@ public abstract class DefaultMetaDataPlugin extends DefaultAdminPlugin implement
 			SC.ask(rs("ui_metadata_DefaultMetaDataPluginManager_renameCloseEditPaneConfirm"), new BooleanCallback() {
 				@Override
 				public void execute(Boolean value) {
-					if(value) {
+					if (value) {
 						removeTab(itemNode);
 
 						openRenameDialog(itemNode);
@@ -668,7 +686,8 @@ public abstract class DefaultMetaDataPlugin extends DefaultAdminPlugin implement
 	 * @param itemNode 選択Node
 	 */
 	protected void openRenameDialog(final MetaDataItemMenuTreeNode itemNode) {
-		final MetaDataRenameDialog dialog = new MetaDataRenameDialog(definitionClassName(), nodeDisplayName(), itemNode.getDefName(), isPathSlash(), isNameAcceptPeriod());
+		final MetaDataRenameDialog dialog = new MetaDataRenameDialog(definitionClassName(), nodeDisplayName(), itemNode.getDefName(), isPathSlash(),
+				isNameAcceptPeriod());
 		dialog.addDataChangeHandler(new DataChangedHandler() {
 
 			@Override
@@ -687,7 +706,7 @@ public abstract class DefaultMetaDataPlugin extends DefaultAdminPlugin implement
 	 * @param itemNode 選択Node
 	 */
 	protected void addTab(MetaDataItemMenuTreeNode itemNode) {
-		workspace.addTab(itemNode.getDefName(), nodeIcon(), nodeName() , workSpaceContents(itemNode));
+		workspace.addTab(itemNode.getDefName(), nodeIcon(), nodeName(), workSpaceContents(itemNode));
 	}
 
 	/**
@@ -725,7 +744,7 @@ public abstract class DefaultMetaDataPlugin extends DefaultAdminPlugin implement
 				GWT.log("error!", caught);
 				SC.say(rs("ui_metadata_DefaultMetaDataPluginManager_failed"),
 						rs("ui_metadata_DefaultMetaDataPluginManager_failedToGetScreenInfo")
-						+ caught.getMessage());
+								+ caught.getMessage());
 			}
 		});
 	}
@@ -757,6 +776,7 @@ public abstract class DefaultMetaDataPlugin extends DefaultAdminPlugin implement
 	protected String nodeTypeRoot() {
 		return nodeName() + NODE_TYPE_ROOT_SUFFIX;
 	}
+
 	/**
 	 * <p>ルートノードかを判定します。</p>
 	 *
@@ -775,6 +795,7 @@ public abstract class DefaultMetaDataPlugin extends DefaultAdminPlugin implement
 	protected String nodeTypeFolder() {
 		return nodeName() + NODE_TYPE_FOLDER_SUFFIX;
 	}
+
 	/**
 	 * <p>フォルダノードかを判定します。</p>
 	 *
@@ -793,6 +814,7 @@ public abstract class DefaultMetaDataPlugin extends DefaultAdminPlugin implement
 	protected String nodeTypeItem() {
 		return nodeName() + NODE_TYPE_ITEM_SUFFIX;
 	}
+
 	/**
 	 * <p>アイテムノードかを判定します。</p>
 	 *
@@ -863,7 +885,7 @@ public abstract class DefaultMetaDataPlugin extends DefaultAdminPlugin implement
 		TreeNode target = null;
 		for (TreeNode node : allNodes) {
 			if (node instanceof MetaDataItemMenuTreeNode) {
-				if (defName.equals(((MetaDataItemMenuTreeNode)node).getDefName())) {
+				if (defName.equals(((MetaDataItemMenuTreeNode) node).getDefName())) {
 					target = node;
 					break;
 				}
@@ -878,9 +900,10 @@ public abstract class DefaultMetaDataPlugin extends DefaultAdminPlugin implement
 
 			if (callback != null) {
 				if (target instanceof MetaDataItemMenuTreeNode) {
-					callback.onSuccess((MetaDataItemMenuTreeNode)target);
+					callback.onSuccess((MetaDataItemMenuTreeNode) target);
 				} else {
-					GWT.log("doSelectDefNameNode's target is not MetaDataItemMenuTreeNode. class=" + target.getClass().getName());
+					GWT.log("doSelectDefNameNode's target is not MetaDataItemMenuTreeNode. class=" + target.getClass()
+							.getName());
 				}
 			}
 		}

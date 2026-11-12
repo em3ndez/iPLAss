@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 <%@ page import="java.util.ArrayList" %>
 <%@ page import="java.util.List" %>
@@ -35,6 +35,7 @@
 <%@ page import="org.iplass.mtp.view.generic.editor.SelectPropertyEditor.SelectDisplayType"%>
 <%@ page import="org.iplass.mtp.web.template.TemplateUtil" %>
 <%@ page import="org.iplass.gem.command.Constants"%>
+<%@ page import="org.iplass.gem.command.ViewUtil" %>
 
 <%!
 	EditorValue getValue(SelectPropertyEditor editor, SelectValue value, List<LocalizedSelectValueDefinition> localeValueList, List<SelectValue> selectValueList) {
@@ -75,6 +76,20 @@
 		}
 		return values;
 	}
+
+	List<EditorValue> getLabelValues(SelectPropertyEditor editor, Object value, PropertyDefinition pd, List<SelectValue> selectValueList, List<LocalizedSelectValueDefinition> localeValueList) {
+		List<EditorValue> values = new ArrayList<EditorValue>();
+		SelectValue[] array = value instanceof SelectValue[] ? (SelectValue[]) value : null;
+		if (array != null) {
+			for (SelectValue tmp : array) {
+				EditorValue ev = getValue(editor, tmp, localeValueList, selectValueList);
+				if (ev != null) {
+					values.add(ev);
+				}
+			}
+		}
+		return values;
+	}
 %>
 
 <%
@@ -95,8 +110,19 @@
 
 	String propName = editor.getPropertyName();
 
+	boolean isMultiple = pd.getMultiplicity() != 1;
+
 	//タイプ毎に出力内容かえる
 	List<EditorValue> values = getValues(editor, propValue, pd, selectValueList, localeValueList);
+
+	// 自動補完があるラベルの場合は、表示に必要な情報をセットする
+	if (ViewUtil.isAutocompletionTarget() 
+			&& (editor.getDisplayType() == SelectDisplayType.LABEL
+				|| editor.getDisplayType() == SelectDisplayType.HIDDEN)) {
+		SelectValue[] selectValueArray = new SelectValue[selectValueList.size()];
+		List<EditorValue> autocompletionEditorValues = getLabelValues(editor, selectValueList.toArray(selectValueArray), pd, selectValueList, localeValueList);
+		request.setAttribute(Constants.AUTOCOMPLETION_EDITOR_VALUES, autocompletionEditorValues);
+	}
 
 	if (editor.getDisplayType() != SelectDisplayType.HIDDEN) {
 		//カスタムスタイル
@@ -112,7 +138,7 @@
 			}
 		}
 %>
-<ul class="data-label" style="<c:out value="<%=customStyle %>"/>">
+<ul name="data-label-<c:out value="<%=propName %>"/>" class="data-label" style="<c:out value="<%=customStyle %>"/>">
 <%
 		for (EditorValue tmp : values) {
 			String style = tmp.getStyle() != null ? tmp.getStyle() : "";
@@ -134,9 +160,26 @@
 <%
 	} else {
 		//HIDDEN
-		for (EditorValue tmp : values) {
+		if (isMultiple) {
+			//複数
 %>
-<input type="hidden" name="<c:out value="<%=propName%>"/>" value="<c:out value="<%=tmp.getValue()%>"/>" />
+<ul name="data-hidden-<c:out value="<%=propName %>"/>">
+<%
+			for (EditorValue editorValue : values) {
+%>
+<li>
+<input type="hidden" name="<c:out value="<%=propName%>"/>" value="<c:out value="<%=editorValue.getValue()%>"/>" />
+</li>
+<%
+			}
+%>
+</ul>
+<%
+		} else {
+			//単一
+			String strHidden = values != null && values.size() > 0 ? values.get(0).getValue() : "";
+%>
+<input type="hidden" name="<c:out value="<%=propName %>"/>" value="<c:out value="<%=strHidden %>"/>" />
 <%
 		}
 	}

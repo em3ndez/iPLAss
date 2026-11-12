@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,11 +26,10 @@ import java.sql.Statement;
 import org.iplass.mtp.impl.entity.property.MetaProperty;
 import org.iplass.mtp.impl.rdb.adapter.RdbAdapter;
 
-
 public class DelProperty extends Diff {
-	
+
 	private MetaProperty deletedProperty;
-	
+
 	public DelProperty(MetaProperty deletedProperty) {
 		this.deletedProperty = deletedProperty;
 	}

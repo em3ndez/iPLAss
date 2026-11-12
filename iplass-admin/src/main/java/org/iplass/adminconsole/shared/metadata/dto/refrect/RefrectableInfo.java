@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,15 +29,19 @@ public class RefrectableInfo implements Serializable {
 	private static final long serialVersionUID = -6530626842022603933L;
 	private Refrectable value;
 	private Map<String, Serializable> valueMap;
+
 	public Refrectable getValue() {
 		return value;
 	}
+
 	public void setValue(Refrectable value) {
 		this.value = value;
 	}
+
 	public Map<String, Serializable> getValueMap() {
 		return valueMap;
 	}
+
 	public void setValueMap(Map<String, Serializable> valueMap) {
 		this.valueMap = valueMap;
 	}

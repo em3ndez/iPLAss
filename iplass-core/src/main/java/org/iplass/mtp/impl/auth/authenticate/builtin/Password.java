@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,7 +28,7 @@ public class Password {
 	private final String convertedPassword;
 	private final String salt;
 	private final Timestamp updateDate;
-	
+
 	public Password(int tenantId, String uid, String convertedPassword,
 			String salt, Timestamp updateDate) {
 		super();
@@ -38,21 +38,25 @@ public class Password {
 		this.salt = salt;
 		this.updateDate = updateDate;
 	}
-	
+
 	public int getTenantId() {
 		return tenantId;
 	}
+
 	public String getUid() {
 		return uid;
 	}
+
 	public String getConvertedPassword() {
 		return convertedPassword;
 	}
+
 	public String getSalt() {
 		return salt;
 	}
+
 	public Timestamp getUpdateDate() {
 		return updateDate;
 	}
-	
+
 }

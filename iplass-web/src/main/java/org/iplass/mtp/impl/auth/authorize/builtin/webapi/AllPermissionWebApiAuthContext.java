@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -39,11 +39,11 @@ class AllPermissionWebApiAuthContext implements WebApiAuthContext {
 		if (withAnonymous) {
 			return true;
 		} else {
-			if(user.getUserContext() instanceof AnonymousUserContext){
+			if (user.getUserContext() instanceof AnonymousUserContext) {
 				return false;
-			}else if(user.getUserContext() instanceof TemporaryUserContext){
+			} else if (user.getUserContext() instanceof TemporaryUserContext) {
 				return false;
-			}else{
+			} else {
 				return true;
 			}
 		}

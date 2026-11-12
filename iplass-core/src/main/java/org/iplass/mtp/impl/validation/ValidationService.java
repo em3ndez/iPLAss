@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,8 +20,6 @@
 
 package org.iplass.mtp.impl.validation;
 
-import javax.validation.Validator;
-
 import org.iplass.mtp.entity.definition.ValidationDefinition;
 import org.iplass.mtp.entity.definition.validations.BinarySizeValidation;
 import org.iplass.mtp.entity.definition.validations.BinaryTypeValidation;
@@ -36,12 +34,13 @@ import org.iplass.mtp.impl.validation.bean.BeanValidationConfig;
 import org.iplass.mtp.spi.Config;
 import org.iplass.mtp.spi.Service;
 
+import jakarta.validation.Validator;
+
 public class ValidationService implements Service {
 
 	private BeanValidationConfig beanValidation;
 
 	private Validator validator;
-
 
 	//TODO MetaDataRepository内の定義を取得する
 
@@ -107,7 +106,8 @@ public class ValidationService implements Service {
 		// TODO Auto-generated method stub
 		beanValidation = config.getValue("beanValidation", BeanValidationConfig.class);
 		if (beanValidation != null) {
-			validator = beanValidation.getValidatorFactory().getValidator();
+			validator = beanValidation.getValidatorFactory()
+					.getValidator();
 		}
 
 	}

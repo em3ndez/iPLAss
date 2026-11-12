@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,6 +20,7 @@
 
 package org.iplass.adminconsole.client.tools.ui.entityexplorer;
 
+import org.iplass.adminconsole.client.base.screen.ScreenModuleBasedUIFactoryHolder;
 import org.iplass.adminconsole.client.base.tenant.TenantInfoHolder;
 import org.iplass.adminconsole.client.tools.ui.entityexplorer.crawl.EntityCrawlMainPane;
 import org.iplass.adminconsole.client.tools.ui.entityexplorer.defrag.EntityDefragMainPane;
@@ -40,6 +41,9 @@ public class EntityExplorerMainPaneControllerImpl implements EntityExplorerMainP
 	@Override
 	public void setupSubModuleTab(EntityExplorerMainPane owner, TabSet tabSet) {
 
+		ScreenModuleBasedUIFactoryHolder.getFactory()
+				.createEntityExplorerViewPaneController()
+				.setupSubModuleTab(owner, tabSet);
 		setupCrawlList(owner, tabSet);
 		setupDefragList(owner, tabSet);
 		setupRecycleBinList(owner, tabSet);
@@ -68,7 +72,7 @@ public class EntityExplorerMainPaneControllerImpl implements EntityExplorerMainP
 
 			@Override
 			public void onFailure(Throwable caught) {
-				SC.say("failed","An error occurred in full-text search configuration loading." + caught.getMessage());
+				SC.say("failed", "An error occurred in full-text search configuration loading." + caught.getMessage());
 				GWT.log(caught.toString(), caught);
 			}
 

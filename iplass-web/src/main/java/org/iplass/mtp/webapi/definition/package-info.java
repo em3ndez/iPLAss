@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -18,10 +18,10 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-@javax.xml.bind.annotation.XmlSchema(
-	namespace="http://mtp.iplass.org/xml/definition/webapi",
-	xmlns={
-		@javax.xml.bind.annotation.XmlNs(namespaceURI="http://mtp.iplass.org/xml/definition/webapi", prefix="def-webapi")
-	}
+@jakarta.xml.bind.annotation.XmlSchema(
+		namespace = "http://mtp.iplass.org/xml/definition/webapi",
+		xmlns = {
+				@jakarta.xml.bind.annotation.XmlNs(namespaceURI = "http://mtp.iplass.org/xml/definition/webapi", prefix = "def-webapi")
+		}
 )
 package org.iplass.mtp.webapi.definition;

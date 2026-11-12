@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,13 +20,13 @@
 
 package org.iplass.mtp.view.top.parts;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
 
 /**
  * テンプレート系のパーツ
  * @author lis3wg
  */
-@XmlSeeAlso({CalendarParts.class, EntityListParts.class, LastLoginParts.class, TreeViewParts.class})
+@XmlSeeAlso({ CalendarParts.class, EntityListParts.class, LastLoginParts.class, TreeViewParts.class })
 public class TemplateParts extends TopViewContentParts {
 
 	/** SerialVersionUID */
@@ -40,7 +40,7 @@ public class TemplateParts extends TopViewContentParts {
 	 * @return テンプレートパス
 	 */
 	public String getTemplatePath() {
-	    return templatePath;
+		return templatePath;
 	}
 
 	/**
@@ -48,6 +48,6 @@ public class TemplateParts extends TopViewContentParts {
 	 * @param templatePath テンプレートパス
 	 */
 	public void setTemplatePath(String templatePath) {
-	    this.templatePath = templatePath;
+		this.templatePath = templatePath;
 	}
 }

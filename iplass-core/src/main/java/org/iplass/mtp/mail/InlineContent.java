@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,30 +20,33 @@
 
 package org.iplass.mtp.mail;
 
-import javax.activation.DataHandler;
+import jakarta.activation.DataHandler;
 
 public class InlineContent {
 
 	private String contentId;
 	private DataHandler dataHandler;
-	
+
 	public InlineContent() {
 	}
-	
+
 	public InlineContent(String contentId, DataHandler dataHandler) {
 		this.contentId = contentId;
 		this.dataHandler = dataHandler;
 	}
-	
+
 	public DataHandler getDataHandler() {
 		return dataHandler;
 	}
+
 	public void setDataHandler(DataHandler dataHandler) {
 		this.dataHandler = dataHandler;
 	}
+
 	public String getContentId() {
 		return contentId;
 	}
+
 	public void setContentId(String contentId) {
 		this.contentId = contentId;
 	}

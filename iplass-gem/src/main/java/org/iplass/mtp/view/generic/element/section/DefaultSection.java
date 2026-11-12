@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,17 +23,16 @@ package org.iplass.mtp.view.generic.element.section;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-
 import org.iplass.adminconsole.annotation.MultiLang;
 import org.iplass.adminconsole.view.annotation.InputType;
 import org.iplass.adminconsole.view.annotation.MetaFieldInfo;
-import org.iplass.mtp.definition.LocalizedStringDefinition;
 import org.iplass.mtp.view.generic.Jsp;
 import org.iplass.mtp.view.generic.Jsps;
 import org.iplass.mtp.view.generic.ViewConst;
 import org.iplass.mtp.view.generic.element.Element;
+
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
 
 /**
  * 標準セクション
@@ -41,104 +40,77 @@ import org.iplass.mtp.view.generic.element.Element;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @Jsps({
-	@Jsp(path="/jsp/gem/generic/element/section/DefaultSection.jsp", key=ViewConst.DESIGN_TYPE_GEM)
+		@Jsp(path = "/jsp/gem/generic/element/section/DefaultSection.jsp", key = ViewConst.DESIGN_TYPE_GEM)
 })
 public class DefaultSection extends Section {
 
 	/** シリアルバージョンUID */
 	private static final long serialVersionUID = 8895232754105370651L;
 
+	/** dispBorderInSectionのデフォルト設定 */
+	@Deprecated
+	private static boolean defaultDispBorderInSection;
+
+	static {
+		// システムプロパティorデフォルトtrueで初期化
+		String value = System.getProperty("mtp.generic.dispBorderInSection", "true");
+		defaultDispBorderInSection = Boolean.parseBoolean(value);
+	}
+
 	/** 詳細編集非表示設定 */
 	@MetaFieldInfo(
-			displayName="詳細編集非表示設定",
-			displayNameKey="generic_element_section_DefaultSection_hideDetailDisplaNameKey",
-			inputType=InputType.CHECKBOX,
-			displayOrder=200,
-			description="詳細編集で非表示にするかを設定します。",
-			descriptionKey="generic_element_section_DefaultSection_hideDetailDescriptionKey"
+			displayName = "詳細編集非表示設定",
+			displayNameKey = "generic_element_section_DefaultSection_hideDetailDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 200,
+			description = "詳細編集で非表示にするかを設定します。",
+			descriptionKey = "generic_element_section_DefaultSection_hideDetailDescriptionKey"
 	)
 	private boolean hideDetail;
 
 	/** 詳細表示非表示設定 */
 	@MetaFieldInfo(
-			displayName="詳細表示非表示設定",
-			displayNameKey="generic_element_section_DefaultSection_hideViewDisplaNameKey",
-			inputType=InputType.CHECKBOX,
-			displayOrder=210,
-			description="詳細表示で非表示にするかを設定します。",
-			descriptionKey="generic_element_section_DefaultSection_hideViewDescriptionKey"
+			displayName = "詳細表示非表示設定",
+			displayNameKey = "generic_element_section_DefaultSection_hideViewDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 210,
+			description = "詳細表示で非表示にするかを設定します。",
+			descriptionKey = "generic_element_section_DefaultSection_hideViewDescriptionKey"
 	)
 	private boolean hideView;
 
-
-
-
-	/** タイトル */
+	/** セクション内に配置した場合に枠線を表示 */
 	@MetaFieldInfo(
-			displayName="タイトル",
-			displayNameKey="generic_element_section_DefaultSection_titleDisplaNameKey",
-			description="セクションのタイトルを設定します。",
-			descriptionKey="generic_element_section_DefaultSection_titleDescriptionKey",
-			inputType=InputType.MULTI_LANG,
-			multiLangField = "localizedTitleList",
-			displayOrder=300
+			displayName = "セクション内に配置した場合に枠線を表示",
+			displayNameKey = "generic_element_section_DefaultSection_dispBorderInSectionDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			description = "セクション内に配置した場合に枠線を表示するかを指定します。",
+			displayOrder = 400,
+			descriptionKey = "generic_element_section_DefaultSection_dispBorderInSectionDescriptionKey"
 	)
-	@MultiLang()
-	private String title;
-
-	/** 多言語設定情報 */
-	@MetaFieldInfo(
-			displayName="多言語設定",
-			displayNameKey="generic_element_section_DefaultSection_localizedTitleListDisplaNameKey",
-			inputType=InputType.MULTI_LANG_LIST,
-			displayOrder=310
-	)
-	private List<LocalizedStringDefinition> localizedTitleList;
-
-	/** クラス名 */
-	@MetaFieldInfo(
-			displayName="クラス名",
-			displayNameKey="generic_element_section_DefaultSection_styleDisplaNameKey",
-			description="スタイルシートのクラス名を指定します。複数指定する場合は半角スペースで区切ってください。",
-			descriptionKey="generic_element_section_DefaultSection_styleDescriptionKey",
-			displayOrder=320
-	)
-	private String style;
-
-	/** id */
-	@MetaFieldInfo(
-			displayName="id",
-			displayNameKey="generic_element_section_DefaultSection_idDisplaNameKey",
-			displayOrder=400,
-			description="画面上で一意となるIDを設定してください。",
-			descriptionKey="generic_element_section_DefaultSection_idDescriptionKey"
-	)
-	private String id;
+	private boolean dispBorderInSection = defaultDispBorderInSection;
 
 	/** セクションの展開可否 */
 	@MetaFieldInfo(
-			displayName="初期表示時に展開",
-			displayNameKey="generic_element_section_DefaultSection_expandableDisplaNameKey",
-			inputType=InputType.CHECKBOX,
-			displayOrder=410,
-			description="セクションを初期展開するかを指定します。",
-			descriptionKey="generic_element_section_DefaultSection_expandableDescriptionKey"
+			displayName = "初期表示時に展開",
+			displayNameKey = "generic_element_section_DefaultSection_expandableDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 410,
+			description = "セクションを初期展開するかを指定します。",
+			descriptionKey = "generic_element_section_DefaultSection_expandableDescriptionKey"
 	)
 	private boolean expandable;
 
 	/** リンクを表示するか */
 	@MetaFieldInfo(
-			displayName="リンクを表示するか",
-			displayNameKey="generic_element_section_DefaultSection_showLinkDisplaNameKey",
-			inputType=InputType.CHECKBOX,
-			displayOrder=420,
-			description="詳細画面でのページ内リンクを表示するかを指定します。",
-			descriptionKey="generic_element_section_DefaultSection_showLinkDescriptionKey"
+			displayName = "リンクを表示するか",
+			displayNameKey = "generic_element_section_DefaultSection_showLinkDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 420,
+			description = "詳細画面でのページ内リンクを表示するかを指定します。",
+			descriptionKey = "generic_element_section_DefaultSection_showLinkDescriptionKey"
 	)
 	private boolean showLink;
-
-
-
 
 	/** エレメント情報 */
 	@MultiLang(isMultiLangValue = false)
@@ -146,42 +118,42 @@ public class DefaultSection extends Section {
 
 	/** 列数 */
 	@MetaFieldInfo(
-			displayName="列数",
-			displayNameKey="generic_element_section_DefaultSection_colNumDisplaNameKey",
-			inputType=InputType.NUMBER,
-			rangeCheck=true,
-			minRange=1,
+			displayName = "列数",
+			displayNameKey = "generic_element_section_DefaultSection_colNumDisplayNameKey",
+			inputType = InputType.NUMBER,
+			rangeCheck = true,
+			minRange = 1,
 //			maxRange=2,
-			displayOrder=1000,
-			description="セクションの列数を指定します。<br>" +
+			displayOrder = 1000,
+			description = "セクションの列数を指定します。<br>" +
 					"なお、3列以上指定する場合は、レイアウトが崩れる可能性があるため注意してください。",
-			descriptionKey="generic_element_section_DefaultSection_colNumDescriptionKey"
+			descriptionKey = "generic_element_section_DefaultSection_colNumDescriptionKey"
 	)
 	private int colNum;
 
 	/** 上部のコンテンツ */
 	@MetaFieldInfo(
-			displayName="上部のコンテンツ",
-			displayNameKey="generic_element_section_DefaultSection_upperContentsDisplaNameKey",
-			description="セクションの上部に表示するコンテンツを設定します。<br>" +
+			displayName = "上部のコンテンツ",
+			displayNameKey = "generic_element_section_DefaultSection_upperContentsDisplayNameKey",
+			description = "セクションの上部に表示するコンテンツを設定します。<br>" +
 					"コンテンツの内容にHTMLタグを利用することも可能です。",
-			descriptionKey="generic_element_section_DefaultSection_upperContentsDescriptionKey",
-			inputType=InputType.SCRIPT,
-			mode="groovytemplate",
-			displayOrder=1010
+			descriptionKey = "generic_element_section_DefaultSection_upperContentsDescriptionKey",
+			inputType = InputType.SCRIPT,
+			mode = "groovytemplate",
+			displayOrder = 1010
 	)
 	private String upperContents;
 
 	/** 下部のコンテンツ */
 	@MetaFieldInfo(
-			displayName="下部のコンテンツ",
-			displayNameKey="generic_element_section_DefaultSection_lowerContentsDisplaNameKey",
-			description="セクションの下部に表示するコンテンツを設定します。<br>" +
+			displayName = "下部のコンテンツ",
+			displayNameKey = "generic_element_section_DefaultSection_lowerContentsDisplayNameKey",
+			description = "セクションの下部に表示するコンテンツを設定します。<br>" +
 					"コンテンツの内容にHTMLタグを利用することも可能です。",
-			descriptionKey="generic_element_section_DefaultSection_lowerContentsDescriptionKey",
-			inputType=InputType.SCRIPT,
-			mode="groovytemplate",
-			displayOrder=1020
+			descriptionKey = "generic_element_section_DefaultSection_lowerContentsDescriptionKey",
+			inputType = InputType.SCRIPT,
+			mode = "groovytemplate",
+			displayOrder = 1020
 	)
 	private String lowerContents;
 
@@ -198,19 +170,51 @@ public class DefaultSection extends Section {
 	}
 
 	/**
-	 * タイトルを取得します。
-	 * @return タイトル
+	 * 詳細編集非表示設定を取得します。
+	 * @return 詳細編集非表示設定
 	 */
-	public String getTitle() {
-		return title;
+	public boolean isHideDetail() {
+		return hideDetail;
 	}
 
 	/**
-	 * タイトルを設定します。
-	 * @return タイトル
+	 * 詳細編集非表示設定を設定します。
+	 * @param hideDetail 詳細編集非表示設定
 	 */
-	public void setTitle(String title) {
-		this.title = title;
+	public void setHideDetail(boolean hideDetail) {
+		this.hideDetail = hideDetail;
+	}
+
+	/**
+	 * 詳細表示非表示設定を取得します。
+	 * @return 詳細表示非表示設定
+	 */
+	public boolean isHideView() {
+		return hideView;
+	}
+
+	/**
+	 * 詳細表示非表示設定を設定します。
+	 * @param hideView 詳細表示非表示設定
+	 */
+	public void setHideView(boolean hideView) {
+		this.hideView = hideView;
+	}
+
+	/**
+	 * セクション内に配置した場合に枠線を表示を取得します。
+	 * @return セクション内に配置した場合に枠線を表示
+	 */
+	public boolean isDispBorderInSection() {
+		return dispBorderInSection;
+	}
+
+	/**
+	 * セクション内に配置した場合に枠線を表示を設定します。
+	 * @param dispBorderInSection セクション内に配置した場合に枠線を表示
+	 */
+	public void setDispBorderInSection(boolean dispBorderInSection) {
+		this.dispBorderInSection = dispBorderInSection;
 	}
 
 	/**
@@ -230,35 +234,19 @@ public class DefaultSection extends Section {
 	}
 
 	/**
-	 * idを取得します。
-	 * @return id
+	 * リンクを表示するかを取得します。
+	 * @return リンクを表示するか
 	 */
-	public String getId() {
-		return id;
+	public boolean isShowLink() {
+		return showLink;
 	}
 
 	/**
-	 * idを設定します。
-	 * @param id id
+	 * リンクを表示するかを設定します。
+	 * @param showLink リンクを表示するか
 	 */
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	/**
-	 * クラス名を取得します。
-	 * @return クラス名
-	 */
-	public String getStyle() {
-		return style;
-	}
-
-	/**
-	 * クラス名を設定します。
-	 * @param style クラス名
-	 */
-	public void setStyle(String style) {
-		this.style = style;
+	public void setShowLink(boolean showLink) {
+		this.showLink = showLink;
 	}
 
 	/**
@@ -266,7 +254,8 @@ public class DefaultSection extends Section {
 	 * @return エレメント情報
 	 */
 	public List<Element> getElements() {
-		if (this.elements == null) this.elements = new ArrayList<Element>();
+		if (this.elements == null)
+			this.elements = new ArrayList<Element>();
 		return elements;
 	}
 
@@ -276,6 +265,14 @@ public class DefaultSection extends Section {
 	 */
 	public void setElements(List<Element> properties) {
 		this.elements = properties;
+	}
+
+	/**
+	 * エレメント情報を追加します。
+	 * @param val エレメント情報
+	 */
+	public void addElement(Element val) {
+		getElements().add(val);
 	}
 
 	/**
@@ -295,95 +292,11 @@ public class DefaultSection extends Section {
 	}
 
 	/**
-	 * リンクを表示するかを取得します。
-	 * @return リンクを表示するか
-	 */
-	public boolean isShowLink() {
-	    return showLink;
-	}
-
-	/**
-	 * リンクを表示するかを設定します。
-	 * @param showLink リンクを表示するか
-	 */
-	public void setShowLink(boolean showLink) {
-	    this.showLink = showLink;
-	}
-
-	/**
-	 * 詳細編集非表示設定を取得します。
-	 * @return 詳細編集非表示設定
-	 */
-	public boolean isHideDetail() {
-	    return hideDetail;
-	}
-
-	/**
-	 * 詳細編集非表示設定を設定します。
-	 * @param hideDetail 詳細編集非表示設定
-	 */
-	public void setHideDetail(boolean hideDetail) {
-	    this.hideDetail = hideDetail;
-	}
-
-	/**
-	 * 詳細表示非表示設定を取得します。
-	 * @return 詳細表示非表示設定
-	 */
-	public boolean isHideView() {
-	    return hideView;
-	}
-
-	/**
-	 * 詳細表示非表示設定を設定します。
-	 * @param hideView 詳細表示非表示設定
-	 */
-	public void setHideView(boolean hideView) {
-	    this.hideView = hideView;
-	}
-
-	/**
-	 * エレメント情報を追加します。
-	 * @param val エレメント情報
-	 */
-	public void addElement(Element val) {
-		getElements().add(val);
-	}
-
-	/**
-	 * 多言語設定情報を取得します。
-	 * @return リスト
-	 */
-	public List<LocalizedStringDefinition> getLocalizedTitleList() {
-		return localizedTitleList;
-	}
-
-	/**
-	 * 多言語設定情報を設定します。
-	 * @param リスト
-	 */
-	public void setLocalizedTitleList(List<LocalizedStringDefinition> localizedTitleList) {
-		this.localizedTitleList = localizedTitleList;
-	}
-
-	/**
-	 * 多言語設定情報を追加します。
-	 * @param 多言語設定情報
-	 */
-	public void addLocalizedTitle(LocalizedStringDefinition localizedTitle) {
-		if (localizedTitleList == null) {
-			localizedTitleList = new ArrayList<LocalizedStringDefinition>();
-		}
-
-		localizedTitleList.add(localizedTitle);
-	}
-
-	/**
 	 * 上部のコンテンツを取得します。
 	 * @return 上部のコンテンツ
 	 */
 	public String getUpperContents() {
-	    return upperContents;
+		return upperContents;
 	}
 
 	/**
@@ -391,7 +304,7 @@ public class DefaultSection extends Section {
 	 * @param upperContents 上部のコンテンツ
 	 */
 	public void setUpperContents(String upperContents) {
-	    this.upperContents = upperContents;
+		this.upperContents = upperContents;
 	}
 
 	/**
@@ -399,7 +312,7 @@ public class DefaultSection extends Section {
 	 * @return 下部のコンテンツ
 	 */
 	public String getLowerContents() {
-	    return lowerContents;
+		return lowerContents;
 	}
 
 	/**
@@ -407,7 +320,7 @@ public class DefaultSection extends Section {
 	 * @param lowerContents 下部のコンテンツ
 	 */
 	public void setLowerContents(String lowerContents) {
-	    this.lowerContents = lowerContents;
+		this.lowerContents = lowerContents;
 	}
 
 	/**

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,8 +20,6 @@
 
 package org.iplass.mtp.impl.view.top.parts;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
-
 import org.iplass.mtp.impl.metadata.MetaData;
 import org.iplass.mtp.impl.view.top.TopViewHandler;
 import org.iplass.mtp.view.top.parts.ApplicationMaintenanceParts;
@@ -33,17 +31,22 @@ import org.iplass.mtp.view.top.parts.TopViewContentParts;
 import org.iplass.mtp.view.top.parts.TopViewParts;
 import org.iplass.mtp.view.top.parts.UserMaintenanceParts;
 
+import jakarta.xml.bind.annotation.XmlSeeAlso;
+
 /**
  * TOP画面パーツ
  * @author lis3wg
  */
-@XmlSeeAlso({MetaTopViewContentParts.class, MetaScriptParts.class, MetaUserMaintenanceParts.class,
-	MetaFulltextSearchViewParts.class, MetaCsvDownloadSettingsParts.class,
-	MetaApplicationMaintenanceParts.class, MetaPreviewDateParts.class})
+@XmlSeeAlso({ MetaTopViewContentParts.class, MetaScriptParts.class, MetaUserMaintenanceParts.class,
+		MetaFulltextSearchViewParts.class, MetaCsvDownloadSettingsParts.class,
+		MetaApplicationMaintenanceParts.class, MetaPreviewDateParts.class })
 public abstract class MetaTopViewParts implements MetaData {
 
 	/** SerialVersionUID */
 	private static final long serialVersionUID = 329805942769537467L;
+
+	/** パーツID */
+	private String partsId;
 
 	/**
 	 * インスタンスを生成します。
@@ -51,7 +54,8 @@ public abstract class MetaTopViewParts implements MetaData {
 	 * @return インスタンス
 	 */
 	public static MetaTopViewParts createInstance(TopViewParts parts) {
-		if (parts == null) return null;
+		if (parts == null)
+			return null;
 		if (parts instanceof TopViewContentParts) {
 			return MetaTopViewContentParts.createInstance(parts);
 		} else if (parts instanceof ScriptParts) {
@@ -70,11 +74,60 @@ public abstract class MetaTopViewParts implements MetaData {
 		return null;
 	}
 
+	/** 最大高さ */
+	private Integer maxHeight;
+
+	/**
+	 * パーツIDを設定します
+	 * @param partsId パーツID
+	 */
+	public void setPartsId(String partsId) {
+		this.partsId = partsId;
+	}
+
+	/**
+	 * パーツIDを取得します
+	 * @return パーツID
+	 */
+	public String getPartsId() {
+		return partsId;
+	}
+
+	/**
+	 * パーツIDを生成するかどうか
+	 * <p>
+	 * デフォルトでは {@code false} を返します。サブクラスでパーツIDを自動生成したい場合はこのメソッドをオーバーライドして {@code true} を返してください。
+	 * パーツIDを自動生成する必要がない場合は、オーバーライド不要です。
+	 * </p>
+	 * @return パーツIDを自動生成する場合は {@code true}、それ以外は {@code false}
+	 */
+	public boolean generatePartsId() {
+		return false;
+	}
+
+	/**
+	 * 最大高さを取得します。
+	 * @return 最大高さ
+	 */
+	public Integer getMaxHeight() {
+		return maxHeight;
+	}
+
+	/**
+	 * 最大高さを設定します。
+	 * @param maxHeight 最大高さ
+	 */
+	public void setMaxHeight(Integer maxHeight) {
+		this.maxHeight = maxHeight;
+	}
+
 	/**
 	 * 定義の内容を自身に設定します。
 	 * @param parts 定義
 	 */
 	protected void fillFrom(TopViewParts parts) {
+		this.maxHeight = parts.getMaxHeight();
+		this.partsId = parts.getPartsId();
 	}
 
 	/**
@@ -88,6 +141,8 @@ public abstract class MetaTopViewParts implements MetaData {
 	 * @param parts 定義
 	 */
 	protected void fillTo(TopViewParts parts) {
+		parts.setPartsId(partsId);
+		parts.setMaxHeight(this.maxHeight);
 	}
 
 	/**

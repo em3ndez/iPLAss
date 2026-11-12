@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright 2012 DENTSU SOKEN INC. All Rights Reserved.
  */
 
 package org.iplass.mtp.tools.batch.crypt;
@@ -15,13 +15,14 @@ import java.nio.file.Paths;
 import java.util.Properties;
 
 import org.iplass.mtp.impl.core.config.BootstrapProps;
+import org.iplass.mtp.impl.core.config.DefaultPropertyValueCoder;
 import org.iplass.mtp.impl.core.config.PropertyValueCoder;
 
 public class Encoder {
-	
-	
+
 	private static Properties getProperties() throws IOException {
-		String fileName = BootstrapProps.getInstance().getProperty(BootstrapProps.CRYPT_CONFIG_FILE_NAME);
+		String fileName = BootstrapProps.getInstance()
+				.getProperty(BootstrapProps.CRYPT_CONFIG_FILE_NAME);
 		if (fileName != null) {
 			Properties prop = new Properties();
 			Path path = Paths.get(fileName);
@@ -36,9 +37,9 @@ public class Encoder {
 				try (InputStream is = PropertyValueCoder.class.getResourceAsStream(fileName)) {
 					if (is == null) {
 						System.err.println("CryptConfigFile:" + fileName + " not found.");
-						
+
 					}
-					
+
 					InputStreamReader isr = new InputStreamReader(is, "utf-8");
 					prop.load(isr);
 				}
@@ -64,43 +65,19 @@ public class Encoder {
 	 * @param args
 	 */
 	public static void main(String[] args) throws Exception {
-		
-		Properties prop = getProperties();
-		
-		String keyAlg = prop.getProperty(PropertyValueCoder.KEY_ALGORITHM, PropertyValueCoder.DEFAULT_KEY_ALGORITHM);
-		int keyLength = PropertyValueCoder.DEFAULT_KEY_LENGTH;
-		if (prop.getProperty(PropertyValueCoder.KEY_LENGTH) != null) {
-			keyLength = Integer.parseInt(prop.getProperty(PropertyValueCoder.KEY_LENGTH));
-		}
-		String cipherAlg = prop.getProperty(PropertyValueCoder.CIPHER_ALGORITHM, PropertyValueCoder.DEFAULT_CIPHER_ALGORITHM);
-		byte[] keySalt = null;
-		if (prop.getProperty(PropertyValueCoder.KEY_SALT) != null) {
-			keySalt = prop.getProperty(PropertyValueCoder.KEY_SALT).getBytes("utf-8");
-		}
-		int keyStretch = PropertyValueCoder.DEFAULT_STRETCH;
-		if (prop.getProperty(PropertyValueCoder.KEY_STRETCH) != null) {
-			keyStretch = Integer.parseInt(prop.getProperty(PropertyValueCoder.KEY_STRETCH));
-		}
-		
-		PropertyValueCoder coder = new PropertyValueCoder(keyAlg, keyLength, cipherAlg, keySalt, keyStretch,
-				() -> {
-					System.out.println("enter passphrase:");
-					BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
-					try {
-						String passphrase1 = console.readLine();
-						System.out.println("enter same passphrase again:");
-						String passphrase2 = console.readLine();
-						
-						if (!passphrase1.equals(passphrase2)) {
-							throw new RuntimeException("passphrase unmatch");
-						}
-						return passphrase1.toCharArray();
-					} catch (Exception e) {
-						throw new RuntimeException(e);
-					}
-				});
 
-		
+		Properties prop = getProperties();
+
+		String propertyValueCoderName = prop.getProperty(PropertyValueCoder.PROPERTY_VALUE_CODER, DefaultPropertyValueCoder.class.getName());
+		if (DefaultPropertyValueCoder.class.getName()
+				.equals(propertyValueCoderName)) {
+			prop.setProperty(DefaultPropertyValueCoder.PASSPHRASE_SUPPLIER, EncoderConsolePassphraseSupplier.class.getName());
+		}
+
+		PropertyValueCoder coder = (PropertyValueCoder) Class.forName(propertyValueCoderName)
+				.newInstance();
+		coder.open(prop);
+
 		while (true) {
 			String plain;
 			if (args.length > 0) {
@@ -122,15 +99,15 @@ public class Encoder {
 				BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
 				plain = console.readLine();
 			}
-			
+
 			if (plain.equals("")) {
 				return;
 			}
-			
+
 			System.out.println("encrypted text:");
 			System.out.println(coder.encode(plain));
 			System.out.println();
-			
+
 			// 引数指定で起動する場合、バッチ処理を終了する。
 			if (args.length > 1 && args[0].equals("-file")) {
 				return;

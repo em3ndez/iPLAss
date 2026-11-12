@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -42,7 +42,7 @@ public class EntityPermission extends Permission {
 
 	private final String definitionName;
 	private final Action action;
-	
+
 	/**
 	 * <p>
 	 * action内のEntityManager経由の検索処理(search、searchEntity、count)では、
@@ -62,7 +62,7 @@ public class EntityPermission extends Permission {
 	public static <T> T doQueryAs(EntityPermission.Action permissionAction, Supplier<T> action) {
 		return doQueryAs(permissionAction, null, action);
 	}
-	
+
 	/**
 	 * <p>
 	 * action内のEntityManager経由の検索処理(search、searchEntity、count)にて、
@@ -105,9 +105,9 @@ public class EntityPermission extends Permission {
 		} finally {
 			EntityQueryAuthContextHolder.clear();
 		}
-		
+
 	}
-	
+
 	/**
 	 * 現在の認証コンテキストで、指定のEntity権限が制限付き（不許可を設定されている、もしくは範囲条件が設定されている）か否かを取得します。<br>
 	 * 

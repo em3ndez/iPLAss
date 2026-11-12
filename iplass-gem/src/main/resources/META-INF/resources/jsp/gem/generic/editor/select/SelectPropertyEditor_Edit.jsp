@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,8 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 <%@ page import="java.util.ArrayList" %>
 <%@ page import="java.util.List" %>
@@ -138,8 +139,11 @@
 			String size = isMultiple ? "5" : "1";
 			String cls = isMultiple ? "form-size-12 inpbr" : "form-size-02 inpbr";
 			String multiple = isMultiple ? " multiple" : "";
+			String ulId = "ul_" + propName;
+			
 %>
-<select name="<c:out value="<%=propName %>"/>" class="<c:out value="<%=cls %>"/>" style="<c:out value="<%=customStyle%>"/>" size="<c:out value="<%=size %>"/>" <c:out value="<%=multiple %>"/>>
+<ul id="<c:out value="<%=ulId %>"/>">
+<select name="<c:out value="<%=propName %>"/>" class="<c:out value="<%=cls %>"/>" style="<c:out value="<%=customStyle%>"/>" size="<c:out value="<%=size %>"/>" <c:out value="<%=multiple %>"/> >
 <%
 			if (!isMultiple){
 				String pleaseSelectLabel = "";
@@ -155,28 +159,61 @@
 				String selected = values.contains(tmp.getValue()) ? " selected" : "";
 				String optStyle = tmp.getStyle() != null ? tmp.getStyle() : "";
 %>
-<option class="<c:out value="<%=optStyle %>"/>" title="<c:out value="<%=label%>"/>"  value="<c:out value="<%=tmp.getValue() %>"/>" <c:out value="<%=selected %>"/>><c:out value="<%=label %>" /></option>
+<option class="<c:out value="<%=optStyle %>"/>" title="<c:out value="<%=label%>"/>" value="<c:out value="<%=tmp.getValue() %>"/>" <c:out value="<%=selected %>"/>><c:out value="<%=label %>" /></option>
 <%
 			}
 %>
 </select>
+<c:set var="multiplicity" value="<%= pd.getMultiplicity() %>" />
+<p class="error-multiplicity" style="display: none;">
+<span class="error">${m:rsp("mtp-gem-messages","generic.editor.select.SelectPropertyEditor_Edit.maxMultipleError",multiplicity)}</span>
+</p>
+</ul>
+<script>
+$(function() {
+	const $ul = $("#" + es("<%=StringUtil.escapeJavaScript(ulId)%>"));
+	const $errorMsg = $(".error-multiplicity", $ul); 
+
+	$("select[name='" + es("<%=StringUtil.escapeJavaScript(propName)%>") + "']").on("change", function() {
+        const selectedCount = $(this).find("option:selected").length;
+
+        if (selectedCount > <%=pd.getMultiplicity()%>) {
+        	$errorMsg.show();  
+		} else {
+			$errorMsg.hide(); 
+		}
+    });
+    
+	<%-- common.js --%>
+	addEditValidator(function() {
+		const selectedCount = $("select[name='" + es("<%=StringUtil.escapeJavaScript(propName)%>") + "'] option:selected", $ul).length;
+		if (selectedCount > <%=pd.getMultiplicity()%>) {
+			alert("${m:rs("mtp-gem-messages","command.generic.detail.DetailCommandBase.inputErr")}");
+			return false;
+		}
+		return true;
+	});
+});
+</script>
 <%
 		} else if (editor.getDisplayType() == SelectDisplayType.CHECKBOX
 				|| editor.getDisplayType() == SelectDisplayType.RADIO) {
 			//チェックボックスorラジオボタン
+			String ulId = "ul_" + propName;
 			String cls = "list-radio-01";
-			if (editor.getDisplayType() == SelectDisplayType.CHECKBOX) cls = "list-check-01";
+			boolean isCheckBox = editor.getDisplayType() == SelectDisplayType.CHECKBOX;
+			if (isCheckBox) cls = "list-check-01";
 %>
-<ul class="<c:out value="<%=cls %>"/>" data-itemName="<c:out value="<%=propName %>"/>">
+<ul id="<c:out value="<%=ulId %>"/>" class="<c:out value="<%=cls %>"/>" data-itemName="<c:out value="<%=propName %>"/>">
 <%
 			for (EditorValue tmp : editor.getValues()) {
 				String label = EntityViewUtil.getSelectPropertyLabel(localeValueList, tmp, selectValueList);
 				String optStyle = tmp.getStyle() != null ? tmp.getStyle() : "";
 %>
-<li><label style="<c:out value="<%=customStyle%>"/>" title="<c:out value="<%=label %>" />">
+<li <c:if test="<%=editor.isItemDirectionColumn() %>">style="display: block;"</c:if>><label style="<c:out value="<%=customStyle%>"/>" title="<c:out value="<%=label %>" />">
 <%
 				String checked = values.contains(tmp.getValue()) ? " checked" : "";
-				if (isMultiple) {
+				if (isCheckBox) {
 					//チェックボックス
 %>
 <input type="checkbox" name="<c:out value="<%=propName %>"/>" class="<c:out value="<%=optStyle %>"/>" value="<c:out value="<%=tmp.getValue() %>"/>" <c:out value="<%=checked %>"/> /><c:out value="<%=label %>" />
@@ -196,7 +233,37 @@
 <%
 			}
 %>
+<c:set var="multiplicity" value="<%= pd.getMultiplicity() %>" />
+<p class="error-multiplicity" style="display: none;">
+<span class="error">${m:rsp("mtp-gem-messages","generic.editor.select.SelectPropertyEditor_Edit.maxMultipleError",multiplicity)}</span>
+</p>
 </ul>
+<script>
+$(function() {
+	const $ul = $("#" + es("<%=StringUtil.escapeJavaScript(ulId)%>"));
+	const $errorMsg = $(".error-multiplicity", $ul); 
+	
+	$(":checkbox[name='" + es("<%=StringUtil.escapeJavaScript(propName)%>") + "']", $ul).on("change", function() {
+
+		const checkedCount = $(":checkbox[name='" + es("<%=StringUtil.escapeJavaScript(propName)%>") + "']:checked", $ul).length;
+		if (checkedCount > <%=pd.getMultiplicity()%>) {
+			$errorMsg.show();  
+		} else {
+			$errorMsg.hide(); 
+		}
+	});
+
+	<%-- common.js --%>
+	addEditValidator(function() {
+		const checkedCount = $(":checkbox[name='" + es("<%=StringUtil.escapeJavaScript(propName)%>") + "']:checked", $ul).length;
+		if (checkedCount > <%=pd.getMultiplicity()%>) {
+			alert("${m:rs("mtp-gem-messages","command.generic.detail.DetailCommandBase.inputErr")}");
+			return false;
+		}
+		return true;
+	});
+}); 
+</script>
 <%
 		}
 	} else {

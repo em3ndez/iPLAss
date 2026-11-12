@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,13 +31,13 @@ public class LobStoreUpdateSql extends UpdateSqlHandler {
 
 		StringBuilder sql = new StringBuilder();
 		sql.append("UPDATE " + LobStoreTable.TABLE_NAME)
-		.append(" SET " + LobStoreTable.B_DATA + "=?");
+				.append(" SET " + LobStoreTable.B_DATA + "=?");
 
 		if (manageLobSizeOnRdb) {
 			sql.append(" ," + LobStoreTable.LOB_SIZE + "=?");
 		}
 		sql.append(" WHERE " + LobStoreTable.TENANT_ID + "=? ")
-		.append(" AND " + LobStoreTable.LOB_DATA_ID + "=?");
+				.append(" AND " + LobStoreTable.LOB_DATA_ID + "=?");
 
 		return sql.toString();
 	}
@@ -46,9 +46,9 @@ public class LobStoreUpdateSql extends UpdateSqlHandler {
 
 		StringBuilder sql = new StringBuilder();
 		sql.append("UPDATE " + LobStoreTable.TABLE_NAME)
-		.append(" SET " + LobStoreTable.LOB_SIZE + "=?")
-		.append(" WHERE " + LobStoreTable.TENANT_ID + "=? ")
-		.append(" AND " + LobStoreTable.LOB_DATA_ID + "=?");
+				.append(" SET " + LobStoreTable.LOB_SIZE + "=?")
+				.append(" WHERE " + LobStoreTable.TENANT_ID + "=? ")
+				.append(" AND " + LobStoreTable.LOB_DATA_ID + "=?");
 
 		return sql.toString();
 	}

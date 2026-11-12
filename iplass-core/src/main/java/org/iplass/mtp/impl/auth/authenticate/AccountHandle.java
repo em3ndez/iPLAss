@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,7 +27,7 @@ import org.iplass.mtp.auth.login.Credential;
 
 /**
  * 認証情報を表すインタフェース。
- * ユーザが認証されている間、ユーザ毎にセッションに保持される。
+ * ユーザーが認証されている間、ユーザー毎にセッションに保持される。
  * セッションの間、キャッシュしときたい情報などはここに保持する。
  *
  * @author K.Higuchi
@@ -39,7 +39,7 @@ public interface AccountHandle extends Serializable {
 	/** パスワード変更日Attribute key */
 	public static final String LAST_PASSWORD_CHANGE = "lastPasswordChange";
 	public static final String LAST_LOGIN_ON = "lastLoginOn";
-	
+
 	//TODO 明示的にgetterを定義したほうがよいか？
 	public static final String GROUP_CODE = "groupCode";
 
@@ -50,13 +50,14 @@ public interface AccountHandle extends Serializable {
 	public boolean isInitialLogin();
 
 	public Credential getCredential();
-	
+
 	public String getUnmodifiableUniqueKey();
-	
+
 //	public User getUser();
 	public Map<String, Object> getAttributeMap();
 
 	//FIXME ここに持つべきではない
 	public void setAuthenticationProviderIndex(int authenticationProviderIndex);
+
 	public int getAuthenticationProviderIndex();
 }

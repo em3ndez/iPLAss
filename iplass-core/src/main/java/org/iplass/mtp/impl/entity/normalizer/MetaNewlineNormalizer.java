@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -89,10 +89,10 @@ public class MetaNewlineNormalizer extends MetaNormalizer {
 	public NormalizerRuntime createRuntime(MetaEntity entity, MetaProperty property) {
 		return new NewlineNormalizerRuntime(property);
 	}
-	
+
 	public class NewlineNormalizerRuntime extends NormalizerRuntime {
 		private String replacement;
-		
+
 		NewlineNormalizerRuntime(MetaProperty property) {
 			if (type == null) {
 				throw new NullPointerException(property.getName() + "'s NewlineNormalizer type must specified");
@@ -114,10 +114,11 @@ public class MetaNewlineNormalizer extends MetaNormalizer {
 			if (value == null) {
 				return null;
 			}
-			
-			return NEWLINE_PATTERN.matcher(value.toString()).replaceAll(replacement);
+
+			return NEWLINE_PATTERN.matcher(value.toString())
+					.replaceAll(replacement);
 		}
-		
+
 	}
 
 }

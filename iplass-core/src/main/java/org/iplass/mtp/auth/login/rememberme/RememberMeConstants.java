@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,6 +31,6 @@ public interface RememberMeConstants {
 	 * このフラグはRememberMeTokenCredential自体にセットするのではなく、
 	 * IdPasswordCredentialなどで認証成功時に認証状態を保持したい場合に、当該フラグ（Boolean型）をセットします。
 	 */
-	public static final String FACTOR_REMEMBER_ME_FLAG ="rememberMe";
-	
+	public static final String FACTOR_REMEMBER_ME_FLAG = "rememberMe";
+
 }

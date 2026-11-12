@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,8 +25,10 @@ import org.iplass.mtp.spi.ServiceInitListener;
 
 public interface LobStore extends ServiceInitListener<LobStoreService> {
 	public LobData create(int tenantId, long lobDataId);
+
 	public LobData load(int tenantId, long lobDataId);
+
 	public void remove(int tenantId, long lobDataId);
-	
+
 	public LobValidator getLobValidator();
 }

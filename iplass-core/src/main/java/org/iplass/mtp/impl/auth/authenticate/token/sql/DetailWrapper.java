@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,7 +25,7 @@ public class DetailWrapper implements Serializable {
 	private static final long serialVersionUID = 2926799761837894728L;
 
 	private Serializable details;
-	
+
 	public DetailWrapper() {
 	}
 

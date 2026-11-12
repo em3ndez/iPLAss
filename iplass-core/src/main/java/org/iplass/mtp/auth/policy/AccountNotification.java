@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,12 +32,12 @@ import org.iplass.mtp.auth.policy.definition.NotificationType;
 public class AccountNotification {
 	private NotificationType type;
 	private String userOid;
-	
+
 	public AccountNotification(NotificationType type, String userOid) {
 		this.type = type;
 		this.userOid = userOid;
 	}
-	
+
 	/**
 	 * 通知のタイプ。
 	 * @return
@@ -45,8 +45,9 @@ public class AccountNotification {
 	public NotificationType getType() {
 		return type;
 	}
+
 	/**
-	 * 対象のユーザのoid
+	 * 対象のユーザーのoid
 	 * 
 	 * @return
 	 */

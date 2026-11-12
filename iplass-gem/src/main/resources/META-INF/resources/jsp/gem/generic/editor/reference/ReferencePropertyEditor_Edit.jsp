@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 <%@ page import="java.util.ArrayList" %>
@@ -62,9 +62,11 @@
 <%@ page import="org.iplass.mtp.view.generic.editor.ReferencePropertyEditor" %>
 <%@ page import="org.iplass.mtp.view.generic.editor.ReferencePropertyEditor.EditPage"%>
 <%@ page import="org.iplass.mtp.view.generic.editor.ReferencePropertyEditor.ReferenceDisplayType" %>
+<%@ page import="org.iplass.mtp.view.generic.editor.ReferencePropertyEditor.RefSortType" %>
 <%@ page import="org.iplass.mtp.view.generic.editor.ReferencePropertyEditor.UrlParameterActionType"%>
 <%@ page import="org.iplass.mtp.view.generic.editor.SelectPropertyEditor.SelectDisplayType"%>
 <%@ page import="org.iplass.mtp.view.generic.editor.SelectPropertyEditor"%>
+<%@ page import="org.iplass.mtp.view.generic.element.Element"%>
 <%@ page import="org.iplass.mtp.web.template.TemplateUtil" %>
 <%@ page import="org.iplass.gem.command.generic.detail.DetailCommandContext"%>
 <%@ page import="org.iplass.gem.command.generic.detail.DetailViewCommand"%>
@@ -76,10 +78,11 @@
 <%@ page import="org.iplass.gem.command.Constants" %>
 <%@ page import="org.iplass.gem.command.GemResourceBundleUtil" %>
 <%@ page import="org.iplass.gem.command.ViewUtil" %>
+<%@ page import="org.iplass.gem.command.generic.editor.ReferencePropertyEditorUtil" %>
 
 <%!
 	List<Entity> getSelectItems(ReferencePropertyEditor editor, Condition defaultCondition, Entity entity,
-			PropertyEditor upperEditor) {
+			PropertyEditor upperEditor, String nestPropertyName, int nestDataIndex) {
 		Condition condition = defaultCondition;
 
 		boolean doSearch = true;
@@ -88,7 +91,19 @@
 			//連動の場合は上位値を取得して値が設定されている場合のみ検索
 			doSearch = false;
 			if (entity != null) {
-				Object upperValue = entity.getValue(linkProperty.getLinkFromPropertyName());
+				Object upperValue = null;
+				if (linkProperty.isWithNestProperty()) {
+					// 同じNestTable内のプロパティに連動する場合は、NestTableのデータから取得
+					upperValue = getNestTableUpperValue(
+							entity, 
+							editor.getReferenceFromObjectName(),
+							nestPropertyName,
+							linkProperty.getLinkFromPropertyName(),
+							upperEditor instanceof ReferencePropertyEditor,
+							nestDataIndex);
+				} else {
+					upperValue = entity.getValue(linkProperty.getLinkFromPropertyName());
+				}
 				if (upperValue != null) {
 					//参照元の値を条件に追加
 					String upperPropName = linkProperty.getLinkToPropertyName();
@@ -140,7 +155,7 @@
 					q.select().add(sortItem);
 				}
 				SortType sortType = SortSpec.SortType.ASC;
-				if ("DESC".equals(editor.getSortType().name())) {
+				if (RefSortType.DESC == editor.getSortType()) {
 					sortType = SortSpec.SortType.DESC;
 				}
 				q.order(new SortSpec(sortItem, sortType));
@@ -153,9 +168,41 @@
 		}
 	}
 
-	PropertyEditor getLinkUpperPropertyEditor(String defName, String viewName, LinkProperty linkProperty, Entity entity) {
+	Object getNestTableUpperValue(Entity rootEntity, String referenceEntityName, String nestPropertyName, String linkFromPropertyName, boolean reference, int nestDataIndex) {
+		// ダミー行は対象外
+		if (nestDataIndex < 0) {
+			return null;
+		}
+		Entity rowData = rootEntity.getValue(nestPropertyName + "[" + nestDataIndex + "]");
+		if (rowData != null) {
+			// Fromのプロパティがロードデータに含まれない場合は検索する
+			if (!linkFromPropertyName.equals(Entity.OID) 
+					&& !linkFromPropertyName.equals(Entity.VERSION)
+					&& !linkFromPropertyName.equals(Entity.NAME)) {
+				if (reference) {
+					loadReferenceEntityProperty(rowData, new String[]{
+							linkFromPropertyName + "." + Entity.OID,
+							linkFromPropertyName + "." + Entity.VERSION,
+							linkFromPropertyName + "." + Entity.NAME});
+				} else {
+					loadReferenceEntityProperty(rowData, linkFromPropertyName);
+				}
+			}
+			return rowData.getValue(linkFromPropertyName);
+		}
+		return null;
+	}
+
+	PropertyEditor getLinkUpperPropertyEditor(String defName, String viewName, LinkProperty linkProperty, String nestPropertyName, Entity entity) {
+		String upperPropertyName = null;
+		if (linkProperty.isWithNestProperty()) {
+			// 同じNestTable内のプロパティに連動する場合は、NestTableのプロパティを付加
+			upperPropertyName = nestPropertyName + "." + linkProperty.getLinkFromPropertyName();
+		} else {
+			upperPropertyName = linkProperty.getLinkFromPropertyName();
+		}
 		EntityViewManager evm = ManagerLocator.getInstance().getManager(EntityViewManager.class);
-		return evm.getPropertyEditor(defName, Constants.VIEW_TYPE_DETAIL, viewName, linkProperty.getLinkFromPropertyName(), entity);
+		return evm.getPropertyEditor(defName, Constants.VIEW_TYPE_DETAIL, viewName, upperPropertyName, entity);
 	}
 
 	String getLinkUpperType(PropertyEditor editor) {
@@ -186,7 +233,7 @@
 
 	//Linkタイプ、Labelタイプの場合の参照Entityのチェック
 	//初期値として設定された際に、NameやVersionが未指定の場合を考慮して詰め直す
-	List<Entity> getLinkTypeItems(String defName, String viewName, Object propValue, ReferenceProperty pd, ReferencePropertyEditor editor) {
+	List<Entity> getLinkTypeItems(String defName, String viewName, Object propValue, ReferenceProperty pd, ReferencePropertyEditor editor, Element element) {
 		if (propValue == null) {
 			return Collections.emptyList();
 		}
@@ -201,7 +248,7 @@
 			Entity[] entities = (Entity[]) propValue;
 			if (entities != null) {
 				for (Entity refEntity : entities) {
-					Entity entity = loadItem(refEntity, editor, pd, handler, em);
+					Entity entity = loadItem(refEntity, editor, pd, handler, em, element);
 					if (entity != null) {
 						entityList.add(entity);
 					}
@@ -210,7 +257,7 @@
 		} else if (propValue instanceof Entity) {
 			Entity refEntity = (Entity) propValue;
 			if (refEntity != null) {
-				Entity entity = loadItem(refEntity, editor, pd, handler, em);
+				Entity entity = loadItem(refEntity, editor, pd, handler, em, element);
 				if (entity != null) {
 					entityList.add(entity);
 				}
@@ -226,7 +273,7 @@
 		return context.getLoadEntityInterrupterHandler();
 	}
 
-	Entity loadItem(final Entity refEntity, final ReferencePropertyEditor editor, final ReferenceProperty pd, final LoadEntityInterrupterHandler handler, final EntityManager em) {
+	Entity loadItem(final Entity refEntity, final ReferencePropertyEditor editor, final ReferenceProperty pd, final LoadEntityInterrupterHandler handler, final EntityManager em, final Element element) {
 		//念のためOIDチェック
 		if (refEntity.getOid() == null) {
 			return null;
@@ -236,7 +283,7 @@
 			Entity entity = null;
 			LoadOption loadOption = new LoadOption(false, false);
 			final String refDefName = editor.getObjectName();
-			final LoadEntityContext leContext = handler.beforeLoadReference(refDefName, loadOption, pd, LoadType.VIEW);
+			final LoadEntityContext leContext = handler.beforeLoadReference(refDefName, loadOption, pd, element, LoadType.VIEW);
 			if (leContext.isDoPrivileged()) {
 				entity = AuthContext.doPrivileged(new Supplier<Entity>() {
 
@@ -248,7 +295,7 @@
 			} else {
 				entity = em.load(refEntity.getOid(), refEntity.getVersion(), refDefName, leContext.getLoadOption());
 			}
-			handler.afterLoadReference(entity, loadOption, pd, LoadType.VIEW);
+			handler.afterLoadReference(entity, loadOption, pd, element, LoadType.VIEW);
 			return entity;
 		} else {
 			return refEntity;
@@ -313,6 +360,16 @@
 		String str = ConvertUtil.convertToString(refEntity.getValue(uniquePropName));
 		return StringUtil.escapeHtml(str);
 	}
+
+	boolean checkActionType(List<UrlParameterActionType> actions, UrlParameterActionType actionType) {
+		if (actions == null) {
+			//未指定の場合は、SELECTとADDはOK
+			return actionType == UrlParameterActionType.SELECT || actionType == UrlParameterActionType.ADD;
+		} else {
+			//指定されている場合は、対象かどうかをチェック
+			return actions.contains(actionType);
+		}
+	}
 %>
 <%
 	String contextPath = TemplateUtil.getTenantContextPath();
@@ -320,15 +377,17 @@
 
 	//Request情報取得
 	ReferencePropertyEditor editor = (ReferencePropertyEditor) request.getAttribute(Constants.EDITOR_EDITOR);
+	String referenceModalSizeAttributes = ReferencePropertyEditorUtil.getDialogSizeAttributes(editor);
 
 	Entity entity = request.getAttribute(Constants.ENTITY_DATA) instanceof Entity ? (Entity) request.getAttribute(Constants.ENTITY_DATA) : null;
 	Object propValue = request.getAttribute(Constants.EDITOR_PROP_VALUE);
 
+	Element element = (Element) request.getAttribute(Constants.ELEMENT);
 	String defName = (String)request.getAttribute(Constants.DEF_NAME);
 	String rootDefName = (String)request.getAttribute(Constants.ROOT_DEF_NAME);
 	ReferenceProperty pd = (ReferenceProperty) request.getAttribute(Constants.EDITOR_PROPERTY_DEFINITION);
 	String scriptKey = (String)request.getAttribute(Constants.SECTION_SCRIPT_KEY);
-	String execType = (String) request.getAttribute(Constants.EXEC_TYPE);
+	String execType = (String)request.getAttribute(Constants.EXEC_TYPE);
 	OutputType outputType = (OutputType)request.getAttribute(Constants.OUTPUT_TYPE);
 	String viewName = (String)request.getAttribute(Constants.VIEW_NAME);
 	if (viewName == null) {
@@ -338,8 +397,23 @@
 	}
 
 	boolean isInsert = Constants.EXEC_TYPE_INSERT.equals(execType);
+
 	Boolean nest = (Boolean) request.getAttribute(Constants.EDITOR_REF_NEST);
 	if (nest == null) nest = false;
+
+	// NestTable参照元プロパティ名
+	String nestPropertyName = "";
+	// NestTable行Index
+	int nestDataIndex = -1;
+	if (nest) {
+		//NestTableのプロパティ名(参照元)を取得
+		nestPropertyName = (String)request.getAttribute(Constants.EDITOR_REF_NEST_PROP_NAME);
+		//NestTableの処理対象データのIndexを取得
+		if (request.getAttribute(Constants.EDITOR_REF_NEST_DATA_INDEX) != null) {
+			nestDataIndex = (int)request.getAttribute(Constants.EDITOR_REF_NEST_DATA_INDEX);
+		}
+	}
+
 	Boolean useBulkView = (Boolean) request.getAttribute(Constants.BULK_UPDATE_USE_BULK_VIEW);
 	if (useBulkView == null) useBulkView = false;
 
@@ -399,6 +473,7 @@
 
 	//refSectionIndexがnullではなければ、参照セクション内でネストされています。
 	Integer refSectionIndex = (Integer)request.getAttribute(Constants.REF_SECTION_INDEX);
+	String _refSectionIndex = refSectionIndex != null ? refSectionIndex.toString() : "";
 
 	//Action定義取得
 	String _viewName = editor.getViewName() != null ? editor.getViewName() : "";
@@ -462,7 +537,7 @@
 		}
 
 		//初期値として設定された際に、NameやVersionが未指定の場合を考慮して詰め直す
-		List<Entity> entityList = getLinkTypeItems(rootDefName, viewName, propValue, pd, editor);
+		List<Entity> entityList = getLinkTypeItems(rootDefName, viewName, propValue, pd, editor, element);
 
 		//ネストテーブルに使われる際に、プロパティ名にカッコとドット区切りを入れ替える
 		String _propName = propName.replace("[", "").replace("]","").replace(".", "_");
@@ -476,7 +551,9 @@ function <%=toggleInsBtnFunc%>() {
 	$("#ins_btn_" + _propName).toggle(display);
 }
 </script>
-<ul id="<c:out value="<%=ulId %>"/>" data-deletable="<c:out value="<%=(!hideDeleteButton && updatable) %>"/>" class="mb05">
+<ul id="<c:out value="<%=ulId %>"/>" data-deletable="
+	<c:out value="<%=(!hideDeleteButton && updatable) %>" />" class="mb05" data-reference-modal="true"
+	<%=referenceModalSizeAttributes %>>
 <%
 		for (int i = 0; i < entityList.size(); i++) {
 			Entity refEntity = entityList.get(i);
@@ -488,21 +565,51 @@ function <%=toggleInsBtnFunc%>() {
 <li id="<c:out value="<%=liId %>"/>" class="list-add">
 <%
 			if (editPageDetail) {
+				String showReference = "showReference(" 
+					+ "'" + StringUtil.escapeJavaScript(viewAction) + "'" 
+					+ ", '" + StringUtil.escapeJavaScript(refDefName) + "'"
+					+ ", '" + StringUtil.escapeJavaScript(refEntity.getOid()) + "'"
+					+ ", '" + refEntity.getVersion() + "'"
+					+ ", '" + StringUtil.escapeJavaScript(linkId) + "'"
+					+ ", " + refEdit 
+					+ ", null"
+					+ ", '" + rootDefName + "'"
+					+ ", '" + viewName + "'"
+					+ ", '" + propName + "'"
+					+ ", '" + viewType + "'"
+					+ ", '" + _refSectionIndex + "'"
+					+ ", '" + StringUtil.escapeJavaScript(rootOid) + "'"
+					+ ", '" + StringUtil.escapeJavaScript(rootVersion) + "'" 
+					+ ")";
 %>
-<a href="javascript:void(0)" class="modal-lnk" style="<c:out value="<%=customStyle%>"/>" id="<c:out value="<%=linkId %>"/>" data-linkId="<c:out value="<%=linkId %>"/>" 
- onclick="showReference('<%=StringUtil.escapeJavaScript(viewAction)%>', '<%=StringUtil.escapeJavaScript(refDefName)%>', '<%=StringUtil.escapeJavaScript(refEntity.getOid())%>', '<%=refEntity.getVersion() %>', '<%=StringUtil.escapeJavaScript(linkId)%>', <%=refEdit %>, null, '<%=rootDefName%>', '<%=viewName%>', '<%=propName%>', '<%=viewType%>', '<c:out value="<%=refSectionIndex%>" />', '<%=StringUtil.escapeJavaScript(rootOid) %>', '<%=StringUtil.escapeJavaScript(rootVersion) %>')">
- <c:out value="<%=dispPropLabel %>" /></a>
+<a href="javascript:void(0)" class="modal-lnk" data-reference-modal="true" <%=referenceModalSizeAttributes %> style="
+	<c:out value="<%=customStyle%>" />"
+ id="<c:out value="<%=linkId %>"/>" data-linkId="<c:out value="<%=linkId %>"/>" 
+ onclick="<c:out value="<%=showReference %>"/>"><c:out value="<%=dispPropLabel %>" /></a>
 <%
 				if (!hideDeleteButton && updatable) {
+					String deleteItem = "deleteItem(" 
+						+ "'" + StringUtil.escapeJavaScript(liId) + "'" 
+						+ ", " + toggleInsBtnFunc
+						+ ")";
 %>
 <input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.delete')}" class="gr-btn-02 del-btn" 
- onclick="deleteItem('<%=StringUtil.escapeJavaScript(liId)%>', <%=toggleInsBtnFunc%>)" />
+ onclick="<c:out value="<%=deleteItem %>"/>" />
 <%				}
 			} else {
+				String showReference = "showReference(" 
+					+ "'" + StringUtil.escapeJavaScript(viewAction) + "'" 
+					+ ", '" + StringUtil.escapeJavaScript(refDefName) + "'"
+					+ ", '" + StringUtil.escapeJavaScript(refEntity.getOid()) + "'"
+					+ ", '" + refEntity.getVersion() + "'"
+					+ ", '" + StringUtil.escapeJavaScript(linkId) + "'"
+					+ ", false"  
+					+ ")";
 %>
-<a href="javascript:void(0)" class="modal-lnk" style="<c:out value="<%=customStyle%>"/>" id="<c:out value="<%=linkId %>"/>" data-linkId="<c:out value="<%=linkId %>"/>" 
- onclick="showReference('<%=StringUtil.escapeJavaScript(viewAction)%>', '<%=StringUtil.escapeJavaScript(refDefName)%>', '<%=StringUtil.escapeJavaScript(refEntity.getOid())%>', '<%=refEntity.getVersion() %>', '<%=StringUtil.escapeJavaScript(linkId)%>', false)">
- <c:out value="<%=dispPropLabel %>" /></a>
+<a href="javascript:void(0)" class="modal-lnk" data-reference-modal="true" <%=referenceModalSizeAttributes %> style="
+	<c:out value="<%=customStyle%>" />"
+ id="<c:out value="<%=linkId %>"/>" data-linkId="<c:out value="<%=linkId %>"/>" 
+ onclick="<c:out value="<%=showReference %>"/>"><c:out value="<%=dispPropLabel %>" /></a>
 <%
 			}
 %>
@@ -539,7 +646,9 @@ function <%=toggleInsBtnFunc%>() {
 				
 				String selBtnUrlParam = evm.getUrlParameter(rootDefName, editor, parentEntity, UrlParameterActionType.SELECT);
 %>
-<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.select')}" class="gr-btn-02 modal-btn sel-btn" id="<c:out value="<%=selBtnId %>"/>" data-propName="<c:out value="<%=propName %>"/>" />
+<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.select')}"
+	class="gr-btn-02 modal-btn sel-btn" data-reference-modal="true"<%=referenceModalSizeAttributes %> id="<c:out value="<%=selBtnId %>"/>"
+data-propName="<c:out value="<%=propName %>" />" />
 <script type="text/javascript">
 $(function() {
 	var callback = function(entityList, deleteList, propName) {
@@ -555,6 +664,13 @@ $(function() {
 	};
 	var key = "selectActionCallback_" + new Date().getTime();
 	scriptContext[key] = callback;
+	var dynamicParamCallback = function(urlParam) {
+		<%if (checkActionType(editor.getDynamicUrlParameterAction(), UrlParameterActionType.SELECT) && StringUtil.isNotBlank(editor.getDynamicUrlParameter())) {%>
+		<%=editor.getDynamicUrlParameter()%>
+		<%} else {%>
+		return urlParam;
+		<%}%>
+	};
 	var delCallback = <%=toggleInsBtnFunc%>;
 	var params = {
 		selectAction: "<%=StringUtil.escapeJavaScript(selectAction) %>"
@@ -573,7 +689,8 @@ $(function() {
 		, entityOid: "<%=StringUtil.escapeJavaScript(rootOid)%>"
 		, entityVersion: "<%=StringUtil.escapeJavaScript(rootVersion)%>"
 		, viewType: "<%=StringUtil.escapeJavaScript(viewType)%>"
-		, refSectionIndex: "<c:out value="<%=refSectionIndex%>"/>"
+		, refSectionIndex: "<%=_refSectionIndex%>"
+		, customStyle: "<%=StringUtil.escapeJavaScript(customStyle)%>"
 	}
 	var $selBtn = $(":button[id='<%=StringUtil.escapeJavaScript(selBtnId) %>']");
 	for (key in params) {
@@ -582,7 +699,8 @@ $(function() {
 	$selBtn.on("click", function() {
 		searchReference(params.selectAction, params.viewAction, params.defName, $(this).attr("data-propName"), params.multiplicity, <%=isMultiple %>,
 				 params.urlParam, params.refEdit, callback, this, params.viewName, params.permitConditionSelectAll, params.permitVersionedSelect, 
-				 params.parentDefName, params.parentViewName, params.viewType, params.refSectionIndex, delCallback, params.entityOid, params.entityVersion);
+				 params.parentDefName, params.parentViewName, params.viewType, params.refSectionIndex, delCallback, params.entityOid, params.entityVersion,
+				 dynamicParamCallback, params.customStyle);
 	});
 
 });
@@ -594,7 +712,9 @@ $(function() {
 				String insBtnStyle = "";
 				if (pd.getMultiplicity() != -1 && entityList.size() >= pd.getMultiplicity()) insBtnStyle = "display: none;";
 %>
-<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.new')}" class="gr-btn-02 modal-btn ins-btn" id="<c:out value="<%=insBtnId %>"/>" style="<c:out value="<%=insBtnStyle %>"/>" />
+<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.new')}"
+	class="gr-btn-02 modal-btn ins-btn" data-reference-modal="true"<%=referenceModalSizeAttributes %> id="<c:out value="<%=insBtnId %>"/>" style="
+<c:out value="<%=insBtnStyle %>" />" />
 <script type="text/javascript">
 $(function() {
 	var callback = function(entity, propName) {
@@ -613,6 +733,13 @@ $(function() {
 	var key = "insertActionCallback_" + new Date().getTime();
 	scriptContext[key] = callback;
 	var delCallback = <%=toggleInsBtnFunc%>;
+	var dynamicParamCallback = function(urlParam) {
+		<%if (checkActionType(editor.getDynamicUrlParameterAction(), UrlParameterActionType.ADD) && StringUtil.isNotBlank(editor.getDynamicUrlParameter())) {%>
+		<%=editor.getDynamicUrlParameter()%>
+		<%} else {%>
+		return urlParam;
+		<%}%>
+	};
 	var params = {
 		addAction: "<%=StringUtil.escapeJavaScript(addAction) %>"
 		, viewAction: "<%=StringUtil.escapeJavaScript(viewAction) %>"
@@ -625,11 +752,12 @@ $(function() {
 		, parentDefName: "<%=StringUtil.escapeJavaScript(rootDefName)%>"
 		, parentViewName: "<%=StringUtil.escapeJavaScript(viewName)%>"
 		, viewType: "<%=StringUtil.escapeJavaScript(viewType)%>"
-		, refSectionIndex: "<c:out value="<%=refSectionIndex%>"/>"
+		, refSectionIndex: "<%=_refSectionIndex%>"
 		, entityOid: "<%=StringUtil.escapeJavaScript(rootOid)%>"
 		, entityVersion: "<%=StringUtil.escapeJavaScript(rootVersion)%>"
 		, refEdit: <%=refEdit %>
 		, callbackKey: key
+		, customStyle: "<%=StringUtil.escapeJavaScript(customStyle)%>"
 	}
 	var $insBtn = $(":button[id='<%=StringUtil.escapeJavaScript(insBtnId) %>']");
 	for (key in params) {
@@ -638,7 +766,7 @@ $(function() {
 	$insBtn.on("click", function() {
 		insertReference(params.addAction, params.viewAction, params.defName, params.propName, params.multiplicity,
 				 params.urlParam, params.parentOid, params.parentVersion, params.parentDefName, params.parentViewName, 
-				 params.refEdit, callback, this, delCallback, params.viewType, params.refSectionIndex, params.entityOid, params.entityVersion);
+				 params.refEdit, callback, this, delCallback, params.viewType, params.refSectionIndex, params.entityOid, params.entityVersion, dynamicParamCallback, params.customStyle);
 	});
 
 });
@@ -650,12 +778,14 @@ $(function() {
 		//リスト
 		PropertyEditor upperEditor = null;
 		String upperType = null;
+		String ulId = "ul_" + propName;
+
 		if (editor.getLinkProperty() != null) {
-			upperEditor = getLinkUpperPropertyEditor(rootDefName, viewName, editor.getLinkProperty(), rootEntity);
+			upperEditor = getLinkUpperPropertyEditor(rootDefName, viewName, editor.getLinkProperty(), nestPropertyName, rootEntity);
 			upperType = getLinkUpperType(upperEditor);
 		}
 
-		List<Entity> entityList = getSelectItems(editor, condition, entity, upperEditor);
+		List<Entity> entityList = getSelectItems(editor, condition, entity, upperEditor, nestPropertyName, nestDataIndex);
 
 		//リスト
 		List<String> oid = new ArrayList<String>();
@@ -685,16 +815,37 @@ $(function() {
 		String size = isMultiple ? "5" : "1";
 
 		if (editor.getLinkProperty() != null && upperType != null && !isMultiple) {
-			//連動設定(連動元のタイプがサポートの場合のみ、かつ多重度は1のみサポート)
+			// 連動設定(連動元のタイプがサポートの場合のみ、かつ多重度は1のみサポート)
 			LinkProperty link = editor.getLinkProperty();
+			
+			// 連動先のプロパティ名
+			String linkToPropName = null;
+			if (nest) {
+				// NestTable上の場合は、参照元も付加
+				linkToPropName = nestPropertyName + "." + pd.getName();
+			} else {
+				// 参照プロパティ名
+				linkToPropName = pd.getName();
+			}
 
+			// 連動元のアイテム名
+			String linkFromName = null;
+			if (link.isWithNestProperty()) {
+				// 連動元がNestTableの場合は、参照元と行Indexも付加
+				linkFromName = nestPropertyName 
+						+ "[" + (nestDataIndex < 0 ? Constants.EDITOR_REF_NEST_DUMMY_ROW_INDEX : nestDataIndex) + "]"
+						+ "." + link.getLinkFromPropertyName();
+			} else {
+				linkFromName = link.getLinkFromPropertyName();
+			}
 %>
-<select name="<c:out value="<%=propName %>"/>" class="form-size-02 inpbr refLinkSelect" style="<c:out value="<%=customStyle%>"/>" size="<c:out value="<%=size %>"/>"
+<select name="<c:out value="<%=propName %>"/>" class="form-size-02 inpbr refLinkSelect" 
+ style="<c:out value="<%=customStyle%>"/>" size="<c:out value="<%=size %>"/>"
  data-defName="<c:out value="<%=rootDefName %>"/>"
  data-viewType="<%=viewType %>"
  data-viewName="<c:out value="<%=viewName %>"/>"
- data-propName="<c:out value="<%=pd.getName() %>"/>"
- data-linkName="<c:out value="<%=link.getLinkFromPropertyName() %>"/>"
+ data-propName="<c:out value="<%=linkToPropName %>"/>"
+ data-linkName="<c:out value="<%=linkFromName %>"/>"
  data-prefix=""
  data-getItemWebapiName="<%=GetReferenceLinkItemCommand.WEBAPI_NAME %>"
  data-upperType="<c:out value="<%=upperType %>"/>"
@@ -720,7 +871,9 @@ $(function() {
 <%
 		} else {
 %>
-<select name="<c:out value="<%=propName %>"/>" class="form-size-02 inpbr" style="<c:out value="<%=customStyle%>"/>" size="<c:out value="<%=size %>"/>" <c:out value="<%=multiple %>"/>>
+<ul id="<c:out value="<%=ulId %>"/>">
+<select name="<c:out value="<%=propName %>"/>" class="form-size-02 inpbr" 
+ style="<c:out value="<%=customStyle%>"/>" size="<c:out value="<%=size %>"/>" <c:out value="<%=multiple %>"/>>
 <%
 			if (!isMultiple) {
 %>
@@ -740,17 +893,50 @@ $(function() {
 		}
 %>
 </select>
+<c:set var="multiplicity" value="<%= pd.getMultiplicity() %>" />
+<p class="error-multiplicity" style="display: none;">
+<span class="error">${m:rsp("mtp-gem-messages","generic.editor.reference.ReferencePropertyEditor_Edit.maxMultipleError",multiplicity)}</span>
+</p>
+</ul>
+<script>
+$(function() {
+	const $ul = $("#" + es("<%=StringUtil.escapeJavaScript(ulId)%>"));
+	const $errorMsg = $(".error-multiplicity", $ul); 
+
+	$("select[name='" + es("<%=StringUtil.escapeJavaScript(propName)%>") + "']").on("change", function() {
+        const selectedCount = $(this).find("option:selected").length;
+
+        if (<%=pd.getMultiplicity()%> > 1 && selectedCount > <%=pd.getMultiplicity()%>) {
+        	$errorMsg.show();  
+		} else {
+			$errorMsg.hide(); 
+		}
+    });
+    
+	<%-- common.js --%>
+	addEditValidator(function() {
+		const selectedCount = $("select[name='" + es("<%=StringUtil.escapeJavaScript(propName)%>") + "'] option:selected", $ul).length;
+		if (<%=pd.getMultiplicity()%> > 1 && selectedCount > <%=pd.getMultiplicity()%>) {
+			alert("${m:rs("mtp-gem-messages","command.generic.detail.DetailCommandBase.inputErr")}");
+			return false;
+		}
+		return true;
+	});
+});
+</script>
 <%
 	} else if (editor.getDisplayType() == ReferenceDisplayType.CHECKBOX && updatable && !isMappedby) {
 		//チェックボックス
 		PropertyEditor upperEditor = null;
 		String upperType = null;
+		String ulId = "ul_" + propName;
+
 		if (editor.getLinkProperty() != null) {
-			upperEditor = getLinkUpperPropertyEditor(rootDefName, viewName, editor.getLinkProperty(), rootEntity);
+			upperEditor = getLinkUpperPropertyEditor(rootDefName, viewName, editor.getLinkProperty(), nestPropertyName, rootEntity);
 			upperType = getLinkUpperType(upperEditor);
 		}
 
-		List<Entity> entityList = getSelectItems(editor, condition, entity, upperEditor);
+		List<Entity> entityList = getSelectItems(editor, condition, entity, upperEditor, nestPropertyName, nestDataIndex);
 
 		//リスト
 		List<String> oid = new ArrayList<String>();
@@ -784,14 +970,36 @@ $(function() {
 		if (editor.getLinkProperty() != null && upperType != null && !isMultiple) {
 			//連動設定(連動元のタイプがサポートの場合のみ、かつ多重度は1のみサポート)
 			LinkProperty link = editor.getLinkProperty();
+
+			// 連動先のプロパティ名
+			String linkToPropName = null;
+			if (nest) {
+				// NestTable上の場合は、参照元も付加
+				linkToPropName = nestPropertyName + "." + pd.getName();
+			} else {
+				// 参照プロパティ名
+				linkToPropName = pd.getName();
+			}
+
+			// 連動元のアイテム名
+			String linkFromName = null;
+			if (link.isWithNestProperty()) {
+				// 連動元がNestTableの場合は、参照元と行Indexも付加
+				linkFromName = nestPropertyName 
+						+ "[" + (nestDataIndex < 0 ? Constants.EDITOR_REF_NEST_DUMMY_ROW_INDEX : nestDataIndex) + "]"
+						+ "." + link.getLinkFromPropertyName();
+			} else {
+				linkFromName = link.getLinkFromPropertyName();
+			}
 %>
 <ul class="<c:out value="<%=cls %>"/> refLinkRadio"
  data-itemName="<c:out value="<%=propName %>"/>"
  data-defName="<c:out value="<%=rootDefName %>"/>"
  data-viewType="<%=viewType %>"
  data-viewName="<c:out value="<%=viewName %>"/>"
- data-propName="<c:out value="<%=pd.getName() %>"/>"
- data-linkName="<c:out value="<%=link.getLinkFromPropertyName() %>"/>"
+ data-propName="<c:out value="<%=linkToPropName %>"/>"
+ data-radioTogglable="<c:out value="<%=radioTogglable %>"/>"
+ data-linkName="<c:out value="<%=linkFromName %>"/>"
  data-prefix=""
  data-getItemWebapiName="<%=GetReferenceLinkItemCommand.WEBAPI_NAME %>"
  data-upperType="<c:out value="<%=upperType %>"/>"
@@ -802,7 +1010,7 @@ $(function() {
 <%
 			for (Entity refEntity : entityList) {
 %>
-<li><label style="<c:out value="<%=customStyle%>"/>">
+<li <c:if test="<%=editor.isItemDirectionColumn() %>">style="display: block;"</c:if>><label style="<c:out value="<%=customStyle%>"/>">
 <%
 				String checked = oid.contains(refEntity.getOid()) ? " checked" : "";
 				String _value = refEntity.getOid() + "_" + refEntity.getVersion();
@@ -825,11 +1033,11 @@ $(function() {
 <%
 		} else {
 %>
-<ul class="<c:out value="<%=cls %>"/>">
+<ul id="<c:out value="<%=ulId %>"/>" class="<c:out value="<%=cls %>"/>" data-itemName="<c:out value="<%=propName %>"/>">
 <%
 			for (Entity refEntity : entityList) {
 %>
-<li><label style="<c:out value="<%=customStyle%>"/>">
+<li <c:if test="<%=editor.isItemDirectionColumn() %>">style="display: block;"</c:if>><label style="<c:out value="<%=customStyle%>"/>">
 <%
 				String checked = oid.contains(refEntity.getOid()) ? " checked" : "";
 				String _value = refEntity.getOid() + "_" + refEntity.getVersion();
@@ -849,7 +1057,37 @@ $(function() {
 			}
 		}
 %>
+<c:set var="multiplicity" value="<%= pd.getMultiplicity() %>" />
+<p class="error-multiplicity" style="display: none;">
+<span class="error">${m:rsp("mtp-gem-messages","generic.editor.reference.ReferencePropertyEditor_Edit.maxMultipleError",multiplicity)}</span>
+</p>
 </ul>
+<script>
+$(function() {
+	const $ul = $("#" + es("<%=StringUtil.escapeJavaScript(ulId)%>"));
+	const $errorMsg = $(".error-multiplicity", $ul); 
+	
+	$(":checkbox[name='" + es("<%=StringUtil.escapeJavaScript(propName)%>") + "']", $ul).on("change", function() {
+
+		const checkedCount = $(":checkbox[name='" + es("<%=StringUtil.escapeJavaScript(propName)%>") + "']:checked", $ul).length;
+		if (<%=pd.getMultiplicity()%> > 1 && checkedCount > <%=pd.getMultiplicity()%>) {
+			$errorMsg.show();  
+		} else {
+			$errorMsg.hide(); 
+		}
+	});
+
+	<%-- common.js --%>
+	addEditValidator(function() {
+		const checkedCount = $(":checkbox[name='" + es("<%=StringUtil.escapeJavaScript(propName)%>") + "']:checked", $ul).length;
+		if (<%=pd.getMultiplicity()%> > 1 && checkedCount > <%=pd.getMultiplicity()%>) {
+			alert("${m:rs("mtp-gem-messages","command.generic.detail.DetailCommandBase.inputErr")}");
+			return false;
+		}
+		return true;
+	});
+}); 
+</script>
 <%
 	} else if (editor.getDisplayType() == ReferenceDisplayType.TREE && updatable && !isMappedby) {
 		//ツリー(基本はリンクと同じ、選択ダイアログを変える)
@@ -863,7 +1101,7 @@ $(function() {
 		}
 
 		//初期値として設定された際に、NameやVersionが未指定の場合を考慮して詰め直す
-		List<Entity> entityList = getLinkTypeItems(rootDefName, viewName, propValue, pd, editor);
+		List<Entity> entityList = getLinkTypeItems(rootDefName, viewName, propValue, pd, editor, element);
 
 		//ネストテーブルに使われる際に、プロパティ名にカッコとドット区切りを入れ替える
 		String _propName = propName.replace("[", "").replace("]","").replace(".", "_");
@@ -879,7 +1117,9 @@ function <%=toggleInsBtnFunc%>() {
 	toggleRefInsertBtn("ul_" + _propName, <%=pd.getMultiplicity()%>, "ins_btn_" + _propName);
 }
 </script>
-<ul id="<c:out value="<%=ulId %>"/>" data-deletable="<c:out value="<%=(!hideDeleteButton && updatable) %>"/>" class="mb05">
+<ul id="<c:out value="<%=ulId %>"/>" data-deletable="
+	<c:out value="<%=(!hideDeleteButton && updatable) %>" />" class="mb05" data-reference-modal="true"
+	<%=referenceModalSizeAttributes %>>
 <%
 		for (int i = 0; i < entityList.size(); i++) {
 			Entity refEntity = entityList.get(i);
@@ -891,21 +1131,51 @@ function <%=toggleInsBtnFunc%>() {
 <li id="<c:out value="<%=liId %>"/>" class="list-add">
 <%
 			if (editPageDetail) {
+				String showReference = "showReference(" 
+					+ "'" + StringUtil.escapeJavaScript(viewAction) + "'" 
+					+ ", '" + StringUtil.escapeJavaScript(refDefName) + "'"
+					+ ", '" + StringUtil.escapeJavaScript(refEntity.getOid()) + "'"
+					+ ", '" + refEntity.getVersion() + "'"
+					+ ", '" + StringUtil.escapeJavaScript(linkId) + "'"
+					+ ", " + refEdit 
+					+ ", null"
+					+ ", '" + rootDefName + "'"
+					+ ", '" + viewName + "'"
+					+ ", '" + propName + "'"
+					+ ", '" + viewType + "'"
+					+ ", '" + _refSectionIndex + "'"
+					+ ", '" + StringUtil.escapeJavaScript(rootOid) + "'"
+					+ ", '" + StringUtil.escapeJavaScript(rootVersion) + "'" 
+					+ ")";
 %>
-<a href="javascript:void(0)" class="modal-lnk" style="<c:out value="<%=customStyle%>"/>" id="<c:out value="<%=linkId %>"/>" data-linkId="<c:out value="<%=linkId %>"/>" 
- onclick="showReference('<%=StringUtil.escapeJavaScript(viewAction)%>', '<%=StringUtil.escapeJavaScript(refDefName)%>', '<%=StringUtil.escapeJavaScript(refEntity.getOid())%>', '<%=refEntity.getVersion() %>', '<%=StringUtil.escapeJavaScript(linkId)%>', <%=refEdit %>, null, '<%=rootDefName%>', '<%=viewName%>', '<%=propName%>', '<%=viewType%>', '<c:out value="<%=refSectionIndex%>" />', '<%=StringUtil.escapeJavaScript(rootOid) %>', '<%=StringUtil.escapeJavaScript(rootVersion) %>')">
- <c:out value="<%=displayPropLabel %>" /></a>
+<a href="javascript:void(0)" class="modal-lnk" data-reference-modal="true" <%=referenceModalSizeAttributes %> style="
+	<c:out value="<%=customStyle%>" />"
+ id="<c:out value="<%=linkId %>"/>" data-linkId="<c:out value="<%=linkId %>"/>" 
+ onclick="<c:out value="<%=showReference %>"/>"><c:out value="<%=displayPropLabel %>" /></a>
 <%
 				if (!hideDeleteButton && updatable) {
+					String deleteItem = "deleteItem(" 
+						+ "'" + StringUtil.escapeJavaScript(liId) + "'" 
+						+ ", " + toggleInsBtnFunc
+						+ ")";
 %>
 <input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.delete')}" class="gr-btn-02 del-btn" 
- onclick="deleteItem('<%=StringUtil.escapeJavaScript(liId)%>', <%=toggleInsBtnFunc%>)" />
+ onclick="<c:out value="<%=deleteItem %>"/>" />
 <%				}
 			} else {
+				String showReference = "showReference(" 
+					+ "'" + StringUtil.escapeJavaScript(viewAction) + "'" 
+					+ ", '" + StringUtil.escapeJavaScript(refDefName) + "'"
+					+ ", '" + StringUtil.escapeJavaScript(refEntity.getOid()) + "'"
+					+ ", '" + refEntity.getVersion() + "'"
+					+ ", '" + StringUtil.escapeJavaScript(linkId) + "'"
+					+ ", false"  
+					+ ")";
 %>
-<a href="javascript:void(0)" class="modal-lnk" style="<c:out value="<%=customStyle%>"/>" id="<c:out value="<%=linkId %>"/>" data-linkId="<c:out value="<%=linkId %>"/>" 
- onclick="showReference('<%=StringUtil.escapeJavaScript(viewAction)%>', '<%=StringUtil.escapeJavaScript(refDefName)%>', '<%=StringUtil.escapeJavaScript(refEntity.getOid())%>', '<%=refEntity.getVersion() %>', '<%=StringUtil.escapeJavaScript(linkId)%>', false)">
- <c:out value="<%=displayPropLabel %>" /></a>
+<a href="javascript:void(0)" class="modal-lnk" data-reference-modal="true" <%=referenceModalSizeAttributes %> style="
+	<c:out value="<%=customStyle%>" />"
+ id="<c:out value="<%=linkId %>"/>" data-linkId="<c:out value="<%=linkId %>"/>" 
+ onclick="<c:out value="<%=showReference %>"/>"><c:out value="<%=displayPropLabel %>" /></a>
 <%
 			}
 %>
@@ -932,7 +1202,7 @@ function <%=toggleInsBtnFunc%>() {
 				String upperType = "";
 				if (editor.getLinkProperty() != null) {
 					linkPropName = editor.getLinkProperty().getLinkFromPropertyName();
-					PropertyEditor upperEditor = getLinkUpperPropertyEditor(rootDefName, viewName, editor.getLinkProperty(), rootEntity);
+					PropertyEditor upperEditor = getLinkUpperPropertyEditor(rootDefName, viewName, editor.getLinkProperty(), nestPropertyName, rootEntity);
 					upperType = getLinkUpperType(upperEditor);
 				}
 %>
@@ -955,7 +1225,7 @@ function <%=toggleInsBtnFunc%>() {
  data-refEdit="<c:out value="<%=refEdit%>"/>"
  data-selCallbackKey="<c:out value="<%=selCallbackKey%>"/>"
  data-delCallbackKey="<c:out value="<%=delCallbackKey%>"/>"
- data-refSectionIndex="<c:out value="<%=refSectionIndex%>"/>"
+ data-refSectionIndex="<%=_refSectionIndex%>"
  data-entityOid="<c:out value="<%=StringUtil.escapeJavaScript(rootOid)%>"/>"
  data-entityVersion="<c:out value="<%=StringUtil.escapeJavaScript(rootVersion)%>"/>"
  />
@@ -966,7 +1236,9 @@ function <%=toggleInsBtnFunc%>() {
 				String insBtnStyle = "";
 				if (pd.getMultiplicity() != -1 && entityList.size() >= pd.getMultiplicity()) insBtnStyle = "display: none;";
 %>
-<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.new')}" class="gr-btn-02 modal-btn ins-btn" id="<c:out value="<%=insBtnId %>"/>" style="<c:out value="<%=insBtnStyle %>"/>"/>
+<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.new')}"
+	class="gr-btn-02 modal-btn ins-btn" data-reference-modal="true"<%=referenceModalSizeAttributes %> id="<c:out value="<%=insBtnId %>"/>" style="
+<c:out value="<%=insBtnStyle %>" />"/>
 <script type="text/javascript">
 $(function() {
 	var callback = function(entity, propName) {
@@ -997,6 +1269,14 @@ $(function() {
 	};
 	var selCallbackKey = "<%=selCallbackKey%>";
 	scriptContext[selCallbackKey] = selCallback;
+
+	var dynamicParamCallback = function(urlParam) {
+		<%if (checkActionType(editor.getDynamicUrlParameterAction(), UrlParameterActionType.ADD) && StringUtil.isNotBlank(editor.getDynamicUrlParameter())) {%>
+		<%=editor.getDynamicUrlParameter()%>
+		<%} else {%>
+		return urlParam;
+		<%}%>
+	};
 	var params = {
 		addAction: "<%=StringUtil.escapeJavaScript(addAction) %>"
 		, viewAction: "<%=StringUtil.escapeJavaScript(viewAction) %>"
@@ -1009,11 +1289,12 @@ $(function() {
 		, parentDefName: "<%=StringUtil.escapeJavaScript(defName)%>"
 		, parentViewName: "<%=StringUtil.escapeJavaScript(viewName)%>"
 		, viewType: "<%=StringUtil.escapeJavaScript(viewType)%>"
-		, refSectionIndex: "<c:out value="<%=refSectionIndex%>"/>"
+		, refSectionIndex: "<%=_refSectionIndex%>"
 		, entityOid: "<%=StringUtil.escapeJavaScript(rootOid)%>"
 		, entityVersion: "<%=StringUtil.escapeJavaScript(rootVersion)%>"
 		, refEdit: <%=refEdit %>
 		, callbackKey: key
+		, customStyle: "<%=StringUtil.escapeJavaScript(customStyle) %>"
 	}
 	var $insBtn = $(":button[id='<%=StringUtil.escapeJavaScript(insBtnId)%>']");
 	for (key in params) {
@@ -1022,7 +1303,7 @@ $(function() {
 	$insBtn.on("click", function() {
 		insertReference(params.addAction, params.viewAction, params.defName, params.propName, params.multiplicity,
 				 params.urlParam, params.parentOid, params.parentVersion, params.parentDefName, params.parentViewName, 
-				 params.refEdit, callback, this, delCallback, params.viewType, params.refSectionIndex, params.entityOid, params.entityVersion);
+				 params.refEdit, callback, this, delCallback, params.viewType, params.refSectionIndex, params.entityOid, params.entityVersion, dynamicParamCallback, params.customStyle);
 	});
 
 });
@@ -1058,6 +1339,8 @@ $(function() {
 		String selUniqueRefCallback = "selUniqueRefCallback_" + StringUtil.escapeJavaScript(propName);
 		String insUniqueRefCallback = "insUniqueRefCallback_" + StringUtil.escapeJavaScript(propName);
 		String toggleAddBtnFunc = "toggleAddBtn_" + StringUtil.escapeJavaScript(propName);
+		String selDynamicParamCallback = "selDynamicParamCallback_" + StringUtil.escapeJavaScript(propName);
+		String insDynamicParamCallback = "insDynamicParamCallback_" + StringUtil.escapeJavaScript(propName);
 %>
 <script type="text/javascript">
 $(function() {
@@ -1090,12 +1373,34 @@ $(function() {
 	};
 	var insKey = "<%=insUniqueRefCallback%>";
 	scriptContext[insKey] = insUniqueRefCallback;
+
+	var selDynamicParamCallback = function(urlParam) {
+		<%if (checkActionType(editor.getDynamicUrlParameterAction(), UrlParameterActionType.SELECT) && StringUtil.isNotBlank(editor.getDynamicUrlParameter())) {%>
+		<%=editor.getDynamicUrlParameter()%>
+		<%} else {%>
+		return urlParam;
+		<%}%>
+	}; 
+	var selDynamicParamKey = "<%=selDynamicParamCallback%>";
+	scriptContext[selDynamicParamKey] = selDynamicParamCallback;
+
+	var insDynamicParamCallback = function(urlParam) {
+		<%if (checkActionType(editor.getDynamicUrlParameterAction(), UrlParameterActionType.ADD) && StringUtil.isNotBlank(editor.getDynamicUrlParameter())) {%>
+		<%=editor.getDynamicUrlParameter()%>
+		<%} else {%>
+		return urlParam;
+		<%}%>
+	}; 
+	var insDynamicParamKey = "<%=insDynamicParamCallback%>";
+	scriptContext[insDynamicParamKey] = insDynamicParamCallback;
 });
 </script>
-<ul id="<c:out value="<%=ulId %>"/>" data-deletable="<c:out value="<%=(!hideDeleteButton && updatable) %>"/>" class="mb05">
+<ul id="<c:out value="<%=ulId %>"/>" data-deletable="
+	<c:out value="<%=(!hideDeleteButton && updatable) %>" />" class="mb05" data-reference-modal="true"
+	<%=referenceModalSizeAttributes %>>
 <%
 		//初期値として設定された際に、NameやVersionが未指定の場合を考慮して詰め直す
-		List<Entity> entityList = getLinkTypeItems(rootDefName, viewName, propValue, pd, editor);
+		List<Entity> entityList = getLinkTypeItems(rootDefName, viewName, propValue, pd, editor, element);
 		int length = entityList.size();
 		//多重度が１で、登録されたデータが1件も無い場合、空エンティティ1件を作成します。
 		if (!isMultiple && length == 0) {
@@ -1107,11 +1412,18 @@ $(function() {
 			Entity refEntity = entityList.get(i);
 			String id = propName + i;
 			String liId = "li_" + id;
-			String linkId = propName + "_" + refEntity.getOid();
-			String dispPropLabel = getDisplayPropLabel(editor, refEntity);
-
+			String linkId = "";
+			String linkDisplayStyle = "";
+			String dispPropLabel = "";
 			String key = "";
-			if (length > 0) key = refEntity.getOid() + "_" + refEntity.getVersion();
+			// 多重度1で値が未指定の場合の空エンティティは、リンクのIDを指定しない、非表示にする
+			if (refEntity.getOid() != null) {
+				linkId = propName + "_" + refEntity.getOid();
+				dispPropLabel = getDisplayPropLabel(editor, refEntity);
+				key = refEntity.getOid() + "_" + refEntity.getVersion();
+			} else {
+				linkDisplayStyle = "display:none;";
+			}
 
 %>
 <li id="<c:out value="<%=liId %>"/>" class="list-add unique-list refUnique"
@@ -1124,7 +1436,9 @@ $(function() {
  data-viewAction="<c:out value="<%=viewAction %>"/>"
  data-addAction="<c:out value="<%=addAction %>"/>"
  data-selectUrlParam="<c:out value="<%=selBtnUrlParam %>"/>"
+ data-selectDynamicParamCallback="<c:out value="<%=selDynamicParamCallback%>"/>"
  data-insertUrlParam="<c:out value="<%=insBtnUrlParam %>"/>"
+ data-insertDynamicParamCallback="<c:out value="<%=insDynamicParamCallback%>"/>"
  data-refDefName="<c:out value="<%=refDefName%>"/>"
  data-refViewName="<c:out value="<%=_viewName%>"/>"
  data-refEdit="<c:out value="<%=refEdit%>"/>"
@@ -1135,9 +1449,10 @@ $(function() {
  data-multiplicity="<%=multiplicity%>"
  data-selUniqueRefCallback="<c:out value="<%=selUniqueRefCallback%>"/>"
  data-insUniqueRefCallback="<c:out value="<%=insUniqueRefCallback%>"/>"
- data-refSectionIndex="<c:out value="<%=refSectionIndex%>"/>"
+ data-refSectionIndex="<%=_refSectionIndex%>"
  data-entityOid="<c:out value="<%=StringUtil.escapeJavaScript(rootOid)%>"/>"
  data-entityVersion="<c:out value="<%=StringUtil.escapeJavaScript(rootVersion)%>"/>"
+ data-customStyle="<c:out value="<%=StringUtil.escapeJavaScript(customStyle)%>"/>"
 >
 <span class="unique-key">
 <%
@@ -1148,36 +1463,62 @@ $(function() {
 			if (!hideSelectButton) {
 				String selBtnId = "sel_btn_" + propName + i;
 %>
-<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.select')}" class="gr-btn-02 modal-btn sel-btn" id="<c:out value="<%=selBtnId %>"/>" data-propName="<c:out value="<%=propName %>"/>" />
+<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.select')}"
+	class="gr-btn-02 modal-btn sel-btn" data-reference-modal="true"<%=referenceModalSizeAttributes %> id="<c:out value="<%=selBtnId %>"/>"
+data-propName="<c:out value="<%=propName %>" />" />
 <%
 			}
 
 			if (auth.checkPermission(new EntityPermission(refDefName, EntityPermission.Action.CREATE)) && !hideRegistButton) {
 				String insBtnId = "ins_btn_" + propName + i;
 %>
-<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.new')}" class="gr-btn-02 modal-btn ins-btn" id="<c:out value="<%=insBtnId %>"/>"
- data-parentOid="<%=StringUtil.escapeJavaScript(parentOid)%>"
- data-parentVersion="<%=StringUtil.escapeJavaScript(parentVersion)%>"
+<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.new')}"
+	class="gr-btn-02 modal-btn ins-btn" data-reference-modal="true"<%=referenceModalSizeAttributes %> id="<c:out value="<%=insBtnId %>"/>"
+ data-parentOid="<c:out value="<%=StringUtil.escapeJavaScript(parentOid)%>"/>"
+ data-parentVersion="<c:out value="<%=StringUtil.escapeJavaScript(parentVersion)%>"/>"
 />
 <%
 			}
+
+			String showReference = "showReference(" 
+				+ "'" + StringUtil.escapeJavaScript(viewAction) + "'" 
+				+ ", '" + StringUtil.escapeJavaScript(refDefName) + "'"
+				+ ", '" + StringUtil.escapeJavaScript(refEntity.getOid()) + "'"
+				+ ", '" + refEntity.getVersion() + "'"
+				+ ", '" + StringUtil.escapeJavaScript(linkId) + "'"
+				+ ", " + refEdit 
+				+ ", null"
+				+ ", '" + rootDefName + "'"
+				+ ", '" + viewName + "'"
+				+ ", '" + propName + "'"
+				+ ", '" + viewType + "'"
+				+ ", '" + _refSectionIndex + "'"
+				+ ", '" + StringUtil.escapeJavaScript(rootOid) + "'"
+				+ ", '" + StringUtil.escapeJavaScript(rootVersion) + "'" 
+				+ ")";
 %>
 </span>
 <span class="unique-ref">
-<a href="javascript:void(0)" class="modal-lnk" id="<c:out value="<%=linkId %>"/>" data-linkId="<c:out value="<%=linkId %>"/>" onclick="showReference('<%=StringUtil.escapeJavaScript(viewAction)%>', '<%=StringUtil.escapeJavaScript(refDefName)%>', '<%=StringUtil.escapeJavaScript(refEntity.getOid())%>', '<%=refEntity.getVersion() %>', '<%=StringUtil.escapeJavaScript(linkId)%>', <%=refEdit %>, null, '<%=rootDefName%>', '<%=viewName%>', '<%=propName%>', '<%=viewType%>', '<c:out value="<%=refSectionIndex%>" />', '<%=StringUtil.escapeJavaScript(rootOid) %>', '<%=StringUtil.escapeJavaScript(rootVersion) %>')"><c:out value="<%=dispPropLabel %>" /></a>
+<a href="javascript:void(0)" class="modal-lnk" data-reference-modal="true" <%=referenceModalSizeAttributes %> id="
+	<c:out value="<%=linkId %>" />"
+	data-linkId="
+	<c:out value="<%=linkId %>" />" style="
+	<c:out value="<%=linkDisplayStyle%>" />
+	<c:out value="<%=customStyle%>" />"
+  onclick="<c:out value="<%=showReference %>"/>"><c:out value="<%=dispPropLabel %>" /></a>
 <%
 
 			if (!hideDeleteButton && updatable) {
 
-				if (isMultiple) {
+				String deleteItem = "deleteUniqueRefItem(" 
+					+ "'" + StringUtil.escapeJavaScript(liId) + "'"
+					+ ", " + isMultiple
+					+ ", " + (isMultiple ? toggleAddBtnFunc : null)
+					+ ")";
 %>
-<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.delete')}" class="gr-btn-02 del-btn" onclick="deleteItem('<%=StringUtil.escapeJavaScript(liId)%>', <%=toggleAddBtnFunc %>)" />
+<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.delete')}" class="gr-btn-02 del-btn"
+ onclick="<c:out value="<%=deleteItem %>"/>"/>
 <%
-				} else {
-%>
-<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.delete')}" class="gr-btn-02 del-btn" />
-<%
-				}
 			}
 %>
 </span>
@@ -1198,7 +1539,9 @@ $(function() {
  data-viewAction="<c:out value="<%=viewAction %>"/>"
  data-addAction="<c:out value="<%=addAction %>"/>"
  data-selectUrlParam="<c:out value="<%=selBtnUrlParam %>"/>"
+ data-selectDynamicParamCallback="<c:out value="<%=selDynamicParamCallback%>"/>"
  data-insertUrlParam="<c:out value="<%=insBtnUrlParam %>"/>"
+ data-insertDynamicParamCallback="<c:out value="<%=insDynamicParamCallback%>"/>"
  data-refDefName="<c:out value="<%=refDefName%>"/>"
  data-refViewName="<c:out value="<%=_viewName%>"/>"
  data-refEdit="<c:out value="<%=refEdit%>"/>"
@@ -1209,31 +1552,36 @@ $(function() {
  data-multiplicity="<%=multiplicity%>"
  data-selUniqueRefCallback="<c:out value="<%=selUniqueRefCallback%>"/>"
  data-insUniqueRefCallback="<c:out value="<%=insUniqueRefCallback%>"/>"
- data-refSectionIndex="<c:out value="<%=refSectionIndex%>"/>"
+ data-refSectionIndex="<%=_refSectionIndex%>"
  data-entityOid="<c:out value="<%=StringUtil.escapeJavaScript(rootOid)%>"/>"
  data-entityVersion="<c:out value="<%=StringUtil.escapeJavaScript(rootVersion)%>"/>"
+ data-customStyle="<c:out value="<%=StringUtil.escapeJavaScript(customStyle)%>"/>"
 >
 <span class="unique-key">
 <input type="text" style="<c:out value="<%=customStyle%>"/>" class="unique-form-size-01 inpbr" />
 <%
 		if (!hideSelectButton) {
 %>
-<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.select')}" class="gr-btn-02 modal-btn sel-btn" data-propName="<c:out value="<%=propName %>"/>" />
+<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.select')}"
+	class="gr-btn-02 modal-btn sel-btn" data-reference-modal="true"<%=referenceModalSizeAttributes %> data-propName="<c:out value="<%=propName %>"/>" />
 <%
 		}
 
 		if (auth.checkPermission(new EntityPermission(refDefName, EntityPermission.Action.CREATE)) && !hideRegistButton) {
 %>
-<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.new')}" class="gr-btn-02 modal-btn ins-btn"
- data-parentOid="<%=StringUtil.escapeJavaScript(parentOid)%>"
- data-parentVersion="<%=StringUtil.escapeJavaScript(parentVersion)%>"
+<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.new')}"
+	class="gr-btn-02 modal-btn ins-btn" data-reference-modal="true"<%=referenceModalSizeAttributes %>
+ data-parentOid="<c:out value="<%=StringUtil.escapeJavaScript(parentOid)%>"/>"
+ data-parentVersion="<c:out value="<%=StringUtil.escapeJavaScript(parentVersion)%>"/>"
 />
 <%
 		}
 %>
 </span>
 <span class="unique-ref">
-<a href="javascript:void(0)" class="modal-lnk"></a>
+<a href="javascript:void(0)" class="modal-lnk" data-reference-modal="true" <%=referenceModalSizeAttributes %> style="
+	<c:out value="
+	<%=customStyle%>"/>"></a>
 <%
 
 		if (!hideDeleteButton && updatable) {
@@ -1251,6 +1599,17 @@ $(function() {
 		if (isMultiple) {
 			String addBtnStyle = "";
 			if (pd.getMultiplicity() != -1 && length >= pd.getMultiplicity()) addBtnStyle = "display: none;";
+
+			String addUniqueRefItem = "addUniqueRefItem(" 
+				+ "'" + StringUtil.escapeJavaScript(ulId) + "'" 
+				+ ", " + multiplicity
+				+ ", '" + StringUtil.escapeJavaScript(dummyRowId) + "'"
+				+ ", '" + StringUtil.escapeJavaScript(propName) + "'"
+				+ ", 'id_count_" + StringUtil.escapeJavaScript(propName) + "'"
+				+ ", " + toggleAddBtnFunc
+				+ ", " + toggleAddBtnFunc
+				+ ", '" + StringUtil.escapeJavaScript(customStyle) + "'"
+				+ ")";
 %>
 <script type="text/javascript">
 function <%=toggleAddBtnFunc%>() {
@@ -1258,13 +1617,14 @@ function <%=toggleAddBtnFunc%>() {
 	$("#id_addBtn_<c:out value="<%=propName%>"/>").toggle(display);
 }
 </script>
-<input type="button" id="id_addBtn_<c:out value="<%=propName%>"/>" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.add')}" class="gr-btn-02 add-btn" style="<%=addBtnStyle%>" onclick="addUniqueRefItem('<%=StringUtil.escapeJavaScript(ulId)%>', <%=multiplicity%>, '<%=StringUtil.escapeJavaScript(dummyRowId)%>', '<%=StringUtil.escapeJavaScript(propName)%>', 'id_count_<%=StringUtil.escapeJavaScript(propName)%>', <%=toggleAddBtnFunc%>, <%=toggleAddBtnFunc%>)" />
+<input type="button" id="id_addBtn_<c:out value="<%=propName%>"/>" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.add')}" class="gr-btn-02 add-btn" style="<%=addBtnStyle%>"
+ onclick="<c:out value="<%=addUniqueRefItem %>"/>" />
 <%
 		}
 
 	} else if (editor.getDisplayType() == ReferenceDisplayType.REFCOMBO && updatable && !isMappedby) {
 		//連動コンボ
-		//多重度1限定
+		//多重度1限定 //FIXME 多重度複数のロジックもあるが限定か？
 %>
 <jsp:include page="ReferencePropertyEditor_RefCombo.jsp" />
 <%
@@ -1276,9 +1636,15 @@ function <%=toggleAddBtnFunc%>() {
 %>
 <jsp:include page="ReferencePropertyEditor_Table.jsp" />
 <%
+	} else if (editor.getDisplayType() == ReferenceDisplayType.SELECTFILTER) {
+%>
+
+<jsp:include page="ReferencePropertyEditor_SelectFilter.jsp" />
+
+<%
 	} else {
 		//初期値として設定された際に、NameやVersionが未指定の場合を考慮して詰め直す
-		List<Entity> entityList = getLinkTypeItems(rootDefName, viewName, propValue, pd, editor);
+		List<Entity> entityList = getLinkTypeItems(rootDefName, viewName, propValue, pd, editor, element);
 		request.setAttribute(Constants.EDITOR_PROP_VALUE, entityList.toArray(new Entity[0]));
 		request.setAttribute(Constants.OUTPUT_HIDDEN, true);
 %>

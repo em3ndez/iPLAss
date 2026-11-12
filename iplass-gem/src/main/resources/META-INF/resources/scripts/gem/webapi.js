@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -356,7 +356,7 @@ function searchSelectList(webapi, searchType, formName, func) {
 	});
 }
 
-function searchEntityList(webapi, defName, viewName, filterName, offset, sortKey, sortType, func) {
+function searchEntityList(webapi, defName, viewName, filterName, offset, sortKey, sortType, searchAsync, func) {
 	var params = "{";
 	params += "\"defName\":\"" + defName + "\"";
 	params += ",\"viewName\":\"" + viewName + "\"";
@@ -369,11 +369,11 @@ function searchEntityList(webapi, defName, viewName, filterName, offset, sortKey
 		params += ",\"sortType\":\"" + sortType + "\"";
 	}
 	params += "}";
+
 	postAsync(webapi, params, function(results){
-		var count = results.count;
 		var list = results.htmlData;
-		if (func && $.isFunction(func)) func.call(this, count, list);
-	});
+		if (func && $.isFunction(func)) func.call(this, list);
+	}, searchAsync == "true" ? true : false);
 }
 
 function searchNameList(webapi, defName, viewName, filterName, offset, func) {
@@ -384,13 +384,12 @@ function searchNameList(webapi, defName, viewName, filterName, offset, func) {
 	params += ",\"offset\":\"" + offset + "\"";
 	params += "}";
 	postAsync(webapi, params, function(results){
-		var count = results.count;
 		var list = results.list;
-		if (func && $.isFunction(func)) func.call(this, count, list);
+		if (func && $.isFunction(func)) func.call(this, list);
 	});
 }
 
-function deleteList(webapi, oid, viewName, _t, func) {
+function deleteList(webapi, oid, viewName, allVersion, _t, func) {
 	var first = true;
 	var params = "{";
 	params += "\"defName\":\"" + $(":hidden[name='defName']").val() + "\"";
@@ -405,6 +404,7 @@ function deleteList(webapi, oid, viewName, _t, func) {
 		params += "\"" + this + "\"";
 	});
 	params += "]";
+	params += ",\"allVersion\":\"" + allVersion + "\"";
 	params += ",\"viewName\":\"" + viewName + "\"";
 	params += "}";
 	postAsync(webapi, params, function(results) {
@@ -413,7 +413,7 @@ function deleteList(webapi, oid, viewName, _t, func) {
 	});
 }
 
-function deleteAll(webapi, searchType, formName, _t, func) {
+function deleteAll(webapi, searchType, formName, allVersion, _t, func) {
 	//共通項目defName,searchType
 	$(":hidden[name='searchType']").val(searchType);
 	$(":hidden[name='formName']").val(formName);
@@ -422,6 +422,7 @@ function deleteAll(webapi, searchType, formName, _t, func) {
 	data += "&searchType=" + searchType;
 	data += "&isSearch=false";
 	data += "&isCount=true";
+	data += "&allVersion=" + allVersion;
 	data += "&_t=" + _t;
 	$.ajax({
 		type: "POST",
@@ -632,6 +633,25 @@ function getUniqueItem(webapi, defName, viewName, viewType, propName, uniqueValu
 	});
 }
 
+function getSelectFilterItem(webapi, defName, viewName, propName, _params, viewType, func) {
+	const body = {
+		defName: String(defName),
+		viewName: String(viewName),
+		propName: String(propName),
+		viewType: String(viewType)
+	};
+	for (let i = 0; i < _params.length; i++) {
+		const key = _params[i].key;
+		const value = _params[i].value;
+		body[key] = value == null ? "" : String(value);
+	}
+	postAsync(webapi, JSON.stringify(body), function (results) {
+		var entities = results.data;
+		var count = results.count;
+		if (func && $.isFunction(func)) func.call(this, entities, count);
+	});
+}
+
 ////////////////////////////////////////////////////////
 //バージョン取得用のJavascript
 ////////////////////////////////////////////////////////
@@ -670,7 +690,7 @@ function _lock(webapi, defName, viewName, oid, token, func) {
 }
 
 ////////////////////////////////////////////////////////
-//連動コンボ用のJavascript
+//参照コンボ用のJavascript
 ////////////////////////////////////////////////////////
 function refComboChange(webapi, defName, viewName, propName, _params, viewType, func) {
 	var params = "{";
@@ -689,6 +709,9 @@ function refComboChange(webapi, defName, viewName, propName, _params, viewType, 
 	});
 }
 
+/**
+ @deprecated use getReferenceComboSetting
+ */
 function getPropertyEditor(webapi, defName, viewName, propName, viewType, entityOid, entityVersion, func) {
 	var params = "{";
 	params += "\"defName\":\"" + defName + "\"";
@@ -708,23 +731,42 @@ function getPropertyEditor(webapi, defName, viewName, propName, viewType, entity
 	});
 }
 
-function searchParent(webapi, defName, viewName, propName, viewType, currentName, oid, entityOid, entityVersion, func) {
-	var params = "{";
+function getReferenceComboSetting(webapi, defName, viewName, propName, viewType, entityOid, entityVersion, func) {
+	let params = "{";
 	params += "\"defName\":\"" + defName + "\"";
 	params += ",\"viewName\":\"" + viewName + "\"";
 	params += ",\"propName\":\"" + propName + "\"";
 	params += ",\"viewType\":\"" + viewType + "\"";
-	params += ",\"currentName\":\"" + currentName + "\"";
-	params += ",\"oid\":\"" + oid + "\"";
+	if (typeof entityOid !== "undefined" && entityOid != null) {
+		params += ",\"entityOid\":\"" + entityOid + "\"";
+	}
+	if (typeof entityVersion !== "undefined" && entityVersion != null) {
+		params += ",\"entityVersion\":\"" + entityVersion + "\"";
+	}
+	params += "}";
+	postAsync(webapi, params, function(results) {
+		const setting = results.setting;
+		if (func && $.isFunction(func)) func.call(this, setting);
+	});
+}
+
+function searchParent(webapi, defName, viewName, propName, viewType, targetPath, childOid, entityOid, entityVersion, func) {
+	let params = "{";
+	params += "\"defName\":\"" + defName + "\"";
+	params += ",\"viewName\":\"" + viewName + "\"";
+	params += ",\"propName\":\"" + propName + "\"";
+	params += ",\"viewType\":\"" + viewType + "\"";
 	if (typeof entityOid !== "undefined" && entityOid !== null) {
 		params += ",\"entityOid\":\"" + entityOid + "\"";
 	}
 	if (typeof entityVersion !== "undefined" && entityVersion !== null) {
 		params += ",\"entityVersion\":\"" + entityVersion + "\"";
 	}
+	params += ",\"targetPath\":\"" + targetPath + "\"";
+	params += ",\"childOid\":\"" + childOid + "\"";
 	params += "}";
 	postAsync(webapi, params, function(results) {
-		var parent = results.parent;
+		const parent = results.parent;
 		if (func && $.isFunction(func)) func.call(this, parent);
 	});
 }

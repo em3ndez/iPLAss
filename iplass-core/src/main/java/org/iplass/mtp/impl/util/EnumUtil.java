@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -34,10 +34,13 @@ public class EnumUtil {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T extends Enum<T>> T toUpperCase(Enum<T> enm) {
-		if (enm == null) return null;
+		if (enm == null)
+			return null;
 		try {
-			Method method = enm.getDeclaringClass().getMethod("valueOf", new Class<?>[]{Class.class, String.class});
-			Object ret = method.invoke(null, new Object[]{enm.getDeclaringClass(), enm.name().toUpperCase()});
+			Method method = enm.getDeclaringClass()
+					.getMethod("valueOf", new Class<?>[] { Class.class, String.class });
+			Object ret = method.invoke(null, new Object[] { enm.getDeclaringClass(), enm.name()
+					.toUpperCase() });
 			return (T) ret;
 		} catch (IllegalArgumentException e) {
 		} catch (SecurityException e) {

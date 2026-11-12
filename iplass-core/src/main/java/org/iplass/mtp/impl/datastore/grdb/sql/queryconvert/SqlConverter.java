@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,6 +29,7 @@ import org.iplass.mtp.entity.Entity;
 import org.iplass.mtp.entity.definition.IndexType;
 import org.iplass.mtp.entity.definition.PropertyDefinitionType;
 import org.iplass.mtp.entity.query.ASTNode;
+import org.iplass.mtp.entity.query.AsOf.AsOfSpec;
 import org.iplass.mtp.entity.query.From;
 import org.iplass.mtp.entity.query.GroupBy;
 import org.iplass.mtp.entity.query.Having;
@@ -72,6 +73,7 @@ import org.iplass.mtp.entity.query.value.ValueExpression;
 import org.iplass.mtp.entity.query.value.aggregate.Aggregate;
 import org.iplass.mtp.entity.query.value.aggregate.Avg;
 import org.iplass.mtp.entity.query.value.aggregate.Count;
+import org.iplass.mtp.entity.query.value.aggregate.Listagg;
 import org.iplass.mtp.entity.query.value.aggregate.Max;
 import org.iplass.mtp.entity.query.value.aggregate.Median;
 import org.iplass.mtp.entity.query.value.aggregate.Min;
@@ -81,6 +83,8 @@ import org.iplass.mtp.entity.query.value.aggregate.StdDevSamp;
 import org.iplass.mtp.entity.query.value.aggregate.Sum;
 import org.iplass.mtp.entity.query.value.aggregate.VarPop;
 import org.iplass.mtp.entity.query.value.aggregate.VarSamp;
+import org.iplass.mtp.entity.query.value.aggregate.WithinGroup;
+import org.iplass.mtp.entity.query.value.aggregate.WithinGroupSortSpec;
 import org.iplass.mtp.entity.query.value.controlflow.Case;
 import org.iplass.mtp.entity.query.value.controlflow.Else;
 import org.iplass.mtp.entity.query.value.controlflow.When;
@@ -121,22 +125,23 @@ import org.iplass.mtp.impl.entity.property.PropertyType;
 import org.iplass.mtp.impl.entity.property.ReferencePropertyHandler;
 import org.iplass.mtp.impl.rdb.adapter.BaseRdbTypeAdapter;
 import org.iplass.mtp.impl.rdb.adapter.RdbAdapter;
+import org.iplass.mtp.impl.rdb.adapter.function.AggregateFunctionAdapter;
 import org.iplass.mtp.impl.rdb.adapter.function.FunctionAdapter;
 import org.iplass.mtp.impl.rdb.adapter.function.FunctionAdapter.FunctionContext;
 
 public class SqlConverter extends QueryVisitorSupport {
 	//TODO 全体的にReferenceを指定された場合の対応がされていない
-	
+
 	//TODO sqlインジェクション対策の再確認（sql文（みたいな構文）自体をapiから指定可能。項目値だけでなく、sql文自体にインジェクションの糸口がないかどうか）
 
 	private static final String INDEX_TABLE_ALIAS = "it";
 
 	private RdbAdapter rdbAdaptor;
-	
+
 	private SqlQueryContext context;
-	
+
 	private ArrayList<ASTNode> astNodeStack;//existsが使えない場合、INDEXテーブルの結合可能かどうかを判断する用のAstNodeのstack
-	
+
 	private boolean treatBindHint;//BINDヒントを処理するか否か
 
 	public SqlConverter(SqlQueryContext context, boolean treatBindHint) {
@@ -147,13 +152,13 @@ public class SqlConverter extends QueryVisitorSupport {
 			astNodeStack = new ArrayList<ASTNode>();
 		}
 	}
-	
+
 	private void push(ASTNode astNode) {
 		if (!rdbAdaptor.isUseSubQueryForIndexJoin()) {
 			astNodeStack.add(astNode);
 		}
 	}
-	
+
 	private void pop(ASTNode astNode) {
 		if (!rdbAdaptor.isUseSubQueryForIndexJoin()) {
 			ASTNode removed = astNodeStack.remove(astNodeStack.size() - 1);
@@ -209,12 +214,13 @@ public class SqlConverter extends QueryVisitorSupport {
 		push(select);
 		try {
 			if (select.getHintComment() != null) {
-				select.getHintComment().accept(this);
+				select.getHintComment()
+						.accept(this);
 			}
-			
+
 			context.changeCurrentClause(Clause.SELECT);
 			int colCount = 1;
-			
+
 			if (select.isDistinct()) {
 				context.append("DISTINCT ");
 			}
@@ -225,9 +231,8 @@ public class SqlConverter extends QueryVisitorSupport {
 				} else {
 					context.append(",");
 				}
-				
+
 				//special logic for EntityField.配列対応のため。（別名付けたい）
-				//FIXME select直下の配列しか対応していない。要包括的な対応
 				if (selectVal instanceof EntityField) {
 					EntityField entityField = (EntityField) selectVal;
 					PropertyHandler pDef = context.getProperty(entityField.getPropertyName());
@@ -237,8 +242,11 @@ public class SqlConverter extends QueryVisitorSupport {
 					context.notifyUsedPropertyName(entityField.getPropertyName());
 					GRdbPropertyStoreRuntime col = (GRdbPropertyStoreRuntime) pDef.getStoreSpecProperty();
 					if (col == null) {
-						throw new QueryException("Reference property:" + entityField + " itself can not be specified in select clause. Specify " + entityField + ".oid or other.");
+						throw new QueryException("Reference property:" + entityField + " itself can not be specified in select clause. Specify "
+								+ entityField + ".oid or other.");
 					}
+
+					col = targetColByIndexIfMulti(col, entityField);
 					String[] castExp = castExp(pDef);
 					List<GRdbPropertyStoreHandler> colList = col.asList();
 					for (int i = 0; i < colList.size(); i++) {
@@ -246,26 +254,30 @@ public class SqlConverter extends QueryVisitorSupport {
 							context.append(",");
 						}
 						if (castExp != null) {
-							context.getCurrentSb().append(castExp[0]);
+							context.getCurrentSb()
+									.append(castExp[0]);
 						}
 						colExp(context.getCurrentSb(), entityField.getPropertyName(), colList.get(i), context.isTreatSelectAsRawValue());
 						if (castExp != null) {
-							context.getCurrentSb().append(castExp[1]);
+							context.getCurrentSb()
+									.append(castExp[1]);
 						}
 						context.append(" as c" + colCount);//limit且つ、joinしていると別名をつけないとエラーとなってしまう。
 						colCount++;
 					}
 				} else {
-					
+
 					if (context.isTreatSelectAsRawValue()) {
-						PropertyType type = context.getValueTypeResolver().resolve(selectVal);
-						BaseRdbTypeAdapter typeAdapter = context.getRdb().getRdbTypeAdapter(type);
+						PropertyType type = context.getValueTypeResolver()
+								.resolve(selectVal);
+						BaseRdbTypeAdapter typeAdapter = context.getRdb()
+								.getRdbTypeAdapter(type);
 						typeAdapter.appendToTypedCol(context.getCurrentSb(), rdbAdaptor,
 								() -> selectVal.accept(this));
 					} else {
 						selectVal.accept(this);
 					}
-					
+
 					context.append(" as c" + colCount);//limit且つ、joinしていると別名をつけないとエラーとなってしまう。
 					colCount++;
 				}
@@ -287,12 +299,13 @@ public class SqlConverter extends QueryVisitorSupport {
 		}
 	}
 
+	@Override
 	public boolean visit(Literal literal) {
 		push(literal);
 		try {
 			BaseRdbTypeAdapter type = rdbAdaptor.getRdbTypeAdapter(literal.getValue());
 			if (literal.getValue() != null && context.isEnableBindVariable() && literal.isBindable()) {
-				context.getCurrentSb().append("?");
+				type.appendParameterPlaceholder(context.getCurrentSb(), rdbAdaptor);
 				context.addBindVariable(literal.getValue(), type);
 			} else {
 				type.appendToSqlAsRealType(literal.getValue(), context.getCurrentSb(), rdbAdaptor);
@@ -302,7 +315,7 @@ public class SqlConverter extends QueryVisitorSupport {
 			pop(literal);
 		}
 	}
-	
+
 	private void colExp(StringBuilder sb, String propName, GRdbPropertyStoreHandler col, boolean treatAsRawValue) {
 		if (treatAsRawValue || col.isNative()) {
 			String colPrefix = context.getColPrefix(propName, col);
@@ -310,32 +323,36 @@ public class SqlConverter extends QueryVisitorSupport {
 			if (col.getIndexColName() != null && context.checkIndexHint(propName, false)) {
 				sb.append(col.getIndexColName());
 			} else {
-				sb.append(col.getMetaData().getColumnName());
+				sb.append(col.getMetaData()
+						.getColumnName());
 			}
 		} else {
-			col.getSingleColumnRdbTypeAdapter().appendFromTypedCol(sb, rdbAdaptor,
-					() -> colExp(sb, propName, col, true));
+			col.getSingleColumnRdbTypeAdapter()
+					.appendFromTypedCol(sb, rdbAdaptor,
+							() -> colExp(sb, propName, col, true));
 		}
 	}
-	
+
 	private String[] castExp(PropertyHandler pDef) {
 		String[] castExp = null;
 		if ((context.getCurrentClause() == Clause.SELECT || context.getCurrentClause() == Clause.ORDERBYGROUPBY)
 				&& context.getStringTypeLengthOnQuery() != null) {
 			GRdbPropertyStoreRuntime col = (GRdbPropertyStoreRuntime) pDef.getStoreSpecProperty();
 			if (!col.isNative()) {
-				if (col.getSingleColumnRdbTypeAdapter().sqlType() == Types.VARCHAR
+				if (col.getSingleColumnRdbTypeAdapter()
+						.sqlType() == Types.VARCHAR
 						&& pDef.getEnumType() != PropertyDefinitionType.BINARY
 						&& pDef.getEnumType() != PropertyDefinitionType.LONGTEXT) {
 					//binary型以外の文字列カラムの値を指定長で切る
-					castExp = context.getRdb().castExp(Types.VARCHAR, context.getStringTypeLengthOnQuery(), null);
+					castExp = context.getRdb()
+							.castExp(Types.VARCHAR, context.getStringTypeLengthOnQuery(), null);
 				}
 			}
 		}
 		return castExp;
 
 	}
-	
+
 	@Override
 	public boolean visit(EntityField entityField) {
 		push(entityField);
@@ -346,15 +363,14 @@ public class SqlConverter extends QueryVisitorSupport {
 			}
 
 			context.notifyUsedPropertyName(entityField.getPropertyName());
-			
-			//FIXME 要、配列本格対応
-			//      親をたどって、切りのいいところでtreeをコピー。
-			//		とかは、EQLのASTレベルでやった方が速いか。。
+
 			GRdbPropertyStoreRuntime col = (GRdbPropertyStoreRuntime) pDef.getStoreSpecProperty();
 			if (col == null) {
-				throw new QueryException("Reference property:" + entityField + " itself can not be specified. Specify " + entityField + ".oid or other.");
+				throw new QueryException(
+						"Reference property:" + entityField + " itself can not be specified. Specify " + entityField + ".oid or other.");
 			}
-			
+
+			col = targetColByIndexIfMulti(col, entityField);
 			String[] castExp = castExp(pDef);
 			List<GRdbPropertyStoreHandler> cols = col.asList();
 			for (int i = 0; i < cols.size(); i++) {
@@ -362,27 +378,29 @@ public class SqlConverter extends QueryVisitorSupport {
 					context.append(",");
 				}
 				if (castExp != null) {
-					context.getCurrentSb().append(castExp[0]);
+					context.getCurrentSb()
+							.append(castExp[0]);
 				}
 				colExp(context.getCurrentSb(), entityField.getPropertyName(), cols.get(i), false);
 				if (castExp != null) {
-					context.getCurrentSb().append(castExp[1]);
+					context.getCurrentSb()
+							.append(castExp[1]);
 				}
 			}
-			
+
 			return true;
 		} finally {
 			pop(entityField);
 		}
 	}
-	
+
 	@Override
 	public boolean visit(RowValueList rowValueList) {
 		push(rowValueList);
 		try {
 			context.append("(");
 			boolean isFirst = true;
-			for (ValueExpression e: rowValueList.getRowValues()) {
+			for (ValueExpression e : rowValueList.getRowValues()) {
 				if (isFirst) {
 					isFirst = false;
 				} else {
@@ -402,49 +420,59 @@ public class SqlConverter extends QueryVisitorSupport {
 	public boolean visit(Count count) {
 		push(count);
 		try {
-			String funcName = rdbAdaptor.aggregateFunctionName(count);
-			context.append(funcName);
-			if (count.getValue() == null) {
-				context.append("(*)");
-			} else {
-				context.append("(");
-				if (count.isDistinct()) {
-					context.append("DISTINCT ");
-				}
-				count.getValue().accept(this);
-				context.append(")");
-			}
+			aggregateFunction(count);
 			return false;
 		} finally {
 			pop(count);
 		}
 	}
-	
-	
+
 	private void aggregateFunction(Aggregate agg) {
+		@SuppressWarnings("unchecked")
+		AggregateFunctionAdapter<Aggregate> fa = (AggregateFunctionAdapter<Aggregate>) rdbAdaptor.resolveAggregateFunction(agg.getClass());
+		if (fa == null) {
+			throw new QueryException(agg.getClass()
+					.getSimpleName() + " not supported.");
+		}
+
+		fa.toSQL(new FunctionContext() {
+			@Override
+			public void appendArgument(ValueExpression arg) {
+				arg.accept(SqlConverter.this);
+			}
+
+			@Override
+			public void append(String str) {
+				context.append(str);
+			}
+		}, agg, rdbAdaptor);
+	}
+
+	private void simpleAggregateFunction(Aggregate agg) {
 		String funcName = rdbAdaptor.aggregateFunctionName(agg);
 		context.append(funcName);
 		context.append("(");
-		agg.getValue().accept(this);
+		agg.getValue()
+				.accept(this);
 		context.append(")");
 	}
-	
+
 	@Override
 	public boolean visit(Sum sum) {
 		push(sum);
 		try {
-			aggregateFunction(sum);
+			simpleAggregateFunction(sum);
 			return false;
 		} finally {
 			pop(sum);
 		}
 	}
-	
+
 	@Override
 	public boolean visit(Avg avg) {
 		push(avg);
 		try {
-			aggregateFunction(avg);
+			simpleAggregateFunction(avg);
 			return false;
 		} finally {
 			pop(avg);
@@ -455,7 +483,7 @@ public class SqlConverter extends QueryVisitorSupport {
 	public boolean visit(Max max) {
 		push(max);
 		try {
-			aggregateFunction(max);
+			simpleAggregateFunction(max);
 			return false;
 		} finally {
 			pop(max);
@@ -466,7 +494,7 @@ public class SqlConverter extends QueryVisitorSupport {
 	public boolean visit(Min min) {
 		push(min);
 		try {
-			aggregateFunction(min);
+			simpleAggregateFunction(min);
 			return false;
 		} finally {
 			pop(min);
@@ -477,7 +505,7 @@ public class SqlConverter extends QueryVisitorSupport {
 	public boolean visit(StdDevPop stdDevPop) {
 		push(stdDevPop);
 		try {
-			aggregateFunction(stdDevPop);
+			simpleAggregateFunction(stdDevPop);
 			return false;
 		} finally {
 			pop(stdDevPop);
@@ -488,7 +516,7 @@ public class SqlConverter extends QueryVisitorSupport {
 	public boolean visit(StdDevSamp stdDevSamp) {
 		push(stdDevSamp);
 		try {
-			aggregateFunction(stdDevSamp);
+			simpleAggregateFunction(stdDevSamp);
 			return false;
 		} finally {
 			pop(stdDevSamp);
@@ -499,7 +527,7 @@ public class SqlConverter extends QueryVisitorSupport {
 	public boolean visit(VarPop varPop) {
 		push(varPop);
 		try {
-			aggregateFunction(varPop);
+			simpleAggregateFunction(varPop);
 			return false;
 		} finally {
 			pop(varPop);
@@ -510,7 +538,7 @@ public class SqlConverter extends QueryVisitorSupport {
 	public boolean visit(VarSamp varSamp) {
 		push(varSamp);
 		try {
-			aggregateFunction(varSamp);
+			simpleAggregateFunction(varSamp);
 			return false;
 		} finally {
 			pop(varSamp);
@@ -521,7 +549,7 @@ public class SqlConverter extends QueryVisitorSupport {
 	public boolean visit(Mode mode) {
 		push(mode);
 		try {
-			aggregateFunction(mode);
+			simpleAggregateFunction(mode);
 			return false;
 		} finally {
 			pop(mode);
@@ -532,7 +560,7 @@ public class SqlConverter extends QueryVisitorSupport {
 	public boolean visit(Median median) {
 		push(median);
 		try {
-			aggregateFunction(median);
+			simpleAggregateFunction(median);
 			return false;
 		} finally {
 			pop(median);
@@ -540,22 +568,47 @@ public class SqlConverter extends QueryVisitorSupport {
 	}
 
 	@Override
+	public boolean visit(Listagg listagg) {
+		push(listagg);
+		try {
+			aggregateFunction(listagg);
+			return false;
+		} finally {
+			pop(listagg);
+		}
+	}
+
+	@Override
+	public boolean visit(WithinGroup withinGroup) {
+		return false;
+	}
+
+	@Override
+	public boolean visit(WithinGroupSortSpec sortSpec) {
+		return false;
+	}
+
+	@Override
 	public boolean visit(Polynomial polynomial) {
 		push(polynomial);
 		try {
 			if (polynomial.getAddValues() != null) {
-				for (int i = 0; i < polynomial.getAddValues().size(); i++) {
+				for (int i = 0; i < polynomial.getAddValues()
+						.size(); i++) {
 					if (i != 0) {
 						context.append("+");
 					}
-					ValueExpression child = polynomial.getAddValues().get(i);
+					ValueExpression child = polynomial.getAddValues()
+							.get(i);
 					child.accept(this);
 				}
 			}
 			if (polynomial.getSubValues() != null) {
-				for (int i = 0; i < polynomial.getSubValues().size(); i++) {
+				for (int i = 0; i < polynomial.getSubValues()
+						.size(); i++) {
 					context.append("-");
-					ValueExpression child = polynomial.getSubValues().get(i);
+					ValueExpression child = polynomial.getSubValues()
+							.get(i);
 					child.accept(this);
 				}
 			}
@@ -570,20 +623,24 @@ public class SqlConverter extends QueryVisitorSupport {
 		push(term);
 		try {
 			if (term.getMulValues() != null) {
-				for (int i = 0; i < term.getMulValues().size(); i++) {
+				for (int i = 0; i < term.getMulValues()
+						.size(); i++) {
 					if (i != 0) {
 						context.append("*");
 					}
-					ValueExpression child = term.getMulValues().get(i);
+					ValueExpression child = term.getMulValues()
+							.get(i);
 					child.accept(this);
 				}
 			} else {
 				context.append("1");
 			}
 			if (term.getDivValues() != null) {
-				for (int i = 0; i < term.getDivValues().size(); i++) {
+				for (int i = 0; i < term.getDivValues()
+						.size(); i++) {
 					context.append("/");
-					ValueExpression child = term.getDivValues().get(i);
+					ValueExpression child = term.getDivValues()
+							.get(i);
 					child.accept(this);
 				}
 			}
@@ -592,15 +649,16 @@ public class SqlConverter extends QueryVisitorSupport {
 			pop(term);
 		}
 	}
-	
+
 	@Override
 	public boolean visit(MinusSign minusSign) {
 		push(minusSign);
 		try {
 			if (minusSign.getValue() != null) {
 				context.append("-");
-				minusSign.getValue().accept(this);
-	
+				minusSign.getValue()
+						.accept(this);
+
 				return false;
 			} else {
 				throw new QueryException(
@@ -617,9 +675,10 @@ public class SqlConverter extends QueryVisitorSupport {
 		try {
 			if (parenthesizedValue.getNestedValue() != null) {
 				context.append("(");
-				parenthesizedValue.getNestedValue().accept(this);
+				parenthesizedValue.getNestedValue()
+						.accept(this);
 				context.append(")");
-	
+
 				return false;
 			} else {
 				throw new QueryException(
@@ -634,13 +693,15 @@ public class SqlConverter extends QueryVisitorSupport {
 	public boolean visit(And andExpression) {
 		push(andExpression);
 		try {
-	
+
 			if (andExpression.getChildExpressions() != null) {
-				for (int i = 0; i < andExpression.getChildExpressions().size(); i++) {
+				for (int i = 0; i < andExpression.getChildExpressions()
+						.size(); i++) {
 					if (i != 0) {
 						context.append(" AND ");
 					}
-					Condition child = andExpression.getChildExpressions().get(i);
+					Condition child = andExpression.getChildExpressions()
+							.get(i);
 					child.accept(this);
 				}
 				return false;
@@ -658,11 +719,13 @@ public class SqlConverter extends QueryVisitorSupport {
 		push(orExpression);
 		try {
 			if (orExpression.getChildExpressions() != null) {
-				for (int i = 0; i < orExpression.getChildExpressions().size(); i++) {
+				for (int i = 0; i < orExpression.getChildExpressions()
+						.size(); i++) {
 					if (i != 0) {
 						context.append(" OR ");
 					}
-					Condition child = orExpression.getChildExpressions().get(i);
+					Condition child = orExpression.getChildExpressions()
+							.get(i);
 					child.accept(this);
 				}
 				return false;
@@ -682,10 +745,10 @@ public class SqlConverter extends QueryVisitorSupport {
 			if (!(equalsExpression.getProperty() instanceof EntityField)
 					&& equalsExpression.getValue() instanceof EntityField) {
 				simpleOp(equalsExpression.getValue(), "=", equalsExpression
-						.getProperty(), true);
+						.getProperty(), false);
 			} else {
 				simpleOp(equalsExpression.getProperty(), "=", equalsExpression
-						.getValue(), true);
+						.getValue(), false);
 			}
 			return false;
 		} finally {
@@ -700,10 +763,10 @@ public class SqlConverter extends QueryVisitorSupport {
 			if (!(notEqualsExpression.getProperty() instanceof EntityField)
 					&& notEqualsExpression.getValue() instanceof EntityField) {
 				simpleOp(notEqualsExpression.getValue(), "!=",
-						notEqualsExpression.getProperty(), false);
+						notEqualsExpression.getProperty(), true);
 			} else {
 				simpleOp(notEqualsExpression.getProperty(), "!=",
-						notEqualsExpression.getValue(), false);
+						notEqualsExpression.getValue(), true);
 			}
 			return false;
 		} finally {
@@ -718,10 +781,10 @@ public class SqlConverter extends QueryVisitorSupport {
 			if (!(greaterExpression.getProperty() instanceof EntityField)
 					&& greaterExpression.getValue() instanceof EntityField) {
 				simpleOp(greaterExpression.getValue(), "<", greaterExpression
-						.getProperty(), true);
+						.getProperty(), false);
 			} else {
 				simpleOp(greaterExpression.getProperty(), ">", greaterExpression
-						.getValue(), true);
+						.getValue(), false);
 			}
 			return false;
 		} finally {
@@ -736,10 +799,10 @@ public class SqlConverter extends QueryVisitorSupport {
 			if (!(greaterEqualExpression.getProperty() instanceof EntityField)
 					&& greaterEqualExpression.getValue() instanceof EntityField) {
 				simpleOp(greaterEqualExpression.getValue(), "<=",
-						greaterEqualExpression.getProperty(), true);
+						greaterEqualExpression.getProperty(), false);
 			} else {
 				simpleOp(greaterEqualExpression.getProperty(), ">=",
-						greaterEqualExpression.getValue(), true);
+						greaterEqualExpression.getValue(), false);
 			}
 			return false;
 		} finally {
@@ -754,10 +817,10 @@ public class SqlConverter extends QueryVisitorSupport {
 			if (!(lesserExpression.getProperty() instanceof EntityField)
 					&& lesserExpression.getValue() instanceof EntityField) {
 				simpleOp(lesserExpression.getValue(), ">", lesserExpression
-						.getProperty(), true);
+						.getProperty(), false);
 			} else {
 				simpleOp(lesserExpression.getProperty(), "<", lesserExpression
-						.getValue(), true);
+						.getValue(), false);
 			}
 			return false;
 		} finally {
@@ -772,10 +835,10 @@ public class SqlConverter extends QueryVisitorSupport {
 			if (!(lesserEqualExpression.getProperty() instanceof EntityField)
 					&& lesserEqualExpression.getValue() instanceof EntityField) {
 				simpleOp(lesserEqualExpression.getValue(), ">=",
-						lesserEqualExpression.getProperty(), true);
+						lesserEqualExpression.getProperty(), false);
 			} else {
 				simpleOp(lesserEqualExpression.getProperty(), "<=",
-						lesserEqualExpression.getValue(), true);
+						lesserEqualExpression.getValue(), false);
 			}
 			return false;
 		} finally {
@@ -784,42 +847,78 @@ public class SqlConverter extends QueryVisitorSupport {
 	}
 
 	private void simpleOp(ValueExpression propVal, final String op,
-			final ValueExpression val, boolean isAny) {
-		
+			final ValueExpression val, boolean isNeq) {
+
 		if (propVal instanceof EntityField) {//special logic for EntityField
-			
+
 			String propName = ((EntityField) propVal).getPropertyName();
-			
+
 			// JOIN対応
 			context.notifyUsedPropertyName(propName);
 
 			final PropertyHandler prop = context.getProperty(propName);
 			if (prop == null) {
-				throw new NullPointerException(context.getFromEntity().getMetaData().getName() + "." + propName + " is not defined..");
+				throw new NullPointerException(context.getFromEntity()
+						.getMetaData()
+						.getName() + "." + propName + " is not defined..");
 			}
 			final GRdbPropertyStoreRuntime col = (GRdbPropertyStoreRuntime) prop.getStoreSpecProperty();
 			if (col == null) {
 				throw new QueryException("Reference property:" + propName + " itself can not be specified. Specify " + propName + ".oid or other.");
 			}
-			
+
 			//配列対応（※配列はindex不可とする）
-			if (prop.getMetaData().getMultiplicity() > 1) {
+			if (prop.getMetaData()
+					.getMultiplicity() > 1
+					&& ((EntityField) propVal).getArrayIndex() == EntityField.ARRAY_INDEX_UNSPECIFIED) {
 				context.append("(");
 				if (val instanceof ArrayValue) {
 					//ValueExpressionがArrayValueの場合は、配列内の各要素単位で比較する
-					ArrayValue array = (ArrayValue) val;
-					int loops = prop.getMetaData().getMultiplicity();
-					if (array.getValues() != null && array.getValues().size() < loops) {
-						loops = array.getValues().size();
+					//!=の場合は、全体にNOT
+					String opToUse = op;
+					if (isNeq) {
+						context.append("NOT(");
+						opToUse = "=";
 					}
+					ArrayValue array = (ArrayValue) val;
+					if (array.getValues() != null && array.getValues()
+							.size() > prop.getMetaData()
+									.getMultiplicity()) {
+						throw new QueryException("Array size of ArrayValue is larger than property multiplicity. property:" + propName
+								+ ", multiplicity:" + prop.getMetaData()
+										.getMultiplicity()
+								+ ", array size:" + array.getValues()
+										.size());
+					}
+					int loops = prop.getMetaData()
+							.getMultiplicity();
 					List<GRdbPropertyStoreHandler> cols = col.asList();
 					for (int i = 0; i < loops; i++) {
 						if (i != 0) {
 							context.append(" AND ");
 						}
 						colExp(context.getCurrentSb(), propName, cols.get(i), false);
-						context.append(op);
-						valueConvert(array.getValues().get(i), col.getSingleColumnRdbTypeAdapter(), false);
+						if (array.getValues() == null || array.getValues()
+								.size() <= i) {
+							//配列要素が足りない場合はnullとみなす
+							context.append(" IS NULL");
+						} else {
+							ValueExpression ve = array.getValues()
+									.get(i);
+							if (ve instanceof Literal && ((Literal) ve).getValue() == null) {
+								//nullリテラルの場合
+								context.append(" IS NULL");
+							} else {
+								context.append(opToUse);
+								valueConvert(ve, col.getSingleColumnRdbTypeAdapter(), false);
+								context.append(" AND ");
+								colExp(context.getCurrentSb(), propName, cols.get(i), false);
+								context.append(" IS NOT NULL");
+							}
+						}
+					}
+					if (isNeq) {
+						context.append(")");
 					}
 				} else {
 					//!=を除き、ANYとみなす（プロパティの配列要素の内どれかひとつでもtrueの場合、trueとみなす）
@@ -827,15 +926,27 @@ public class SqlConverter extends QueryVisitorSupport {
 					List<GRdbPropertyStoreHandler> cols = col.asList();
 					for (int i = 0; i < cols.size(); i++) {
 						if (i != 0) {
-							if (isAny) {
+							if (!isNeq) {
 								context.append(" OR ");
 							} else {
 								context.append(" AND ");
 							}
 						}
+						context.append("(");
 						colExp(context.getCurrentSb(), propName, cols.get(i), false);
 						context.append(op);
 						valueConvert(val, col.getSingleColumnRdbTypeAdapter(), false);
+						if (!isNeq) {
+							context.append(" AND ");
+						} else {
+							context.append(" OR ");
+						}
+						colExp(context.getCurrentSb(), propName, cols.get(i), false);
+						if (!isNeq) {
+							context.append(" IS NOT NULL)");
+						} else {
+							context.append(" IS NULL)");
+						}
 					}
 				}
 				context.append(")");
@@ -844,42 +955,49 @@ public class SqlConverter extends QueryVisitorSupport {
 				externalIndexedSql(propName, (PrimitivePropertyHandler) prop,
 						(tableName) -> {
 							// EXISTSによる条件文を構築。
-							context.append(tableName).append(".VAL").append(op);
+							context.append(tableName)
+									.append(".VAL")
+									.append(op);
 							valueConvert(val, col.getSingleColumnRdbTypeAdapter(), true);
 						});
 			} else {
-				//内部インデックス、単純プロパティの場合
+				//内部インデックス、単純プロパティ、配列インデックス指定の場合
+				final GRdbPropertyStoreRuntime targetCol = targetColByIndexIfMulti(col, (EntityField) propVal);
 				internalIndexedSql(propName, (PrimitivePropertyHandler) prop, false,
 						() -> {
 							if (val instanceof EntityField) {
 								String valPropName = ((EntityField) val).getPropertyName();
-								
+
 								// JOIN対応
 								context.notifyUsedPropertyName(valPropName);
 
 								final PropertyHandler valProp = context.getProperty(valPropName);
 								if (valProp == null) {
-									throw new NullPointerException(context.getFromEntity().getMetaData().getName() + "." + valPropName + " is not defined..");
+									throw new NullPointerException(context.getFromEntity()
+											.getMetaData()
+											.getName() + "." + valPropName + " is not defined..");
 								}
 								final GRdbPropertyStoreRuntime valCol = (GRdbPropertyStoreRuntime) valProp.getStoreSpecProperty();
 								if (valCol == null) {
-									throw new QueryException("Reference property:" + valPropName + " itself can not be specified. Specify " + valPropName + ".oid or other.");
+									throw new QueryException("Reference property:" + valPropName + " itself can not be specified. Specify "
+											+ valPropName + ".oid or other.");
 								}
-								
+
+								final GRdbPropertyStoreRuntime targetValCol = targetColByIndexIfMulti(valCol, (EntityField) val);
 								internalIndexedSql(valPropName, (PrimitivePropertyHandler) valProp, false,
 										() -> {
-											colExp(context.getCurrentSb(), propName, (GRdbPropertyStoreHandler) col, true);
+											colExp(context.getCurrentSb(), propName, (GRdbPropertyStoreHandler) targetCol, true);
 											context.append(op);
-											colExp(context.getCurrentSb(), valPropName, (GRdbPropertyStoreHandler) valCol, true);
+											colExp(context.getCurrentSb(), valPropName, (GRdbPropertyStoreHandler) targetValCol, true);
 										});
 							} else {
-								colExp(context.getCurrentSb(), propName, (GRdbPropertyStoreHandler) col, true);
+								colExp(context.getCurrentSb(), propName, (GRdbPropertyStoreHandler) targetCol, true);
 								context.append(op);
-								if (col.isNative()) {
+								if (targetCol.isNative()) {
 									//nativeの場合は変換なし
-									valueConvert(val, col.getSingleColumnRdbTypeAdapter(), false);
+									valueConvert(val, targetCol.getSingleColumnRdbTypeAdapter(), false);
 								} else {
-									valueConvert(val, col.getSingleColumnRdbTypeAdapter(), true);
+									valueConvert(val, targetCol.getSingleColumnRdbTypeAdapter(), true);
 								}
 							}
 						});
@@ -887,42 +1005,71 @@ public class SqlConverter extends QueryVisitorSupport {
 		} else {
 			propVal.accept(this);
 			context.append(op);
-			PropertyType type = context.getValueTypeResolver().resolve(propVal);
-			valueConvert(val, context.getRdb().getRdbTypeAdapter(type), false);
+			PropertyType type = context.getValueTypeResolver()
+					.resolve(propVal);
+			valueConvert(val, context.getRdb()
+					.getRdbTypeAdapter(type), false);
 		}
 	}
-	
+
+	private GRdbPropertyStoreRuntime targetColByIndexIfMulti(GRdbPropertyStoreRuntime col, EntityField specifier) {
+		if (col.isMulti() && specifier.getArrayIndex() != EntityField.ARRAY_INDEX_UNSPECIFIED) {
+			//配列インデックス指定の場合
+			List<GRdbPropertyStoreHandler> valCols = col.asList();
+			if (specifier.getArrayIndex() < 0
+					|| specifier.getArrayIndex() >= valCols.size()) {
+				throw new QueryException(
+						"Array index out of range. property:" + specifier.getPropertyName() + ", index:" + specifier.getArrayIndex());
+			}
+			return valCols.get(specifier.getArrayIndex());
+		} else {
+			return col;
+		}
+	}
+
 	private void internalIndexedSql(String propName,
 			PrimitivePropertyHandler prop, boolean isNullOp, Runnable callback) {
-		//not multiなものだけ想定
-		GRdbPropertyStoreHandler col = (GRdbPropertyStoreHandler) prop.getStoreSpecProperty();
-		
-		//内部index利用時
-		boolean useIndexCol = col.getIndexColName() != null && context.checkIndexHint(propName, false) && ! isNullOp
-				&& context.getCurrentClause() == Clause.WHERE;
-		if (useIndexCol) {
-			context.append("(");
-			String colPrefix = context.getColPrefix(propName, col);
-			context.append(colPrefix);
-			context.append(col.getIndexColName());
-			context.append(ObjStoreTable.INDEX_TD_POSTFIX);
-			
-			context.append("='");
-			context.append(MetaGRdbPropertyStore.makeInternalIndexKey(
-					context.getMetaContext().getTenantId(prop.getParent()), prop.getParent().getMetaData().getId(), col.getMetaData().getIndexPageNo()));
-			context.append("'");
-			context.append(" AND ");
-		}
-		
-		callback.run();
-		
-		if (useIndexCol) {
-			context.append(")");
+
+		if (prop.getMetaData()
+				.getMultiplicity() > 1) {
+			callback.run();
+		} else {
+			//単純プロパティの場合、内部index利用可能
+			GRdbPropertyStoreHandler col = (GRdbPropertyStoreHandler) prop.getStoreSpecProperty();
+
+			//内部index利用時
+			boolean useIndexCol = col.getIndexColName() != null && context.checkIndexHint(propName, false) && !isNullOp
+					&& context.getCurrentClause() == Clause.WHERE;
+			if (useIndexCol) {
+				context.append("(");
+				String colPrefix = context.getColPrefix(propName, col);
+				context.append(colPrefix);
+				context.append(col.getIndexColName());
+				context.append(ObjStoreTable.INDEX_TD_POSTFIX);
+
+				context.append("='");
+				context.append(MetaGRdbPropertyStore.makeInternalIndexKey(
+						context.getMetaContext()
+								.getTenantId(prop.getParent()),
+						prop.getParent()
+								.getMetaData()
+								.getId(),
+						col.getMetaData()
+								.getIndexPageNo()));
+				context.append("'");
+				context.append(" AND ");
+			}
+
+			callback.run();
+
+			if (useIndexCol) {
+				context.append(")");
+			}
 		}
 	}
-	
+
 	private boolean canUseIndexTableJoin() {
-		
+
 		for (int i = astNodeStack.size() - 1; i >= 0; i--) {
 			ASTNode n = astNodeStack.get(i);
 			if (n instanceof Where) {
@@ -933,10 +1080,10 @@ public class SqlConverter extends QueryVisitorSupport {
 				return false;
 			}
 		}
-		
+
 		return true;
 	}
-	
+
 	private boolean useExternalIndex(PropertyHandler prop, String fullPropName) {
 		return prop.isIndexed()
 				&& prop instanceof PrimitivePropertyHandler
@@ -946,16 +1093,21 @@ public class SqlConverter extends QueryVisitorSupport {
 				&& context.checkIndexHint(fullPropName, true)
 				&& (rdbAdaptor.isUseSubQueryForIndexJoin() || canUseIndexTableJoin());
 	}
-	
+
 	private void externalIndexedSql(String propName,
 			PrimitivePropertyHandler prop, Consumer<String> callback) {
 		//not multiなものだけ想定
 		GRdbPropertyStoreHandler propertyStoreHanlder = (GRdbPropertyStoreHandler) prop.getStoreSpecProperty();
 		String tableName = null;
-		if (prop.getMetaData().getIndexType() == IndexType.NON_UNIQUE) {
-			tableName = ((GRdbEntityStoreRuntime) prop.getParent().getEntityStoreRuntime()).OBJ_INDEX(propertyStoreHanlder.getSingleColumnRdbTypeAdapter().getColOfIndex());
+		if (prop.getMetaData()
+				.getIndexType() == IndexType.NON_UNIQUE) {
+			tableName = ((GRdbEntityStoreRuntime) prop.getParent()
+					.getEntityStoreRuntime()).OBJ_INDEX(propertyStoreHanlder.getSingleColumnRdbTypeAdapter()
+							.getColOfIndex());
 		} else {
-			tableName = ((GRdbEntityStoreRuntime) prop.getParent().getEntityStoreRuntime()).OBJ_UNIQUE(propertyStoreHanlder.getSingleColumnRdbTypeAdapter().getColOfIndex());
+			tableName = ((GRdbEntityStoreRuntime) prop.getParent()
+					.getEntityStoreRuntime()).OBJ_UNIQUE(propertyStoreHanlder.getSingleColumnRdbTypeAdapter()
+							.getColOfIndex());
 		}
 
 		//Existsによる相関副問い合わせ or Indexテーブルを利用した結合（可能な場合） 
@@ -966,40 +1118,71 @@ public class SqlConverter extends QueryVisitorSupport {
 			context.append(tableName);
 			context.append(" WHERE ");
 			context.append(colPrefix);
-			context.append(ObjStoreTable.TENANT_ID + "=").append(tableName).append("." + ObjIndexTable.TENANT_ID);
+			context.append(ObjStoreTable.TENANT_ID + "=")
+					.append(tableName)
+					.append("." + ObjIndexTable.TENANT_ID);
 			context.append(" AND ");
 			context.append(colPrefix);
-			context.append(ObjStoreTable.OBJ_DEF_ID + "=").append(tableName).append("." + ObjIndexTable.OBJ_DEF_ID);
+			context.append(ObjStoreTable.OBJ_DEF_ID + "=")
+					.append(tableName)
+					.append("." + ObjIndexTable.OBJ_DEF_ID);
 			context.append(" AND ");
 			context.append(colPrefix);
-			context.append(ObjStoreTable.OBJ_ID + "=").append(tableName).append("." + ObjIndexTable.OBJ_ID);
-			if (prop.getMetaData().getIndexType() == IndexType.NON_UNIQUE) {
+			context.append(ObjStoreTable.OBJ_ID + "=")
+					.append(tableName)
+					.append("." + ObjIndexTable.OBJ_ID);
+			if (prop.getMetaData()
+					.getIndexType() == IndexType.NON_UNIQUE) {
 				context.append(" AND ");
 				context.append(colPrefix);
-				context.append(ObjStoreTable.OBJ_VER + "=").append(tableName).append("." + ObjIndexTable.OBJ_VER);
+				context.append(ObjStoreTable.OBJ_VER + "=")
+						.append(tableName)
+						.append("." + ObjIndexTable.OBJ_VER);
 			}
 			context.append(" AND ");
-			context.append(tableName).append("." + ObjIndexTable.OBJ_DEF_ID + "='").append(prop.getParent().getMetaData().getId()).append("'");
+			context.append(tableName)
+					.append("." + ObjIndexTable.OBJ_DEF_ID + "='")
+					.append(prop.getParent()
+							.getMetaData()
+							.getId())
+					.append("'");
 			context.append(" AND ");
-			context.append(tableName).append("." + ObjIndexTable.COL_NAME + "='").append(propertyStoreHanlder.getExternalIndexColName());
+			context.append(tableName)
+					.append("." + ObjIndexTable.COL_NAME + "='")
+					.append(propertyStoreHanlder.getExternalIndexColName());
 			context.append("' AND ");
 			callback.accept(tableName);
 			context.append(")");
 
 		} else {
 			//Indexテーブルを利用した内部結合（可能な場合） 
-			
+
 			//一時Index Tableを作成
 			StringBuilder indexTableSb = new StringBuilder();
-			indexTableSb.append("(SELECT ").append(INDEX_TABLE_ALIAS).append(".* FROM ").append(tableName).append(" ").append(INDEX_TABLE_ALIAS);
+			indexTableSb.append("(SELECT ")
+					.append(INDEX_TABLE_ALIAS)
+					.append(".* FROM ")
+					.append(tableName)
+					.append(" ")
+					.append(INDEX_TABLE_ALIAS);
 			indexTableSb.append(" WHERE ");
-			indexTableSb.append(INDEX_TABLE_ALIAS).append("." + ObjIndexTable.TENANT_ID + "=").append(context.getMetaContext().getTenantId(prop.getParent()));
+			indexTableSb.append(INDEX_TABLE_ALIAS)
+					.append("." + ObjIndexTable.TENANT_ID + "=")
+					.append(context.getMetaContext()
+							.getTenantId(prop.getParent()));
 			indexTableSb.append(" AND ");
-			indexTableSb.append(INDEX_TABLE_ALIAS).append("." + ObjIndexTable.OBJ_DEF_ID + "='").append(prop.getParent().getMetaData().getId()).append("'");
+			indexTableSb.append(INDEX_TABLE_ALIAS)
+					.append("." + ObjIndexTable.OBJ_DEF_ID + "='")
+					.append(prop.getParent()
+							.getMetaData()
+							.getId())
+					.append("'");
 			indexTableSb.append(" AND ");
-			indexTableSb.append(INDEX_TABLE_ALIAS).append("." + ObjIndexTable.COL_NAME + "='").append(propertyStoreHanlder.getExternalIndexColName());
+			indexTableSb.append(INDEX_TABLE_ALIAS)
+					.append("." + ObjIndexTable.COL_NAME + "='")
+					.append(propertyStoreHanlder.getExternalIndexColName());
 			indexTableSb.append("' AND (");
-			
+
 			//JoinPath,Aliases,bindVariablesは共有
 			SqlQueryContext referContext = new SqlQueryContext(
 					context.getFromEntity(),
@@ -1011,47 +1194,58 @@ public class SqlConverter extends QueryVisitorSupport {
 					context.getIndexTable(),
 					context.isEnableBindVariable());
 			referContext.setUseIndexTable(false);
-			
+
 			SqlQueryContext mainContext = context;
 			context = referContext;
 			context.changeCurrentClause(Clause.WHERE);
-			
+
 			callback.accept(INDEX_TABLE_ALIAS);
 
 			if (referContext.getCurrentClause() != Clause.WHERE) {
 				referContext.changeCurrentClause(Clause.WHERE);
 			}
 			context = mainContext;
-			
-			indexTableSb.append(referContext.getCurrentSb().toString());
+
+			indexTableSb.append(referContext.getCurrentSb()
+					.toString());
 			indexTableSb.append("))");
-			
+
 			String indexTableAlias = context.addIndexTable(indexTableSb.toString());
 			String colPrefix = context.getColPrefix(propName, propertyStoreHanlder);
 
 			context.append(" (");
 			context.append(colPrefix);
-			context.append(ObjStoreTable.TENANT_ID + "=").append(indexTableAlias).append("." + ObjIndexTable.TENANT_ID);
+			context.append(ObjStoreTable.TENANT_ID + "=")
+					.append(indexTableAlias)
+					.append("." + ObjIndexTable.TENANT_ID);
 			context.append(" AND ");
 			context.append(colPrefix);
-			context.append(ObjStoreTable.OBJ_DEF_ID + "=").append(indexTableAlias).append("." + ObjIndexTable.OBJ_DEF_ID);
+			context.append(ObjStoreTable.OBJ_DEF_ID + "=")
+					.append(indexTableAlias)
+					.append("." + ObjIndexTable.OBJ_DEF_ID);
 			context.append(" AND ");
 			context.append(colPrefix);
-			context.append(ObjStoreTable.OBJ_ID + "=").append(indexTableAlias).append("." + ObjIndexTable.OBJ_ID);
-			if (prop.getMetaData().getIndexType() == IndexType.NON_UNIQUE) {
+			context.append(ObjStoreTable.OBJ_ID + "=")
+					.append(indexTableAlias)
+					.append("." + ObjIndexTable.OBJ_ID);
+			if (prop.getMetaData()
+					.getIndexType() == IndexType.NON_UNIQUE) {
 				context.append(" AND ");
 				context.append(colPrefix);
-				context.append(ObjStoreTable.OBJ_VER + "=").append(indexTableAlias).append("." + ObjIndexTable.OBJ_VER);
+				context.append(ObjStoreTable.OBJ_VER + "=")
+						.append(indexTableAlias)
+						.append("." + ObjIndexTable.OBJ_VER);
 			}
 			context.append(")");
-			
+
 			List<BindValue> indexTableBindVarialbes = referContext.toOrderedBindVariables(false);
 			if (indexTableBindVarialbes != null && indexTableBindVarialbes.size() > 0) {
 				context.setEnableBindVariable(true);
-				for (BindValue b: indexTableBindVarialbes) {
+				for (BindValue b : indexTableBindVarialbes) {
 					((QueryBindValue) b).inIndexTable = true;
 					((QueryBindValue) b).clause = context.getCurrentClause();
-					context.getBindVariables().add(b);
+					context.getBindVariables()
+							.add(b);
 				}
 			}
 		}
@@ -1070,14 +1264,14 @@ public class SqlConverter extends QueryVisitorSupport {
 	public boolean visit(final Between betweenExpression) {
 		push(betweenExpression);
 		try {
-			
+
 			ValueExpression propVal = betweenExpression.getProperty();
-			
+
 			if (propVal instanceof EntityField) {//special logic for EntityField
 				String propName = betweenExpression.getPropertyName();
 				// JOIN対応
 				context.notifyUsedPropertyName(propName);
-	
+
 				final PropertyHandler prop = context.getProperty(propName);
 				if (prop == null) {
 					throw new NullPointerException(propName + " is not defined..");
@@ -1086,59 +1280,69 @@ public class SqlConverter extends QueryVisitorSupport {
 				if (col == null) {
 					throw new QueryException("Reference property:" + propName + " itself can not be specified. Specify " + propName + ".oid or other.");
 				}
-				
+
 				//配列対応（※配列はindex不可とする）
 				//TODO 配列対応、とりあえずANYで実装しているが、ALLも用途がありそう、、、 どっちも微妙か、、、
-				if (prop.getMetaData().getMultiplicity() > 1) {
+				if (prop.getMetaData()
+						.getMultiplicity() > 1
+						&& ((EntityField) propVal).getArrayIndex() == EntityField.ARRAY_INDEX_UNSPECIFIED) {
 					context.append("(");
 					List<GRdbPropertyStoreHandler> cols = col.asList();
 					for (int i = 0; i < cols.size(); i++) {
 						if (i != 0) {
 							context.append(" OR ");
 						}
+						context.append("(");
 						colExp(context.getCurrentSb(), propName, cols.get(i), false);
 						context.append(" BETWEEN ");
 						valueConvert(betweenExpression.getFrom(), col.getSingleColumnRdbTypeAdapter(), false);
 						context.append(" AND ");
 						valueConvert(betweenExpression.getTo(), col.getSingleColumnRdbTypeAdapter(), false);
+						context.append(" AND ");
+						colExp(context.getCurrentSb(), propName, cols.get(i), false);
+						context.append(" IS NOT NULL)");
 					}
 					context.append(")");
 				} else {
 					if (useExternalIndex(prop, propName)) {
 						externalIndexedSql(propName, (PrimitivePropertyHandler) prop,
 								(tableName) -> {
-								// EXISTSによる条件文を構築。
-								context.append(tableName).append(".VAL");
-								context.append(" BETWEEN ");
-								valueConvert(betweenExpression.getFrom(), col.getSingleColumnRdbTypeAdapter(), true);
-								context.append(" AND ");
-								valueConvert(betweenExpression.getTo(), col.getSingleColumnRdbTypeAdapter(), true);
-						});
+									// EXISTSによる条件文を構築。
+									context.append(tableName)
+											.append(".VAL");
+									context.append(" BETWEEN ");
+									valueConvert(betweenExpression.getFrom(), col.getSingleColumnRdbTypeAdapter(), true);
+									context.append(" AND ");
+									valueConvert(betweenExpression.getTo(), col.getSingleColumnRdbTypeAdapter(), true);
+								});
 					} else {
-						//内部インデックス、単純プロパティの場合
+						//内部インデックス、単純プロパティ、配列インデックス指定の場合
+						GRdbPropertyStoreRuntime targetCol = targetColByIndexIfMulti(col, (EntityField) propVal);
 						internalIndexedSql(propName, (PrimitivePropertyHandler) prop, false,
 								() -> {
-									colExp(context.getCurrentSb(), propName, (GRdbPropertyStoreHandler) col, true);
+									colExp(context.getCurrentSb(), propName, (GRdbPropertyStoreHandler) targetCol, true);
 									context.append(" BETWEEN ");
 									//nativeの場合は変換なし
-									valueConvert(betweenExpression.getFrom(), col.getSingleColumnRdbTypeAdapter(), !col.isNative());
+									valueConvert(betweenExpression.getFrom(), targetCol.getSingleColumnRdbTypeAdapter(), !targetCol.isNative());
 									context.append(" AND ");
 									//nativeの場合は変換なし
-									valueConvert(betweenExpression.getTo(), col.getSingleColumnRdbTypeAdapter(), !col.isNative());
+									valueConvert(betweenExpression.getTo(), targetCol.getSingleColumnRdbTypeAdapter(), !targetCol.isNative());
 								});
 					}
 				}
 			} else {
 				propVal.accept(this);
 				context.append(" BETWEEN ");
-				PropertyType type = context.getValueTypeResolver().resolve(propVal);
-				BaseRdbTypeAdapter rdbType = context.getRdb().getRdbTypeAdapter(type);
-				
+				PropertyType type = context.getValueTypeResolver()
+						.resolve(propVal);
+				BaseRdbTypeAdapter rdbType = context.getRdb()
+						.getRdbTypeAdapter(type);
+
 				valueConvert(betweenExpression.getFrom(), rdbType, false);
 				context.append(" AND ");
 				valueConvert(betweenExpression.getTo(), rdbType, false);
 			}
-	
+
 			return false;
 		} finally {
 			pop(betweenExpression);
@@ -1151,9 +1355,10 @@ public class SqlConverter extends QueryVisitorSupport {
 		try {
 			if (paren.getNestedExpression() != null) {
 				context.append("(");
-				paren.getNestedExpression().accept(this);
+				paren.getNestedExpression()
+						.accept(this);
 				context.append(")");
-	
+
 				return false;
 			} else {
 				throw new QueryException(
@@ -1168,65 +1373,75 @@ public class SqlConverter extends QueryVisitorSupport {
 	public boolean visit(final In in) {
 		push(in);
 		try {
-			
+
 			//FIXME かなり冗長なコードになっているので、そのうちリファクタリング
-			
+
 			List<ValueExpression> propList = in.getPropertyList();
-			
+
 			if (propList.size() == 1) {
 				ValueExpression propVal = propList.get(0);
-				
+
 				if (propVal instanceof EntityField) {
 					String propName = ((EntityField) propVal).getPropertyName();
 					// JOIN対応
 					context.notifyUsedPropertyName(propName);
-	
+
 					final PropertyHandler prop = context.getProperty(propName);
 					if (prop == null) {
 						throw new QueryException("not define property:" + propName);
 					}
 					final GRdbPropertyStoreRuntime col = (GRdbPropertyStoreRuntime) prop.getStoreSpecProperty();
 					if (col == null) {
-						throw new QueryException("Reference property:" + propName + " itself can not be specified in IN clause. Specify " + propName + ".oid or other.");
+						throw new QueryException(
+								"Reference property:" + propName + " itself can not be specified in IN clause. Specify " + propName + ".oid or other.");
 					}
-					
+
 					//配列対応（※配列はindex不可とする）
-					if (prop.getMetaData().getMultiplicity() > 1) {
+					if (prop.getMetaData()
+							.getMultiplicity() > 1
+							&& ((EntityField) propVal).getArrayIndex() == EntityField.ARRAY_INDEX_UNSPECIFIED) {
 						context.append("(");
 						List<GRdbPropertyStoreHandler> cols = col.asList();
 						for (int i = 0; i < cols.size(); i++) {
 							if (i != 0) {
 								context.append(" OR ");
 							}
-							
+
+							context.append("(");
 							if (in.getSubQuery() != null) {
 								//subquery
 								colExp(context.getCurrentSb(), propName, cols.get(i), false);
 								context.append(" IN");
-								in.getSubQuery().accept(SqlConverter.this);
+								in.getSubQuery()
+										.accept(SqlConverter.this);
 							} else {
 								//list
-								boolean enableInPart = rdbAdaptor.isEnableInPartitioning() && in.getValue().size() > rdbAdaptor.getInPartitioningSize();
+								boolean enableInPart = rdbAdaptor.isEnableInPartitioning() && in.getValue()
+										.size() > rdbAdaptor.getInPartitioningSize();
 								if (enableInPart) {
 									context.append("(");
 								}
 								boolean isFirst = true;
 								int partLimit = 0;
 								int offset = 0;
-								while (partLimit < in.getValue().size()) {
+								while (partLimit < in.getValue()
+										.size()) {
 									if (isFirst) {
 										isFirst = false;
 										if (enableInPart) {
 											partLimit = rdbAdaptor.getInPartitioningSize();
 										} else {
-											partLimit = in.getValue().size();
+											partLimit = in.getValue()
+													.size();
 										}
 									} else {
 										context.append(" OR ");
 										offset = partLimit;
 										partLimit = partLimit += rdbAdaptor.getInPartitioningSize();
-										if (partLimit > in.getValue().size()) {
-											partLimit = in.getValue().size();
+										if (partLimit > in.getValue()
+												.size()) {
+											partLimit = in.getValue()
+													.size();
 										}
 									}
 									colExp(context.getCurrentSb(), propName, cols.get(i), false);
@@ -1236,15 +1451,18 @@ public class SqlConverter extends QueryVisitorSupport {
 										if (j != offset) {
 											context.append(",");
 										}
-										valueConvert(in.getValue().get(j), col.getSingleColumnRdbTypeAdapter(), false);
+										valueConvert(in.getValue()
+												.get(j), col.getSingleColumnRdbTypeAdapter(), false);
 									}
 									context.append(")");
 								}
 								if (enableInPart) {
 									context.append(")");
 								}
-
 							}
+							context.append(" AND ");
+							colExp(context.getCurrentSb(), propName, cols.get(i), false);
+							context.append(" IS NOT NULL)");
 						}
 						context.append(")");
 					} else {
@@ -1255,43 +1473,51 @@ public class SqlConverter extends QueryVisitorSupport {
 										// EXISTSによる条件文を構築。
 										if (in.getSubQuery() != null) {
 											//subquery
-											context.append(tableName).append(".VAL");
+											context.append(tableName)
+													.append(".VAL");
 											context.append(" IN");
 											//indexを有効化するため
 											visit(in.getSubQuery(), true);
 										} else {
 											//list
-											boolean enableInPart = rdbAdaptor.isEnableInPartitioning() && in.getValue().size() > rdbAdaptor.getInPartitioningSize();
+											boolean enableInPart = rdbAdaptor.isEnableInPartitioning() && in.getValue()
+													.size() > rdbAdaptor.getInPartitioningSize();
 											if (enableInPart) {
 												context.append("(");
 											}
 											boolean isFirst = true;
 											int partLimit = 0;
 											int offset = 0;
-											while (partLimit < in.getValue().size()) {
+											while (partLimit < in.getValue()
+													.size()) {
 												if (isFirst) {
 													isFirst = false;
 													if (enableInPart) {
 														partLimit = rdbAdaptor.getInPartitioningSize();
 													} else {
-														partLimit = in.getValue().size();
+														partLimit = in.getValue()
+																.size();
 													}
 												} else {
 													context.append(" OR ");
 													offset = partLimit;
 													partLimit = partLimit += rdbAdaptor.getInPartitioningSize();
-													if (partLimit > in.getValue().size()) {
-														partLimit = in.getValue().size();
+													if (partLimit > in.getValue()
+															.size()) {
+														partLimit = in.getValue()
+																.size();
 													}
 												}
-												context.append(tableName).append(".VAL");
+												context.append(tableName)
+														.append(".VAL");
 												context.append(" IN");
 												context.append("(");
 												for (int i = offset; i < partLimit; i++) {
 													if (i != offset) {
 														context.append(",");
 													}
-													valueConvert(in.getValue().get(i), col.getSingleColumnRdbTypeAdapter(), true);
+													valueConvert(in.getValue()
+															.get(i), col.getSingleColumnRdbTypeAdapter(), true);
 												}
 												context.append(")");
 											}
@@ -1302,44 +1528,52 @@ public class SqlConverter extends QueryVisitorSupport {
 									});
 						} else {
 							//外部index未利用
+							//内部インデックス、単純プロパティ、配列インデックス指定の場合
+							GRdbPropertyStoreRuntime targetCol = targetColByIndexIfMulti(col, (EntityField) propVal);
 							internalIndexedSql(propName, (PrimitivePropertyHandler) prop, false,
 									() -> {
 										if (in.getSubQuery() != null) {
 											//subquery
-											colExp(context.getCurrentSb(), propName, (GRdbPropertyStoreHandler) col, true);
+											colExp(context.getCurrentSb(), propName, (GRdbPropertyStoreHandler) targetCol, true);
 											context.append(" IN");
-											if (col.isNative()) {
+											if (targetCol.isNative()) {
 												//nativeの場合は変換なし
-												in.getSubQuery().accept(SqlConverter.this);
+												in.getSubQuery()
+														.accept(SqlConverter.this);
 											} else {
 												visit(in.getSubQuery(), true);
 											}
 										} else {
 											//list
-											boolean enableInPart = rdbAdaptor.isEnableInPartitioning() && in.getValue().size() > rdbAdaptor.getInPartitioningSize();
+											boolean enableInPart = rdbAdaptor.isEnableInPartitioning() && in.getValue()
+													.size() > rdbAdaptor.getInPartitioningSize();
 											if (enableInPart) {
 												context.append("(");
 											}
 											boolean isFirst = true;
 											int partLimit = 0;
 											int offset = 0;
-											while (partLimit < in.getValue().size()) {
+											while (partLimit < in.getValue()
+													.size()) {
 												if (isFirst) {
 													isFirst = false;
 													if (enableInPart) {
 														partLimit = rdbAdaptor.getInPartitioningSize();
 													} else {
-														partLimit = in.getValue().size();
+														partLimit = in.getValue()
+																.size();
 													}
 												} else {
 													context.append(" OR ");
 													offset = partLimit;
 													partLimit = partLimit += rdbAdaptor.getInPartitioningSize();
-													if (partLimit > in.getValue().size()) {
-														partLimit = in.getValue().size();
+													if (partLimit > in.getValue()
+															.size()) {
+														partLimit = in.getValue()
+																.size();
 													}
 												}
-												colExp(context.getCurrentSb(), propName, (GRdbPropertyStoreHandler) col, true);
+												colExp(context.getCurrentSb(), propName, (GRdbPropertyStoreHandler) targetCol, true);
 												context.append(" IN");
 												context.append("(");
 												for (int i = offset; i < partLimit; i++) {
@@ -1347,7 +1581,9 @@ public class SqlConverter extends QueryVisitorSupport {
 														context.append(",");
 													}
 													//nativeの場合は変換なし
-													valueConvert(in.getValue().get(i), col.getSingleColumnRdbTypeAdapter(), !col.isNative());
+													valueConvert(in.getValue()
+															.get(i), targetCol.getSingleColumnRdbTypeAdapter(),
+															!targetCol.isNative());
 												}
 												context.append(")");
 											}
@@ -1364,32 +1600,40 @@ public class SqlConverter extends QueryVisitorSupport {
 						//subquery
 						propVal.accept(this);
 						context.append(" IN");
-						in.getSubQuery().accept(SqlConverter.this);
+						in.getSubQuery()
+								.accept(SqlConverter.this);
 					} else {
 						//list
-						PropertyType type = context.getValueTypeResolver().resolve(propVal);
-						BaseRdbTypeAdapter rdbType = context.getRdb().getRdbTypeAdapter(type);
-						boolean enableInPart = rdbAdaptor.isEnableInPartitioning() && in.getValue().size() > rdbAdaptor.getInPartitioningSize();
+						PropertyType type = context.getValueTypeResolver()
+								.resolve(propVal);
+						BaseRdbTypeAdapter rdbType = context.getRdb()
+								.getRdbTypeAdapter(type);
+						boolean enableInPart = rdbAdaptor.isEnableInPartitioning() && in.getValue()
+								.size() > rdbAdaptor.getInPartitioningSize();
 						if (enableInPart) {
 							context.append("(");
 						}
 						boolean isFirst = true;
 						int partLimit = 0;
 						int offset = 0;
-						while (partLimit < in.getValue().size()) {
+						while (partLimit < in.getValue()
+								.size()) {
 							if (isFirst) {
 								isFirst = false;
 								if (enableInPart) {
 									partLimit = rdbAdaptor.getInPartitioningSize();
 								} else {
-									partLimit = in.getValue().size();
+									partLimit = in.getValue()
+											.size();
 								}
 							} else {
 								context.append(" OR ");
 								offset = partLimit;
 								partLimit = partLimit += rdbAdaptor.getInPartitioningSize();
-								if (partLimit > in.getValue().size()) {
-									partLimit = in.getValue().size();
+								if (partLimit > in.getValue()
+										.size()) {
+									partLimit = in.getValue()
+											.size();
 								}
 							}
 							propVal.accept(this);
@@ -1399,7 +1643,8 @@ public class SqlConverter extends QueryVisitorSupport {
 								if (i != offset) {
 									context.append(",");
 								}
-								valueConvert(in.getValue().get(i), rdbType, false);
+								valueConvert(in.getValue()
+										.get(i), rdbType, false);
 							}
 							context.append(")");
 						}
@@ -1424,42 +1669,60 @@ public class SqlConverter extends QueryVisitorSupport {
 							if (propVal instanceof EntityField) {
 								String propName = ((EntityField) propVal).getPropertyName();
 								PropertyHandler prop = context.getProperty(propName);
-								if (prop.getMetaData().getMultiplicity() != 1) {
+								if (prop.getMetaData()
+										.getMultiplicity() != 1
+										&& ((EntityField) propVal).getArrayIndex() == EntityField.ARRAY_INDEX_UNSPECIFIED) {
 									throw new QueryException(
-									"multi column IN clause can not use multiple valued property:" + propName);
+											"multi column IN clause can not use multiple valued property:" + propName);
 								}
 							}
 							propVal.accept(this);
 						}
 						context.append(") IN");
-						in.getSubQuery().accept(SqlConverter.this);
+						in.getSubQuery()
+								.accept(SqlConverter.this);
 					} else {
 						// RDBが行値構成子(行値式)を未サポート
 						context.append("EXISTS");
-						SubQuery copySubQuery = new SubQuery(in.getSubQuery().getQuery().copy());
+						SubQuery copySubQuery = new SubQuery(in.getSubQuery()
+								.getQuery()
+								.copy());
 
 						List<Condition> onCondList = new ArrayList<>();
-						if (in.getSubQuery().getOn() != null) {
-							onCondList.add(in.getSubQuery().getOn());
+						if (in.getSubQuery()
+								.getOn() != null) {
+							onCondList.add(in.getSubQuery()
+									.getOn());
 						}
 
 						List<Condition> havingCondList = new ArrayList<>();
-						if (in.getSubQuery().getQuery().getHaving() != null) {
-							havingCondList.add(in.getSubQuery().getQuery().getHaving().getCondition());
+						if (in.getSubQuery()
+								.getQuery()
+								.getHaving() != null) {
+							havingCondList.add(in.getSubQuery()
+									.getQuery()
+									.getHaving()
+									.getCondition());
 						}
 
 						for (int i = 0; i < propList.size(); i++) {
 							Condition cond = null;
 							ValueExpression propVal = propList.get(i);
-							ValueExpression selectVal = in.getSubQuery().getQuery().select().getSelectValues().get(i);
+							ValueExpression selectVal = in.getSubQuery()
+									.getQuery()
+									.select()
+									.getSelectValues()
+									.get(i);
 							if (propVal instanceof EntityField) {
 								String propName = ((EntityField) propVal).getPropertyName();
 								PropertyHandler prop = context.getProperty(propName);
-								if (prop.getMetaData().getMultiplicity() != 1) {
+								if (prop.getMetaData()
+										.getMultiplicity() != 1
+										&& ((EntityField) propVal).getArrayIndex() == EntityField.ARRAY_INDEX_UNSPECIFIED) {
 									throw new QueryException(
-									"multi column IN clause can not use multiple valued property:" + propName);
+											"multi column IN clause can not use multiple valued property:" + propName);
 								}
-								cond = new Equals(new EntityField("." + propName), selectVal);
+								cond = new Equals(new EntityField("." + propName, ((EntityField) propVal).getArrayIndex()), selectVal);
 							} else {
 								cond = new Equals(propVal, selectVal);
 							}
@@ -1481,36 +1744,42 @@ public class SqlConverter extends QueryVisitorSupport {
 						if (!havingCondList.isEmpty()) {
 							havingCond = havingCondList.size() > 1 ? new And(havingCondList) : havingCondList.get(0);
 						}
-						copySubQuery.getQuery().setHaving(havingCond != null ? new Having(havingCond) : null);
+						copySubQuery.getQuery()
+								.setHaving(havingCond != null ? new Having(havingCond) : null);
 
 						visit(copySubQuery, false, true);
 					}
 				} else {
 					//rowValueList
-					boolean enableInPart = rdbAdaptor.isEnableInPartitioning() && in.getValue().size() > rdbAdaptor.getInPartitioningSize();
+					boolean enableInPart = rdbAdaptor.isEnableInPartitioning() && in.getValue()
+							.size() > rdbAdaptor.getInPartitioningSize();
 					if (enableInPart) {
 						context.append("(");
 					}
 					boolean isFirst = true;
 					int partLimit = 0;
 					int offset = 0;
-					while (partLimit < in.getValue().size()) {
+					while (partLimit < in.getValue()
+							.size()) {
 						if (isFirst) {
 							isFirst = false;
 							if (enableInPart) {
 								partLimit = rdbAdaptor.getInPartitioningSize();
 							} else {
-								partLimit = in.getValue().size();
+								partLimit = in.getValue()
+										.size();
 							}
 						} else {
 							context.append(" OR ");
 							offset = partLimit;
 							partLimit = partLimit += rdbAdaptor.getInPartitioningSize();
-							if (partLimit > in.getValue().size()) {
-								partLimit = in.getValue().size();
+							if (partLimit > in.getValue()
+									.size()) {
+								partLimit = in.getValue()
+										.size();
 							}
 						}
-						
+
 						if (rdbAdaptor.isSupportRowValueConstructor()) {
 							context.append("(");
 							for (int i = 0; i < propList.size(); i++) {
@@ -1521,9 +1790,11 @@ public class SqlConverter extends QueryVisitorSupport {
 								if (propVal instanceof EntityField) {
 									String propName = ((EntityField) propVal).getPropertyName();
 									PropertyHandler prop = context.getProperty(propName);
-									if (prop.getMetaData().getMultiplicity() != 1) {
+									if (prop.getMetaData()
+											.getMultiplicity() != 1
+											&& ((EntityField) propVal).getArrayIndex() == EntityField.ARRAY_INDEX_UNSPECIFIED) {
 										throw new QueryException(
-										"multi column IN clause can not use multiple valued property:" + propName);
+												"multi column IN clause can not use multiple valued property:" + propName);
 									}
 								}
 								propVal.accept(this);
@@ -1533,7 +1804,9 @@ public class SqlConverter extends QueryVisitorSupport {
 								if (i != offset) {
 									context.append(",");
 								}
-								in.getValue().get(i).accept(this);
+								in.getValue()
+										.get(i)
+										.accept(this);
 							}
 							context.append(")");
 						} else {
@@ -1543,7 +1816,8 @@ public class SqlConverter extends QueryVisitorSupport {
 								if (i != 0) {
 									context.append(" OR ");
 								}
-								ValueExpression rvl = in.getValue().get(i);
+								ValueExpression rvl = in.getValue()
+										.get(i);
 								context.append("(");
 								for (int j = 0; j < propList.size(); j++) {
 									if (j != 0) {
@@ -1553,12 +1827,15 @@ public class SqlConverter extends QueryVisitorSupport {
 									if (propVal instanceof EntityField) {
 										String propName = ((EntityField) propVal).getPropertyName();
 										PropertyHandler prop = context.getProperty(propName);
-										if (prop.getMetaData().getMultiplicity() != 1) {
+										if (prop.getMetaData()
+												.getMultiplicity() != 1
+												&& ((EntityField) propVal).getArrayIndex() == EntityField.ARRAY_INDEX_UNSPECIFIED) {
 											throw new QueryException(
-											"multi column IN clause can not use multiple valued property:" + propName);
+													"multi column IN clause can not use multiple valued property:" + propName);
 										}
 									}
-									new Equals(propVal, ((RowValueList) rvl).getRowValues().get(j)).accept(this);
+									new Equals(propVal, ((RowValueList) rvl).getRowValues()
+											.get(j)).accept(this);
 								}
 								context.append(")");
 							}
@@ -1569,7 +1846,7 @@ public class SqlConverter extends QueryVisitorSupport {
 						context.append(")");
 					}
 				}
-				
+
 			}
 			return false;
 		} finally {
@@ -1580,15 +1857,18 @@ public class SqlConverter extends QueryVisitorSupport {
 	private void forLike(Literal pattern, CaseType cs) {
 		String patternStr;
 		if (cs == CaseType.CS) {
-			patternStr = pattern.getValue().toString();
+			patternStr = pattern.getValue()
+					.toString();
 		} else {
-			patternStr = pattern.getValue().toString().toUpperCase();
+			patternStr = pattern.getValue()
+					.toString()
+					.toUpperCase();
 		}
 		patternStr = rdbAdaptor.likePattern(patternStr);
 
 		BaseRdbTypeAdapter type = rdbAdaptor.getRdbTypeAdapter(patternStr);
 		if (context.isEnableBindVariable() && pattern.isBindable()) {
-			context.getCurrentSb().append("?");
+			type.appendParameterPlaceholder(context.getCurrentSb(), rdbAdaptor);
 			context.addBindVariable(patternStr, type);
 		} else {
 			type.appendToSqlAsRealType(patternStr, context.getCurrentSb(), rdbAdaptor);
@@ -1599,25 +1879,28 @@ public class SqlConverter extends QueryVisitorSupport {
 	public boolean visit(final Like like) {
 		push(like);
 		try {
-			
+
 			ValueExpression propVal = like.getProperty();
-			
+
 			if (propVal instanceof EntityField) {
 				String propName = like.getPropertyName();
 				// JOIN対応
 				context.notifyUsedPropertyName(propName);
-	
+
 				final PropertyHandler prop = context.getProperty(propName);
 				if (prop == null) {
 					throw new QueryException("not define property:" + propName);
 				}
 				final GRdbPropertyStoreRuntime col = (GRdbPropertyStoreRuntime) prop.getStoreSpecProperty();
 				if (col == null) {
-					throw new QueryException("Reference property:" + propName + " itself can not be specified in Like clause. Specify " + propName + ".oid or other.");
+					throw new QueryException(
+							"Reference property:" + propName + " itself can not be specified in Like clause. Specify " + propName + ".oid or other.");
 				}
-				
+
 				//配列対応（※配列はindex不可とする）
-				if (prop.getMetaData().getMultiplicity() > 1) {
+				if (prop.getMetaData()
+						.getMultiplicity() > 1
+						&& ((EntityField) propVal).getArrayIndex() == EntityField.ARRAY_INDEX_UNSPECIFIED) {
 					context.append("(");
 					//ANYとみなす（プロパティの配列要素の内どれかひとつでもtrueの場合、trueとみなす）
 					List<GRdbPropertyStoreHandler> cols = col.asList();
@@ -1625,11 +1908,13 @@ public class SqlConverter extends QueryVisitorSupport {
 						if (i != 0) {
 							context.append(" OR ");
 						}
+						context.append("(");
 						if (like.getCaseType() == CaseType.CS) {
 							colExp(context.getCurrentSb(), propName, cols.get(i), false);
 							context.append(" LIKE ");
 							forLike(like.getPatternAsLiteral(), like.getCaseType());
-							context.append(" ").append(rdbAdaptor.escape());
+							context.append(" ")
+									.append(rdbAdaptor.escape());
 						} else {
 							//#900 大文字/小文字区別をなくす
 							context.append(rdbAdaptor.upperFunctionName());
@@ -1638,47 +1923,63 @@ public class SqlConverter extends QueryVisitorSupport {
 							context.append(")");
 							context.append(" LIKE ");
 							forLike(like.getPatternAsLiteral(), like.getCaseType());
-							context.append(" ").append(rdbAdaptor.escape());
+							context.append(" ")
+									.append(rdbAdaptor.escape());
 						}
+						context.append(" AND ");
+						colExp(context.getCurrentSb(), propName, cols.get(i), false);
+						context.append(" IS NOT NULL)");
 					}
 					context.append(")");
 				} else {
 					if (like.getCaseType() == CaseType.CS
-							&& !like.getPattern().startsWith(Like.PS)
-							&& !like.getPattern().startsWith(Like.US)) {
+							&& !like.getPattern()
+									.startsWith(Like.PS)
+							&& !like.getPattern()
+									.startsWith(Like.US)) {
+						//インデックス利用可能性あり
 						if (useExternalIndex(prop, propName)) {
 							externalIndexedSql(propName, (PrimitivePropertyHandler) prop,
 									(tableName) -> {
 										// EXISTSによる条件文を構築。
-										context.append(tableName).append(".VAL");
+										context.append(tableName)
+												.append(".VAL");
 										context.append(" LIKE ");
 										forLike(like.getPatternAsLiteral(), like.getCaseType());
-										context.append(" ").append(rdbAdaptor.escape());
+										context.append(" ")
+												.append(rdbAdaptor.escape());
 									});
 						} else {
+							//内部インデックス、単純プロパティ、配列インデックス指定の場合
+							GRdbPropertyStoreRuntime targetCol = targetColByIndexIfMulti(col, (EntityField) propVal);
 							internalIndexedSql(propName, (PrimitivePropertyHandler) prop, false,
 									() -> {
-										colExp(context.getCurrentSb(), propName, (GRdbPropertyStoreHandler) col, true);
+										colExp(context.getCurrentSb(), propName, (GRdbPropertyStoreHandler) targetCol, true);
 										context.append(" LIKE ");
 										forLike(like.getPatternAsLiteral(), like.getCaseType());
-										context.append(" ").append(rdbAdaptor.escape());
+										context.append(" ")
+												.append(rdbAdaptor.escape());
 									});
 						}
 					} else {
+						//単純プロパティ、配列インデックス指定の場合
+						GRdbPropertyStoreRuntime targetCol = targetColByIndexIfMulti(col, (EntityField) propVal);
 						if (like.getCaseType() == CaseType.CS) {
-							colExp(context.getCurrentSb(), propName, (GRdbPropertyStoreHandler) col, false);
+							colExp(context.getCurrentSb(), propName, (GRdbPropertyStoreHandler) targetCol, false);
 							context.append(" LIKE ");
 							forLike(like.getPatternAsLiteral(), like.getCaseType());
-							context.append(" ").append(rdbAdaptor.escape());
+							context.append(" ")
+									.append(rdbAdaptor.escape());
 						} else {
 							//#900 大文字/小文字区別をなくす
 							context.append(rdbAdaptor.upperFunctionName());
 							context.append("(");
-							colExp(context.getCurrentSb(), propName, (GRdbPropertyStoreHandler) col, false);
+							colExp(context.getCurrentSb(), propName, (GRdbPropertyStoreHandler) targetCol, false);
 							context.append(")");
 							context.append(" LIKE ");
 							forLike(like.getPatternAsLiteral(), like.getCaseType());
-							context.append(" ").append(rdbAdaptor.escape());
+							context.append(" ")
+									.append(rdbAdaptor.escape());
 						}
 					}
 				}
@@ -1699,7 +2000,7 @@ public class SqlConverter extends QueryVisitorSupport {
 					context.append(" " + rdbAdaptor.escape());
 				}
 			}
-	
+
 			return false;
 		} finally {
 			pop(like);
@@ -1712,7 +2013,8 @@ public class SqlConverter extends QueryVisitorSupport {
 		try {
 			if (not.getNestedExpression() != null) {
 				context.append("NOT ");
-				not.getNestedExpression().accept(this);
+				not.getNestedExpression()
+						.accept(this);
 				return false;
 			} else {
 				throw new QueryException(
@@ -1746,11 +2048,11 @@ public class SqlConverter extends QueryVisitorSupport {
 	}
 
 	private void nullOp(ValueExpression propVal, boolean isNullOp, boolean isAny) {
-		String op = isNullOp ? "IS NULL": "IS NOT NULL";
-		
+		String op = isNullOp ? "IS NULL" : "IS NOT NULL";
+
 		if (propVal instanceof EntityField) {
 			String propName = ((EntityField) propVal).getPropertyName();
-			
+
 			// JOIN対応
 			context.notifyUsedPropertyName(propName);
 
@@ -1762,9 +2064,11 @@ public class SqlConverter extends QueryVisitorSupport {
 			if (col == null) {
 				throw new QueryException("Reference property:" + propName + " itself can not be specified. Specify " + propName + ".oid or other.");
 			}
-			
+
 			//配列対応（※配列はindex不可とする）
-			if (prop.getMetaData().getMultiplicity() > 1) {
+			if (prop.getMetaData()
+					.getMultiplicity() > 1
+					&& ((EntityField) propVal).getArrayIndex() == EntityField.ARRAY_INDEX_UNSPECIFIED) {
 				context.append("(");
 				List<GRdbPropertyStoreHandler> cols = col.asList();
 				for (int i = 0; i < cols.size(); i++) {
@@ -1776,33 +2080,44 @@ public class SqlConverter extends QueryVisitorSupport {
 						}
 					}
 					colExp(context.getCurrentSb(), propName, cols.get(i), false);
-					context.append(" ").append(op);
+					context.append(" ")
+							.append(op);
 				}
 				context.append(")");
 			} else {
 				//外部index使わない。内部Index or 通常カラムのみ
+				//内部インデックス、単純プロパティ、配列インデックス指定の場合
+				GRdbPropertyStoreRuntime targetCol = targetColByIndexIfMulti(col, (EntityField) propVal);
 				internalIndexedSql(propName, (PrimitivePropertyHandler) prop, isNullOp,
 						() -> {
-							colExp(context.getCurrentSb(), propName, (GRdbPropertyStoreHandler) col, true);
-							context.append(" ").append(op);
+							colExp(context.getCurrentSb(), propName, (GRdbPropertyStoreHandler) targetCol, true);
+							context.append(" ")
+									.append(op);
 						});
 			}
 		} else {
 			propVal.accept(this);
-			context.append(" ").append(op);
+			context.append(" ")
+					.append(op);
 		}
 	}
-	
-	
 
 	@Override
 	public boolean visit(ScalarSubQuery scalarSubQuery) {
 		push(scalarSubQuery);
 		try {
 			if (scalarSubQuery.getQuery() == null ||
-					scalarSubQuery.getQuery().getSelect() == null ||
-					scalarSubQuery.getQuery().getSelect().getSelectValues() == null ||
-							scalarSubQuery.getQuery().getSelect().getSelectValues().size() != 1) {
+					scalarSubQuery.getQuery()
+							.getSelect() == null
+					||
+					scalarSubQuery.getQuery()
+							.getSelect()
+							.getSelectValues() == null
+					||
+					scalarSubQuery.getQuery()
+							.getSelect()
+							.getSelectValues()
+							.size() != 1) {
 				throw new QueryException("ScalarSubQuery must specify only one column.");
 			}
 			return true;
@@ -1810,12 +2125,12 @@ public class SqlConverter extends QueryVisitorSupport {
 			pop(scalarSubQuery);
 		}
 	}
-	
+
 	@Override
 	public boolean visit(SubQuery subQuery) {
 		return visit(subQuery, false);
 	}
-	
+
 	private boolean visit(SubQuery subQuery, boolean treatSelectAsRawColType) {
 		return visit(subQuery, treatSelectAsRawColType, false);
 	}
@@ -1823,97 +2138,128 @@ public class SqlConverter extends QueryVisitorSupport {
 	private boolean visit(SubQuery subQuery, boolean treatSelectAsRawColType, boolean groupingCorrelation) {
 		push(subQuery);
 		try {
-			
+
 			EntityContext ec = context.getMetaContext();
 			SqlQueryContext subContext = new SqlQueryContext(
-					ec.getHandlerByName(subQuery.getQuery().getFrom().getEntityName()),
+					ec.getHandlerByName(subQuery.getQuery()
+							.getFrom()
+							.getEntityName()),
 					context, treatSelectAsRawColType);
-			
+
 			context = subContext;
-			
-			if (subQuery.getQuery().getSelect() != null) {
-				subQuery.getQuery().getSelect().accept(this);
+
+			if (subQuery.getQuery()
+					.getSelect() != null) {
+				subQuery.getQuery()
+						.getSelect()
+						.accept(this);
 			}
-			if (subQuery.getQuery().getFrom() != null) {
-				subQuery.getQuery().getFrom().accept(this);
+			if (subQuery.getQuery()
+					.getFrom() != null) {
+				subQuery.getQuery()
+						.getFrom()
+						.accept(this);
 			}
-			if (subQuery.getQuery().getRefer() != null) {
-				for (Refer r: subQuery.getQuery().getRefer()) {
+			if (subQuery.getQuery()
+					.getRefer() != null) {
+				for (Refer r : subQuery.getQuery()
+						.getRefer()) {
 					r.accept(this);
 				}
 			}
-			
+
 			//special logic for correlation
 			if (subQuery.getOn() != null) {
-				
+
 				subContext.changeCurrentClause(Clause.WHERE);
-				
-				if (subQuery.getQuery().getWhere() != null) {
+
+				if (subQuery.getQuery()
+						.getWhere() != null) {
 					subContext.append("(");
-					subQuery.getQuery().getWhere().getCondition().accept(this);
+					subQuery.getQuery()
+							.getWhere()
+							.getCondition()
+							.accept(this);
 					subContext.append(") AND ");
 				}
-				
+
 				subContext.setEnableCorrelation(true);
 				subContext.setUseIndexTable(false);
-				
+
 				if (subQuery.getOn() instanceof Or) {
 					subContext.append("(");
 				}
-				
-				subQuery.getOn().accept(this);
-				
+
+				subQuery.getOn()
+						.accept(this);
+
 				if (subQuery.getOn() instanceof Or) {
 					subContext.append(")");
 				}
-				
+
 				subContext.setEnableCorrelation(false);
 				subContext.setUseIndexTable(true);
-				
+
 			} else {
-				if (subQuery.getQuery().getWhere() != null) {
-					subQuery.getQuery().getWhere().accept(this);
+				if (subQuery.getQuery()
+						.getWhere() != null) {
+					subQuery.getQuery()
+							.getWhere()
+							.accept(this);
 				}
 			}
-			
+
 			if (groupingCorrelation) {
 				subContext.setEnableCorrelation(true);
 				subContext.setUseIndexTable(false);
 			}
-			if (subQuery.getQuery().getGroupBy() != null) {
-				subQuery.getQuery().getGroupBy().accept(this);
+			if (subQuery.getQuery()
+					.getGroupBy() != null) {
+				subQuery.getQuery()
+						.getGroupBy()
+						.accept(this);
 			}
-			if (subQuery.getQuery().getHaving() != null) {
-				subQuery.getQuery().getHaving().accept(this);
+			if (subQuery.getQuery()
+					.getHaving() != null) {
+				subQuery.getQuery()
+						.getHaving()
+						.accept(this);
 			}
 			if (groupingCorrelation) {
 				subContext.setEnableCorrelation(false);
 				subContext.setUseIndexTable(true);
 			}
-			if (subQuery.getQuery().getOrderBy() != null) {
-				subQuery.getQuery().getOrderBy().accept(this);
+			if (subQuery.getQuery()
+					.getOrderBy() != null) {
+				subQuery.getQuery()
+						.getOrderBy()
+						.accept(this);
 			}
-			if (subQuery.getQuery().getLimit() != null) {
-				subQuery.getQuery().getLimit().accept(this);
+			if (subQuery.getQuery()
+					.getLimit() != null) {
+				subQuery.getQuery()
+						.getLimit()
+						.accept(this);
 			}
-			
+
 			context = context.getParentContext();
-			
+
 			//メインContextへappend
 			context.append("(");
 			context.append(subContext.toSelectSql());
 			context.append(")");
-			
+
 			List<BindValue> subqueryBindVarialbes = subContext.toOrderedBindVariables(true);
 			if (subqueryBindVarialbes != null && subqueryBindVarialbes.size() > 0) {
 				context.setEnableBindVariable(true);
-				for (BindValue b: subqueryBindVarialbes) {
+				for (BindValue b : subqueryBindVarialbes) {
 					((QueryBindValue) b).inIndexTable = false;
 					((QueryBindValue) b).clause = context.getCurrentClause();
-					context.getBindVariables().add(b);
+					context.getBindVariables()
+							.add(b);
 				}
 			}
-			
+
 			return false;
 		} finally {
 			pop(subQuery);
@@ -1924,11 +2270,18 @@ public class SqlConverter extends QueryVisitorSupport {
 	public boolean visit(SortSpec order) {
 		push(order);
 		try {
-			int start = context.getCurrentSb().length();
-			order.getSortKey().accept(this);
-			CharSequence sortValue = context.getCurrentSb().subSequence(start, context.getCurrentSb().length());
-			context.getCurrentSb().delete(start, context.getCurrentSb().length());
-			context.getRdb().appendSortSpecExpression(context.getCurrentSb(), sortValue, order.getType(), order.getNullOrderingSpec());
+			int start = context.getCurrentSb()
+					.length();
+			order.getSortKey()
+					.accept(this);
+			CharSequence sortValue = context.getCurrentSb()
+					.subSequence(start, context.getCurrentSb()
+							.length());
+			context.getCurrentSb()
+					.delete(start, context.getCurrentSb()
+							.length());
+			context.getRdb()
+					.appendSortSpecExpression(context.getCurrentSb(), sortValue, order.getType(), order.getNullOrderingSpec());
 			return false;
 		} finally {
 			pop(order);
@@ -1939,7 +2292,7 @@ public class SqlConverter extends QueryVisitorSupport {
 	public boolean visit(OrderBy orderBy) {
 		push(orderBy);
 		try {
-			
+
 			//mysqlが group by rollup と order byを同時利用できないので
 			if (!context.isUseRollup()
 					|| rdbAdaptor.isSupportGroupingExtentionWithOrderBy()) {
@@ -1950,10 +2303,11 @@ public class SqlConverter extends QueryVisitorSupport {
 					if (i != 0) {
 						context.append(",");
 					}
-					orderSpec.get(i).accept(this);
+					orderSpec.get(i)
+							.accept(this);
 				}
 			}
-			
+
 			return false;
 		} finally {
 			pop(orderBy);
@@ -1964,27 +2318,28 @@ public class SqlConverter extends QueryVisitorSupport {
 	public boolean visit(GroupBy groupBy) {
 		push(groupBy);
 		try {
-			
+
 			context.changeCurrentClause(Clause.ORDERBYGROUPBY);
 			context.append(" GROUP BY ");
-			
+
 			if (groupBy.getRollType() != null && rdbAdaptor.isSupportGroupingExtention()) {
 				context.setUseRollup(true);
 				context.append(rdbAdaptor.rollUpStart(groupBy.getRollType()));
 			}
-			
+
 			List<ValueExpression> valueList = groupBy.getGroupingFieldList();
 			for (int i = 0; i < valueList.size(); i++) {
 				if (i != 0) {
 					context.append(",");
 				}
-				valueList.get(i).accept(this);
+				valueList.get(i)
+						.accept(this);
 			}
-			
+
 			if (groupBy.getRollType() != null && rdbAdaptor.isSupportGroupingExtention()) {
 				context.append(rdbAdaptor.rollUpEnd(groupBy.getRollType()));
 			}
-	
+
 			return false;
 		} finally {
 			pop(groupBy);
@@ -2009,7 +2364,7 @@ public class SqlConverter extends QueryVisitorSupport {
 		push(cast);
 		try {
 			String[] castExp = null;
-			
+
 			switch (cast.getType()) {
 			case BOOLEAN:
 				castExp = rdbAdaptor.castExp(Types.VARCHAR, 32, null);
@@ -2041,37 +2396,38 @@ public class SqlConverter extends QueryVisitorSupport {
 						"not support type of cast expression:" + cast.getType());
 			}
 			context.append(castExp[0]);
-			cast.getValue().accept(this);
+			cast.getValue()
+					.accept(this);
 			context.append(castExp[1]);
-			
+
 		} finally {
 			pop(cast);
 		}
 		return false;
 	}
-	
+
 	@Override
 	public boolean visit(Function function) {
 		push(function);
 		try {
-			
-			FunctionAdapter fa = rdbAdaptor.resolveFunction(function.getName());
+
+			FunctionAdapter<Function> fa = rdbAdaptor.resolveFunction(function.getName());
 			if (fa == null) {
 				throw new QueryException(function.getName() + " not supported.");
 			}
-			
+
 			fa.toSQL(new FunctionContext() {
 				@Override
 				public void appendArgument(ValueExpression arg) {
 					arg.accept(SqlConverter.this);
 				}
-				
+
 				@Override
 				public void append(String str) {
 					context.append(str);
 				}
 			}, function, rdbAdaptor);
-			
+
 			return false;
 		} finally {
 			pop(function);
@@ -2087,40 +2443,48 @@ public class SqlConverter extends QueryVisitorSupport {
 				String oidName = refPropName.getPropertyName() + "." + Entity.OID;
 				String verName = refPropName.getPropertyName() + "." + Entity.VERSION;
 				context.notifyUsedPropertyName(oidName);
-				
+
 				Condition refCond = refer.getCondition();
-				
+
 				MultiPageChecker mpc = new MultiPageChecker(context.getFromEntity(), context.getMetaContext(), refPropName.getPropertyName());
 				refCond.accept(mpc);
 				if (mpc.isMultiPage()) {
 					//複数ページ跨ぐ場合、oidのサブクエリに変換
-					ReferencePropertyHandler refPh = (ReferencePropertyHandler) context.getFromEntity().getPropertyCascade(refPropName.getPropertyName(), context.getMetaContext());
+					ReferencePropertyHandler refPh = (ReferencePropertyHandler) context.getFromEntity()
+							.getPropertyCascade(refPropName.getPropertyName(), context.getMetaContext());
 					EntityHandler refEh = refPh.getReferenceEntityHandler(context.getMetaContext());
-					
+
 					Query subq = new Query();
 					if (mpc.isAllPropertyUnderRef()) {
 						//サブクエリの深さを刈り取る
-						if (context.getFromEntity().isVersioned()) {
+						if (context.getFromEntity()
+								.isVersioned()) {
 							subq.select(new EntityField(Entity.OID), new EntityField(Entity.VERSION));
 						} else {
 							subq.select(new EntityField(Entity.OID));
 						}
-						subq.from(refEh.getMetaData().getName());
-						
+						subq.from(refEh.getMetaData()
+								.getName());
+
 						RefTrimmer refTrimmer = new RefTrimmer(refPropName.getPropertyName());
-						subq.where((Condition) refer.getCondition().accept(refTrimmer));
-						
+						subq.where((Condition) refer.getCondition()
+								.accept(refTrimmer));
+
 					} else {
-						if (context.getFromEntity().isVersioned()) {
+						if (context.getFromEntity()
+								.isVersioned()) {
 							subq.select(new EntityField(oidName), new EntityField(verName));
 						} else {
 							subq.select(new EntityField(oidName));
 						}
-						subq.from(context.getFromEntity().getMetaData().getName());
+						subq.from(context.getFromEntity()
+								.getMetaData()
+								.getName());
 						subq.where(refer.getCondition());
 					}
 
-					if (context.getFromEntity().isVersioned()) {
+					if (context.getFromEntity()
+							.isVersioned()) {
 						ArrayList<ValueExpression> p = new ArrayList<>();
 						p.add(new EntityField(oidName));
 						p.add(new EntityField(verName));
@@ -2129,7 +2493,7 @@ public class SqlConverter extends QueryVisitorSupport {
 						refCond = new And(new In(new EntityField(oidName), subq), new Equals(new EntityField(verName), new Literal(0L)));
 					}
 				}
-				
+
 				//JoinPath,Aliasesは共有
 				SqlQueryContext referContext = new SqlQueryContext(
 						context.getFromEntity(),
@@ -2140,28 +2504,35 @@ public class SqlConverter extends QueryVisitorSupport {
 						context.getJoinPath(),
 						context.getIndexTable(),
 						context.isEnableBindVariable());
-				
+
 				referContext.setUseIndexTable(false);
-				
+
 				SqlQueryContext mainContext = context;
-				
+
 				context = referContext;
 				context.changeCurrentClause(Clause.WHERE);
 				refCond.accept(this);
 				if (referContext.getCurrentClause() != Clause.WHERE) {
 					referContext.changeCurrentClause(Clause.WHERE);
 				}
-				
+
 				List<BindValue> referBindVarialbes = referContext.toOrderedBindVariables(false);
 				if (referBindVarialbes != null && referBindVarialbes.size() > 0) {
 					mainContext.setEnableBindVariable(true);
-					for (BindValue b: referBindVarialbes) {
+					for (BindValue b : referBindVarialbes) {
 						((QueryBindValue) b).inIndexTable = false;
 						((QueryBindValue) b).clause = Clause.REFER;
 					}
 				}
-	
-				mainContext.getJoinPath().getJoinPath(refPropName.getPropertyName()).setAdditionalCondition(referContext.getCurrentSb().toString(), referBindVarialbes);
+
+				AsOfSpec asOfSpec = refer.getAsOf() == null ? null
+						: refer.getAsOf()
+								.getSpec();
+				mainContext.getJoinPath()
+						.getJoinPath(refPropName.getPropertyName())
+						.setAdditionalCondition(referContext.getCurrentSb()
+								.toString(),
+								referBindVarialbes, asOfSpec);
 				if (mainContext.getIndexTable() == null) {
 					mainContext.setIndexTable(referContext.getIndexTable());
 				}
@@ -2190,15 +2561,16 @@ public class SqlConverter extends QueryVisitorSupport {
 		push(caseClause);
 		try {
 			context.append("CASE");
-			for (When w: caseClause.getWhen()) {
+			for (When w : caseClause.getWhen()) {
 				context.append(" ");
 				w.accept(this);
 			}
 			if (caseClause.getElseClause() != null) {
 				context.append(" ");
-				caseClause.getElseClause().accept(this);
+				caseClause.getElseClause()
+						.accept(this);
 			}
-			
+
 			context.append(" END");
 			return false;
 		} finally {
@@ -2211,7 +2583,8 @@ public class SqlConverter extends QueryVisitorSupport {
 		push(elseClause);
 		try {
 			context.append("ELSE ");
-			elseClause.getResult().accept(this);
+			elseClause.getResult()
+					.accept(this);
 			return false;
 		} finally {
 			pop(elseClause);
@@ -2225,10 +2598,12 @@ public class SqlConverter extends QueryVisitorSupport {
 			context.append("WHEN ");
 			boolean stackedUseIndex = context.isUseIndexTable();
 			context.setUseIndexTable(false);
-			when.getCondition().accept(this);
+			when.getCondition()
+					.accept(this);
 			context.setUseIndexTable(stackedUseIndex);
 			context.append(" THEN ");
-			when.getResult().accept(this);
+			when.getResult()
+					.accept(this);
 			return false;
 		} finally {
 			pop(when);
@@ -2240,7 +2615,7 @@ public class SqlConverter extends QueryVisitorSupport {
 		push(hintComment);
 		try {
 			if (hintComment.getHintList() != null) {
-				for (Hint hc: hintComment.getHintList()) {
+				for (Hint hc : hintComment.getHintList()) {
 					hc.accept(this);
 				}
 			}
@@ -2255,7 +2630,7 @@ public class SqlConverter extends QueryVisitorSupport {
 		push(indexHint);
 		try {
 			if (indexHint.getPropertyNameList() != null) {
-				for (String prop: indexHint.getPropertyNameList()) {
+				for (String prop : indexHint.getPropertyNameList()) {
 					context.addIndexHint(prop);
 				}
 			}
@@ -2270,7 +2645,7 @@ public class SqlConverter extends QueryVisitorSupport {
 		push(noIndexHint);
 		try {
 			if (noIndexHint.getPropertyNameList() != null) {
-				for (String prop: noIndexHint.getPropertyNameList()) {
+				for (String prop : noIndexHint.getPropertyNameList()) {
 					context.addNoIndexHint(prop);
 				}
 			}
@@ -2326,18 +2701,21 @@ public class SqlConverter extends QueryVisitorSupport {
 		try {
 			if (rdbAdaptor.isSupportWindowFunction()) {
 				if (windowAggregate.getAggregate() != null) {
-					windowAggregate.getAggregate().accept(this);
+					windowAggregate.getAggregate()
+							.accept(this);
 				}
-				
+
 				context.append(" OVER (");
 				if (windowAggregate.getPartitionBy() != null) {
-					windowAggregate.getPartitionBy().accept(this);
+					windowAggregate.getPartitionBy()
+							.accept(this);
 				}
 				if (windowAggregate.getOrderBy() != null) {
 					if (windowAggregate.getPartitionBy() != null) {
 						context.append(" ");
 					}
-					windowAggregate.getOrderBy().accept(this);
+					windowAggregate.getOrderBy()
+							.accept(this);
 				}
 				context.append(")");
 			} else {
@@ -2348,21 +2726,22 @@ public class SqlConverter extends QueryVisitorSupport {
 			pop(windowAggregate);
 		}
 	}
-	
-	
+
 	private void windowRankFunction(WindowRankFunction wrf) {
 		if (rdbAdaptor.isSupportWindowFunction()) {
 			String funcName = rdbAdaptor.windowRankFunctionName(wrf);
 			context.append(funcName);
 			context.append("() OVER(");
 			if (wrf.getPartitionBy() != null) {
-				wrf.getPartitionBy().accept(this);
+				wrf.getPartitionBy()
+						.accept(this);
 			}
 			if (wrf.getOrderBy() != null) {
 				if (wrf.getPartitionBy() != null) {
 					context.append(" ");
 				}
-				wrf.getOrderBy().accept(this);
+				wrf.getOrderBy()
+						.accept(this);
 			}
 			context.append(")");
 		} else {
@@ -2435,9 +2814,10 @@ public class SqlConverter extends QueryVisitorSupport {
 				if (i != 0) {
 					context.append(",");
 				}
-				valueList.get(i).accept(this);
+				valueList.get(i)
+						.accept(this);
 			}
-			
+
 			return false;
 		} finally {
 			pop(partitionBy);
@@ -2454,9 +2834,10 @@ public class SqlConverter extends QueryVisitorSupport {
 				if (i != 0) {
 					context.append(",");
 				}
-				orderSpec.get(i).accept(this);
+				orderSpec.get(i)
+						.accept(this);
 			}
-			
+
 			return false;
 		} finally {
 			pop(orderBy);
@@ -2467,11 +2848,18 @@ public class SqlConverter extends QueryVisitorSupport {
 	public boolean visit(WindowSortSpec sortSpec) {
 		push(sortSpec);
 		try {
-			int start = context.getCurrentSb().length();
-			sortSpec.getSortKey().accept(this);
-			CharSequence sortValue = context.getCurrentSb().subSequence(start, context.getCurrentSb().length());
-			context.getCurrentSb().delete(start, context.getCurrentSb().length());
-			context.getRdb().appendSortSpecExpression(context.getCurrentSb(), sortValue, sortSpec.getType(), sortSpec.getNullOrderingSpec());
+			int start = context.getCurrentSb()
+					.length();
+			sortSpec.getSortKey()
+					.accept(this);
+			CharSequence sortValue = context.getCurrentSb()
+					.subSequence(start, context.getCurrentSb()
+							.length());
+			context.getCurrentSb()
+					.delete(start, context.getCurrentSb()
+							.length());
+			context.getRdb()
+					.appendSortSpecExpression(context.getCurrentSb(), sortValue, sortSpec.getType(), sortSpec.getNullOrderingSpec());
 			return false;
 		} finally {
 			pop(sortSpec);

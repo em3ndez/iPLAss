@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,19 +31,22 @@ import org.slf4j.LoggerFactory;
 
 public class GroovyObjectInputStream extends ObjectInputStream {
 	private static Logger log = LoggerFactory.getLogger(GroovyObjectInputStream.class);
-	
+
 	private final GroovyScriptEngine se;
 
 	public GroovyObjectInputStream(InputStream in) throws IOException {
 		super(in);
-		se = (GroovyScriptEngine) ExecuteContext.getCurrentContext().getTenantContext().getScriptEngine();
+		se = (GroovyScriptEngine) ExecuteContext.getCurrentContext()
+				.getTenantContext()
+				.getScriptEngine();
 	}
-	
+
 	@Override
 	protected Class<?> resolveClass(ObjectStreamClass desc)
 			throws IOException, ClassNotFoundException {
 		try {
-			return se.getSharedClassLoader().loadClass(desc.getName());
+			return se.getSharedClassLoader()
+					.loadClass(desc.getName());
 		} catch (Exception e) {
 			log.debug("cant deserialize GroovyObject..., so resolve class from default class loader. cause:" + e.toString());
 			return super.resolveClass(desc);

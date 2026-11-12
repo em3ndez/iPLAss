@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,6 +23,7 @@ package org.iplass.adminconsole.shared.tools.rpc.pack;
 import java.util.List;
 
 import org.iplass.adminconsole.shared.tools.dto.entityexplorer.EntityDataImportResultInfo;
+import org.iplass.adminconsole.shared.tools.dto.metaexplorer.MetaDataCheckResultInfo;
 import org.iplass.adminconsole.shared.tools.dto.metaexplorer.MetaDataImportResultInfo;
 import org.iplass.adminconsole.shared.tools.dto.pack.PackageCreateInfo;
 import org.iplass.adminconsole.shared.tools.dto.pack.PackageCreateResultInfo;
@@ -43,7 +44,6 @@ public interface PackageRpcServiceAsync {
 	 */
 	void getPackageList(final int tenantId, AsyncCallback<List<PackageEntryStatusInfo>> callback);
 
-
 	/**
 	 * Packageを削除します。
 	 *
@@ -52,7 +52,6 @@ public interface PackageRpcServiceAsync {
 	 * @param callback Void
 	 */
 	void deletePackage(final int tenantId, final List<String> packOids, AsyncCallback<Void> callback);
-
 
 	/**
 	 * Packageを登録します。
@@ -81,12 +80,20 @@ public interface PackageRpcServiceAsync {
 	 */
 	void syncCreatePackage(final int tenantId, final String packOid, AsyncCallback<PackageCreateResultInfo> callback);
 
-
 	void getPackageEntryInfo(final int tenantId, final String packOid, AsyncCallback<PackageEntryInfo> callback);
-
 
 	void importPackageMetaData(final int tenantId, final String packOid, final Tenant importTenant, AsyncCallback<MetaDataImportResultInfo> callback);
 
-	void importPackageEntityData(final int tenantId, final String packOid, final String path, final PackageImportCondition condition, AsyncCallback<EntityDataImportResultInfo> callback);
+	void importPackageEntityData(final int tenantId, final String packOid, final String path, final PackageImportCondition condition,
+			AsyncCallback<EntityDataImportResultInfo> callback);
+
+	/**
+	 * メタデータ整合性チェックを行います。
+	 * 
+	 * @param tenantId テナントID
+	 * @param oid 対象PackageのOID
+	 * @param callback MetaDataCheckResultInfo（チェック結果）
+	 */
+	void checkPackageMetaData(final int tenantId, final String packOid, AsyncCallback<MetaDataCheckResultInfo> callback);
 
 }

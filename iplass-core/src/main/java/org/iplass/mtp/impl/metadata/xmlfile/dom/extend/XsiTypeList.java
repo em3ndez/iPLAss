@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,17 +21,17 @@ package org.iplass.mtp.impl.metadata.xmlfile.dom.extend;
 
 import org.iplass.mtp.impl.metadata.xmlfile.dom.XsiTypeClass;
 
-@XsiTypeClass({ 
-	// リリース対象とする外部参照メタデータクラスはここに追加していく.
-	MetaAsyncCommandXsiType.class,
-	MetaBinaryTemplateXsiType.class,
-	MetaEntityXsiType.class,
-	MetaGroovyTemplateXsiType.class,
-	MetaHtmlTemplateXsiType.class,
-	MetaMailTemplateXsiType.class,
-	MetaMetaScriptingCommandXsiType.class,
-	MetaReportTemplateXsiType.class,
-	MetaUtilityClassXsiType.class,
+@XsiTypeClass({
+		// リリース対象とする外部参照メタデータクラスはここに追加していく.
+		MetaAsyncCommandXsiType.class,
+		MetaBinaryTemplateXsiType.class,
+		MetaEntityXsiType.class,
+		MetaGroovyTemplateXsiType.class,
+		MetaHtmlTemplateXsiType.class,
+		MetaMailTemplateXsiType.class,
+		MetaMetaScriptingCommandXsiType.class,
+		MetaReportTemplateXsiType.class,
+		MetaUtilityClassXsiType.class,
 })
 public class XsiTypeList {
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,10 +26,10 @@ import org.apache.lucene.analysis.Analyzer;
 import org.iplass.mtp.spi.Config;
 
 public class PerEntityAnalyzerSetting implements AnalyzerSetting {
-	
+
 	private AnalyzerSetting defaultSetting;
 	private Map<String, AnalyzerSetting> settingsPerEntity;
-	
+
 	public AnalyzerSetting getDefaultSetting() {
 		return defaultSetting;
 	}
@@ -48,26 +48,10 @@ public class PerEntityAnalyzerSetting implements AnalyzerSetting {
 
 	@Override
 	public void inited(LuceneFulltextSearchService service, Config config) {
-		if (defaultSetting != null) {
-			defaultSetting.inited(service, config);
-		}
-		if (settingsPerEntity != null) {
-			for (AnalyzerSetting as: settingsPerEntity.values()) {
-				as.inited(service, config);
-			}
-		}
 	}
 
 	@Override
 	public void destroyed() {
-		if (defaultSetting != null) {
-			defaultSetting.destroyed();
-		}
-		if (settingsPerEntity != null) {
-			for (AnalyzerSetting as: settingsPerEntity.values()) {
-				as.destroyed();
-			}
-		}
 	}
 
 	@Override
@@ -76,11 +60,11 @@ public class PerEntityAnalyzerSetting implements AnalyzerSetting {
 		if (settingsPerEntity != null) {
 			as = settingsPerEntity.get(entityDefName);
 		}
-		
+
 		if (as == null) {
 			as = defaultSetting;
 		}
-		
+
 		return as.getAnalyzer(tenantId, entityDefName);
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,7 +35,6 @@ import org.iplass.mtp.message.MessageCategory;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.smartgwt.client.util.SC;
-
 
 public class MessagePlugin extends DefaultMetaDataPlugin {
 
@@ -105,23 +104,27 @@ public class MessagePlugin extends DefaultMetaDataPlugin {
 	@Override
 	protected void itemDelete(final MetaDataItemMenuTreeNode itemNode) {
 		MetaDataServiceAsync service = MetaDataServiceFactory.get();
-		service.deleteDefinition(TenantInfoHolder.getId(), MessageCategory.class.getName(), itemNode.getDefName(), new AsyncCallback<AdminDefinitionModifyResult>() {
-			public void onFailure(Throwable caught) {
-				// 失敗時
-				SC.warn(AdminClientMessageUtil.getString("ui_metadata_message_MessagePluginManager_failedToDeleteMessageCategory") + caught.getMessage());
-			}
-			public void onSuccess(AdminDefinitionModifyResult result) {
-				if (result.isSuccess()) {
-					SC.say(AdminClientMessageUtil.getString("ui_metadata_message_MessagePluginManager_completion"),
-							AdminClientMessageUtil.getString("ui_metadata_message_MessagePluginManager_deleteMessageCategoryComp"));
+		service.deleteDefinition(TenantInfoHolder.getId(), MessageCategory.class.getName(), itemNode.getDefName(),
+				new AsyncCallback<AdminDefinitionModifyResult>() {
+					public void onFailure(Throwable caught) {
+						// 失敗時
+						SC.warn(AdminClientMessageUtil.getString("ui_metadata_message_MessagePluginManager_failedToDeleteMessageCategory")
+								+ caught.getMessage());
+					}
 
-					refresh();
-					removeTab(itemNode);
-				} else {
-					SC.warn(AdminClientMessageUtil.getString("ui_metadata_message_MessagePluginManager_failedToDeleteMessageCategory") + result.getMessage());
-				}
-			}
-		});
+					public void onSuccess(AdminDefinitionModifyResult result) {
+						if (result.isSuccess()) {
+							SC.say(AdminClientMessageUtil.getString("ui_metadata_message_MessagePluginManager_completion"),
+									AdminClientMessageUtil.getString("ui_metadata_message_MessagePluginManager_deleteMessageCategoryComp"));
+
+							refresh();
+							removeTab(itemNode);
+						} else {
+							SC.warn(AdminClientMessageUtil.getString("ui_metadata_message_MessagePluginManager_failedToDeleteMessageCategory")
+									+ result.getMessage());
+						}
+					}
+				});
 	}
 
 	@Override
@@ -131,6 +134,6 @@ public class MessagePlugin extends DefaultMetaDataPlugin {
 
 	@Override
 	protected Class<?>[] workspaceContentsPaneClass() {
-		return new Class[]{MessageCategoryEditPane.class};
+		return new Class[] { MessageCategoryEditPane.class };
 	}
 }

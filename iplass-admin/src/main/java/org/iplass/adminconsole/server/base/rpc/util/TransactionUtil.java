@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,7 +33,8 @@ public class TransactionUtil {
 
 	public static void setRollback() {
 		//トランザクションのロールバック指定
-		TransactionManager tm = ManagerLocator.getInstance().getManager(TransactionManager.class);
+		TransactionManager tm = ManagerLocator.getInstance()
+				.getManager(TransactionManager.class);
 		Transaction t = tm.currentTransaction();
 		if (t != null && t.getStatus() == TransactionStatus.ACTIVE && !t.isRollbackOnly()) {
 			log.debug("set transaction rollback.");

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,10 +35,10 @@ public class ParenValue extends PrimaryValue {
 	private static final long serialVersionUID = -3526585666272234663L;
 
 	private ValueExpression nestedValue;
-	
+
 	public ParenValue() {
 	}
-	
+
 	public ParenValue(ValueExpression nestedValue) {
 		this.nestedValue = nestedValue;
 	}
@@ -54,10 +54,11 @@ public class ParenValue extends PrimaryValue {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("(").append(nestedValue).append(")");
+		sb.append("(")
+				.append(nestedValue)
+				.append(")");
 		return sb.toString();
 	}
-
 
 	public void accept(ValueExpressionVisitor visitor) {
 		if (visitor.visit(this)) {
@@ -68,7 +69,7 @@ public class ParenValue extends PrimaryValue {
 	}
 
 	public ASTNode accept(ASTTransformer transformer) {
-		
+
 		return transformer.visit(this);
 	}
 
@@ -97,5 +98,5 @@ public class ParenValue extends PrimaryValue {
 			return false;
 		return true;
 	}
-	
+
 }

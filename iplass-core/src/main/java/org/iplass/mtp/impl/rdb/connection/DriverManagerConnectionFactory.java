@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,12 +27,10 @@ import java.util.Properties;
 
 import org.iplass.mtp.spi.Config;
 
-
 public class DriverManagerConnectionFactory extends AbstractConnectionFactory {
 
 	private String url;
 	private Properties info;
-
 
 	@Override
 	protected Connection getConnectionInternal() {
@@ -54,16 +52,14 @@ public class DriverManagerConnectionFactory extends AbstractConnectionFactory {
 
 	}
 
-
 	public void destroy() {
 	}
-
 
 	public void init(Config config) {
 		super.init(config);
 
 		info = new Properties();
-		for (String name: config.getNames()) {
+		for (String name : config.getNames()) {
 			if (!name.equals("warnLogThreshold")
 					&& !name.equals("transactionIsolationLevel")
 					&& !name.equals("clientInfoMap")

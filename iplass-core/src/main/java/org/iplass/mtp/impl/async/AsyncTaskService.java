@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,7 +26,6 @@ import java.util.concurrent.Future;
 import org.iplass.mtp.async.AsyncTaskFuture;
 import org.iplass.mtp.async.AsyncTaskOption;
 import org.iplass.mtp.spi.Service;
-
 
 public abstract class AsyncTaskService implements Service {
 	public static final String DEFAULT_QUEUE_BASE_ASYNC_TASK_SERVICE = "DefaultQueueBaseAsyncTaskService";

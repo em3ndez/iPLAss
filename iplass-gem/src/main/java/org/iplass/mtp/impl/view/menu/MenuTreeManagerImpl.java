@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,7 +30,8 @@ import org.iplass.mtp.view.menu.MenuTreeManager;
 
 public class MenuTreeManagerImpl extends AbstractTypedDefinitionManager<MenuTree> implements MenuTreeManager {
 
-	private MenuTreeService service = ServiceRegistry.getRegistry().getService(MenuTreeService.class);
+	private MenuTreeService service = ServiceRegistry.getRegistry()
+			.getService(MenuTreeService.class);
 
 	@Deprecated
 	@Override

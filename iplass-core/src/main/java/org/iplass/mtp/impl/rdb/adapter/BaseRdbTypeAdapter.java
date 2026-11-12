@@ -1,19 +1,19 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
- * 
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
+ *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
@@ -41,13 +41,29 @@ import org.iplass.mtp.impl.entity.property.PropertyType;
 import org.iplass.mtp.impl.properties.basic.DecimalType;
 import org.iplass.mtp.spi.ServiceRegistry;
 
-
 public abstract class BaseRdbTypeAdapter implements RdbTypeAdapter {
+
+	/**
+	 * Column Index タイプ
+	 */
+	public static class ColumnIndexType {
+		/** 日 */
+		public static final String DATE = "DATE";
+		/** Double */
+		public static final String DOUBLE = "DBL";
+		/** 数値 */
+		public static final String NUMBER = "NUM";
+		/** 文字 */
+		public static final String STRING = "STR";
+		/** 日時 */
+		public static final String TIMESTAMP = "TS";
+	}
 
 	private static Map<Class<? extends BaseRdbTypeAdapter>, BaseRdbTypeAdapter> map;
 
 	static {
-		PropertyService ps = ServiceRegistry.getRegistry().getService(PropertyService.class);
+		PropertyService ps = ServiceRegistry.getRegistry()
+				.getService(PropertyService.class);
 		map = new HashMap<Class<? extends BaseRdbTypeAdapter>, BaseRdbTypeAdapter>();
 		map.put(Null.class, new Null());
 		map.put(DateTime.class, new DateTime(ps.getPropertyType(Timestamp.class)));
@@ -78,14 +94,10 @@ public abstract class BaseRdbTypeAdapter implements RdbTypeAdapter {
 		this.propertyType = propertyType;
 	}
 
-
+	@Override
 	public int allocateColumnCount() {
 		return 1;
 	}
-
-
-
-
 
 	//TODO 以下のメソッドの整理が必要
 
@@ -111,7 +123,7 @@ public abstract class BaseRdbTypeAdapter implements RdbTypeAdapter {
 	public void appendToSqlAsRealType(Object javaTypeValue, StringBuilder context, RdbAdapter rdb) {
 		context.append(rdb.toSqlExp(toDataStore(javaTypeValue, rdb)));
 	}
-	
+
 	public abstract void setParameter(int index, Object javaTypeValue, PreparedStatement stmt, RdbAdapter rdb) throws SQLException;
 
 	public void appendToTypedCol(StringBuilder context, RdbAdapter rdb, ValueHandleLogic callback) {
@@ -122,7 +134,7 @@ public abstract class BaseRdbTypeAdapter implements RdbTypeAdapter {
 		callback.run();
 	}
 
-	public void appendToTypedColForPrepare(StringBuilder context, RdbAdapter rdb) {
+	public void appendParameterPlaceholder(StringBuilder context, RdbAdapter rdb) {
 		context.append("?");
 	}
 
@@ -204,7 +216,9 @@ public abstract class BaseRdbTypeAdapter implements RdbTypeAdapter {
 			}
 
 			try {
-				return new Timestamp(DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM).parse(javaTypeValue.toString()).getTime());
+				return new Timestamp(DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM)
+						.parse(javaTypeValue.toString())
+						.getTime());
 			} catch (ParseException e) {
 				throw new EntityRuntimeException("can not convert to Date:" + javaTypeValue);
 			}
@@ -222,7 +236,7 @@ public abstract class BaseRdbTypeAdapter implements RdbTypeAdapter {
 
 		@Override
 		public String getColOfIndex() {
-			return "TS";
+			return ColumnIndexType.TIMESTAMP;
 		}
 
 		@Override
@@ -263,7 +277,9 @@ public abstract class BaseRdbTypeAdapter implements RdbTypeAdapter {
 			}
 
 			try {
-				return new java.sql.Date(DateFormat.getDateInstance(DateFormat.MEDIUM).parse(javaTypeValue.toString()).getTime());
+				return new java.sql.Date(DateFormat.getDateInstance(DateFormat.MEDIUM)
+						.parse(javaTypeValue.toString())
+						.getTime());
 			} catch (ParseException e) {
 				throw new EntityRuntimeException("can not convert to Date:" + javaTypeValue);
 			}
@@ -278,12 +294,10 @@ public abstract class BaseRdbTypeAdapter implements RdbTypeAdapter {
 				context.append(rdb.toDateExpression(date));
 			}
 		}
-		
-		
 
 		@Override
 		public String getColOfIndex() {
-			return "DATE";
+			return ColumnIndexType.DATE;
 		}
 
 		@Override
@@ -334,26 +348,6 @@ public abstract class BaseRdbTypeAdapter implements RdbTypeAdapter {
 			}
 		}
 
-
-		public void appendToTypedColForPrepare(StringBuilder context, RdbAdapter rdb) {
-			DecimalType type = (DecimalType) propertyType;
-			if (type.getScale() > 0) {
-				context.append("1");
-				for (int i = 0; i < type.getScale(); i++) {
-					context.append("0");
-				}
-				context.append("*(?)");
-			} else if (type.getScale() < 0) {
-				context.append("(?)/");
-				context.append("1");
-				for (int i = 0; i > type.getScale(); i--) {
-					context.append("0");
-				}
-			} else {
-				super.appendToTypedColForPrepare(context, rdb);
-			}
-		}
-
 		@Override
 		public void appendToTypedCol(StringBuilder context, RdbAdapter rdb,
 				ValueHandleLogic callback) {
@@ -386,7 +380,7 @@ public abstract class BaseRdbTypeAdapter implements RdbTypeAdapter {
 			BigDecimal dec = rs.getBigDecimal(columnIndex);
 			if (dec != null && dec.scale() != ((DecimalType) propertyType).getScale()
 					&& ((DecimalType) propertyType).getScale() != java.lang.Integer.MIN_VALUE) {
-				RoundingMode rm =  ((DecimalType) propertyType).getRoundingMode();
+				RoundingMode rm = ((DecimalType) propertyType).getRoundingMode();
 				if (rm == null) {
 					rm = RoundingMode.HALF_EVEN;
 				}
@@ -402,7 +396,7 @@ public abstract class BaseRdbTypeAdapter implements RdbTypeAdapter {
 
 		@Override
 		public String getColOfIndex() {
-			return "NUM";
+			return ColumnIndexType.NUMBER;
 		}
 
 		@Override
@@ -449,7 +443,7 @@ public abstract class BaseRdbTypeAdapter implements RdbTypeAdapter {
 
 		@Override
 		public String getColOfIndex() {
-			return "DBL";
+			return ColumnIndexType.DOUBLE;
 		}
 
 		@Override
@@ -500,7 +494,7 @@ public abstract class BaseRdbTypeAdapter implements RdbTypeAdapter {
 
 		@Override
 		public String getColOfIndex() {
-			return "NUM";
+			return ColumnIndexType.NUMBER;
 		}
 
 		@Override
@@ -559,7 +553,7 @@ public abstract class BaseRdbTypeAdapter implements RdbTypeAdapter {
 
 		@Override
 		public String getColOfIndex() {
-			return "TS";
+			return ColumnIndexType.TIMESTAMP;
 		}
 
 		@Override
@@ -608,14 +602,15 @@ public abstract class BaseRdbTypeAdapter implements RdbTypeAdapter {
 			if (val == null) {
 				context.append("null");
 			} else {
-				context.append("'").append(rdb.sanitize(val)).append("'");
+				context.append("'")
+						.append(rdb.sanitize(val))
+						.append("'");
 			}
 		}
 
-
 		@Override
 		public String getColOfIndex() {
-			return "STR";
+			return ColumnIndexType.STRING;
 		}
 
 		@Override
@@ -667,7 +662,7 @@ public abstract class BaseRdbTypeAdapter implements RdbTypeAdapter {
 			if (javaTypeValue instanceof Boolean) {
 				val = (Boolean) javaTypeValue;
 			} else {
-				val =  Boolean.valueOf(javaTypeValue.toString());
+				val = Boolean.valueOf(javaTypeValue.toString());
 			}
 
 			if (val.booleanValue() == false) {
@@ -679,16 +674,19 @@ public abstract class BaseRdbTypeAdapter implements RdbTypeAdapter {
 
 		@Override
 		public void appendToSqlAsRealType(Object javaTypeValue, StringBuilder context, RdbAdapter rdb) {
-			String val = toRdb(javaTypeValue,rdb);
+			String val = toRdb(javaTypeValue, rdb);
 			if (val == null) {
 				context.append("null");
 			} else {
-				context.append("'").append(rdb.sanitize(val)).append("'");
+				context.append("'")
+						.append(rdb.sanitize(val))
+						.append("'");
 			}
 		}
+
 		@Override
 		public String getColOfIndex() {
-			return "STR";
+			return ColumnIndexType.STRING;
 		}
 
 		@Override

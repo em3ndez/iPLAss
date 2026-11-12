@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,9 +23,15 @@ package org.iplass.mtp.impl.view.generic.element;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.iplass.mtp.impl.entity.EntityContext;
+import org.iplass.mtp.impl.entity.EntityHandler;
 import org.iplass.mtp.impl.i18n.I18nUtil;
 import org.iplass.mtp.impl.i18n.MetaLocalizedString;
 import org.iplass.mtp.impl.util.ObjectUtil;
+import org.iplass.mtp.impl.view.generic.EntityViewRuntime;
+import org.iplass.mtp.impl.view.generic.FormViewRuntime;
+import org.iplass.mtp.impl.view.generic.common.MetaAutocompletionSetting;
+import org.iplass.mtp.impl.view.generic.common.MetaAutocompletionSetting.AutocompletionSettingRuntime;
 import org.iplass.mtp.impl.view.generic.editor.MetaPropertyEditor;
 import org.iplass.mtp.view.generic.RequiredDisplayType;
 import org.iplass.mtp.view.generic.TextAlign;
@@ -85,12 +91,15 @@ public class MetaVirtualProperty extends MetaElement {
 	/** CSVの出力 */
 	private boolean outputCsv = false;
 
+	/** 自動補完設定 */
+	private MetaAutocompletionSetting autocompletionSetting;
+
 	/**
 	 * プロパティ名を取得します。
 	 * @return プロパティ名
 	 */
 	public String getPropertyName() {
-	    return propertyName;
+		return propertyName;
 	}
 
 	/**
@@ -98,7 +107,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @param propertyName プロパティ名
 	 */
 	public void setPropertyName(String propertyName) {
-	    this.propertyName = propertyName;
+		this.propertyName = propertyName;
 	}
 
 	/**
@@ -106,7 +115,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @return 画面表示時のラベル
 	 */
 	public String getDisplayLabel() {
-	    return displayLabel;
+		return displayLabel;
 	}
 
 	/**
@@ -114,7 +123,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @param displayLabel 画面表示時のラベル
 	 */
 	public void setDisplayLabel(String displayLabel) {
-	    this.displayLabel = displayLabel;
+		this.displayLabel = displayLabel;
 	}
 
 	/**
@@ -122,7 +131,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @return 多言語設定情報
 	 */
 	public List<MetaLocalizedString> getLocalizedDisplayLabelList() {
-	    return localizedDisplayLabelList;
+		return localizedDisplayLabelList;
 	}
 
 	/**
@@ -130,7 +139,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @param localizedDisplayLabelList 多言語設定情報
 	 */
 	public void setLocalizedDisplayLabelList(List<MetaLocalizedString> localizedDisplayLabelList) {
-	    this.localizedDisplayLabelList = localizedDisplayLabelList;
+		this.localizedDisplayLabelList = localizedDisplayLabelList;
 	}
 
 	/**
@@ -138,7 +147,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @return クラス名
 	 */
 	public String getStyle() {
-	    return style;
+		return style;
 	}
 
 	/**
@@ -146,7 +155,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @param style クラス名
 	 */
 	public void setStyle(String style) {
-	    this.style = style;
+		this.style = style;
 	}
 
 	/**
@@ -154,7 +163,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @return 説明
 	 */
 	public String getDescription() {
-	    return description;
+		return description;
 	}
 
 	/**
@@ -162,7 +171,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @param description 説明
 	 */
 	public void setDescription(String description) {
-	    this.description = description;
+		this.description = description;
 	}
 
 	/**
@@ -170,7 +179,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @return 説明の多言語設定情報
 	 */
 	public List<MetaLocalizedString> getLocalizedDescriptionList() {
-	    return localizedDescriptionList;
+		return localizedDescriptionList;
 	}
 
 	/**
@@ -178,7 +187,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @param localizedDescriptionList 説明の多言語設定情報
 	 */
 	public void setLocalizedDescriptionList(List<MetaLocalizedString> localizedDescriptionList) {
-	    this.localizedDescriptionList = localizedDescriptionList;
+		this.localizedDescriptionList = localizedDescriptionList;
 	}
 
 	/**
@@ -186,7 +195,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @return ツールチップ
 	 */
 	public String getTooltip() {
-	    return tooltip;
+		return tooltip;
 	}
 
 	/**
@@ -194,7 +203,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @param tooltip ツールチップ
 	 */
 	public void setTooltip(String tooltip) {
-	    this.tooltip = tooltip;
+		this.tooltip = tooltip;
 	}
 
 	/**
@@ -202,7 +211,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @return ツールチップの多言語設定情報
 	 */
 	public List<MetaLocalizedString> getLocalizedTooltipList() {
-	    return localizedTooltipList;
+		return localizedTooltipList;
 	}
 
 	/**
@@ -210,7 +219,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @param localizedTooltipList ツールチップの多言語設定情報
 	 */
 	public void setLocalizedTooltipList(List<MetaLocalizedString> localizedTooltipList) {
-	    this.localizedTooltipList = localizedTooltipList;
+		this.localizedTooltipList = localizedTooltipList;
 	}
 
 	/**
@@ -218,7 +227,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @return 詳細編集非表示設定
 	 */
 	public boolean isHideDetail() {
-	    return hideDetail;
+		return hideDetail;
 	}
 
 	/**
@@ -226,7 +235,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @param hideDetail 詳細編集非表示設定
 	 */
 	public void setHideDetail(boolean hideDetail) {
-	    this.hideDetail = hideDetail;
+		this.hideDetail = hideDetail;
 	}
 
 	/**
@@ -234,7 +243,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @return 詳細表示非表示設定
 	 */
 	public boolean isHideView() {
-	    return hideView;
+		return hideView;
 	}
 
 	/**
@@ -242,7 +251,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @param hideView 詳細表示非表示設定
 	 */
 	public void setHideView(boolean hideView) {
-	    this.hideView = hideView;
+		this.hideView = hideView;
 	}
 
 	/**
@@ -250,7 +259,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @return 必須属性表示タイプ
 	 */
 	public RequiredDisplayType getRequiredDisplayType() {
-	    return requiredDisplayType;
+		return requiredDisplayType;
 	}
 
 	/**
@@ -258,7 +267,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @param requiredDisplayType 必須属性表示タイプ
 	 */
 	public void setRequiredDisplayType(RequiredDisplayType requiredDisplayType) {
-	    this.requiredDisplayType = requiredDisplayType;
+		this.requiredDisplayType = requiredDisplayType;
 	}
 
 	/**
@@ -266,7 +275,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @return プロパティエディタ
 	 */
 	public MetaPropertyEditor getEditor() {
-	    return editor;
+		return editor;
 	}
 
 	/**
@@ -274,7 +283,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @param editor プロパティエディタ
 	 */
 	public void setEditor(MetaPropertyEditor editor) {
-	    this.editor = editor;
+		this.editor = editor;
 	}
 
 	/**
@@ -282,7 +291,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @return 列幅
 	 */
 	public int getWidth() {
-	    return width;
+		return width;
 	}
 
 	/**
@@ -290,7 +299,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @param width 列幅
 	 */
 	public void setWidth(int width) {
-	    this.width = width;
+		this.width = width;
 	}
 
 	/**
@@ -298,7 +307,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @return テキストの配置
 	 */
 	public TextAlign getTextAlign() {
-	    return textAlign;
+		return textAlign;
 	}
 
 	/**
@@ -306,7 +315,7 @@ public class MetaVirtualProperty extends MetaElement {
 	 * @param textAlign テキストの配置
 	 */
 	public void setTextAlign(TextAlign textAlign) {
-	    this.textAlign = textAlign;
+		this.textAlign = textAlign;
 	}
 
 	/**
@@ -323,6 +332,22 @@ public class MetaVirtualProperty extends MetaElement {
 	 */
 	public void setOutputCsv(boolean outputCsv) {
 		this.outputCsv = outputCsv;
+	}
+
+	/**
+	 * 自動補完設定を取得します。
+	 * @return autocompletionSetting 自動補完設定
+	 */
+	public MetaAutocompletionSetting getAutocompletionSetting() {
+		return autocompletionSetting;
+	}
+
+	/**
+	 * 自動補完設定を設定します。
+	 * @param autocompletionSetting 自動補完設定
+	 */
+	public void setAutocompletionSetting(MetaAutocompletionSetting autocompletionSetting) {
+		this.autocompletionSetting = autocompletionSetting;
 	}
 
 	@Override
@@ -349,9 +374,17 @@ public class MetaVirtualProperty extends MetaElement {
 
 		MetaPropertyEditor editor = MetaPropertyEditor.createInstance(property.getEditor());
 		if (editor != null) {
-			property.getEditor().setPropertyName(propertyName);
+			property.getEditor()
+					.setPropertyName(propertyName);
 			editor.applyConfig(property.getEditor());
 			this.editor = editor;
+		}
+
+		EntityContext context = EntityContext.getCurrentContext();
+		EntityHandler entity = context.getHandlerById(definitionId);
+		if (property.getAutocompletionSetting() != null) {
+			this.autocompletionSetting = MetaAutocompletionSetting.createInstance(property.getAutocompletionSetting());
+			autocompletionSetting.applyConfig(property.getAutocompletionSetting(), entity, null);
 		}
 
 		// 言語毎の文字情報設定
@@ -383,10 +416,26 @@ public class MetaVirtualProperty extends MetaElement {
 		if (editor != null) {
 			property.setEditor(editor.currentConfig(propertyName));
 		}
+		if (autocompletionSetting != null) {
+			EntityContext metaContext = EntityContext.getCurrentContext();
+			EntityHandler entity = metaContext.getHandlerById(definitionId);
+			property.setAutocompletionSetting(autocompletionSetting.currentConfig(entity, null));
+		}
+
 		property.setLocalizedDisplayLabelList(I18nUtil.toDef(localizedDisplayLabelList));
 		property.setLocalizedDescriptionList(I18nUtil.toDef(localizedDescriptionList));
 		property.setLocalizedTooltipList(I18nUtil.toDef(localizedTooltipList));
 		return property;
 	}
 
+	@Override
+	public ElementRuntime createRuntime(EntityViewRuntime entityView, FormViewRuntime formView) {
+		if (autocompletionSetting != null) {
+			AutocompletionSettingRuntime runtime = autocompletionSetting.createRuntime(entityView);
+			if (runtime != null) {
+				entityView.addAutocompletionSetting(runtime);
+			}
+		}
+		return super.createRuntime(entityView, formView);
+	}
 }

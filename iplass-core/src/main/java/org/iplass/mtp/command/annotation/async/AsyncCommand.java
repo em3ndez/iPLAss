@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -101,7 +101,7 @@ public @interface AsyncCommand {
 	 * 
 	 * @return
 	 */
-	CommandConfig[] command() default {@CommandConfig};
+	CommandConfig[] command() default { @CommandConfig };
 
 	/**
 	 * 複合Commandを利用する場合の設定です。

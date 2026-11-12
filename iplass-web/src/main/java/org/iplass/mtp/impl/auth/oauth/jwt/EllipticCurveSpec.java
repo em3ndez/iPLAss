@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,26 +20,33 @@
 package org.iplass.mtp.impl.auth.oauth.jwt;
 
 public enum EllipticCurveSpec {
-	
-	P_256("P-256", 32),
-	P_384("P-384", 48),
-	P_521("P-521", 66);
-	
+
+	P_256("P-256", 32, "secp256r1"),
+	P_384("P-384", 48, "secp384r1"),
+	P_521("P-521", 66, "secp521r1");
+
 	private final String curveName;
 	private final int octetStringLength;
-	
-	private EllipticCurveSpec(String curveName, int octetStringLength) {
+	private final String standardName;
+
+	private EllipticCurveSpec(String curveName, int octetStringLength, String standardName) {
 		this.curveName = curveName;
 		this.octetStringLength = octetStringLength;
+		this.standardName = standardName;
 	}
-	
-    public String getCurveName() {
+
+	public String getStandardName() {
+		return standardName;
+	}
+
+	public String getCurveName() {
 		return curveName;
 	}
+
 	public int getOctetStringLength() {
 		return octetStringLength;
 	}
-	
+
 	static EllipticCurveSpec preferredSpec(int keyLength) {
 		if (keyLength >= 512) {
 			return P_521;
@@ -47,8 +54,18 @@ public enum EllipticCurveSpec {
 		if (keyLength >= 384) {
 			return P_384;
 		}
-		
+
 		return P_256;
+	}
+
+	static EllipticCurveSpec fromCurveName(String curveName) {
+		for (EllipticCurveSpec v : values()) {
+			if (v.getCurveName()
+					.equals(curveName)) {
+				return v;
+			}
+		}
+		throw new IllegalArgumentException("Unsupported curve name:" + curveName);
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,9 +20,8 @@
 
 package org.iplass.mtp.impl.cache.store;
 
-
 public interface CacheContext<K, V> {
-	
+
 	public V getValue(K key);
 
 }

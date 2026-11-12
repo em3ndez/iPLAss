@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -19,7 +19,6 @@
  */
 
 package org.iplass.mtp.entity.interceptor;
-
 
 /**
  * Interceptor実装クラスで判断可能な、Entityの操作の種類。
@@ -43,5 +42,6 @@ public enum InvocationType {
 	PURGE,
 	RESTORE,
 	LOCK_BY_USER,
-	UNLOCK_BY_USER
+	UNLOCK_BY_USER,
+	NORMALIZE
 }

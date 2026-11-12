@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,9 +32,11 @@ public abstract class AnimationFullScreenCallback implements AnimationCallback {
 	public void setOutline(Canvas animateOutline) {
 		this.animateOutline = animateOutline;
 	}
+
 	public void setWidth(int width) {
 		this.width = width;
 	}
+
 	public void setHeight(int height) {
 		this.height = height;
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -19,7 +19,6 @@
  */
 
 package org.iplass.gem.command.treeview;
-
 
 /**
  * Entityを表すノード
@@ -117,7 +116,7 @@ public class EntityNode extends TreeViewNode {
 	 * @return ビュー名
 	 */
 	public String getViewName() {
-	    return viewName;
+		return viewName;
 	}
 
 	/**
@@ -125,7 +124,7 @@ public class EntityNode extends TreeViewNode {
 	 * @param viewName ビュー名
 	 */
 	public void setViewName(String viewName) {
-	    this.viewName = viewName;
+		this.viewName = viewName;
 	}
 
 	/**
@@ -133,7 +132,7 @@ public class EntityNode extends TreeViewNode {
 	 * @return 参照設定
 	 */
 	public boolean isHasReference() {
-	    return hasReference;
+		return hasReference;
 	}
 
 	/**
@@ -141,7 +140,7 @@ public class EntityNode extends TreeViewNode {
 	 * @param hasReference 参照設定
 	 */
 	public void setHasReference(boolean hasReference) {
-	    this.hasReference = hasReference;
+		this.hasReference = hasReference;
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -42,6 +42,8 @@ public class MetaTenantAuthInfo extends MetaTenantConfig<TenantAuthInfo> {
 
 	/** Remember Me 利用有無*/
 	private boolean useRememberMe;
+	private boolean useWebAuthn;
+	private String webAuthnDefinitionName;
 
 	private List<String> userAdminRoles;
 
@@ -52,7 +54,7 @@ public class MetaTenantAuthInfo extends MetaTenantConfig<TenantAuthInfo> {
 	}
 
 	/**
-	 * ユーザを管理可能とするロールを取得します。
+	 * ユーザーを管理可能とするロールを取得します。
 	 *
 	 * @return
 	 */
@@ -61,7 +63,7 @@ public class MetaTenantAuthInfo extends MetaTenantConfig<TenantAuthInfo> {
 	}
 
 	/**
-	 * ユーザを管理可能（パスワードリセット、accountPlicyの設定、adminフラグの設定など）とするロールを指定します。
+	 * ユーザーを管理可能（パスワードリセット、accountPlicyの設定、adminフラグの設定など）とするロールを指定します。
 	 * adminフラグを更新不可としたい場合は、別途当該ロールにEntity権限を設定します。
 	 *
 	 * @param userAdminRoles
@@ -78,6 +80,22 @@ public class MetaTenantAuthInfo extends MetaTenantConfig<TenantAuthInfo> {
 		this.useRememberMe = useRememberMe;
 	}
 
+	public boolean isUseWebAuthn() {
+		return useWebAuthn;
+	}
+
+	public void setUseWebAuthn(boolean useWebAuthn) {
+		this.useWebAuthn = useWebAuthn;
+	}
+
+	public String getWebAuthnDefinitionName() {
+		return webAuthnDefinitionName;
+	}
+
+	public void setWebAuthnDefinitionName(String webAuthnDefinitionName) {
+		this.webAuthnDefinitionName = webAuthnDefinitionName;
+	}
+
 	@Override
 	public MetaData copy() {
 		return ObjectUtil.deepCopy(this);
@@ -86,6 +104,8 @@ public class MetaTenantAuthInfo extends MetaTenantConfig<TenantAuthInfo> {
 	@Override
 	public void applyConfig(TenantAuthInfo definition) {
 		setUseRememberMe(definition.isUseRememberMe());
+		setUseWebAuthn(definition.isUseWebAuthn());
+		setWebAuthnDefinitionName(definition.getWebAuthnDefinitionName());
 		if (definition.getUserAdminRoles() != null) {
 			setUserAdminRoles(new ArrayList<>(definition.getUserAdminRoles()));
 		} else {
@@ -96,7 +116,9 @@ public class MetaTenantAuthInfo extends MetaTenantConfig<TenantAuthInfo> {
 	@Override
 	public TenantAuthInfo currentConfig() {
 		TenantAuthInfo definition = new TenantAuthInfo();
-		definition.setUseRememberMe(isUseRememberMe());
+		definition.setUseRememberMe(useRememberMe);
+		definition.setUseWebAuthn(useWebAuthn);
+		definition.setWebAuthnDefinitionName(webAuthnDefinitionName);
 		if (userAdminRoles != null) {
 			definition.setUserAdminRoles(new ArrayList<>(userAdminRoles));
 		}

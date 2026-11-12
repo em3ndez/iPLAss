@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,21 +26,21 @@ import org.iplass.mtp.impl.rdb.adapter.BaseRdbTypeAdapter;
 public class ToSqlResult {
 	public String sql;
 	public List<BindValue> bindVariables;
-	
+
 	ToSqlResult(String sql, List<BindValue> bindVariables) {
 		this.sql = sql;
 		this.bindVariables = bindVariables;
 	}
-	
+
 	public static class BindValue {
 		public Object value;
 		public BaseRdbTypeAdapter type;
-		
+
 		public BindValue(Object value, BaseRdbTypeAdapter type) {
 			super();
 			this.value = value;
 			this.type = type;
 		}
 	}
-	
+
 }

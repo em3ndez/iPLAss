@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -47,21 +47,22 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class LogLobValidator implements LobValidator {
-	
+
 	private static Logger logger = LoggerFactory.getLogger("lob");
-	
 
 	@Override
 	public void stored(Lob lob, String streamWriteChecksum) {
-		//ユーザのoid
-		String user = ExecuteContext.getCurrentContext().getClientId();
+		//ユーザーのoid
+		String user = ExecuteContext.getCurrentContext()
+				.getClientId();
 
 		//FileLobStoreの場合にファイルパスを取得
 		String filePath = null;
 		if (lob.getLobData() instanceof FileLobData) {
 			filePath = ((FileLobData) lob.getLobData()).getFilePath();
 		}
-		logger.info("user:" + user + ", fileName:" + lob.getName() + ", lobId:" + lob.getLobId() + ", path=" + filePath + ", checksum:" + streamWriteChecksum);
+		logger.info("user:" + user + ", fileName:" + lob.getName() + ", lobId:" + lob.getLobId() + ", path=" + filePath + ", checksum:"
+				+ streamWriteChecksum);
 	}
 
 	/**

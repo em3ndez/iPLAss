@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -63,7 +63,8 @@ class ErrorsContext {
 			if (bindContext != null) {
 				if (bindContext.getBinding() != null) {
 					try {
-						errors = bindContext.getBinding().getVariable(errorsVariableName);
+						errors = bindContext.getBinding()
+								.getVariable(errorsVariableName);
 					} catch (MissingPropertyException e) {
 					}
 				}
@@ -76,7 +77,8 @@ class ErrorsContext {
 			} else {
 				WebRequestStack webStack = WebRequestStack.getCurrent();
 				if (webStack != null) {
-					errors = webStack.getRequestContext().getAttribute(WebRequestConstants.EXCEPTION);
+					errors = webStack.getRequestContext()
+							.getAttribute(WebRequestConstants.EXCEPTION);
 				}
 			}
 		}
@@ -144,7 +146,7 @@ class ErrorsContext {
 		if (errors instanceof String) {
 			writeMessage((String) errors, out);
 		} else if (errors instanceof List) {
-			for (Object e: (List) errors) {
+			for (Object e : (List) errors) {
 				writeError(e, out);
 			}
 		} else if (errors instanceof Object[]) {
@@ -153,11 +155,11 @@ class ErrorsContext {
 				writeError(array[i], out);
 			}
 		} else if (errors instanceof MappingError) {
-			for (String m: ((MappingError) errors).getErrorMessages()) {
+			for (String m : ((MappingError) errors).getErrorMessages()) {
 				writeError(m, out);
 			}
 		} else if (errors instanceof MappingResult) {
-			for (MappingError me: ((MappingResult) errors).getErrors()) {
+			for (MappingError me : ((MappingResult) errors).getErrors()) {
 				writeError(me, out);
 			}
 		} else if (errors instanceof MappingException) {

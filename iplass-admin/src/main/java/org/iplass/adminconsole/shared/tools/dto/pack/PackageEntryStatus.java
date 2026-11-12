@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,10 +24,10 @@ import org.iplass.mtp.entity.SelectValue;
 
 public enum PackageEntryStatus {
 
-	READY("00","Ready"),
-	ACTIVE("10","Active"),
-	COMPLETED("20","Completed"),
-	ERROR("90","Error");
+	READY("00", "Ready"),
+	ACTIVE("10", "Active"),
+	COMPLETED("20", "Completed"),
+	ERROR("90", "Error");
 
 	private String value;
 	private String displayName;

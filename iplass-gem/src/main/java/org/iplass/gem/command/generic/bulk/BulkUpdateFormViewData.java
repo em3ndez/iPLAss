@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,7 +30,7 @@ import org.iplass.mtp.entity.Entity;
 import org.iplass.mtp.entity.definition.EntityDefinition;
 import org.iplass.mtp.view.generic.SearchFormView;
 
-public class BulkUpdateFormViewData{
+public class BulkUpdateFormViewData {
 
 	/** Entity定義 */
 	private EntityDefinition entityDefinition;
@@ -49,7 +49,6 @@ public class BulkUpdateFormViewData{
 		this.view = context.getView();
 		this.selected = new HashMap<>();
 	}
-
 
 	/**
 	 * Entity定義を取得します。
@@ -100,10 +99,11 @@ public class BulkUpdateFormViewData{
 	}
 
 	public void addUpdatedProperty(String propName, Object propValue) {
-		Optional<Integer> optional = updatedProperties.stream().map(BulkUpdatedProperty::getUpdateNo)
+		Optional<Integer> optional = updatedProperties.stream()
+				.map(BulkUpdatedProperty::getUpdateNo)
 				.max(Integer::compareTo);
 		Integer current = Integer.valueOf(0);
-		if(optional.isPresent()) {
+		if (optional.isPresent()) {
 			current = optional.get();
 		}
 		current = current + 1;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -38,6 +38,6 @@ public class EntityNodeManager extends ItemNodeManager {
 	@Override
 	public void loadChild(Tree tree, TopViewNode parent) {
 		TopViewNode entityList = new TopViewNode("SearchResult List", EntityListParts.class.getName(), "", true, true, false);
-		tree.addList(new TopViewNode[]{entityList}, parent);
+		tree.addList(new TopViewNode[] { entityList }, parent);
 	}
 }

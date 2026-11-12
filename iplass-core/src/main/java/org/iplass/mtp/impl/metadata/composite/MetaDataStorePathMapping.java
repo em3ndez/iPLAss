@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,7 +22,7 @@ package org.iplass.mtp.impl.metadata.composite;
 public class MetaDataStorePathMapping {
 	private String pathPrefix;
 	private String store;
-	
+
 	public String getPathPrefix() {
 		return pathPrefix;
 	}
@@ -37,5 +37,5 @@ public class MetaDataStorePathMapping {
 
 	public void setStore(String store) {
 		this.store = store;
-	}	
+	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,11 +28,11 @@ import java.util.Map;
 import org.iplass.mtp.impl.web.ParameterValueMap;
 
 public class MapParameterValueMap implements ParameterValueMap {
-	
+
 	private Map<String, Object> map;
-	
+
 	private Map<String, String[]> arrayCache;
-	
+
 	public MapParameterValueMap(Map<String, Object> map) {
 		this.map = map;
 	}
@@ -59,7 +59,7 @@ public class MapParameterValueMap implements ParameterValueMap {
 			return val;
 		}
 	}
-	
+
 	@Override
 	public Object[] getParams(String name) {
 		if (arrayCache == null) {
@@ -109,7 +109,8 @@ public class MapParameterValueMap implements ParameterValueMap {
 
 	@Override
 	public Iterator<String> getParamNames() {
-		return map.keySet().iterator();
+		return map.keySet()
+				.iterator();
 	}
 
 	@Override

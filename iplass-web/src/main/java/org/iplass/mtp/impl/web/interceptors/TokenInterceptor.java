@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,7 +30,6 @@ import org.iplass.mtp.impl.web.token.TokenStore;
 import org.iplass.mtp.web.actionmapping.TokenValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 public class TokenInterceptor implements CommandInterceptor {
 
@@ -89,16 +88,20 @@ public class TokenInterceptor implements CommandInterceptor {
 		if (invocation instanceof WebInvocationImpl) {
 			final WebInvocationImpl webInvocation = (WebInvocationImpl) invocation;
 
-			final MetaTokenCheck tokenCheck = webInvocation.getAction().getMetaData().getTokenCheck();
+			final MetaTokenCheck tokenCheck = webInvocation.getAction()
+					.getMetaData()
+					.getTokenCheck();
 			if (tokenCheck != null) {
 				logger.trace("execute validate token...");
 
-				String token = invocation.getRequest().getParam(TokenStore.TOKEN_PARAM_NAME);
+				String token = invocation.getRequest()
+						.getParam(TokenStore.TOKEN_PARAM_NAME);
 				if (token == null) {
 					doError(tokenCheck);
 				}
 
-				SessionContext session = invocation.getRequest().getSession();
+				SessionContext session = invocation.getRequest()
+						.getSession();
 				TokenStore tokenStore = TokenStore.getTokenStore(session);
 				if (tokenStore == null) {
 					doError(tokenCheck);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -34,13 +34,13 @@ import org.iplass.adminconsole.client.base.ui.widget.MessageTabSet;
 import org.iplass.adminconsole.client.base.util.SmartGWTUtil;
 import org.iplass.adminconsole.client.tools.data.entityexplorer.UniquePropertyDS;
 import org.iplass.adminconsole.client.tools.ui.entityexplorer.datalist.EntityCsvDownloadDialog.ENCODE;
+import org.iplass.adminconsole.shared.base.dto.io.upload.UploadProperty;
 import org.iplass.mtp.entity.Entity;
 import org.iplass.mtp.entity.definition.EntityDefinition;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.json.client.JSONArray;
 import com.google.gwt.json.client.JSONObject;
-import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONValue;
 import com.google.gwt.user.client.ui.Hidden;
 import com.google.gwt.user.client.ui.Label;
@@ -60,8 +60,6 @@ import com.smartgwt.client.widgets.form.fields.TextItem;
 import com.smartgwt.client.widgets.layout.HLayout;
 import com.smartgwt.client.widgets.layout.VLayout;
 
-import gwtupload.client.IUploadStatus.Status;
-
 /**
  * EntityImportダイアログ
  */
@@ -76,9 +74,9 @@ public class EntityCsvUploadDialog extends AbstractWindow {
 		SmartGWTUtil.showAnimationFullScreen(new AnimationFullScreenCallback() {
 			@Override
 			public void execute(boolean earlyFinish) {
-              animateOutline.hide();
-              EntityCsvUploadDialog dialog = new EntityCsvUploadDialog(definition, width, height);
-              dialog.show();
+				animateOutline.hide();
+				EntityCsvUploadDialog dialog = new EntityCsvUploadDialog(definition, width, height);
+				dialog.show();
 			}
 		});
 	}
@@ -164,20 +162,23 @@ public class EntityCsvUploadDialog extends AbstractWindow {
 			final AdminSingleUploader uploader = new AdminSingleUploader(UPLOAD_SERVICE);
 			uploader.setValidExtensions("csv");
 			uploader.addOnStartUploadHandler((result) -> {
-				uploader.debugUploader("onStart");
-				startExecute();
-			});
-			uploader.addOnStatusChangedHandler((result) -> {
-				uploader.debugUploader("onStatusChanged");
+				if (!result.isCanceled()) {
+					uploader.debugUploader("onStart");
+					startExecute();
+				} else {
+					uploader.removeHidden();
+				}
 			});
 			uploader.addOnFinishUploadHandler((result) -> {
 				uploader.debugUploader("onFinish");
-				if (uploader.getStatus() == Status.SUCCESS) {
-					showResult(uploader.getMessage());
+				if (uploader.getLastUploadState()
+						.isSuccess()) {
+					showResult(uploader.getLastUploadState()
+							.getData());
 				} else {
-					showResultError(uploader.getErrorMessage());
+					showResultError(uploader.getLastUploadState()
+							.getErrorMessage());
 				}
-
 				//Hidden項目の削除
 				uploader.removeHidden();
 			});
@@ -204,7 +205,7 @@ public class EntityCsvUploadDialog extends AbstractWindow {
 			chkBulkUpdateField.setTitle(rs("ui_tools_entityexplorer_EntityCsvUploadDialog_bulkUpdate"));
 			chkBulkUpdateField.setShowTitle(false);
 			chkBulkUpdateField.setColSpan(2);
-			chkBulkUpdateField.addChangedHandler((e)->{
+			chkBulkUpdateField.addChangedHandler((e) -> {
 
 				if (SmartGWTUtil.getBooleanValue(chkBulkUpdateField)) {
 					//bulkUpdateモード
@@ -260,7 +261,8 @@ public class EntityCsvUploadDialog extends AbstractWindow {
 			});
 
 			chkInsertEnableAuditPropertySpecification = new CheckboxItem();
-			chkInsertEnableAuditPropertySpecification.setTitle(rs("ui_tools_entityexplorer_EntityCsvUploadDialog_insertEnableAuditPropertySpecification"));
+			chkInsertEnableAuditPropertySpecification
+					.setTitle(rs("ui_tools_entityexplorer_EntityCsvUploadDialog_insertEnableAuditPropertySpecification"));
 			chkInsertEnableAuditPropertySpecification.setShowTitle(false);
 			chkInsertEnableAuditPropertySpecification.setColSpan(2);
 
@@ -278,11 +280,11 @@ public class EntityCsvUploadDialog extends AbstractWindow {
 			chkIgnoreNotExistsPropertyField.setTitle(rs("ui_tools_entityexplorer_EntityCsvUploadDialog_ignoreNotExistsProperty"));
 			chkIgnoreNotExistsPropertyField.setShowTitle(false);
 			chkIgnoreNotExistsPropertyField.setColSpan(2);
-			chkIgnoreNotExistsPropertyField.setValue(true);	//デフォルトtrue
+			chkIgnoreNotExistsPropertyField.setValue(true); //デフォルトtrue
 
 			prefixOidField = new TextItem();
 			prefixOidField.setTitle("OID Prefix");
-			prefixOidField.setKeyPressFilter("[A-Za-z0-9]");	//英数字のみ
+			prefixOidField.setKeyPressFilter("[A-Za-z0-9]"); //英数字のみ
 			prefixOidField.setHint(rs("ui_tools_entityexplorer_EntityCsvUploadDialog_preOidHint"));
 
 			uniqueKeyField = new SelectItem();
@@ -331,7 +333,7 @@ public class EntityCsvUploadDialog extends AbstractWindow {
 			i18nForm.setIsGroup(true);
 			i18nForm.setGroupTitle("i18n Support Setting:");
 			i18nForm.setNumCols(5);
-			i18nForm.setColWidths(90, 170, 120, "*", "*");	//2つの幅を狭めたいので2番目のWidthも指定
+			i18nForm.setColWidths(90, 170, 120, "*", "*"); //2つの幅を狭めたいので2番目のWidthも指定
 
 			localeField = new ComboBoxItem();
 			localeField.setTitle("File Locale");
@@ -375,27 +377,29 @@ public class EntityCsvUploadDialog extends AbstractWindow {
 			btnUpload.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent event) {
-					if (uploader.getFileName() == null || uploader.getFileName().isEmpty()) {
+					if (uploader.getFileName() == null || uploader.getFileName()
+							.isEmpty()) {
 						SC.warn(rs("ui_tools_entityexplorer_EntityCsvUploadDialog_selectImportFile"));
 						return;
 					}
 					//if (User.DEFINITION_NAME.equals(EntityCsvUploadDialog.this.defName)
 					if ("mtp.auth.User".equals(defName)
 							&& SmartGWTUtil.getBooleanValue(chkTruncateField)) {
-						//ユーザEntityを削除する場合は警告
+						//ユーザーEntityを削除する場合は警告
 
-						SC.ask(rs("ui_tools_entityexplorer_EntityCsvUploadDialog_confirm"), rs("ui_tools_entityexplorer_EntityCsvUploadDialog_userTruncateConfirm"), new BooleanCallback() {
+						SC.ask(rs("ui_tools_entityexplorer_EntityCsvUploadDialog_confirm"),
+								rs("ui_tools_entityexplorer_EntityCsvUploadDialog_userTruncateConfirm"), new BooleanCallback() {
 
-							@Override
-							public void execute(Boolean value) {
-								if (value) {
-									doCheckListener(uploader);
-								}
-							}
-						});
+									@Override
+									public void execute(Boolean value) {
+										if (value) {
+											doCheckListener(uploader, definition);
+										}
+									}
+								});
 
 					} else {
-						doCheckListener(uploader);
+						doCheckListener(uploader, definition);
 					}
 				}
 			});
@@ -414,102 +418,116 @@ public class EntityCsvUploadDialog extends AbstractWindow {
 			addMember(footer);
 		}
 
-
 		private void startExecute() {
 			disableComponent(true);
 			messageTabSet.clearMessage();
 			messageTabSet.setTabTitleProgress();
 		}
 
-		private void showResult(String message) {
+		private void showResult(JSONValue message) {
 			showResponse(message);
 
 			disableComponent(false);
 			messageTabSet.setTabTitleNormal();
 		}
-		
-		private void doCheckListener(final AdminSingleUploader uploader) {
+
+		private void doCheckListener(final AdminSingleUploader uploader, EntityDefinition definition) {
 
 			//EntityにUserまたはPermission系が含まれていてListener実行しない場合は確認
-				if (!SmartGWTUtil.getBooleanValue(chkNotifyListenersField)) {
-					if ("mtp.auth.User".equals(defName)) {
-						SC.ask(rs("ui_tools_entityexplorer_EntityCsvUploadDialog_confirm"), rs("ui_tools_entityexplorer_EntityCsvUploadDialog_userListenerConfirm"), new BooleanCallback() {
-							@Override
-							public void execute(Boolean value) {
-								if (value) {
-									doUpload(uploader);
+			if (!SmartGWTUtil.getBooleanValue(chkNotifyListenersField)) {
+				if ("mtp.auth.User".equals(defName)) {
+					SC.ask(rs("ui_tools_entityexplorer_EntityCsvUploadDialog_confirm"),
+							rs("ui_tools_entityexplorer_EntityCsvUploadDialog_userListenerConfirm"), new BooleanCallback() {
+								@Override
+								public void execute(Boolean value) {
+									if (value) {
+										doUpload(uploader);
+									}
 								}
-							}
-						});
-						return;
-					} else if (Arrays.asList(
-							"mtp.auth.ActionPermission", 
-							"mtp.auth.CubePermission", 
-							"mtp.auth.EntityPermission", 
-							"mtp.auth.UserTaskPermission", 
-							"mtp.auth.WebApiPermission", 
-							"mtp.auth.WorkflowPermission").contains(defName)) {
-						SC.ask(rs("ui_tools_entityexplorer_EntityCsvUploadDialog_confirm"), rs("ui_tools_entityexplorer_EntityCsvUploadDialog_permissionListenerConfirm"), new BooleanCallback() {
-							@Override
-							public void execute(Boolean value) {
-								if (value) {
-									doUpload(uploader);
+							});
+					return;
+				} else if (Arrays.asList(
+						"mtp.auth.ActionPermission",
+						"mtp.auth.CubePermission",
+						"mtp.auth.EntityPermission",
+						"mtp.auth.UserTaskPermission",
+						"mtp.auth.WebApiPermission",
+						"mtp.auth.WorkflowPermission")
+						.contains(defName)) {
+					SC.ask(rs("ui_tools_entityexplorer_EntityCsvUploadDialog_confirm"),
+							rs("ui_tools_entityexplorer_EntityCsvUploadDialog_permissionListenerConfirm"), new BooleanCallback() {
+								@Override
+								public void execute(Boolean value) {
+									if (value) {
+										doUpload(uploader);
+									}
 								}
-							}
-						});
-						return;
-					}
+							});
+					return;
+				} else if (SmartGWTUtil.isNotEmpty(definition.getEventListenerList())) {
+					SC.ask(rs("ui_tools_entityexplorer_EntityCsvUploadDialog_confirm"),
+							rs("ui_tools_entityexplorer_EntityCsvUploadDialog_listenerConfirm"), new BooleanCallback() {
+								@Override
+								public void execute(Boolean value) {
+									if (value) {
+										doUpload(uploader);
+									}
+								}
+							});
+					return;
 				}
-				
-				doUpload(uploader);
+			}
+
+			doUpload(uploader);
 		}
 
 		private void doUpload(final AdminSingleUploader uploader) {
-			SC.ask(rs("ui_tools_entityexplorer_EntityCsvUploadDialog_confirm"), rs("ui_tools_entityexplorer_EntityCsvUploadDialog_startImportConf"), new BooleanCallback() {
-				@Override
-				public void execute(Boolean value) {
-					if (value) {
-						uploader.add(new Hidden("defName", defName));
-						uploader.add(new Hidden("tenantId", Integer.toString(TenantInfoHolder.getId())));
-						if (SmartGWTUtil.getBooleanValue(chkTruncateField)) {
-							uploader.add(new Hidden("chkTruncate", "1"));
-						}
-						if (SmartGWTUtil.getBooleanValue(chkBulkUpdateField)) {
-							uploader.add(new Hidden("chkBulkUpdate", "1"));
-						}
-						if (SmartGWTUtil.getBooleanValue(chkForceUpdateField)) {
-							uploader.add(new Hidden("chkForceUpdate", "1"));
-						}
-						if (SmartGWTUtil.getBooleanValue(chkErrorSkipField)) {
-							uploader.add(new Hidden("chkErrorSkip", "1"));
-						}
-						if (SmartGWTUtil.getBooleanValue(chkIgnoreNotExistsPropertyField)) {
-							uploader.add(new Hidden("chkIgnoreNotExistsProperty", "1"));
-						}
-						if (SmartGWTUtil.getBooleanValue(chkNotifyListenersField)) {
-							uploader.add(new Hidden("chkNotifyListeners", "1"));
-						}
-						if (SmartGWTUtil.getBooleanValue(chkWithValidationField)) {
-							uploader.add(new Hidden("chkWithValidation", "1"));
-						}
-						if (SmartGWTUtil.getBooleanValue(chkUpdateDisupdatablePropertyField)) {
-							uploader.add(new Hidden("chkUpdateDisupdatableProperty", "1"));
-						}
-						if (SmartGWTUtil.getBooleanValue(chkInsertEnableAuditPropertySpecification)) {
-							uploader.add(new Hidden("chkInsertEnableAuditPropertySpecification", "1"));
-						}
-						uploader.add(new Hidden("locale", SmartGWTUtil.getStringValue(localeField)));
-						uploader.add(new Hidden("timeZone", SmartGWTUtil.getStringValue(timeZoneField)));
+			SC.ask(rs("ui_tools_entityexplorer_EntityCsvUploadDialog_confirm"), rs("ui_tools_entityexplorer_EntityCsvUploadDialog_startImportConf"),
+					new BooleanCallback() {
+						@Override
+						public void execute(Boolean value) {
+							if (value) {
+								uploader.add(new Hidden("defName", defName));
+								uploader.add(new Hidden("tenantId", Integer.toString(TenantInfoHolder.getId())));
+								if (SmartGWTUtil.getBooleanValue(chkTruncateField)) {
+									uploader.add(new Hidden("chkTruncate", "1"));
+								}
+								if (SmartGWTUtil.getBooleanValue(chkBulkUpdateField)) {
+									uploader.add(new Hidden("chkBulkUpdate", "1"));
+								}
+								if (SmartGWTUtil.getBooleanValue(chkForceUpdateField)) {
+									uploader.add(new Hidden("chkForceUpdate", "1"));
+								}
+								if (SmartGWTUtil.getBooleanValue(chkErrorSkipField)) {
+									uploader.add(new Hidden("chkErrorSkip", "1"));
+								}
+								if (SmartGWTUtil.getBooleanValue(chkIgnoreNotExistsPropertyField)) {
+									uploader.add(new Hidden("chkIgnoreNotExistsProperty", "1"));
+								}
+								if (SmartGWTUtil.getBooleanValue(chkNotifyListenersField)) {
+									uploader.add(new Hidden("chkNotifyListeners", "1"));
+								}
+								if (SmartGWTUtil.getBooleanValue(chkWithValidationField)) {
+									uploader.add(new Hidden("chkWithValidation", "1"));
+								}
+								if (SmartGWTUtil.getBooleanValue(chkUpdateDisupdatablePropertyField)) {
+									uploader.add(new Hidden("chkUpdateDisupdatableProperty", "1"));
+								}
+								if (SmartGWTUtil.getBooleanValue(chkInsertEnableAuditPropertySpecification)) {
+									uploader.add(new Hidden("chkInsertEnableAuditPropertySpecification", "1"));
+								}
+								uploader.add(new Hidden("locale", SmartGWTUtil.getStringValue(localeField)));
+								uploader.add(new Hidden("timeZone", SmartGWTUtil.getStringValue(timeZoneField)));
 
-						uploader.add(new Hidden("csvEncode", ENCODE.UTF8.name()));
-						uploader.add(new Hidden("uniqueKey", SmartGWTUtil.getStringValue(uniqueKeyField)));
-						uploader.add(new Hidden("commitLimit", SmartGWTUtil.getStringValue(commitLimitField)));
-						uploader.add(new Hidden("prefixOid", SmartGWTUtil.getStringValue(prefixOidField)));
+								uploader.add(new Hidden("csvEncode", ENCODE.UTF8.name()));
+								uploader.add(new Hidden("uniqueKey", SmartGWTUtil.getStringValue(uniqueKeyField)));
+								uploader.add(new Hidden("commitLimit", SmartGWTUtil.getStringValue(commitLimitField)));
+								uploader.add(new Hidden("prefixOid", SmartGWTUtil.getStringValue(prefixOidField)));
 
-						uploader.submit();
-					}
-				}
-			});
+								uploader.submit();
+							}
+						}
+					});
 		}
 
 		private void showResultError(String message) {
@@ -527,12 +545,8 @@ public class EntityCsvUploadDialog extends AbstractWindow {
 			btnCancel.setDisabled(disabled);
 		}
 
-		private void showResponse(String json) {
-			GWT.log("ImportEntity Response:" + json);
-			if (json == null) {
-				return;
-			}
-			JSONValue rootValue = JSONParser.parseStrict(json);
+		private void showResponse(JSONValue rootValue) {
+			GWT.log("ImportEntity Response:" + rootValue);
 			if (rootValue == null) {
 				return;
 			}
@@ -559,11 +573,14 @@ public class EntityCsvUploadDialog extends AbstractWindow {
 		}
 
 		private String getStatusMessage(String status) {
-			if ("SUCCESS".equals(status)) {
+			if (UploadProperty.Status.SUCCESS.name()
+					.equals(status)) {
 				return rs("ui_tools_entityexplorer_EntityCsvUploadDialog_importSuccessful");
-			} else if ("WARN".equals(status)) {
+			} else if (UploadProperty.Status.WARN.name()
+					.equals(status)) {
 				return rs("ui_tools_entityexplorer_EntityCsvUploadDialog_importWarning");
-			} else if ("ERROR".equals(status)) {
+			} else if (UploadProperty.Status.ERROR.name()
+					.equals(status)) {
 				return rs("ui_tools_entityexplorer_EntityCsvUploadDialog_importErr");
 			} else {
 				return rs("ui_tools_entityexplorer_EntityCsvUploadDialog_couldNotRetImportResult");
@@ -571,7 +588,8 @@ public class EntityCsvUploadDialog extends AbstractWindow {
 		}
 
 		private boolean isStatusSuccess(String status) {
-			return "SUCCESS".equals(status);
+			return UploadProperty.Status.SUCCESS.name()
+					.equals(status);
 		}
 
 		private List<String> getMessageInfo(JSONValue root) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,6 +28,7 @@ import org.iplass.mtp.impl.tools.tenant.PartitionInfo;
 import org.iplass.mtp.impl.tools.tenant.TenantToolService;
 import org.iplass.mtp.impl.tools.tenant.log.LogHandler;
 import org.iplass.mtp.spi.ServiceRegistry;
+import org.iplass.mtp.tools.batch.MtpBatchResourceDisposer;
 import org.iplass.mtp.tools.batch.MtpCuiBase;
 import org.iplass.mtp.tools.gui.partition.MySQLPartitionManagerApp;
 import org.iplass.mtp.util.StringUtil;
@@ -39,12 +40,15 @@ public class MySQLPartitionBatch extends MtpCuiBase implements PartitionBatch {
 	private static Logger logger = LoggerFactory.getLogger(MySQLPartitionBatch.class);
 
 	/** 実行モード */
-	public enum MySQLPartitionBatchExecMode {GUI, CREATE};
+	public enum MySQLPartitionBatchExecMode {
+		GUI, CREATE
+	};
 
 	//実行モード
 	private MySQLPartitionBatchExecMode execMode = MySQLPartitionBatchExecMode.GUI;
 
-	private TenantToolService toolService = ServiceRegistry.getRegistry().getService(TenantToolService.class);
+	private TenantToolService toolService = ServiceRegistry.getRegistry()
+			.getService(TenantToolService.class);
 
 	/**
 	 * args[0]・・・execMode
@@ -58,6 +62,13 @@ public class MySQLPartitionBatch extends MtpCuiBase implements PartitionBatch {
 		} catch (Throwable e) {
 			e.printStackTrace();
 		} finally {
+			if (instance.getExecMode() == MySQLPartitionBatchExecMode.GUI) {
+				MtpBatchResourceDisposer.addShutdownHookForDisposeResource(() -> {
+					// NOTE 個別の破棄処理が必要な場合は、ここに実装する。
+				});
+			} else {
+				MtpBatchResourceDisposer.disposeResource();
+			}
 		}
 	}
 
@@ -89,22 +100,22 @@ public class MySQLPartitionBatch extends MtpCuiBase implements PartitionBatch {
 		logEnvironment();
 
 		switch (getExecMode()) {
-		case GUI :
+		case GUI:
 			logInfo("■Start App");
 			logInfo("");
 
 			//Guiの場合はConsole出力を外す
 			switchLog(false, true);
 
-			MySQLPartitionManagerApp.main(new String[]{getLanguage()});
+			MySQLPartitionManagerApp.main(new String[] { getLanguage() });
 			return true;
-		case CREATE :
+		case CREATE:
 			logInfo("■Start Create Wizard");
 			logInfo("");
 
 			//Wizardの実行
 			return startCreateWizard();
-		default :
+		default:
 			logError("unsupport execute mode : " + getExecMode());
 			return false;
 		}

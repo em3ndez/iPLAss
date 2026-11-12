@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -80,7 +80,8 @@ public class ReportTemplateDS extends AbstractAdminDataSource {
 				Collections.sort(result, new Comparator<Name>() {
 					@Override
 					public int compare(Name o1, Name o2) {
-						return o1.getName().compareTo(o2.getName());
+						return o1.getName()
+								.compareTo(o2.getName());
 					}
 				});
 

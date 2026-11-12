@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,11 +28,10 @@ import org.iplass.mtp.impl.util.KeyGenerator;
 import org.iplass.mtp.spi.Service;
 
 public abstract class SessionService implements Service {
-	
+
 	private static final String SESSION_NAME = "mtp.session.store.Session";
 	private static final String SESSION_STATELESS_FLAG = "mtp.session.store.StatelessFlag";
-	
-	
+
 	private enum StatelessFlag {
 		ENABLE,
 		FORCE
@@ -56,30 +55,31 @@ public abstract class SessionService implements Service {
 					s = new OnetimeSessionImpl(this);
 				}
 			}
-			
+
 			if (s != null) {
 				ec.setAttribute(SESSION_NAME, s, true);
 			}
 		}
-		
+
 		return s;
 	}
-	
+
 	public void setSessionStateless(boolean force) {
 		if (force) {
 			ExecuteContext ec = ExecuteContext.getCurrentContext();
 			ec.setAttribute(SESSION_STATELESS_FLAG, StatelessFlag.FORCE, true);
 			ec.removeAttribute(SESSION_NAME);//clear current
 		} else {
-			ExecuteContext.getCurrentContext().setAttribute(SESSION_STATELESS_FLAG, StatelessFlag.ENABLE, true);
+			ExecuteContext.getCurrentContext()
+					.setAttribute(SESSION_STATELESS_FLAG, StatelessFlag.ENABLE, true);
 		}
 	}
-	
+
 	public boolean isSessionStateless() {
 		ExecuteContext ec = ExecuteContext.getCurrentContext();
 		return ec.getAttribute(SESSION_STATELESS_FLAG) != null;
 	}
-	
+
 	public void removeSessionFromExecuteContext(Session session) {
 		ExecuteContext ec = ExecuteContext.getCurrentContext();
 		Session s = (Session) ec.getAttribute(SESSION_NAME);
@@ -91,14 +91,14 @@ public abstract class SessionService implements Service {
 	protected abstract Session getSessionInternal(boolean create);
 
 	public static class OnetimeSessionImpl implements Session {
-		
+
 		private static KeyGenerator gen = new KeyGenerator();
-		
+
 		private final ConcurrentHashMap<String, Object> store;
-		private final String id;
+		private volatile String id;
 		private final SessionService service;
 		private final long createDate;
-		
+
 		public OnetimeSessionImpl(SessionService service) {
 			store = new ConcurrentHashMap<>();
 			id = "es-" + gen.generateId();
@@ -128,7 +128,8 @@ public abstract class SessionService implements Service {
 
 		@Override
 		public Iterator<String> getAttributeNames() {
-			return store.keySet().iterator();
+			return store.keySet()
+					.iterator();
 		}
 
 		@Override
@@ -146,6 +147,11 @@ public abstract class SessionService implements Service {
 		public long getCreationTime() {
 			return createDate;
 		}
+
+		@Override
+		public void changeSessionId() {
+			id = "es-" + gen.generateId();
+		}
 	}
-	
+
 }

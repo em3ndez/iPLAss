@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -80,7 +80,7 @@ public class BuiltinAccountHandle implements AccountHandle {
 
 	@Override
 	public Map<String, Object> getAttributeMap() {
-		if(attributeMap == null){
+		if (attributeMap == null) {
 			attributeMap = new HashMap<String, Object>();
 		}
 		return attributeMap;

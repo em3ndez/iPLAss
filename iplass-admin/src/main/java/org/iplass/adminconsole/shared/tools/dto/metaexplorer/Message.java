@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -59,6 +59,7 @@ public class Message implements Serializable {
 	public Level getLevel() {
 		return level;
 	}
+
 	public void setLevel(Level level) {
 		this.level = level;
 	}
@@ -66,6 +67,7 @@ public class Message implements Serializable {
 	public String getMessage() {
 		return message;
 	}
+
 	public void setMessage(String message) {
 		this.message = message;
 	}

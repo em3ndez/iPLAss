@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
 <%@ page import="org.iplass.mtp.util.StringUtil"%>
@@ -33,69 +33,96 @@ Integer multiplicity = (Integer) request.getAttribute(Constants.AUTOCOMPLETION_M
 if (multiplicity == null) multiplicity = 1;
 //呼び出し元は/common/Autocompletion.jsp、以降はWebApiの結果を反映する部分のJavascript、結果の変数はvalue
 if (Constants.VIEW_TYPE_DETAIL.equals(viewType)) {
-	//詳細画面
+	//編集画面
+	//Booleanは入力領域の数ではなくて、多重度で埋める
 %>
-var multiplicity = <%=multiplicity%>;
-if (multiplicity == 1) {
-	if (value instanceof Array) {
-		value = value.length > 0 ? value[0] : "";
-	}
-} else {
-	if (value instanceof Array) {
-		if (value.length > multiplicity) {
-			value = value.slice(0, multiplicity);
-		}
-	} else {
-		value = [value];
-	}
-}
+const multiplicity = <%=multiplicity%>;
+value = normalizedDetailAutoCompletionValue(value, multiplicity, multiplicity, null);
 <%
 	if (editor.getDisplayType() == BooleanDisplayType.SELECT) {
+		// booleanやnullをそのままセットすると選択されない（stringなら平気）ため、配列化して対応
 %>
+if (multiplicity == 1) {
+	value = [value];
+}
 $("[name='" + propName + "']").val(value);
 <%
 	} else if (editor.getDisplayType() == BooleanDisplayType.RADIO) {
 		if (multiplicity == 1) {
+			// クリック状態を解除して、選択
 %>
+$("[name='" + propName + "']:checked").each(function() {
+	$(this).click();
+});
 $("[name='" + propName + "'][value='" + value + "']").click();
 <%
-		} else  {
+		} else {
+			// クリック状態を解除して、選択
 %>
-for (var i = 0; i < value.length; i++) {
+for (let i = 0; i < value.length; i++) {
+	$("[name='" + propName + i + "']:checked").each(function() {
+		$(this).click();
+		return false;
+	});
 	$("[name='" + propName + i + "'][value='" + value[i] + "']").click();
 }
 <%
 		}
 	} else if (editor.getDisplayType() == BooleanDisplayType.CHECKBOX) {
 		if (multiplicity == 1) {
+			// クリック状態を解除して、trueの場合のみ選択
 %>
-var isChecked = $("[name='" + propName + "']").is(":checked");
+$("[name='" + propName + "']:checked").each(function() {
+	$(this).click();
+});
 if (value === true || value === "true") {
-	if (!isChecked) {
-		$("[name='" + propName + "']").click();
-	}
-} else {
-	if (isChecked) {
-		$("[name='" + propName + "']").click();
-	}
+	$("[name='" + propName + "'][value='" + value + "']").click();
 }
 <%
-		} else  {
+		} else {
+			// クリック状態を解除して、trueの場合のみ選択
 %>
-for (var i = 0; i < value.length; i++) {
-	var isChecked = $("[name='" + propName + i + "']").is(":checked");
+for (let i = 0; i < value.length; i++) {
+	$("[name='" + propName + i + "']:checked").each(function() {
+		$(this).click();
+	});
 	if (value[i] === true || value[i] === "true") {
-		if (!isChecked) {
-			$("[name='" + propName + i + "']").click();
-		}
-	} else {
-		if (isChecked) {
-			$("[name='" + propName + i + "']").click();
-		}
+		$("[name='" + propName + i + "'][value='" + value[i] + "']").click();
 	}
 }
 <%
 		}
+	} else if (editor.getDisplayType() == BooleanDisplayType.LABEL) {
+		String[] autocompletionBooleanLabel = (String[]) request.getAttribute("autocompletionBooleanLabel");
+		String trueLabel = autocompletionBooleanLabel[0];
+		String falseLabel = autocompletionBooleanLabel[1];
+%>
+renderDetailAutoCompletionLabelType(value, multiplicity, propName,
+	function(value) {
+		if (!((value === true || value === "true") || (value === false || value === "false"))) {
+			return ""
+		}
+		return (value === true || value === "true") ? "<%=trueLabel %>" : "<%=falseLabel %>";
+	},
+	function(value) {
+		if (!((value === true || value === "true") || (value === false || value === "false"))) {
+			return "";
+		}
+		return value;
+	}
+);
+<%
+	} else if (editor.getDisplayType() == BooleanDisplayType.HIDDEN) {
+%>
+renderDetailAutoCompletionHiddenType(value, multiplicity, propName, 
+	function(value) {
+		if (!((value === true || value === "true") || (value === false || value === "false"))) {
+			return "";
+		}
+		return value;
+	}
+);
+<%
 	}
 } else {
 	//検索画面
@@ -105,12 +132,19 @@ if (value instanceof Array) {
 }
 <%
 	if (editor.getDisplayType() == BooleanDisplayType.SELECT) {
+		//booleanをそのままセットすると選択されない、かつnullも対応のため変換する
 %>
+value = [value];
 $("[name='sc_" + propName + "']").val(value);
 <%
 	} else {
 %>
-$("[name='sc_" + propName + "'][value='" + value + "']").click();
+if ((value === true || value === "true")
+	|| (value === false || value === "false")) {
+	$("[name='sc_" + propName + "'][value='" + value + "']").click();
+} else {
+	$("[name='sc_" + propName + "']:last").click();
+}
 <%
 	}
 }

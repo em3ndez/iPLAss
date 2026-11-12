@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -36,7 +36,7 @@ class BuiltinWebApiAuthContext extends BuiltinAuthorizationContext implements We
 
 	private WebApiPermissionEntry[] permissionEntry;
 	private TenantAuthorizeContext tenantAuthContext;
-	
+
 	private boolean hasParameterCondition;
 
 	//複数ロールがある場合、基本はそれぞれのロールの権限をOR（許可と否許可では許可優先）。
@@ -53,7 +53,7 @@ class BuiltinWebApiAuthContext extends BuiltinAuthorizationContext implements We
 		this.permissionEntry = permissionEntry;
 		this.tenantAuthContext = tenantAuthContext;
 		if (permissionEntry != null) {
-			for (WebApiPermissionEntry wpe: permissionEntry) {
+			for (WebApiPermissionEntry wpe : permissionEntry) {
 				if (wpe.hasParam()) {
 					hasParameterCondition = true;
 					break;
@@ -66,7 +66,8 @@ class BuiltinWebApiAuthContext extends BuiltinAuthorizationContext implements We
 		List<WebApiPermissionEntry> target = new LinkedList<WebApiPermissionEntry>();
 		long currentPriority = 0;
 		for (int i = 0; i < permissionEntry.length; i++) {
-			if (userAuthContext.userInRole(permissionEntry[i].getRole(), tenantAuthContext.getTenantContext().getTenantId())) {
+			if (userAuthContext.userInRole(permissionEntry[i].getRole(), tenantAuthContext.getTenantContext()
+					.getTenantId())) {
 				RoleContext role = tenantAuthContext.getRoleContext(permissionEntry[i].getRole());
 				if (currentPriority < role.getPriority()) {
 					//reset priority
@@ -83,16 +84,16 @@ class BuiltinWebApiAuthContext extends BuiltinAuthorizationContext implements We
 
 	@Override
 	public boolean isPermit(Permission permission, AuthContextHolder user) {
-		//admin（かつ、他テナントユーザでない）は全権限保持
+		//admin（かつ、他テナントユーザーでない）は全権限保持
 		UserBinding userBinding = user.newUserBinding(tenantAuthContext);
 		if (userBinding.isGrantAllPermissions()) {
 			return true;
 		}
-		
+
 		WebApiPermission wap = (WebApiPermission) permission;
 
 		List<WebApiPermissionEntry> target = listTarget(user);
-		for (WebApiPermissionEntry pe: target) {
+		for (WebApiPermissionEntry pe : target) {
 			if (pe.isPermit(user, wap.getWebApiName(), wap.getParameter(), tenantAuthContext)) {
 				return true;
 			}

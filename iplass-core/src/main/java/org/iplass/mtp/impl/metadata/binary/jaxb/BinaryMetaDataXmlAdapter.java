@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -19,9 +19,9 @@
  */
 package org.iplass.mtp.impl.metadata.binary.jaxb;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
-
 import org.iplass.mtp.impl.metadata.binary.BinaryMetaData;
+
+import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 
 public class BinaryMetaDataXmlAdapter extends XmlAdapter<ChunkedBinary, BinaryMetaData> {
 

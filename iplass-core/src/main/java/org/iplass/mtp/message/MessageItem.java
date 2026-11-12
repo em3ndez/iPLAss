@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -37,7 +37,13 @@ public class MessageItem implements Serializable {
 
 	private static final long serialVersionUID = 6941829508291170486L;
 
-	@MultiLang(itemNameGetter = "getMessageId", itemKey = "message", itemGetter = "getMessage", itemSetter = "setMessage", multiLangGetter = "getLocalizedMessageList", multiLangSetter = "setLocalizedMessageList")
+	@MultiLang(
+			itemNameGetter = "getMessageId",
+			itemKey = "message",
+			itemGetter = "getMessage",
+			itemSetter = "setMessage",
+			multiLangGetter = "getLocalizedMessageList",
+			multiLangSetter = "setLocalizedMessageList")
 	private String message;
 	private String messageId;
 

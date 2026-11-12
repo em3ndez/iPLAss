@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -18,10 +18,10 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-@javax.xml.bind.annotation.XmlSchema(
-	namespace="http://mtp.iplass.org/xml/definition/view/menu",
-	xmlns={
-		@javax.xml.bind.annotation.XmlNs(namespaceURI="http://mtp.iplass.org/xml/definition/view/menu", prefix="def-vmenu")
-	}
+@jakarta.xml.bind.annotation.XmlSchema(
+		namespace = "http://mtp.iplass.org/xml/definition/view/menu",
+		xmlns = {
+				@jakarta.xml.bind.annotation.XmlNs(namespaceURI = "http://mtp.iplass.org/xml/definition/view/menu", prefix = "def-vmenu")
+		}
 )
 package org.iplass.mtp.view.menu;

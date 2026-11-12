@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,46 +30,47 @@ import org.iplass.mtp.entity.query.value.primary.EntityField;
  *
  */
 public class SortSpec implements ASTNode {
+	//TODO v3.2でAbstractSortSpec継承に
 	private static final long serialVersionUID = -8115669253085961836L;
 
 	public enum SortType {
-		ASC,DESC;
+		ASC, DESC;
 	}
-	
+
 	public enum NullOrderingSpec {
-		FIRST,LAST
+		FIRST, LAST
 	}
-	
+
 	private ValueExpression sortKey;
 	private SortType type;
 	private NullOrderingSpec nullOrderingSpec;
-	
+
 	public SortSpec() {
 	}
-	
+
 	public SortSpec(String sortKeyField, SortType type) {
 		super();
 		this.sortKey = new EntityField(sortKeyField);
 		this.type = type;
 	}
-	
+
 	public SortSpec(ValueExpression sortKey, SortType type) {
 		super();
 		this.sortKey = sortKey;
 		this.type = type;
 	}
-	
+
 	public SortSpec(ValueExpression sortKey, SortType type, NullOrderingSpec nullOrderingSpec) {
 		super();
 		this.sortKey = sortKey;
 		this.type = type;
 		this.nullOrderingSpec = nullOrderingSpec;
 	}
-	
+
 	public ASTNode accept(ASTTransformer transformer) {
 		return transformer.visit(this);
 	}
-	
+
 	public void accept(QueryVisitor visitor) {
 		if (visitor.visit(this)) {
 			sortKey.accept(visitor);
@@ -91,7 +92,7 @@ public class SortSpec implements ASTNode {
 	public void setType(SortType type) {
 		this.type = type;
 	}
-	
+
 	public NullOrderingSpec getNullOrderingSpec() {
 		return nullOrderingSpec;
 	}
@@ -99,12 +100,12 @@ public class SortSpec implements ASTNode {
 	public void setNullOrderingSpec(NullOrderingSpec nullOrderingSpec) {
 		this.nullOrderingSpec = nullOrderingSpec;
 	}
-	
+
 	public SortSpec nulls(NullOrderingSpec nullOrderingSpec) {
 		this.nullOrderingSpec = nullOrderingSpec;
 		return this;
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -152,5 +153,5 @@ public class SortSpec implements ASTNode {
 			return false;
 		return true;
 	}
-	
+
 }

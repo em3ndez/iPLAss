@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -17,7 +17,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-
 
 package com.google.gwt.user.client.rpc.core.org.iplass.mtp.entity;
 
@@ -42,7 +41,7 @@ public class GenericEntity_CustomFieldSerializer extends CustomFieldSerializer<G
 			String propertyName = streamReader.readString();
 			Object value = streamReader.readObject();
 			instance.setValue(propertyName, value);
-	    }
+		}
 	}
 
 	public static void serialize(SerializationStreamWriter streamWriter, GenericEntity instance) throws SerializationException {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,9 +23,9 @@ package org.iplass.mtp.web.template.definition;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.iplass.mtp.definition.LocalizedStringDefinition;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class GroovyTemplateDefinition extends TemplateDefinition {

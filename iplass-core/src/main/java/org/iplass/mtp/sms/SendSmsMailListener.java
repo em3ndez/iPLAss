@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,7 +26,7 @@ package org.iplass.mtp.sms;
  *
  */
 public interface SendSmsMailListener {
-	
+
 	/**
 	 * SMS送信前に呼び出されます。
 	 * デフォルト実装では何もしません（return trueします）。
@@ -37,7 +37,7 @@ public interface SendSmsMailListener {
 	public default boolean beforeSend(SmsMail mail) {
 		return true;
 	}
-	
+
 	/**
 	 * SMS送信成功時に呼び出されます。
 	 * デフォルト実装では何もしません。
@@ -46,7 +46,7 @@ public interface SendSmsMailListener {
 	 */
 	public default void onSuccess(SmsMail mail) {
 	}
-	
+
 	/**
 	 * SMS送信失敗時（例外発生時）に呼び出されます。
 	 * デフォルト実装では何もしません（return trueします）。

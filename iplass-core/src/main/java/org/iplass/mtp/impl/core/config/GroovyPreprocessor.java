@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,15 +33,16 @@ import groovy.text.GStringTemplateEngine;
 import groovy.text.Template;
 
 public class GroovyPreprocessor implements ConfigPreprocessor {
-	
+
 	private static Logger logger = LoggerFactory.getLogger(GroovyPreprocessor.class);
-	
+
 	private Pattern pattern = Pattern.compile("(?i)<serviceDefinition\\s*preprocess\\s*=\\s*(\"|')true(\"|')\\s*>");
 
 	@Override
 	public String preprocess(String xml, String filePath) {
-		
-		if (pattern.matcher(xml).find()) {
+
+		if (pattern.matcher(xml)
+				.find()) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("preprocess " + filePath);
 			}
@@ -50,13 +51,14 @@ public class GroovyPreprocessor implements ConfigPreprocessor {
 				Template tmpl = eng.createTemplate(xml);
 				Map<String, Object> binding = new HashMap<>();
 				binding.put("filePath", filePath);
-				
-				xml = tmpl.make(binding).toString();
-				
+
+				xml = tmpl.make(binding)
+						.toString();
+
 			} catch (IOException | CompilationFailedException | ClassNotFoundException e) {
 				throw new ServiceConfigrationException("preprocess failed:" + filePath, e);
 			}
-			
+
 		}
 		return xml;
 	}

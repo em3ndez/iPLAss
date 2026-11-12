@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -146,6 +146,7 @@
 %>
 <div class="bulk-edit">
 <h3 class="hgroup-02 hgroup-02-01"><%=GemResourceBundleUtil.resourceString("generic.bulk.title", displayName)%></h3>
+<span class="error page-error"></span>
 <%
 	if (isSuccess) {
 		//更新に成功した場合
@@ -176,7 +177,6 @@
 	}
 %>
 <form id="detailForm" method="post" action="<%=action%>">
-${m:outputToken('FORM_XHTML', true)}
 <%
 	if (!isSelectAll) {
 %>
@@ -336,6 +336,7 @@ $(function() {
 </ul>
 </div>
 </div>
+${m:outputToken('FORM_XHTML', true)}
 </form>
 <input type="hidden" id="confirmEditSave" value="<%=ViewUtil.isConfirmEditSave()%>" />
 <script type="text/javascript">
@@ -343,6 +344,7 @@ function onclick_cancel() {
 	$("#modal-dialog-root .modal-close", parent.document).trigger("click");
 }
 function onclick_bulkupdate(target){
+	if (!validation()) return;
 	if ($("#confirmEditSave").val() == "true" && !confirm("${m:rs('mtp-gem-messages', 'generic.bulk.updateMsg')}")) {
 		return;
 	}
@@ -358,6 +360,13 @@ function onDialogClose() {
 		func.call(parent.window, id);
 	}
 	return true;
+}
+function validation() {
+	<%-- common.js --%>
+	var ret = editValidate();
+	var message = !ret ? "${m:rs('mtp-gem-messages', 'command.generic.detail.DetailCommandBase.inputErr')}" : "";
+	$(".bulk-edit > .page-error").text(message);
+	return ret;
 }
 $(function() {
 	// タイトルの設定

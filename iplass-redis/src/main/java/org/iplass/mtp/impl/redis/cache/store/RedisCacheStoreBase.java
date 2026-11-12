@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,41 +20,78 @@
 
 package org.iplass.mtp.impl.redis.cache.store;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 
-import org.iplass.mtp.MtpException;
+import org.apache.commons.pool2.impl.GenericObjectPool;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.iplass.mtp.impl.cache.store.CacheEntry;
 import org.iplass.mtp.impl.cache.store.CacheStore;
 import org.iplass.mtp.impl.cache.store.CacheStoreFactory;
+import org.iplass.mtp.impl.cache.store.TimeToLiveCalculator;
 import org.iplass.mtp.impl.cache.store.event.CacheCreateEvent;
 import org.iplass.mtp.impl.cache.store.event.CacheEventListener;
 import org.iplass.mtp.impl.cache.store.event.CacheInvalidateEvent;
 import org.iplass.mtp.impl.cache.store.event.CacheRemoveEvent;
 import org.iplass.mtp.impl.cache.store.event.CacheUpdateEvent;
+import org.iplass.mtp.impl.redis.RedisRuntimeException;
+
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.sync.RedisCommands;
+import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
+import io.lettuce.core.pubsub.api.sync.RedisPubSubCommands;
+import io.lettuce.core.support.ConnectionPoolSupport;
 
 public abstract class RedisCacheStoreBase implements CacheStore {
 
+	protected final StatefulRedisPubSubConnection<String, String> pubSubConnection;
+	protected RedisPubSubCommands<String, String> pubSubCommands;
+
 	private final RedisCacheStoreFactory factory;
 	private final String namespace;
-	private final long timeToLive;
-	private final boolean isSave;
+	//redisの場合は、精度は秒まで。
+	private final TimeToLiveCalculator timeToLiveCalculator;
+	protected final int retryCount;
 
-	private List<CacheEventListener> listeners;
+	protected final NamespaceSerializedObjectCodec codec;
+	protected final GenericObjectPool<StatefulRedisConnection<Object, Object>> pool;
 
-	public RedisCacheStoreBase(RedisCacheStoreFactory factory, String namespace, long timeToLive, boolean isSave) {
+	private final List<CacheEventListener> listeners;
+
+	public RedisCacheStoreBase(RedisCacheStoreFactory factory, String namespace,
+			TimeToLiveCalculator timeToLiveCalculator, RedisCacheStorePoolConfig redisCacheStorePoolConfig) {
+		this.pubSubConnection = factory.getClient()
+				.connectPubSub();
 		this.factory = factory;
 		this.namespace = namespace;
-		this.timeToLive = timeToLive;
-		this.isSave = isSave;
+		this.timeToLiveCalculator = timeToLiveCalculator;
+		this.retryCount = factory.getRetryCount();
 
-		listeners = new CopyOnWriteArrayList<CacheEventListener>();
+		this.codec = new NamespaceSerializedObjectCodec(namespace);
+
+		GenericObjectPoolConfig<StatefulRedisConnection<Object, Object>> poolConfig = new GenericObjectPoolConfig<>();
+		if (redisCacheStorePoolConfig != null) {
+			redisCacheStorePoolConfig.apply(poolConfig);
+		}
+
+		this.pool = ConnectionPoolSupport.createGenericObjectPool(() -> factory.getClient()
+				.connect(codec), poolConfig);
+
+		this.listeners = new CopyOnWriteArrayList<CacheEventListener>();
+	}
+
+	protected long getTtlSeconds(CacheEntry entry) {
+		if (entry.getTimeToLive()
+				.longValue() < 0) {
+			return 0L;
+		} else {
+			return TimeUnit.MILLISECONDS.toSeconds(entry.getTimeToLive());
+		}
+	}
+
+	protected void setTtl(CacheEntry entry) {
+		timeToLiveCalculator.set(entry);
 	}
 
 	@Override
@@ -68,6 +105,11 @@ public abstract class RedisCacheStoreBase implements CacheStore {
 	}
 
 	@Override
+	public List<CacheEventListener> getListeners() {
+		return listeners;
+	}
+
+	@Override
 	public void addCacheEventListenner(CacheEventListener listener) {
 		listeners.add(listener);
 	}
@@ -78,16 +120,31 @@ public abstract class RedisCacheStoreBase implements CacheStore {
 	}
 
 	@Override
-	public List<CacheEventListener> getListeners() {
-		return listeners;
+	public int getSize() {
+		try (StatefulRedisConnection<Object, Object> connection = pool.borrowObject()) {
+			RedisCommands<Object, Object> commands = connection.sync();
+			List<Object> keys = commands.keys("*");
+			return keys == null ? 0 : keys.size();
+		} catch (Exception e) {
+			throw new RedisRuntimeException(e);
+		}
 	}
 
-	protected long getTimeToLive() {
-		return timeToLive;
+	@Override
+	public String trace() {
+		try (StatefulRedisConnection<Object, Object> connection = pool.borrowObject()) {
+			RedisCommands<Object, Object> commands = connection.sync();
+			return commands.info();
+		} catch (Exception e) {
+			throw new RedisRuntimeException(e);
+		}
 	}
 
-	protected boolean isSave() {
-		return isSave;
+	@Override
+	public void destroy() {
+		pool.close();
+		factory.getClient()
+				.shutdown();
 	}
 
 	protected void notifyRemoved(CacheEntry entry) {
@@ -120,26 +177,6 @@ public abstract class RedisCacheStoreBase implements CacheStore {
 
 	protected boolean hasListener() {
 		return listeners != null ? listeners.size() > 0 : false;
-	}
-
-	protected String encodeBase64(Object obj) {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try (ObjectOutputStream bis = new ObjectOutputStream(baos)) {
-			bis.writeObject(obj);
-			bis.flush();
-			return Base64.getEncoder().encodeToString(baos.toByteArray());
-		} catch (IOException e) {
-			throw new MtpException(e);
-		}
-	}
-
-	protected Object decodeBase64(String src) {
-		ByteArrayInputStream bais = new ByteArrayInputStream(Base64.getDecoder().decode(src));
-		try (ObjectInputStream ois = new ObjectInputStream(bais)) {
-			return ois.readObject();
-		} catch (IOException | ClassNotFoundException e) {
-			throw new MtpException(e);
-		}
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -101,6 +101,11 @@ public @interface MetaFieldInfo {
 	Class<?> enumClass() default Object.class;
 
 	/**
+	 * Enumクラス(固定)の特定の値のみ利用する場合に使用する。
+	 */
+	String[] fixedEnumValue() default {};
+
+	/**
 	 * フィールドの説明
 	 */
 	String description() default "";
@@ -144,5 +149,11 @@ public @interface MetaFieldInfo {
 	 * 同じClass内で参照する場合に指定
 	 */
 	String sourceEntityNameField() default "";
+
+	/**
+	 * inputTypeがPropertyの場合、対象のEntityのプロパティタイプを除外するための設定
+	 * 指定されたプロパティタイプのプロパティは選択肢に表示されなくなる
+	 */
+	String[] excludePropertyType() default {};
 
 }

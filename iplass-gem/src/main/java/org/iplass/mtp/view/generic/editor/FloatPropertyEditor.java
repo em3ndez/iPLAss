@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,12 +20,12 @@
 
 package org.iplass.mtp.view.generic.editor;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-
 import org.iplass.mtp.view.generic.Jsp;
 import org.iplass.mtp.view.generic.Jsps;
 import org.iplass.mtp.view.generic.ViewConst;
+
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
 
 /**
  * 浮動小数点型プロパティエディタ
@@ -33,8 +33,11 @@ import org.iplass.mtp.view.generic.ViewConst;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @Jsps({
-	@Jsp(path="/jsp/gem/generic/editor/NumberPropertyEditor.jsp", key=ViewConst.DESIGN_TYPE_GEM),
-	@Jsp(path="/jsp/gem/aggregation/unit/editor/NumberPropertyEditor.jsp", key=ViewConst.DESIGN_TYPE_GEM_AGGREGATION)
+		@Jsp(path = "/jsp/gem/generic/editor/NumberPropertyEditor.jsp", key = ViewConst.DESIGN_TYPE_GEM),
+		@Jsp(path = "/jsp/gem/aggregation/unit/editor/NumberPropertyEditor.jsp", key = ViewConst.DESIGN_TYPE_GEM_AGGREGATION),
+		@Jsp(
+				path = "/jsp/gem/spreadsheet/element/section/editor/SpreadSheetFilterNumberPropertyEditor.jsp",
+				key = ViewConst.DESIGN_TYPE_GEM_SPREADSHEET)
 })
 public class FloatPropertyEditor extends NumberPropertyEditor {
 

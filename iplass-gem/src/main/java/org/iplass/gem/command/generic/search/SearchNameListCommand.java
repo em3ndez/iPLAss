@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -38,31 +38,33 @@ import org.iplass.mtp.webapi.definition.MethodType;
 import org.iplass.mtp.webapi.definition.RequestType;
 
 @WebApi(
-		name=SearchNameListCommand.WEBAPI_NAME,
-		displayName="Entity一覧検索(ウィジェット)",
-		accepts=RequestType.REST_JSON,
-		methods=MethodType.POST,
-		restJson=@RestJson(parameterName="param"),
-		results={SearchNameListCommand.RESULT_PARAM_LIST, SearchNameListCommand.RESULT_PARAM_COUNT},
-		checkXRequestedWithHeader=true
+		name = SearchNameListCommand.WEBAPI_NAME,
+		displayName = "Entity一覧検索(ウィジェット)",
+		accepts = RequestType.REST_JSON,
+		methods = MethodType.POST,
+		restJson = @RestJson(parameterName = "param"),
+		results = { SearchNameListCommand.RESULT_PARAM_LIST },
+		checkXRequestedWithHeader = true
 )
-@Template(name="gem/generic/search/listWidget", displayName="検索結果ウィジェット", path="/jsp/gem/generic/search/listWidget.jsp")
-@CommandClass(name="gem/generic/search/SearchNameListCommand", displayName="Entity一覧検索(ウィジェット)")
+@Template(name = "gem/generic/search/listWidget", displayName = "検索結果ウィジェット", path = "/jsp/gem/generic/search/listWidget.jsp")
+@CommandClass(name = "gem/generic/search/SearchNameListCommand", displayName = "Entity一覧検索(ウィジェット)")
 public final class SearchNameListCommand extends SearchListPartsCommandBase {
 
 	public static final String WEBAPI_NAME = "gem/generic/search/nameList";
 
 	public static final String RESULT_PARAM_LIST = "list";
-	public static final String RESULT_PARAM_COUNT = "count";
 
 	private EntityDefinitionManager edm;
 	private EntityViewManager evm;
 	private EntityFilterManager efm;
 
 	public SearchNameListCommand() {
-		edm = ManagerLocator.getInstance().getManager(EntityDefinitionManager.class);
-		evm = ManagerLocator.getInstance().getManager(EntityViewManager.class);
-		efm = ManagerLocator.getInstance().getManager(EntityFilterManager.class);
+		edm = ManagerLocator.getInstance()
+				.getManager(EntityDefinitionManager.class);
+		evm = ManagerLocator.getInstance()
+				.getManager(EntityViewManager.class);
+		efm = ManagerLocator.getInstance()
+				.getManager(EntityFilterManager.class);
 	}
 
 	@Override
@@ -75,14 +77,11 @@ public final class SearchNameListCommand extends SearchListPartsCommandBase {
 		context.setFilter(efm.get(context.getDefName()));
 
 		Query query = toQuery(context);
-
-		int count = count(context, query.copy());
-		request.setAttribute(RESULT_PARAM_COUNT, count);
-
 		query.setOrderBy(context.getOrderBy());
-		query.setLimit(context.getLimit());
+		query.setLimit(getLimitForPaging(context));
 
 		List<Entity> entity = search(context, query).getList();
+
 		request.setAttribute(RESULT_PARAM_LIST, entity);
 
 		return Constants.CMD_EXEC_SUCCESS;

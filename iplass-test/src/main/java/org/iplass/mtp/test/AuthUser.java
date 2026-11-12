@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,17 +25,18 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * テスト実施時のユーザを指定します。
+ * テスト実施時のユーザーを指定します。
  * クラス、メソッドに指定可能です。
  * 
  * @author K.Higuchi
  *
  */
-@Retention(value=RetentionPolicy.RUNTIME)
-@Target(value={ElementType.TYPE, ElementType.METHOD})
+@Retention(value = RetentionPolicy.RUNTIME)
+@Target(value = { ElementType.TYPE, ElementType.METHOD })
 public @interface AuthUser {
-	
+
 	String userId();
+
 	String password();
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,12 +29,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.io.FilenameUtils;
 import org.iplass.adminconsole.server.base.i18n.AdminResourceBundleUtil;
 import org.iplass.adminconsole.server.base.io.upload.AdminUploadAction;
+import org.iplass.adminconsole.server.base.io.upload.MultipartRequestParameter;
+import org.iplass.adminconsole.server.base.io.upload.UploadActionException;
 import org.iplass.adminconsole.server.base.io.upload.UploadResponseInfo;
 import org.iplass.adminconsole.server.base.io.upload.UploadRuntimeException;
 import org.iplass.adminconsole.server.base.io.upload.UploadUtil;
@@ -47,7 +46,7 @@ import org.iplass.mtp.message.MessageManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import gwtupload.server.exceptions.UploadActionException;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class MessageItemCsvUploadServiceImpl extends AdminUploadAction {
 
@@ -55,28 +54,22 @@ public class MessageItemCsvUploadServiceImpl extends AdminUploadAction {
 
 	private static final Logger logger = LoggerFactory.getLogger(MessageItemCsvUploadServiceImpl.class);
 
-	/* (非 Javadoc)
-	 * @see gwtupload.server.UploadAction#executeAction(javax.servlet.http.HttpServletRequest, java.util.List)
-	 */
 	@Override
 	public String executeAction(final HttpServletRequest request,
-			final List<FileItem> sessionFiles) throws UploadActionException {
+			final List<MultipartRequestParameter> sessionFiles) throws UploadActionException {
 
 		final MessageItemCsvUploadResponseInfo result = new MessageItemCsvUploadResponseInfo();
-		final HashMap<String,Object> args = new HashMap<String,Object>();
+		final HashMap<String, Object> args = new HashMap<String, Object>();
 		try {
 
 			//リクエスト情報の取得
 			readRequest(request, sessionFiles, args);
 
-			//セッションからファイルを削除
-		    super.removeSessionFileItems(request);
-
-		    //リクエスト情報の検証
+			//リクエスト情報の検証
 			validateRequest(args);
 
 			//テナントIDの取得
-			int tenantId = Integer.parseInt((String)args.get(UploadProperty.TENANT_ID));
+			int tenantId = Integer.parseInt((String) args.get(UploadProperty.TENANT_ID));
 
 			//ここでトランザクションを開始
 			AuthUtil.authCheckAndInvoke(getServletContext(), request, null, tenantId, new AuthUtil.Callable<Void>() {
@@ -109,7 +102,7 @@ public class MessageItemCsvUploadServiceImpl extends AdminUploadAction {
 		}
 
 		//ResultをJSON形式に変換
-	    try {
+		try {
 			return UploadUtil.toJsonResponse(result);
 		} catch (UploadRuntimeException e) {
 			throw new UploadActionException(e);
@@ -122,14 +115,14 @@ public class MessageItemCsvUploadServiceImpl extends AdminUploadAction {
 	 * @param sessionFiles
 	 * @return
 	 */
-	private void readRequest(final HttpServletRequest request, List<FileItem> sessionFiles, HashMap<String,Object> args) {
+	private void readRequest(final HttpServletRequest request, List<MultipartRequestParameter> sessionFiles, HashMap<String, Object> args) {
 
 		//リクエスト情報の取得
 		try {
-			for (FileItem item : sessionFiles) {
+			for (MultipartRequestParameter item : sessionFiles) {
 				if (item.isFormField()) {
-			    	//File以外のもの
-			        args.put(item.getFieldName(), UploadUtil.getValueAsString(item));
+					//File以外のもの
+					args.put(item.getFieldName(), UploadUtil.getValueAsString(item));
 				} else {
 					//Fileの場合、tempに書きだし
 					args.put(UploadProperty.UPLOAD_FILE_NAME, FilenameUtils.getName(item.getName()));
@@ -146,7 +139,7 @@ public class MessageItemCsvUploadServiceImpl extends AdminUploadAction {
 	 * 入力チェック
 	 * @param args
 	 */
-	private void validateRequest(HashMap<String,Object> args) {
+	private void validateRequest(HashMap<String, Object> args) {
 		if (args.get(UploadProperty.UPLOAD_FILE) == null) {
 			throw new UploadRuntimeException(rs("metadata.message.MessageItemCsvUploadServiceImpl.canNotGetImportFile"));
 		}
@@ -165,10 +158,11 @@ public class MessageItemCsvUploadServiceImpl extends AdminUploadAction {
 	 */
 	private void importCSV(MessageItemCsvUploadResponseInfo result, HashMap<String, Object> args, String definitionName) {
 
-		File file = (File)args.get(UploadProperty.UPLOAD_FILE);
+		File file = (File) args.get(UploadProperty.UPLOAD_FILE);
 
 		//更新対象の定義取得
-		MessageManager mm = ManagerLocator.getInstance().getManager(MessageManager.class);
+		MessageManager mm = ManagerLocator.getInstance()
+				.getManager(MessageManager.class);
 		MessageCategory category = mm.get(definitionName);
 
 		if (category == null) {
@@ -183,7 +177,7 @@ public class MessageItemCsvUploadServiceImpl extends AdminUploadAction {
 			//IDでソートするためTreeMapに格納
 			Map<String, MessageItem> messageItems = new TreeMap<>();
 
-			Iterator<MessageItem> iterator = reader.iterator();	//このタイミングでHeaderが読み込まれる
+			Iterator<MessageItem> iterator = reader.iterator(); //このタイミングでHeaderが読み込まれる
 
 			while (iterator.hasNext()) {
 				MessageItem item = iterator.next();

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,7 +27,7 @@ package org.iplass.mtp.transaction;
  *
  */
 public enum Propagation {
-	
+
 	/** トランザクションが開始されていなかったら、開始（およびコミット/ロールバック）する。すでにトランザクションが開始されている場合は、そのトランザクションのコンテキストで実行される。 */
 	REQUIRED,
 	/** 新規にトランザクションを開始（およびコミット/ロールバック）する。既存のトランザクションがあった場合は、一旦サスペンドされ当該処理完了後、レジュームされる。 */

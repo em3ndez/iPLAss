@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -74,6 +74,7 @@ public class TenantWebInfo extends TenantConfig {
 	public void setLoginUrlSelector(String loginUrlSelector) {
 		this.loginUrlSelector = loginUrlSelector;
 	}
+
 	public String getReAuthUrlSelector() {
 		return reAuthUrlSelector;
 	}

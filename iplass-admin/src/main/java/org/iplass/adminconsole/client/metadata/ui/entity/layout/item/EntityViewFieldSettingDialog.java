@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -120,7 +120,8 @@ public class EntityViewFieldSettingDialog extends MetaFieldSettingDialog {
 			if (getValue() instanceof JoinPropertyEditor) {
 				//JoinPropertyEditorのNestPropertyは前画面のEntityが対象
 				if (prev != null) {
-					return prev.getOwner().getNestPropertyReferenceEntityName();
+					return prev.getOwner()
+							.getNestPropertyReferenceEntityName();
 				}
 			}
 		}

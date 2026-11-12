@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,8 +27,7 @@ package org.iplass.mtp.web.actionmapping.definition;
  *
  */
 public enum ClientCacheType {
-	
-	
+
 	/**
 	 * キャッシュを許可します。
 	 * 具体的にはCache-Controlをprivate指定します。
@@ -36,17 +35,17 @@ public enum ClientCacheType {
 	 * 
 	 */
 	CACHE,
-	
+
 	/**
 	 * キャッシュを許可します。
 	 * 具体的にはCache-Controlをpublic指定します。
 	 * CACHE_PUBLICを指定する場合は、合わせてclientCacheMaxAgeも指定してください。
 	 */
 	CACHE_PUBLIC,
-	
+
 	/**
 	 * キャッシュを許可しません。
-	 * 具体的にはCache-Controlをno-store,no-cache指定します
+	 * 具体的にはCache-Controlをprivate, no-store, no-cache, must-revalidate指定します
 	 * （加えて、HTTP/1.0の場合は、Pragmaをno-cache指定します）。
 	 * 
 	 */

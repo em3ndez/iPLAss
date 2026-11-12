@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,12 +29,12 @@ class WrappedRestException extends RuntimeException {
 	public WrappedRestException(Exception cause) {
 		super(cause);
 	}
-	
+
 	public WrappedRestException(Exception cause, WebApiResponse response) {
 		super(cause);
 		this.response = response;
 	}
-	
+
 	WebApiResponse getResponse() {
 		return response;
 	}

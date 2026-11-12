@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,17 +21,27 @@
 package org.iplass.mtp.entity.query.hint;
 
 public interface HintVisitor {
-	
+
 	public boolean visit(HintComment hintComment);
+
 	public boolean visit(IndexHint indexHint);
+
 	public boolean visit(NoIndexHint noIndexHint);
+
 	public boolean visit(NativeHint nativeHint);
+
 	public boolean visit(BindHint bindHint);
+
 	public boolean visit(CacheHint cacheHint);
+
 	public boolean visit(FetchSizeHint fetchSizeHint);
+
 	public boolean visit(TimeoutHint timeoutHint);
+
 	public boolean visit(NoBindHint noBindHint);
+
 	public boolean visit(SuppressWarningsHint suppressWarningsHint);
+
 	public boolean visit(ReadOnlyHint readOnlyHint);
 
 }

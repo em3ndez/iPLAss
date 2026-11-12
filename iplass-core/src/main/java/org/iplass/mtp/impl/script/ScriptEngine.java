@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,7 +23,7 @@ package org.iplass.mtp.impl.script;
 import java.io.PrintWriter;
 
 public interface ScriptEngine {
-	
+
 	/**
 	 * sharedClass=falseとして、Scriptを生成。
 	 * 
@@ -32,7 +32,7 @@ public interface ScriptEngine {
 	 * @return
 	 */
 	public Script createScript(String script, String name);
-	
+
 	/**
 	 * Scriptを生成。
 	 * 
@@ -42,14 +42,14 @@ public interface ScriptEngine {
 	 * @return
 	 */
 	public Script createScript(String script, String name, boolean sharedClass);
-	
+
 	/**
 	 * Scriptへ変数を受け渡すためのScriptContextを生成。
 	 * 
 	 * @return
 	 */
 	public ScriptContext newScriptContext();
-	
+
 	/**
 	 * Scriptへ変数を受け渡すためのScriptContextを生成。
 	 * 

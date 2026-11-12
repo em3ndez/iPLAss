@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -45,7 +45,8 @@ public class SectionItemDS extends AbstractAdminDataSource {
 			dsList = new HashMap<String, SectionItemDS>();
 		}
 
-		if (viewType == null) throw new IllegalArgumentException("viewType is null.");
+		if (viewType == null)
+			throw new IllegalArgumentException("viewType is null.");
 
 		if (dsList.containsKey(viewType.name())) {
 			return dsList.get(viewType.name());
@@ -72,7 +73,8 @@ public class SectionItemDS extends AbstractAdminDataSource {
 	@Override
 	protected void executeFetch(String requestId, DSRequest request, DSResponse response) {
 
-		ListGridRecord[] list = sectionController.sectionItemList(viewType).toArray(new ListGridRecord[0]);
+		ListGridRecord[] list = sectionController.sectionItemList(viewType)
+				.toArray(new ListGridRecord[0]);
 		response.setData(list);
 		response.setTotalRows(list.length);
 		processResponse(requestId, response);

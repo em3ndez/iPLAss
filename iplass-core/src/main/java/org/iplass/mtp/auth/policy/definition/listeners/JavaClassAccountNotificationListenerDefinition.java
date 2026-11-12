@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,7 +31,7 @@ import org.iplass.mtp.auth.policy.definition.AccountNotificationListenerDefiniti
  */
 public class JavaClassAccountNotificationListenerDefinition extends AccountNotificationListenerDefinition {
 	private static final long serialVersionUID = 64910434337213460L;
-	
+
 	private String className;
 
 	/**

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,10 +24,13 @@ import org.iplass.mtp.command.Command;
 import org.iplass.mtp.command.RequestContext;
 
 public interface CommandInvocation {
-	
+
 	public String proceedCommand();
+
 	public RequestContext getRequest();
+
 	public Command getCommand();
+
 	public String getCommandName();
 
 }

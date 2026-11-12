@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
 <%@ page import="org.iplass.mtp.util.StringUtil"%>
@@ -28,9 +28,17 @@
 
 <%
 BinaryPropertyEditor editor = (BinaryPropertyEditor) request.getAttribute(Constants.AUTOCOMPLETION_EDITOR);
+String viewType = StringUtil.escapeJavaScript((String) request.getAttribute(Constants.AUTOCOMPLETION_VIEW_TYPE));
 Integer multiplicity = (Integer) request.getAttribute(Constants.AUTOCOMPLETION_MULTIPLICTTY);
 if (multiplicity == null) multiplicity = 1;
 //呼び出し元は/common/Autocompletion.jsp、以降はWebApiの結果を反映する部分のJavascript、結果の変数はvalue
+if (Constants.VIEW_TYPE_DETAIL.equals(viewType)) {
+	//Binary型は編集画面での利用は想定しない
+	//BinaryPropertyEditor_Edit.jspで指定していない
+} else {
+	//検索画面
+	//検索条件では、多重度に関係なく1が設定される(SearchConditionSection.jsp)
+	//検索条件のファイル名のみ
 %>
 var multiplicity = <%=multiplicity%>;
 if (multiplicity == 1) {
@@ -46,7 +54,7 @@ if (multiplicity == 1) {
 		value = [value];
 	}
 }
-<%
-//Binary型は詳細画面での利用は想定しない、検索条件のファイル名のみ
-%>
 $("[name='sc_" + propName + "']").val(value);
+<%
+}
+%>

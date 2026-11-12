@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -53,7 +53,7 @@ public class MetaFilterSetting implements MetaData {
 	 * @return フィルタ名
 	 */
 	public String getFilterName() {
-	    return filterName;
+		return filterName;
 	}
 
 	/**
@@ -61,6 +61,6 @@ public class MetaFilterSetting implements MetaData {
 	 * @param filterName フィルタ名
 	 */
 	public void setFilterName(String filterName) {
-	    this.filterName = filterName;
+		this.filterName = filterName;
 	}
 }

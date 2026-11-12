@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,6 +23,7 @@ import org.iplass.mtp.definition.TypedDefinitionManager;
 
 public interface WebhookEndpointDefinitionManager extends TypedDefinitionManager<WebhookEndpointDefinition> {
 
-	void modifySecurityToken(int tenantId,String definitionName, String secret, String TokenType);
+	void modifySecurityToken(int tenantId, String definitionName, String secret, String TokenType);
+
 	String generateHmacKey();
 }

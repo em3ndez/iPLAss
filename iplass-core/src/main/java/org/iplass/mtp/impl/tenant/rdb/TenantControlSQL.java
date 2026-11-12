@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -60,7 +60,7 @@ public class TenantControlSQL extends UpdateSqlHandler {
 		ps.setString(num++, tenant.getName());
 		// DESCRIPTION
 		ps.setString(num++, tenant.getDescription());
-		if(isRegist) {
+		if (isRegist) {
 //			// HOST_NAME
 //			ps.setString(num++, tenant.getHostName());
 			// URL
@@ -71,7 +71,7 @@ public class TenantControlSQL extends UpdateSqlHandler {
 		// YUKO_DATE_TO
 		ps.setDate(num++, tenant.getTo());
 
-		if(isRegist) {
+		if (isRegist) {
 			// CRE_USER
 			ps.setString(num++, user);
 //			// CRE_DATE
@@ -93,7 +93,7 @@ public class TenantControlSQL extends UpdateSqlHandler {
 				" WHERE ID = ?";
 
 		if (!forceUpdate) {
-			 sql = sql + " AND UP_DATE = ?";
+			sql = sql + " AND UP_DATE = ?";
 		}
 
 		return sql;

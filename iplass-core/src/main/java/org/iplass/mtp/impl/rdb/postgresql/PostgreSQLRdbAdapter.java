@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -36,7 +36,21 @@ import java.text.SimpleDateFormat;
 import org.iplass.mtp.entity.query.GroupBy.RollType;
 import org.iplass.mtp.entity.query.SortSpec.NullOrderingSpec;
 import org.iplass.mtp.entity.query.SortSpec.SortType;
+import org.iplass.mtp.entity.query.value.aggregate.Avg;
+import org.iplass.mtp.entity.query.value.aggregate.Count;
+import org.iplass.mtp.entity.query.value.aggregate.Listagg;
+import org.iplass.mtp.entity.query.value.aggregate.Max;
+import org.iplass.mtp.entity.query.value.aggregate.Min;
+import org.iplass.mtp.entity.query.value.aggregate.StdDevPop;
+import org.iplass.mtp.entity.query.value.aggregate.StdDevSamp;
+import org.iplass.mtp.entity.query.value.aggregate.Sum;
+import org.iplass.mtp.entity.query.value.aggregate.VarPop;
+import org.iplass.mtp.entity.query.value.aggregate.VarSamp;
+import org.iplass.mtp.impl.entity.property.PropertyService;
+import org.iplass.mtp.impl.entity.property.PropertyType;
 import org.iplass.mtp.impl.i18n.I18nService;
+import org.iplass.mtp.impl.properties.basic.TimeType;
+import org.iplass.mtp.impl.rdb.adapter.BaseRdbTypeAdapter;
 import org.iplass.mtp.impl.rdb.adapter.HintPlace;
 import org.iplass.mtp.impl.rdb.adapter.MultiInsertContext;
 import org.iplass.mtp.impl.rdb.adapter.MultiTableUpdateMethod;
@@ -48,17 +62,22 @@ import org.iplass.mtp.impl.rdb.adapter.bulk.BulkUpdateContext;
 import org.iplass.mtp.impl.rdb.adapter.bulk.InOperatorBulkDeleteContext;
 import org.iplass.mtp.impl.rdb.adapter.bulk.PreparedBulkInsertContext;
 import org.iplass.mtp.impl.rdb.adapter.bulk.PreparedBulkUpdateContext;
+import org.iplass.mtp.impl.rdb.adapter.function.AggregateFunctionAdapter;
 import org.iplass.mtp.impl.rdb.adapter.function.DynamicTypedFunctionAdapter;
 import org.iplass.mtp.impl.rdb.adapter.function.StaticTypedFunctionAdapter;
+import org.iplass.mtp.impl.rdb.common.function.CountFunctionAdapter;
 import org.iplass.mtp.impl.rdb.common.function.CurrentDateFunctionAdapter;
 import org.iplass.mtp.impl.rdb.common.function.CurrentDateTimeFunctionAdapter;
 import org.iplass.mtp.impl.rdb.common.function.CurrentTimeFunctionAdapter;
 import org.iplass.mtp.impl.rdb.common.function.ExtractDateFunctionAdapter;
+import org.iplass.mtp.impl.rdb.common.function.ListaggFunctionAdapter;
 import org.iplass.mtp.impl.rdb.common.function.LocalTimeFunctionAdapter;
 import org.iplass.mtp.impl.rdb.connection.ConnectionFactory;
 import org.iplass.mtp.impl.rdb.postgresql.function.PostgreSQLDateAddFunctionAdapter;
 import org.iplass.mtp.impl.rdb.postgresql.function.PostgreSQLDateDiffFunctionAdapter;
+import org.iplass.mtp.impl.rdb.postgresql.function.PostgreSQLListaggFunctionAdapter;
 import org.iplass.mtp.impl.rdb.postgresql.function.PostgreSQLRoundTruncFunctionAdapter;
+import org.iplass.mtp.impl.rdb.postgresql.function.PostgreSQLSubstrFunctionAdapter;
 import org.iplass.mtp.spi.ServiceRegistry;
 
 public class PostgreSQLRdbAdapter extends RdbAdapter {
@@ -68,7 +87,11 @@ public class PostgreSQLRdbAdapter extends RdbAdapter {
 
 	//FIXME AWS RedShiftでサポートされる関数が微妙に異なる。。特に日付関数系。どちらかというとOracleに近い
 
-	private static final String[] optimizerHintBracket = {"/*+", "*/"};
+	private static PostgreSQLTimeRdbTypeAdapter postgreSQLTimeRdbTypeAdapter = new PostgreSQLTimeRdbTypeAdapter(ServiceRegistry.getRegistry()
+			.getService(PropertyService.class)
+			.getPropertyType(java.sql.Time.class));
+
+	private static final String[] optimizerHintBracket = { "/*+", "*/" };
 	private static final String DATE_MIN = "-47120101000000000";
 	private static final String DATE_MAX = "99991231235959999";
 	long dateMin;
@@ -89,17 +112,18 @@ public class PostgreSQLRdbAdapter extends RdbAdapter {
 
 	private String viewSubQueryAlias = "vsq";
 	private int maxViewNameLength = 63;
+	private boolean useStandardListaggFunction;
 
 	public PostgreSQLRdbAdapter() {
 		addFunction(new StaticTypedFunctionAdapter("CHAR_LENGTH", Long.class));
 		addFunction(new StaticTypedFunctionAdapter("INSTR", Long.class));
 		addFunction(new StaticTypedFunctionAdapter("CONCAT", String.class));
-		addFunction(new StaticTypedFunctionAdapter("SUBSTR", String.class));
+		addFunction(new PostgreSQLSubstrFunctionAdapter("SUBSTR"));
 		addFunction(new StaticTypedFunctionAdapter("REPLACE", String.class));
-		addFunction(new DynamicTypedFunctionAdapter("MOD", new int[]{0,1}));
+		addFunction(new DynamicTypedFunctionAdapter("MOD", new int[] { 0, 1 }));
 		addFunction(new StaticTypedFunctionAdapter("SQRT", Double.class));
-		addFunction(new DynamicTypedFunctionAdapter("POWER", new int[]{0,1}));
-		addFunction(new DynamicTypedFunctionAdapter("ABS", new int[]{0}));
+		addFunction(new DynamicTypedFunctionAdapter("POWER", new int[] { 0, 1 }));
+		addFunction(new DynamicTypedFunctionAdapter("ABS", new int[] { 0 }));
 		addFunction(new StaticTypedFunctionAdapter("CEIL", Long.class));
 		addFunction(new StaticTypedFunctionAdapter("FLOOR", Long.class));
 		addFunction(new PostgreSQLRoundTruncFunctionAdapter("ROUND", "ROUND"));
@@ -119,21 +143,56 @@ public class PostgreSQLRdbAdapter extends RdbAdapter {
 		addFunction(new CurrentDateTimeFunctionAdapter());
 		addFunction(new LocalTimeFunctionAdapter());
 
+		// 三角関数
+		addFunction(new StaticTypedFunctionAdapter("SIN", Double.class));
+		addFunction(new StaticTypedFunctionAdapter("COS", Double.class));
+		addFunction(new StaticTypedFunctionAdapter("TAN", Double.class));
+		addFunction(new StaticTypedFunctionAdapter("ASIN", Double.class));
+		addFunction(new StaticTypedFunctionAdapter("ACOS", Double.class));
+		addFunction(new StaticTypedFunctionAdapter("ATAN", Double.class));
+		addFunction(new StaticTypedFunctionAdapter("ATAN2", Double.class));
+
+		addAggregateFunction(Count.class, new CountFunctionAdapter());
+		addAggregateFunction(Sum.class, new AggregateFunctionAdapter<Sum>("SUM", null));
+		addAggregateFunction(Avg.class, new AggregateFunctionAdapter<Avg>("AVG", Double.class));
+		addAggregateFunction(Max.class, new AggregateFunctionAdapter<Max>("MAX", null));
+		addAggregateFunction(Min.class, new AggregateFunctionAdapter<Min>("MIN", null));
+		addAggregateFunction(StdDevPop.class, new AggregateFunctionAdapter<StdDevPop>("STDDEV_POP", Double.class));
+		addAggregateFunction(StdDevSamp.class, new AggregateFunctionAdapter<StdDevSamp>("STDDEV_SAMP", Double.class));
+		addAggregateFunction(VarPop.class, new AggregateFunctionAdapter<VarPop>("VAR_POP", Double.class));
+		addAggregateFunction(VarSamp.class, new AggregateFunctionAdapter<VarSamp>("VAR_SAMP", Double.class));
+		if (useStandardListaggFunction) {
+			addAggregateFunction(Listagg.class, new ListaggFunctionAdapter());
+		} else {
+			addAggregateFunction(Listagg.class, new PostgreSQLListaggFunctionAdapter());
+		}
+
 		DateFormatSymbols symbols = new DateFormatSymbols();
 		symbols.setEras(new String[] { "-", "" });
 
-		I18nService i18n = ServiceRegistry.getRegistry().getService(I18nService.class);
+		I18nService i18n = ServiceRegistry.getRegistry()
+				.getService(I18nService.class);
 		SimpleDateFormat sdfMin = new SimpleDateFormat("GyyyyMMddHHmmssSSS", symbols);
 		sdfMin.setTimeZone(i18n.getTimezone());
 		SimpleDateFormat sdfMax = new SimpleDateFormat("yyyyMMddHHmmssSSS");
 		sdfMax.setTimeZone(i18n.getTimezone());
 
 		try {
-			dateMin = sdfMin.parse(DATE_MIN).getTime();
-			dateMax = sdfMax.parse(DATE_MAX).getTime();
+			dateMin = sdfMin.parse(DATE_MIN)
+					.getTime();
+			dateMax = sdfMax.parse(DATE_MAX)
+					.getTime();
 		} catch (ParseException e) {
 			throw new UnsupportedDataTypeException(e);
 		}
+	}
+
+	public boolean isUseStandardListaggFunction() {
+		return useStandardListaggFunction;
+	}
+
+	public void setUseStandardListaggFunction(boolean useStandardListaggFunction) {
+		this.useStandardListaggFunction = useStandardListaggFunction;
 	}
 
 	@Override
@@ -183,9 +242,11 @@ public class PostgreSQLRdbAdapter extends RdbAdapter {
 	public Connection getConnection(String connectionFactoryName) throws SQLException {
 		ConnectionFactory cf;
 		if (connectionFactoryName == null) {
-			cf = ServiceRegistry.getRegistry().getService(ConnectionFactory.class);
+			cf = ServiceRegistry.getRegistry()
+					.getService(ConnectionFactory.class);
 		} else {
-			cf = ServiceRegistry.getRegistry().<ConnectionFactory>getService(connectionFactoryName);
+			cf = ServiceRegistry.getRegistry()
+					.<ConnectionFactory> getService(connectionFactoryName);
 		}
 		return cf.getConnection();
 	}
@@ -194,6 +255,7 @@ public class PostgreSQLRdbAdapter extends RdbAdapter {
 	public String getOptimizerHint() {
 		return null;
 	}
+
 	@Override
 	public HintPlace getOptimizerHintPlace() {
 		return HintPlace.HEAD_OF_SQL;
@@ -224,18 +286,21 @@ public class PostgreSQLRdbAdapter extends RdbAdapter {
 		}
 	}
 
+	@Override
 	public String toDateExpression(Date date) {
 		checkDateRange(date);
 		SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd");
 		return "CAST('" + fmt.format(date) + "' AS DATE )";
 	}
 
+	@Override
 	public String toTimeExpression(Time time) {
 		checkDateRange(time);
 		SimpleDateFormat fmt = new SimpleDateFormat("HH:mm:ss");
 		return "CAST('1970-01-01 " + fmt.format(time) + "' AS TIMESTAMP(0))";
 	}
 
+	@Override
 	public String toTimeStampExpression(Timestamp date) {
 		checkDateRange(date);
 		SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
@@ -245,6 +310,7 @@ public class PostgreSQLRdbAdapter extends RdbAdapter {
 		return "CAST('" + fmt.format(date) + "' AS TIMESTAMP(3))";
 	}
 
+	@Override
 	public String systimestamp() {
 		if (rdbTimeZone() == null) {
 			return timestampFunction;
@@ -253,6 +319,7 @@ public class PostgreSQLRdbAdapter extends RdbAdapter {
 		}
 	}
 
+	@Override
 	public MultiInsertContext createMultiInsertContext(Statement stmt) {
 		return new PostgreSQLMultiInsertContext(stmt);
 	}
@@ -262,10 +329,10 @@ public class PostgreSQLRdbAdapter extends RdbAdapter {
 		if (sqlType == Types.DECIMAL && scale != null && scale < 0) {
 			if (lengthOrPrecision == null) {
 				//負のスケールを設定できないため、取り得る最大桁数を設定し、ROUND関数で切り捨てる。
-				return new String[]{"ROUND(CAST(",  " AS NUMERIC(65,0))," + scale + ")"};
+				return new String[] { "ROUND(CAST(", " AS NUMERIC(65,0))," + scale + ")" };
 			} else {
 				//負のスケールを設定できないため、取り得る最大桁数を設定し、ROUND関数で切り捨てる。
-				return new String[]{"ROUND(CAST(",  " AS NUMERIC(" + lengthOrPrecision + -scale + ",0))," + scale + ")"};
+				return new String[] { "ROUND(CAST(", " AS NUMERIC(" + lengthOrPrecision + -scale + ",0))," + scale + ")" };
 			}
 		}
 
@@ -295,7 +362,7 @@ public class PostgreSQLRdbAdapter extends RdbAdapter {
 				if (scale == null) {
 					return "NUMERIC(" + lengthOrPrecision + ",0)";
 				} else {
-					return "NUMERIC("+ lengthOrPrecision + "," + scale + ")";
+					return "NUMERIC(" + lengthOrPrecision + "," + scale + ")";
 				}
 			}
 		case Types.DATE:
@@ -344,7 +411,7 @@ public class PostgreSQLRdbAdapter extends RdbAdapter {
 	@Override
 	public Object[] toLimitSqlBindValue(int limitCount,
 			int offset) {
-		return new Integer[]{Integer.valueOf(limitCount), Integer.valueOf(offset)};
+		return new Integer[] { Integer.valueOf(limitCount), Integer.valueOf(offset) };
 	}
 
 	@Override
@@ -434,15 +501,15 @@ public class PostgreSQLRdbAdapter extends RdbAdapter {
 
 	@Override
 	public String sanitize(String str) {
-        if (str == null) {
-        	return null;
-        }
+		if (str == null) {
+			return null;
+		}
 
-        boolean needSanitaizing = false;
-        char current = 0;
-        for (int i = 0; i < str.length(); i++) {
-            current = str.charAt(i);
-            switch (current) {
+		boolean needSanitaizing = false;
+		char current = 0;
+		for (int i = 0; i < str.length(); i++) {
+			current = str.charAt(i);
+			switch (current) {
 			case '\'':
 				needSanitaizing = true;
 				break;
@@ -455,37 +522,36 @@ public class PostgreSQLRdbAdapter extends RdbAdapter {
 				break;
 			}
 
-            if (needSanitaizing) {
-            	break;
-            }
-        }
+			if (needSanitaizing) {
+				break;
+			}
+		}
 
-        if (!needSanitaizing) {
-            return str;
-        }
+		if (!needSanitaizing) {
+			return str;
+		}
 
+		StringBuilder buff = new StringBuilder();
 
-        StringBuilder buff = new StringBuilder();
+		for (int i = 0; i < str.length(); i++) {
+			current = str.charAt(i);
+			switch (current) {
+			case '\'':
+				buff.append('\'');
+				break;
+			case '\\':
+				if (escapeBackslash) {
+					buff.append('\\');
+				}
+				break;
+			default:
+				break;
+			}
 
-        for (int i = 0; i < str.length(); i++) {
-        	current = str.charAt(i);
-            switch (current) {
-            case '\'':
-                buff.append('\'');
-                break;
-            case '\\':
-            	if (escapeBackslash) {
-            		buff.append('\\');
-            	}
-                break;
-            default:
-                break;
-            }
+			buff.append(current);
+		}
 
-            buff.append(current);
-        }
-
-        return buff.toString();
+		return buff.toString();
 	}
 
 	@Override
@@ -544,11 +610,11 @@ public class PostgreSQLRdbAdapter extends RdbAdapter {
 		if (rdbTimeZone() == null) {
 			return new String[] {
 					"TIMEZONE('" + to + "',CAST(",
-					" AS TIMESTAMPTZ(3)))"};
+					" AS TIMESTAMPTZ(3)))" };
 		} else {
 			return new String[] {
 					"TIMEZONE('" + to + "',TIMEZONE('" + rdbTimeZone().getID() + "',",
-					"))"};
+					"))" };
 		}
 	}
 
@@ -724,7 +790,8 @@ public class PostgreSQLRdbAdapter extends RdbAdapter {
 
 		// LobID
 		sb.append(String.format("TRIM(SUBSTR(c%d::TEXT, 3, 16)) AS \"%s%s\"",
-				colNo, colName.toLowerCase(), lobIdSuffix.toLowerCase())).append(",");
+				colNo, colName.toLowerCase(), lobIdSuffix.toLowerCase()))
+				.append(",");
 		// Text
 		sb.append(String.format("SUBSTR(c%d::TEXT, 22) AS \"%s\"", colNo, colName.toLowerCase()));
 
@@ -739,14 +806,47 @@ public class PostgreSQLRdbAdapter extends RdbAdapter {
 
 		// ビュー削除DDL
 		if (withDropView) {
-			sb.append("DROP VIEW IF EXISTS \"").append(viewName.toLowerCase()).append("\" CASCADE;");
-			sb.append(lf).append(lf);
+			sb.append("DROP VIEW IF EXISTS \"")
+					.append(viewName.toLowerCase())
+					.append("\" CASCADE;");
+			sb.append(lf)
+					.append(lf);
 		}
 
 		// ビュー作成DDL
-		sb.append("CREATE VIEW \"").append(viewName.toLowerCase()).append("\" AS").append(lf);
-		sb.append(selectSql).append(";").append(lf).append(lf);
+		sb.append("CREATE VIEW \"")
+				.append(viewName.toLowerCase())
+				.append("\" AS")
+				.append(lf);
+		sb.append(selectSql)
+				.append(";")
+				.append(lf)
+				.append(lf);
 
 		return sb.toString();
 	}
+
+	@Override
+	public BaseRdbTypeAdapter getRdbTypeAdapter(Object value) {
+		if (value instanceof Time) {
+			return postgreSQLTimeRdbTypeAdapter;
+		} else {
+			return super.getRdbTypeAdapter(value);
+		}
+	}
+
+	@Override
+	public BaseRdbTypeAdapter getRdbTypeAdapter(PropertyType propType) {
+		if (propType instanceof TimeType) {
+			return postgreSQLTimeRdbTypeAdapter;
+		} else {
+			return super.getRdbTypeAdapter(propType);
+		}
+	}
+
+	@Override
+	public boolean isRequireOrderByExpressionInSelectForDistinct() {
+		return true;
+	}
+
 }

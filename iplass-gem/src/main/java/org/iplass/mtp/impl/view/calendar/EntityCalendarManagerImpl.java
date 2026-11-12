@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -37,7 +37,8 @@ import org.iplass.mtp.view.calendar.EntityCalendarManager;
 public class EntityCalendarManagerImpl extends AbstractTypedDefinitionManager<EntityCalendar> implements EntityCalendarManager {
 
 	/** サービス */
-	private EntityCalendarService service = ServiceRegistry.getRegistry().getService(EntityCalendarService.class);
+	private EntityCalendarService service = ServiceRegistry.getRegistry()
+			.getService(EntityCalendarService.class);
 
 	@Deprecated
 	@Override
@@ -66,8 +67,10 @@ public class EntityCalendarManagerImpl extends AbstractTypedDefinitionManager<En
 	@Override
 	public String getColorConfigResult(String name, Entity entity) {
 		CalendarHandler handler = service.getRuntimeByName(name);
-		if (handler == null) return null;
-		return ((CalendarHandler) handler.getMetaData().createRuntime(null)).getColorConfigResult(entity);
+		if (handler == null)
+			return null;
+		return ((CalendarHandler) handler.getMetaData()
+				.createRuntime(null)).getColorConfigResult(entity);
 	}
 
 	@Override

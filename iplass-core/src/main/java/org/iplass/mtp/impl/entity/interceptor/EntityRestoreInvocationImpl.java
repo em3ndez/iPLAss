@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,19 +27,19 @@ import org.iplass.mtp.entity.interceptor.InvocationType;
 import org.iplass.mtp.impl.entity.EntityHandler;
 
 public class EntityRestoreInvocationImpl extends EntityInvocationImpl<Entity> implements EntityRestoreInvocation {
-	
+
 	private Long rbid;
-	
+
 	public EntityRestoreInvocationImpl(Long rbid, EntityInterceptor[] entityInterceptors,
 			EntityHandler entityHandler) {
 		super(entityInterceptors, entityHandler);
 		this.rbid = rbid;
 	}
-	
+
 	public Long getRecycleBinId() {
 		return rbid;
 	}
-	
+
 	public void setRecycleBinId(Long rbid) {
 		this.rbid = rbid;
 	}
@@ -53,5 +53,5 @@ public class EntityRestoreInvocationImpl extends EntityInvocationImpl<Entity> im
 	protected Entity callEntityHandler(EntityHandler eh) {
 		return eh.restore(rbid);
 	}
-	
+
 }

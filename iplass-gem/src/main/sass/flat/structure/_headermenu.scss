@@ -1,3 +1,5 @@
+@use "sass:string";
+
 //@extend-elements
 //original selectors
 //#account-01 p span::before, #account-01 p span::after
@@ -32,7 +34,7 @@
 		margin-top: 25px;
 		.fullsearch {
 			display: block;
-			width: 300px;
+			width: 315px;
 			height: 30px;
 			padding: 10px;
 			padding-right: 15px;
@@ -165,7 +167,7 @@
 	.search-text {
 		float: left;
 		position: relative;
-		width: 170px;
+		width: 185px;
 		padding-left: 10px;
 		overflow: hidden;
 		height: 30px;
@@ -296,7 +298,7 @@
 			}
 			> span {
 				&.txt::after {
-					content: '\25B6';
+					content: string.unquote("'\\25B6'");
 					display: inline-block;
 					position: absolute;
 					right: 10px;

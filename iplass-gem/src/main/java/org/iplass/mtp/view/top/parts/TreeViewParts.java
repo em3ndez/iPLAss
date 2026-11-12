@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -53,7 +53,7 @@ public class TreeViewParts extends TemplateParts {
 	 * @return アイコンタグ
 	 */
 	public String getIconTag() {
-	    return iconTag;
+		return iconTag;
 	}
 
 	/**
@@ -61,7 +61,7 @@ public class TreeViewParts extends TemplateParts {
 	 * @param iconTag アイコンタグ
 	 */
 	public void setIconTag(String iconTag) {
-	    this.iconTag = iconTag;
+		this.iconTag = iconTag;
 	}
 
 }

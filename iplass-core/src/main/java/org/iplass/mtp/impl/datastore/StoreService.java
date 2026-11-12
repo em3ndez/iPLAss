@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,17 +27,17 @@ import org.iplass.mtp.entity.definition.StoreDefinition;
 import org.iplass.mtp.spi.Config;
 import org.iplass.mtp.spi.Service;
 
-
 public class StoreService implements Service {
 
 	private DataStore dataStore;
 
 	public StoreService() {
 	}
-	
+
 	public DataStore getDataStore() {
 		return dataStore;
 	}
+
 	public void setDataStore(DataStore dataStore) {
 		this.dataStore = dataStore;
 	}
@@ -53,7 +53,7 @@ public class StoreService implements Service {
 	public MetaEntityStore newEntityStoreInstance(StoreDefinition storeDefinition) {
 		return dataStore.newEntityStoreInstance();
 	}
-	
+
 	public Class<? extends MetaEntityStore> getEntityStoreType(StoreDefinition storeDefinition) {
 		return dataStore.getEntityStoreType();
 	}

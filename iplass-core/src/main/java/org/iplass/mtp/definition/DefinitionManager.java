@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -131,7 +131,6 @@ public interface DefinitionManager extends Manager {
 	 * @param newDefinitionName 変更後のname
 	 */
 	public <D extends Definition> void rename(Class<D> type, String oldDefinitionName, String newDefinitionName);
-
 
 	/**
 	 * 型付けされたDefinitionManagerのインスタンスを返します。

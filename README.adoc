@@ -1,6 +1,7 @@
 lang: link:./README-EN.adoc[English] | link:./README.adoc[日本語]
+
 [link=https://iplass.org/]
-image::https://user-images.githubusercontent.com/22016554/42924803-cc0eb00c-8b66-11e8-8e86-2a13b0609ea5.png[iPLAss]
+image:https://user-images.githubusercontent.com/22016554/42924803-cc0eb00c-8b66-11e8-8e86-2a13b0609ea5.png[iPLAss]
 
 [.lead]
 エンタープライズクラスのシステム開発における生産性向上を主目的とした、javaベースのローコード開発プラットフォームです。
@@ -8,6 +9,8 @@ image::https://user-images.githubusercontent.com/22016554/42924803-cc0eb00c-8b66
 * https://iplass.org/[iPLAss Website]
 * https://iplass.org/intro/[Getting Started]
 * https://iplass.org/docs/[Document]
+
+image::https://deepwiki.com/badge.svg[Ask DeepWiki,link=https://deepwiki.com/dentsusoken/iPLAss]
 
 ## Docker
 
@@ -35,19 +38,19 @@ https://iplass.org/downloads/
 
 gradleでの定義例：
 
- implementation 'org.iplass:iplass-gem:3.1.12'
+ implementation 'org.iplass:iplass-gem:4.1.0'
 
 mavenでの設定例：
 
  <dependency>
    <groupId>org.iplass</groupId>
    <artifactId>iplass-gem</artifactId>
-   <version>3.1.12</version>
+   <version>4.1.0</version>
    <type>pom</type>
  </dependency>
 
-NOTE: JakartaEE8 (Servlet/JSP/JSTL/EL/JAX-RS/BeanValidation/CommonAnnotations/JavaMail/JAXB/JAF) のランタイムが必要です。
-https://github.com/ISID/iplass-skeleton[スケルトンプロジェクト] のbuild.gradleを参考にしてください。
+NOTE: JakartaEE10 (Servlet/JSP/JSTL/EL/JAX-RS/BeanValidation/CommonAnnotations/JavaMail/JAXB/JAF) のランタイムが必要です。
+https://github.com/dentsusoken/iplass-skeleton[スケルトンプロジェクト] のbuild.gradleを参考にしてください。
 
 以下は各モジュールの説明です。
 
@@ -86,22 +89,45 @@ infinispanアドオンモジュールです。 +
 Redisアドオンモジュールです。 +
 キャッシュストアとしてRedisを利用することを可能にします。
 
+### iplass-googlecloud
+Google Cloudのサービスを利用する際のアドオンモジュールです。 +
+FCM経由でプッシュ通知を送信可能です。
+
 ## Related repositories
 
-* https://github.com/ISID/iplass-skeleton
-* https://github.com/ISID/iplass-sample-app
-* https://github.com/ISID/iplass-sample-app-vuejs
-* https://github.com/ISID/iplass-eclipse
+* https://github.com/dentsusoken/iplass-skeleton
+* https://github.com/dentsusoken/iplass-sample-app
+* https://github.com/dentsusoken/iplass-sample-app-vuejs
+* https://github.com/dentsusoken/iplass-sample-app-km
+* https://github.com/dentsusoken/iplass-sample-claude
+* https://github.com/dentsusoken/iplass-gradle-plugin
+* https://github.com/dentsusoken/iPLAss-docs
+* https://github.com/iplass
 
 ## Branches
 
 ### master
-現在の最新のバージョン3.1.xのソースはmasterブランチです。
+現在の最新のバージョン4.1.xのソースはmasterブランチです。
+
+NOTE: Java21 / JakartaEE10ベースです
+
+### 4.0.x
+以前の安定版4.0.xのソースは4.0.xブランチです。
+
+NOTE: Java21 / JakartaEE10ベースです
+
+### 3.2.x
+過去の安定版3.2.xのソースは3.2.xブランチです。
+
+NOTE: (Java8 | Java11 | Java17) / JakartaEE8(JavaEE8)ベースです
+
+### 3.1.x
+過去の安定版3.1.xのソースは3.1.xブランチです。
 
 NOTE: (Java8 | Java11) / JakartaEE8(JavaEE8)ベースです
 
 ### 3.0.x
-以前の安定版3.0.xのソースは3.0.xブランチです。
+過去の安定版3.0.xのソースは3.0.xブランチです。
 
 NOTE: (Java8 | Java11) / JavaEE7ベースです
 
@@ -118,4 +144,11 @@ https://www.gnu.org/licenses/agpl.html[AGPL-3.0]
 
 商用ライセンスをご希望の方は、 下記リンクよりお問い合わせください。
 
-https://www.isid.co.jp/solution/iPLAss.html
+https://itsol.dentsusoken.com/iplass/
+
+## Work with us
+
+iPLAssを一緒に開発していただける仲間を募集中です。
+ご興味ある方は、是非下記リンクからご応募ください！
+
+https://hrmos.co/pages/dentsusokengroup/jobs/01_11_97[電通総研グループ キャリア採用ページ 製品・プラットフォーム開発エンジニア]

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -41,9 +41,13 @@ public class OrOperatorBulkDeleteContext implements BulkDeleteContext {
 
 		stmt = con.createStatement();
 		StringBuilder sb = new StringBuilder();
-		sb.append("DELETE FROM ").append(tableName).append(" WHERE ");
+		sb.append("DELETE FROM ")
+				.append(tableName)
+				.append(" WHERE ");
 		if (additionalConditionExpression != null) {
-			sb.append("(").append(additionalConditionExpression).append(") AND ");
+			sb.append("(")
+					.append(additionalConditionExpression)
+					.append(") AND ");
 		}
 		baseSql = sb.toString();
 
@@ -70,7 +74,8 @@ public class OrOperatorBulkDeleteContext implements BulkDeleteContext {
 				List<Object> k = keys.get(i);
 				if (k.size() == 1) {
 					ColumnValue cv = keyColumnValue.get(0);
-					sb.append(cv.colName()).append("=");
+					sb.append(cv.colName())
+							.append("=");
 					if (cv instanceof FixedExpressionColumnValue) {
 						sb.append(((FixedExpressionColumnValue) cv).fixedValueExpression());
 					} else {
@@ -83,7 +88,8 @@ public class OrOperatorBulkDeleteContext implements BulkDeleteContext {
 							sb.append(" AND ");
 						}
 						ColumnValue cv = keyColumnValue.get(j);
-						sb.append(cv.colName()).append("=");
+						sb.append(cv.colName())
+								.append("=");
 						if (cv instanceof FixedExpressionColumnValue) {
 							sb.append(((FixedExpressionColumnValue) cv).fixedValueExpression());
 						} else {

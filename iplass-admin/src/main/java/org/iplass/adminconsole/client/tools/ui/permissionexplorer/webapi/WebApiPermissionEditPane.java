@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -101,7 +101,6 @@ public class WebApiPermissionEditPane extends PermissionEditPane {
 
 		permissionConditionForm.setItems(areaAllowConditionField);
 
-
 		//配置
 		addMember(permissionTargetForm);
 		addMember(permissionConditionForm);
@@ -117,7 +116,7 @@ public class WebApiPermissionEditPane extends PermissionEditPane {
 			editEntity.setValue("role", roleEntity);
 			editEntity.setDefinitionName("mtp.auth.WebApiPermission");
 		} else {
-			editEntity = (GenericEntity)permissionEntity;
+			editEntity = (GenericEntity) permissionEntity;
 		}
 		createFieldData();
 	}

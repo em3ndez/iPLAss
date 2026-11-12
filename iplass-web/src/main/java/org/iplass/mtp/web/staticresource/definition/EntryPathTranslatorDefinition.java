@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,11 +21,13 @@ package org.iplass.mtp.web.staticresource.definition;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
 
-@XmlSeeAlso({JavaClassEntryPathTranslatorDefinition.class,
-	PrefixEntryPathTranslatorDefinition.class,
-	ScriptingEntryPathTranslatorDefinition.class})
+@XmlSeeAlso({ JavaClassEntryPathTranslatorDefinition.class,
+		PrefixEntryPathTranslatorDefinition.class,
+		ScriptingEntryPathTranslatorDefinition.class })
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 public abstract class EntryPathTranslatorDefinition implements Serializable {
 	private static final long serialVersionUID = -6417327445573147737L;
 

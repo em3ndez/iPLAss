@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,19 +22,21 @@ package org.iplass.mtp.impl.webapi.jackson;
 public class MixinConfig {
 	private Class<?> target;
 	private Class<?> mixinSource;
-	
+
 	public Class<?> getTarget() {
 		return target;
 	}
+
 	public void setTarget(Class<?> target) {
 		this.target = target;
 	}
+
 	public Class<?> getMixinSource() {
 		return mixinSource;
 	}
+
 	public void setMixinSource(Class<?> mixinSource) {
 		this.mixinSource = mixinSource;
 	}
-	
-	
+
 }

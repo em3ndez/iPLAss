@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,7 +32,6 @@ import org.iplass.mtp.impl.entity.MetaEntity;
 import org.iplass.mtp.impl.entity.property.MetaProperty;
 import org.iplass.mtp.impl.util.ObjectUtil;
 
-
 public class MetaValidationBinarySize extends MetaValidation {
 	private static final long serialVersionUID = 1334805081077727638L;
 
@@ -45,12 +44,15 @@ public class MetaValidationBinarySize extends MetaValidation {
 	public Long getMax() {
 		return max;
 	}
+
 	public void setMax(Long max) {
 		this.max = max;
 	}
+
 	public Long getMin() {
 		return min;
 	}
+
 	public void setMin(Long min) {
 		this.min = min;
 	}
@@ -62,7 +64,7 @@ public class MetaValidationBinarySize extends MetaValidation {
 
 	@Override
 	public ValidationHandler createRuntime(MetaEntity entity, MetaProperty property) {
-		return new ValidationHandler(this) {
+		return new ValidationHandler(this, entity, property) {
 			@Override
 			public String generateErrorMessage(Object value,
 					ValidationContext context, String propertyDisplayName,
@@ -71,10 +73,12 @@ public class MetaValidationBinarySize extends MetaValidation {
 						entityDisplayName);
 				if (msg != null) {
 					if (msg.contains("${max}")) {
-						msg = maxPattern.matcher(msg).replaceAll(String.valueOf(max));
+						msg = maxPattern.matcher(msg)
+								.replaceAll(String.valueOf(max));
 					}
 					if (msg.contains("${min}")) {
-						msg = minPattern.matcher(msg).replaceAll(String.valueOf(min));
+						msg = minPattern.matcher(msg)
+								.replaceAll(String.valueOf(min));
 					}
 				}
 				return msg;
@@ -82,6 +86,9 @@ public class MetaValidationBinarySize extends MetaValidation {
 
 			@Override
 			public boolean validate(Object value, ValidationContext context) {
+				if (validateSkipCheck(value, context)) {
+					return true;
+				}
 				if (value == null) {
 					return true;
 				}
@@ -126,6 +133,7 @@ public class MetaValidationBinarySize extends MetaValidation {
 		result = prime * result + ((min == null) ? 0 : min.hashCode());
 		return result;
 	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)

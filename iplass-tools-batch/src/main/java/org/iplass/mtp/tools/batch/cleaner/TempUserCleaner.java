@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright 2011 DENTSU SOKEN INC. All Rights Reserved.
  */
 
 package org.iplass.mtp.tools.batch.cleaner;
@@ -17,6 +17,7 @@ import org.iplass.mtp.impl.core.ExecuteContext;
 import org.iplass.mtp.impl.core.TenantContextService;
 import org.iplass.mtp.impl.tools.tenant.TenantInfo;
 import org.iplass.mtp.spi.ServiceRegistry;
+import org.iplass.mtp.tools.batch.MtpBatchResourceDisposer;
 import org.iplass.mtp.tools.batch.MtpSilentBatch;
 import org.iplass.mtp.transaction.Transaction;
 import org.iplass.mtp.util.StringUtil;
@@ -24,9 +25,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * テンポラリーユーザ削除ツール
+ * テンポラリーユーザー削除ツール
  *
- * アプリにて作成されたテンポラリーユーザを定期的削除するために使用する。
+ * アプリにて作成されたテンポラリーユーザーを定期的削除するために使用する。
  *
  * @author lis71n
  *
@@ -35,8 +36,10 @@ public class TempUserCleaner extends MtpSilentBatch {
 
 	private static Logger logger = LoggerFactory.getLogger(TempUserCleaner.class);
 
-	private TenantContextService tenantContextService = ServiceRegistry.getRegistry().getService(TenantContextService.class);
-	private EntityManager em = ManagerLocator.getInstance().getManager(EntityManager.class);
+	private TenantContextService tenantContextService = ServiceRegistry.getRegistry()
+			.getService(TenantContextService.class);
+	private EntityManager em = ManagerLocator.getInstance()
+			.getManager(EntityManager.class);
 	private int tenantId;
 
 	/**
@@ -53,15 +56,21 @@ public class TempUserCleaner extends MtpSilentBatch {
 		if (args != null && args.length > 0 && StringUtil.isNotEmpty(args[0])) {
 			tenantId = Integer.parseInt(args[0]);
 		}
-		if (tenantId >= 0) {
-			(new TempUserCleaner(tenantId)).clean();
-		} else {
-			List<TenantInfo> tenants = getValidTenantInfoList();
-			if (tenants != null) {
-				for (TenantInfo t: tenants) {
-					(new TempUserCleaner(t.getId())).clean();
+
+		try {
+			if (tenantId >= 0) {
+				(new TempUserCleaner(tenantId)).clean();
+			} else {
+				List<TenantInfo> tenants = getValidTenantInfoList();
+				if (tenants != null) {
+					for (TenantInfo t : tenants) {
+						(new TempUserCleaner(t.getId())).clean();
+					}
 				}
 			}
+		} finally {
+			// リソース破棄
+			MtpBatchResourceDisposer.disposeResource();
 		}
 	}
 
@@ -75,7 +84,7 @@ public class TempUserCleaner extends MtpSilentBatch {
 	}
 
 	/**
-	 * テナント内のテンポラリーユーザを削除します。
+	 * テナント内のテンポラリーユーザーを削除します。
 	 *
 	 * @return boolean 成功：true 失敗：false
 	 * @throws Exception
@@ -93,16 +102,18 @@ public class TempUserCleaner extends MtpSilentBatch {
 				logArguments();
 
 				Transaction.required(t -> {
-					//有効期限切れのテンポラリーユーザ情報検索(有効終了日が現在日付より小さい場合且つ、テンポラリーフラグがtrueの場合)
+					//有効期限切れのテンポラリーユーザー情報検索(有効終了日が現在日付より小さい場合且つ、テンポラリーフラグがtrueの場合)
 					Query query = new Query()
-										.selectAll(User.DEFINITION_NAME, true, false)
-										.where(new And()
-												.eq(User.TEMPORARY_FLG, true)
-												.lt(User.END_DATE, new java.sql.Date(ExecuteContext.getCurrentContext().getCurrentTimestamp().getTime())));
+							.selectAll(User.DEFINITION_NAME, true, false)
+							.where(new And()
+									.eq(User.TEMPORARY_FLG, true)
+									.lt(User.END_DATE, new java.sql.Date(ExecuteContext.getCurrentContext()
+											.getCurrentTimestamp()
+											.getTime())));
 					org.iplass.mtp.entity.SearchResult<Entity> user = em.searchEntity(query);
 
-					//テンポラリーユーザ物理削除
-					for(Entity entity : user.getList() ){
+					//テンポラリーユーザー物理削除
+					for (Entity entity : user.getList()) {
 						em.delete(entity, new DeleteOption(false));
 					}
 				});
@@ -128,7 +139,7 @@ public class TempUserCleaner extends MtpSilentBatch {
 	 * @return tenantId
 	 */
 	public int getTenantId() {
-	    return tenantId;
+		return tenantId;
 	}
 
 	/**
@@ -136,7 +147,7 @@ public class TempUserCleaner extends MtpSilentBatch {
 	 * @param tenantId tenantId
 	 */
 	public void setTenantId(int tenantId) {
-	    this.tenantId = tenantId;
+		this.tenantId = tenantId;
 	}
 
 	@Override

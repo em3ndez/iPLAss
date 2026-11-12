@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -62,7 +62,8 @@ public class CrawlEntityDS extends AbstractAdminDataSource {
 		this.isInitDrop = isInitDrop;
 		DataSourceField nameField = new DataSourceTextField("name", AdminClientMessageUtil.getString("datasource_entity_CrawlEntityDS_name"));
 		nameField.setPrimaryKey(true);
-		DataSourceField displayNameField = new DataSourceTextField("displayName", AdminClientMessageUtil.getString("datasource_entity_CrawlEntityDS_dispName"));
+		DataSourceField displayNameField = new DataSourceTextField("displayName",
+				AdminClientMessageUtil.getString("datasource_entity_CrawlEntityDS_dispName"));
 		DataSourceField entityView = new DataSourceTextField("entityView", "entityView");
 		DataSourceBooleanField isDispEntity = new DataSourceBooleanField("isDispEntity", "DisplayEntity");
 
@@ -89,7 +90,7 @@ public class CrawlEntityDS extends AbstractAdminDataSource {
 			@Override
 			public void onSuccess(List<EntityDefinition> result) {
 				List<ListGridRecord> records = createRecord(result);
-				response.setData(records.toArray(new ListGridRecord[]{}));
+				response.setData(records.toArray(new ListGridRecord[] {}));
 				response.setTotalRows(records.size());
 				processResponse(requestId, response);
 			}
@@ -99,12 +100,13 @@ public class CrawlEntityDS extends AbstractAdminDataSource {
 
 	@Override
 	protected void executeUpdate(String requestId, DSRequest request, DSResponse response) {
+		updateGridRecordResponse(requestId, request, response);
 		processResponse(requestId, response);
 	}
 
 	private List<ListGridRecord> createRecord(List<EntityDefinition> entities) {
 
-		List<ListGridRecord> list = new ArrayList<ListGridRecord>();
+		List<ListGridRecord> list = new ArrayList<>();
 
 		if (entities != null) {
 			for (EntityDefinition entity : entities) {
@@ -112,9 +114,11 @@ public class CrawlEntityDS extends AbstractAdminDataSource {
 				record.setAttribute("name", entity.getName());
 				record.setAttribute("displayName", entity.getDisplayName());
 
-				if (parts.getViewNames() != null && parts.getViewNames().get(entity.getName()) != null) {
+				if (parts.getViewNames() != null && parts.getViewNames()
+						.get(entity.getName()) != null) {
 
-					String viewName = parts.getViewNames().get(entity.getName());
+					String viewName = parts.getViewNames()
+							.get(entity.getName());
 					if (viewName.equals("")) {
 						viewName = "(default)";
 					}
@@ -122,8 +126,10 @@ public class CrawlEntityDS extends AbstractAdminDataSource {
 					record.setAttribute("entityView", viewName);
 				}
 
-				if (parts.getDispEntities() != null && parts.getDispEntities().get(entity.getName()) != null) {
-					record.setAttribute("isDispEntity", parts.getDispEntities().get(entity.getName()));
+				if (parts.getDispEntities() != null && parts.getDispEntities()
+						.get(entity.getName()) != null) {
+					record.setAttribute("isDispEntity", parts.getDispEntities()
+							.get(entity.getName()));
 				}
 
 				if (isInitDrop) {

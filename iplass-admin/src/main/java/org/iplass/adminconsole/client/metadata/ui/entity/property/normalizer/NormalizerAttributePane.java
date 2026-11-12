@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,7 +26,7 @@ import org.iplass.mtp.entity.definition.NormalizerDefinition;
 
 import com.smartgwt.client.widgets.layout.VLayout;
 
-public abstract class NormalizerAttributePane extends VLayout implements EditablePane<NormalizerDefinition>{
+public abstract class NormalizerAttributePane extends VLayout implements EditablePane<NormalizerDefinition> {
 
 	public abstract int panelHeight();
 

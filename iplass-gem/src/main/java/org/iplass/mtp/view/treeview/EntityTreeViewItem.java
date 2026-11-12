@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,13 +20,13 @@
 
 package org.iplass.mtp.view.treeview;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
 
 /**
  * ツリービューにEntityを表示するための定義情報
  * @author lis3wg
  */
-@XmlSeeAlso({ReferenceTreeViewItem.class})
+@XmlSeeAlso({ ReferenceTreeViewItem.class })
 public class EntityTreeViewItem extends TreeViewItem {
 
 	/** SerialVersionUID */

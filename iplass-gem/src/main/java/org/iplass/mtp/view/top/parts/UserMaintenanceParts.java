@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,7 +33,7 @@ public class UserMaintenanceParts extends TopViewParts {
 	 * @return ビュー名
 	 */
 	public String getViewName() {
-	    return viewName;
+		return viewName;
 	}
 
 	/**
@@ -41,6 +41,6 @@ public class UserMaintenanceParts extends TopViewParts {
 	 * @param viewName ビュー名
 	 */
 	public void setViewName(String viewName) {
-	    this.viewName = viewName;
+		this.viewName = viewName;
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -57,7 +57,7 @@ public class ReportTemplateDefinition extends TemplateDefinition {
 	 * @return reportType
 	 */
 	public ReportType getReportType() {
-	    return reportType;
+		return reportType;
 	}
 
 	/**
@@ -65,15 +65,15 @@ public class ReportTemplateDefinition extends TemplateDefinition {
 	 * @param reportType reportType
 	 */
 	public void setReportType(ReportType reportType) {
-	    this.reportType = reportType;
+		this.reportType = reportType;
 	}
 
 	public String getFileName() {
-	    return fileName;
+		return fileName;
 	}
 
 	public void setFileName(String fileName) {
-	    this.fileName = fileName;
+		this.fileName = fileName;
 	}
 
 	public byte[] getBinary() {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,6 +22,7 @@ package org.iplass.mtp.entity.query.hint;
 
 import org.iplass.mtp.entity.query.ASTNode;
 import org.iplass.mtp.entity.query.ASTTransformer;
+import org.iplass.mtp.entity.query.QueryException;
 
 /**
  * EQLが変換されたデータベースネイティブのSQL文に付与するヒントを指定するヒント句です。<br>
@@ -44,19 +45,21 @@ public class NativeHint extends Hint {
 	//生SQLに対するヒント
 	private String table;
 	private String hintExpression;
-	
+
 	public NativeHint() {
 	}
-	
+
 	public NativeHint(String hintExpression) {
 		this.hintExpression = hintExpression;
+		checkValidHint();
 	}
-	
+
 	public NativeHint(String table, String hintExpression) {
 		this.table = table;
 		this.hintExpression = hintExpression;
+		checkValidHint();
 	}
-	
+
 	public String getTable() {
 		return table;
 	}
@@ -71,8 +74,20 @@ public class NativeHint extends Hint {
 
 	public void setHintExpression(String hintExpression) {
 		this.hintExpression = hintExpression;
+		checkValidHint();
 	}
-	
+
+	private void checkValidHint() {
+		if (hintExpression != null) {
+			if (hintExpression.contains(";")
+					|| hintExpression.contains("--")
+					|| hintExpression.contains("/*")
+					|| hintExpression.contains("*/")) {
+				throw new QueryException("NativeHint expression:'" + hintExpression + "' is not valid.");
+			}
+		}
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;

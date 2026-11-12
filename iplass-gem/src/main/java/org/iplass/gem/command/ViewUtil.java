@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -40,6 +40,9 @@ import org.iplass.mtp.ManagerLocator;
 import org.iplass.mtp.command.RequestContext;
 import org.iplass.mtp.impl.core.ExecuteContext;
 import org.iplass.mtp.impl.core.TenantContextService;
+import org.iplass.mtp.impl.tenant.MetaTenant.MetaTenantHandler;
+import org.iplass.mtp.impl.tenant.MetaTenantService;
+import org.iplass.mtp.impl.tenant.gem.MetaTenantGemInfo.MetaTenantGemInfoRuntime;
 import org.iplass.mtp.spi.ServiceRegistry;
 import org.iplass.mtp.tenant.Tenant;
 import org.iplass.mtp.tenant.gem.TenantGemInfo;
@@ -56,6 +59,7 @@ import org.iplass.mtp.view.generic.element.property.PropertyColumn;
 import org.iplass.mtp.view.generic.element.property.PropertyItem;
 import org.iplass.mtp.view.generic.element.section.SearchConditionSection.CsvDownloadSpecifyCharacterCode;
 import org.iplass.mtp.view.generic.element.section.SearchResultSection;
+import org.iplass.mtp.view.generic.element.section.SearchResultSection.AutoHeightAdjustMode;
 import org.iplass.mtp.view.top.TopViewDefinition;
 import org.iplass.mtp.view.top.TopViewDefinitionManager;
 import org.iplass.mtp.view.top.parts.CsvDownloadSettingsParts;
@@ -102,7 +106,9 @@ public class ViewUtil {
 	}
 
 	private static List<Skin> getSkinList() {
-		List<Skin> skins = ServiceRegistry.getRegistry().getService(GemConfigService.class).getSkins();
+		List<Skin> skins = ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class)
+				.getSkins();
 		if (skins == null) {
 			skins = Collections.emptyList();
 		}
@@ -147,7 +153,9 @@ public class ViewUtil {
 	}
 
 	private static List<Theme> getThemeList() {
-		List<Theme> themes = ServiceRegistry.getRegistry().getService(GemConfigService.class).getThemes();
+		List<Theme> themes = ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class)
+				.getThemes();
 		if (themes == null) {
 			themes = Collections.emptyList();
 		}
@@ -161,6 +169,7 @@ public class ViewUtil {
 	public static String getImagePath() {
 		return getSkinImagePath();
 	}
+
 	public static String getSkinImagePath() {
 		String contentPath = TemplateUtil.getStaticContentPath();
 		Skin skin = getSkin();
@@ -197,10 +206,13 @@ public class ViewUtil {
 	}
 
 	public static FormView getFormView(String defName, String viewName, String viewType) {
-		if (defName == null || defName.isEmpty()) return null;
-		EntityViewManager evm = ManagerLocator.getInstance().getManager(EntityViewManager.class);
+		if (defName == null || defName.isEmpty())
+			return null;
+		EntityViewManager evm = ManagerLocator.getInstance()
+				.getManager(EntityViewManager.class);
 		EntityView ev = evm.get(defName);
-		if (ev == null) return null;
+		if (ev == null)
+			return null;
 
 		FormView form = null;
 		if (Constants.VIEW_TYPE_DETAIL.equals(viewType)) {
@@ -209,7 +221,8 @@ public class ViewUtil {
 			} else {
 				form = ev.getDetailFormView(viewName);
 			}
-		} else if (Constants.VIEW_TYPE_SEARCH.equals(viewType) || Constants.VIEW_TYPE_SEARCH_RESULT.equals(viewType) || Constants.VIEW_TYPE_BULK.equals(viewType)) {
+		} else if (Constants.VIEW_TYPE_SEARCH.equals(viewType) || Constants.VIEW_TYPE_SEARCH_RESULT.equals(viewType)
+				|| Constants.VIEW_TYPE_BULK.equals(viewType)) {
 			if (viewName == null || viewName.isEmpty()) {
 				form = ev.getDefaultSearchFormView();
 			} else {
@@ -231,22 +244,30 @@ public class ViewUtil {
 	}
 
 	public static String getEntityImageColor(FormView view) {
-		if (view == null || view.getImageColor() == null) return null;
+		if (view == null || view.getImageColor() == null)
+			return null;
 		return view.getImageColor();
 	}
 
 	public static String getIconTag(FormView view) {
-		if (view == null) return "";// 何も無い場合は空文字でそのまま出力
+		if (view == null)
+			return "";// 何も無い場合は空文字でそのまま出力
 		return StringUtil.isNotBlank(view.getIconTag()) ? view.getIconTag() : "";
 	}
 
 	public static List<PropertyItem> filterPropertyItem(List<Element> elements) {
-		return elements.stream().filter(e -> e instanceof PropertyItem).map(e -> (PropertyItem) e).collect(Collectors.toList());
+		return elements.stream()
+				.filter(e -> e instanceof PropertyItem)
+				.map(e -> (PropertyItem) e)
+				.collect(Collectors.toList());
 	}
 
 	public static PropertyItem filterPropertyItem(List<Element> elements, String propName) {
-		Optional<PropertyItem> property = elements.stream().filter(e -> e instanceof PropertyItem).map(e -> (PropertyItem) e)
-				.filter(e -> propName.equals(e.getPropertyName())).findFirst();
+		Optional<PropertyItem> property = elements.stream()
+				.filter(e -> e instanceof PropertyItem)
+				.map(e -> (PropertyItem) e)
+				.filter(e -> propName.equals(e.getPropertyName()))
+				.findFirst();
 		if (property.isPresent()) {
 			return property.get();
 		}
@@ -254,7 +275,10 @@ public class ViewUtil {
 	}
 
 	public static List<PropertyColumn> filterPropertyColumn(List<Element> elements) {
-		return elements.stream().filter(e -> e instanceof PropertyColumn).map(e -> (PropertyColumn) e).collect(Collectors.toList());
+		return elements.stream()
+				.filter(e -> e instanceof PropertyColumn)
+				.map(e -> (PropertyColumn) e)
+				.collect(Collectors.toList());
 	}
 
 	/**
@@ -262,7 +286,8 @@ public class ViewUtil {
 	 * @return
 	 */
 	public static boolean isConfirmEditSave() {
-		GemConfigService gemConfigService = ServiceRegistry.getRegistry().getService(GemConfigService.class);
+		GemConfigService gemConfigService = ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class);
 		return gemConfigService.isConfirmEditSave();
 	}
 
@@ -271,7 +296,8 @@ public class ViewUtil {
 	 * @return
 	 */
 	public static boolean isConfirmEditCancel() {
-		GemConfigService gemConfigService = ServiceRegistry.getRegistry().getService(GemConfigService.class);
+		GemConfigService gemConfigService = ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class);
 		return gemConfigService.isConfirmEditCancel();
 	}
 
@@ -282,7 +308,8 @@ public class ViewUtil {
 	 */
 	@Deprecated
 	public static boolean isTopViewEditCancelBackToTop() {
-		GemConfigService gemConfigService = ServiceRegistry.getRegistry().getService(GemConfigService.class);
+		GemConfigService gemConfigService = ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class);
 		return gemConfigService.isTopViewEditCancelBackToTop();
 	}
 
@@ -291,17 +318,20 @@ public class ViewUtil {
 	 * @return
 	 */
 	public static boolean isShowSeachCondResetButton() {
-		GemConfigService gemConfigService = ServiceRegistry.getRegistry().getService(GemConfigService.class);
+		GemConfigService gemConfigService = ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class);
 		return gemConfigService.isShowSeachCondResetButton();
 	}
 
 	public static List<String> getCsvDownloadCharacterCode() {
-		GemConfigService gemConfigService = ServiceRegistry.getRegistry().getService(GemConfigService.class);
+		GemConfigService gemConfigService = ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class);
 		return gemConfigService.getCsvDownloadCharacterCode();
 	}
 
 	public static int getSearchInterval() {
-		GemConfigService gemConfigService = ServiceRegistry.getRegistry().getService(GemConfigService.class);
+		GemConfigService gemConfigService = ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class);
 		return gemConfigService.getSearchInterval();
 	}
 
@@ -316,12 +346,30 @@ public class ViewUtil {
 		if (limit != null && limit > 0) {
 			return limit;
 		}
-		GemConfigService gemConfigService = ServiceRegistry.getRegistry().getService(GemConfigService.class);
+		GemConfigService gemConfigService = ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class);
 		return gemConfigService.getSearchResultDispRowCount();
 	}
 
+	/**
+	 * 検索結果TABLEの高さ自動調節を返します。
+	 * SearchResultSection で未設定の場合は GemConfigService の既定値を返します。
+	 *
+	 * @param resultSection SearchResultSection
+	 * @return 検索結果TABLEの高さ自動調節
+	 */
+	public static AutoHeightAdjustMode getAutoHeightAdjustMode(SearchResultSection resultSection) {
+		if (resultSection.getAutoHeightAdjustMode() != null) {
+			return resultSection.getAutoHeightAdjustMode();
+		}
+		return ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class)
+				.getSearchResultAutoHeightAdjustMode();
+	}
+
 	public static int getCsvDownloadInterval() {
-		GemConfigService gemConfigService = ServiceRegistry.getRegistry().getService(GemConfigService.class);
+		GemConfigService gemConfigService = ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class);
 		return gemConfigService.getCsvDownloadInterval();
 	}
 
@@ -349,9 +397,13 @@ public class ViewUtil {
 	}
 
 	private static CsvDownloadSettingsParts getCsvDownloadSettingsParts() {
-		String roleName = (String) TemplateUtil.getRequestContext().getSession().getAttribute(Constants.ROLE_NAME);
-		if (roleName == null) roleName = "DEFAULT";
-		TopViewDefinitionManager manager = ManagerLocator.getInstance().getManager(TopViewDefinitionManager.class);
+		String roleName = (String) TemplateUtil.getRequestContext()
+				.getSession()
+				.getAttribute(Constants.ROLE_NAME);
+		if (roleName == null)
+			roleName = "DEFAULT";
+		TopViewDefinitionManager manager = ManagerLocator.getInstance()
+				.getManager(TopViewDefinitionManager.class);
 		TopViewDefinition td = manager.get(roleName);
 		CsvDownloadSettingsParts csvDownloadSettingsParts = null;
 		if (td != null) {
@@ -366,28 +418,55 @@ public class ViewUtil {
 	}
 
 	public static boolean isShowPulldownPleaseSelectLabel() {
-		GemConfigService gemConfigService = ServiceRegistry.getRegistry().getService(GemConfigService.class);
+		GemConfigService gemConfigService = ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class);
 		return gemConfigService.isShowPulldownPleaseSelectLabel();
 
 	}
 
+	/**
+	 * ReferencePropertyEditorのモーダル初期表示幅を取得します。
+	 *
+	 * @return 幅（未設定の場合はnull）
+	 */
+	public static Integer getReferenceModalWidth() {
+		return ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class)
+				.getReferenceModalWidth();
+	}
+
+	/**
+	 * ReferencePropertyEditorのモーダル初期表示高さを取得します。
+	 *
+	 * @return 高さ（未設定の場合はnull）
+	 */
+	public static Integer getReferenceModalHeight() {
+		return ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class)
+				.getReferenceModalHeight();
+	}
+
 	public static boolean isCsvUploadAsync() {
-		GemConfigService gemConfigService = ServiceRegistry.getRegistry().getService(GemConfigService.class);
+		GemConfigService gemConfigService = ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class);
 		return gemConfigService.isCsvUploadAsync();
 	}
 
 	public static int getCsvUploadStatusPollingInterval() {
-		GemConfigService gemConfigService = ServiceRegistry.getRegistry().getService(GemConfigService.class);
+		GemConfigService gemConfigService = ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class);
 		return gemConfigService.getCsvUploadStatusPollingInterval();
 	}
 
 	public static List<String> getCssPathList(String skinName) {
-		GemConfigService gemConfigService = ServiceRegistry.getRegistry().getService(GemConfigService.class);
+		GemConfigService gemConfigService = ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class);
 		return gemConfigService.getCssPathList(skinName);
 	}
 
 	public static final EntityViewHelper getEntityViewHelper() {
-		GemConfigService gemConfigService = ServiceRegistry.getRegistry().getService(GemConfigService.class);
+		GemConfigService gemConfigService = ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class);
 		return gemConfigService.getEntityViewHelper();
 	}
 
@@ -408,17 +487,24 @@ public class ViewUtil {
 	public static boolean dispElement(Element element) {
 		return dispElement(TemplateUtil.getRequestContext(), element);
 	}
+
 	public static boolean dispElement(RequestContext context, Element element) {
 		DetailFormViewData data = (DetailFormViewData) context.getAttribute(Constants.DATA);
 		String execType = data.getExecType();
 		return dispElement(execType, element);
 	}
+
 	public static boolean dispElement(String execType, Element element) {
-		if (execType == null) return true;//画面表示前
+		if (execType == null)
+			return true;//画面表示前
 		if (element.getEditDisplayType() == EditDisplayType.INSERT) {
-			return EditDisplayType.INSERT.name().toLowerCase().equals(execType.toLowerCase());
+			return EditDisplayType.INSERT.name()
+					.toLowerCase()
+					.equals(execType.toLowerCase());
 		} else if (element.getEditDisplayType() == EditDisplayType.UPDATE) {
-			return EditDisplayType.UPDATE.name().toLowerCase().equals(execType.toLowerCase());
+			return EditDisplayType.UPDATE.name()
+					.toLowerCase()
+					.equals(execType.toLowerCase());
 		} else {
 			//未指定orBOTH
 			return true;
@@ -431,7 +517,9 @@ public class ViewUtil {
 		Tenant tenant = TemplateUtil.getTenant();
 		boolean isDisp = getTenantGemInfo(tenant).isDispTenantName();
 		if (!isDisp) {
-			dispTenantName = ServiceRegistry.getRegistry().getService(TenantContextService.class).getDefaultTenantName();
+			dispTenantName = ServiceRegistry.getRegistry()
+					.getService(TenantContextService.class)
+					.getDefaultTenantName();
 		}
 
 		return dispTenantName;
@@ -439,15 +527,11 @@ public class ViewUtil {
 
 	public static String getDispTenantName() {
 		Tenant tenant = TemplateUtil.getTenant();
-		String dispTenantName = tenant.getDisplayName();
-
-		dispTenantName = TemplateUtil.getMultilingualString(dispTenantName, tenant.getLocalizedDisplayNameList());
-
-		if (StringUtil.isEmpty(dispTenantName)){
-			dispTenantName = tenant.getName();
-		}
-
-		return dispTenantName;
+		MetaTenantService metaTenantService = ServiceRegistry.getRegistry()
+				.getService(MetaTenantService.class);
+		MetaTenantHandler handler = metaTenantService.getRuntimeByName(tenant.getName());
+		MetaTenantGemInfoRuntime metaTenantGemInfoRuntime = handler.getConfigRuntime(MetaTenantGemInfoRuntime.class);
+		return metaTenantGemInfoRuntime.getScreenTitle();
 	}
 
 	public static String getTenantImgUrlWithDispChecked() {
@@ -493,27 +577,30 @@ public class ViewUtil {
 	}
 
 	public static String getGroupingSeparator() {
-		return String.valueOf(DecimalFormatSymbols.getInstance(TemplateUtil.getLocale()).getGroupingSeparator());
+		return String.valueOf(DecimalFormatSymbols.getInstance(TemplateUtil.getLocale())
+				.getGroupingSeparator());
 	}
 
 	public static boolean isAutocompletionTarget() {
 		//自動補完の対象でWebAPI経由かどうか
-		Object setting = TemplateUtil.getRequestContext().getAttribute(Constants.AUTOCOMPLETION_SETTING);
+		Object setting = TemplateUtil.getRequestContext()
+				.getAttribute(Constants.AUTOCOMPLETION_SETTING);
 		return setting != null && setting instanceof WebApiAutocompletionSetting;
 	}
 
 	public static String getParamMappingPath(String defName, String viewName) {
 		StringBuilder sb = new StringBuilder();
 		if (StringUtil.isNotBlank(viewName)) {
-			sb.append("/").append(viewName);
+			sb.append("/")
+					.append(viewName);
 		}
-		sb.append("/").append(defName);
+		sb.append("/")
+				.append(defName);
 		return sb.toString();
 	}
 
 	public static TenantGemInfo getTenantGemInfo(Tenant tenant) {
-		return (tenant.getTenantConfig(TenantGemInfo.class) != null ?
-				tenant.getTenantConfig(TenantGemInfo.class) : new TenantGemInfo());
+		return (tenant.getTenantConfig(TenantGemInfo.class) != null ? tenant.getTenantConfig(TenantGemInfo.class) : new TenantGemInfo());
 	}
 
 	public static String[] getSearchCondValue(Map<String, List<String>> searchCondMap, String key) {
@@ -533,7 +620,8 @@ public class ViewUtil {
 	 */
 	public static DateFormat getDateTimeFormat(String pattern, String datetimeLocale) {
 		//指定されたフォーマットで、ロケール設定がない場合はデフォルトで指定されているロケールのものを使用する
-		Locale locale = ExecuteContext.getCurrentContext().getLocale();
+		Locale locale = ExecuteContext.getCurrentContext()
+				.getLocale();
 		if (datetimeLocale != null) {
 			String[] localeValue = datetimeLocale.split("_", 0);
 			if (localeValue.length <= 1) {
@@ -559,7 +647,8 @@ public class ViewUtil {
 	private static LocalizedDateTimeFormatSetting getDateTimeFormatSetting(List<LocalizedDateTimeFormatSetting> list) {
 		for (LocalizedDateTimeFormatSetting ldt : list) {
 			String localLang = ldt.getLangage();
-			String tenantLang = ExecuteContext.getCurrentContext().getLanguage();
+			String tenantLang = ExecuteContext.getCurrentContext()
+					.getLanguage();
 			if ((tenantLang.equals(localLang))) {
 				return ldt;
 			}
@@ -574,7 +663,7 @@ public class ViewUtil {
 	 * @param dtfInfo 日付/時刻フォーマットのデフォルト設定
 	 * @return settingInfo 日付/時刻フォーマットの設定
 	 */
-	public static DateTimeFormatSetting getFormatInfo(List<LocalizedDateTimeFormatSetting> ldtInfoList, DateTimeFormatSetting dtfInfo){
+	public static DateTimeFormatSetting getFormatInfo(List<LocalizedDateTimeFormatSetting> ldtInfoList, DateTimeFormatSetting dtfInfo) {
 		DateTimeFormatSetting settingInfo = new DateTimeFormatSetting();
 
 		if (ldtInfoList != null) {
@@ -593,5 +682,18 @@ public class ViewUtil {
 			settingInfo.setDatetimeLocale(dtfInfo.getDatetimeLocale());
 		}
 		return settingInfo;
+	}
+
+	/**
+	 * Section や Parts などで共通して使用できる「高さ指定用」の style 内容を生成します。
+	 *
+	 * @param height 高さ(px単位)。null または 0 以下の場合は空文字を返します。
+	 * @return "max-height:xxxpx; overflow-y:auto;" または 空文字
+	 */
+	public static String buildHeightStyleAttr(Integer height) {
+		if (height != null && height > 0) {
+			return "max-height:" + height.intValue() + "px; overflow-y:auto;";
+		}
+		return "";
 	}
 }

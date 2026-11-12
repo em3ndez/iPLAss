@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,7 +29,7 @@ import org.iplass.mtp.impl.web.actionmapping.ActionMappingService;
 import org.iplass.mtp.web.actionmapping.permission.ActionPermission;
 
 public class ActionAuthContextHandler extends AuthorizationContextHandler {
-	private static final Class<?>[] PERM_TYPE = {ActionPermission.class};
+	private static final Class<?>[] PERM_TYPE = { ActionPermission.class };
 	private static final AllPermissionActionAuthContext DEFAULT = new AllPermissionActionAuthContext(false);
 
 	public ActionAuthContextHandler() {
@@ -45,7 +45,7 @@ public class ActionAuthContextHandler extends AuthorizationContextHandler {
 	protected String cacheNamespace() {
 		return "mtp.auth.builtin.action";
 	}
-	
+
 	@Override
 	protected String contextName(Permission permission) {
 		return ((ActionPermission) permission).getActionName();
@@ -60,8 +60,6 @@ public class ActionAuthContextHandler extends AuthorizationContextHandler {
 	protected AuthorizationContextCacheLogic newAuthorizeContextCacheLogic(TenantAuthorizeContext tac) {
 		return new ActionAuthContextCacheLogic(tac);
 	}
-	
-	
 
 	@Override
 	public boolean useSharedPermission(Permission permission) {
@@ -77,7 +75,7 @@ public class ActionAuthContextHandler extends AuthorizationContextHandler {
 		if (contextName.length() == 0) {
 			contextName = "/";
 		}
-		
+
 		BuiltinAuthorizationContext actionContext = super.get(contextName, tac);
 		if (actionContext == null) {
 			//～/*指定の定義がないか検索

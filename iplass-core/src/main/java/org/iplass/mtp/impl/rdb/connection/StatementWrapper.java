@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,6 +31,9 @@ import org.iplass.mtp.impl.core.ExecuteContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.logstash.logback.argument.StructuredArguments;
+import net.logstash.logback.marker.Markers;
+
 public class StatementWrapper implements Statement {
 
 	private static Logger logger = LoggerFactory.getLogger(StatementWrapper.class);
@@ -40,7 +43,7 @@ public class StatementWrapper implements Statement {
 	protected int warnLogThreshold;
 	protected boolean warnLogBefore;
 	protected boolean countSqlExecution;
-	
+
 	protected AdditionalWarnLogInfo additionalWarnLogInfo;
 	protected AtomicInteger sqlCount;
 
@@ -51,9 +54,9 @@ public class StatementWrapper implements Statement {
 		this.warnLogBefore = warnLogBefore;
 		this.countSqlExecution = countSqlExecution;
 	}
-	
+
 	private <T> T withLog(String method, String sql, SQLExecution<T> s) throws SQLException {
-		
+
 		if (countSqlExecution) {
 			if (sqlCount == null) {
 				ExecuteContext ec = ExecuteContext.getCurrentContext();
@@ -63,48 +66,85 @@ public class StatementWrapper implements Statement {
 				sqlCount.incrementAndGet();
 			}
 		}
-		
+
 		long start = System.currentTimeMillis();
 		try {
 			if (warnLogBefore && additionalWarnLogInfo != null && additionalWarnLogInfo.logBefore()) {
-				logger.warn(logStr(method, sql, -1));
+				logger.warn(Markers.append("warning_type", "alert"), withWarnLogFormat(method, sql, null), logParam(method, sql, null));
 			}
-			
+
 			return s.run();
-			
+
 		} finally {
 			long queryTime = System.currentTimeMillis() - start;
-			if (warnLogThreshold > 0  && queryTime > warnLogThreshold) {
+			if (warnLogThreshold > 0 && queryTime > warnLogThreshold) {
 				if (logger.isWarnEnabled()) {
-					logger.warn(logStr(method, sql, queryTime));
+					logger.warn(Markers.append("warning_type", "time"), withWarnLogFormat(method, sql, queryTime), logParam(method, sql, queryTime));
 				}
 			} else {
 				if (logger.isDebugEnabled()) {
-					logger.debug(logStr(method, sql, queryTime));
+					logger.debug(Markers.append("warning_type", "time"), withWarnLogFormat(method, sql, queryTime), logParam(method, sql, queryTime));
 				}
 			}
 		}
 	}
 
-	private String logStr(String method, String sql, long queryTime) {
-		StringBuilder log = new StringBuilder();
-		log.append(method);
-		if (queryTime > -1) {
-			log.append(" time= ");
-			log.append(queryTime);
-			log.append(" ms.");
+	private Object[] logParam(String method, String sql, Long queryTime) {
+		Object[] logParam;
+		int base;
+		if (queryTime == null) {
+			base = 2;
+		} else {
+			base = 3;
+		}
+		if (additionalWarnLogInfo == null) {
+			logParam = new Object[base];
+		} else {
+			logParam = new Object[base + additionalWarnLogInfo.parameterSize()];
+		}
+
+		int i = 0;
+		logParam[i++] = StructuredArguments.value("method", method);
+		if (queryTime != null) {
+			logParam[i++] = StructuredArguments.value("execution_time", queryTime);
 		}
 		if (sql != null) {
-			log.append(" sql=");
-			log.append(sql);
+			logParam[i++] = StructuredArguments.value("sql", sql);
 		}
 		if (additionalWarnLogInfo != null) {
-			log.append(" -- ");
-			log.append(additionalWarnLogInfo);
+			additionalWarnLogInfo.setParameter(base, logParam);
 		}
-		return log.toString();
+		return logParam;
 	}
-	
+
+	private String withWarnLogFormat(String method, String sql, Long queryTime) {
+		String fmt;
+		if (queryTime == null) {
+			if (sql == null) {
+				fmt = "{}";
+			} else {
+				fmt = "{} sql={}";
+			}
+		} else {
+			if (sql == null) {
+				fmt = "{} time= {} ms.";
+			} else {
+				fmt = "{} time= {} ms. sql={}";
+			}
+		}
+
+		if (additionalWarnLogInfo == null) {
+			return fmt;
+		} else {
+			String warnLogFmt = additionalWarnLogInfo.logFormat();
+			StringBuilder sb = new StringBuilder(fmt.length() + 4 + warnLogFmt.length());
+			sb.append(fmt)
+					.append(" -- ")
+					.append(warnLogFmt);
+			return sb.toString();
+		}
+	}
+
 	public AdditionalWarnLogInfo getAdditionalWarnLogInfo() {
 		return additionalWarnLogInfo;
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,13 +20,13 @@
 
 package org.iplass.mtp.impl.view.top.parts;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.iplass.mtp.impl.metadata.MetaData;
 import org.iplass.mtp.impl.util.ObjectUtil;
 import org.iplass.mtp.impl.view.top.TopViewHandler;
 import org.iplass.mtp.view.top.parts.TopViewParts;
 import org.iplass.mtp.view.top.parts.TreeViewParts;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * ツリービューパーツ
@@ -57,7 +57,7 @@ public class MetaTreeViewParts extends MetaTemplateParts {
 	 * @return ツリービュー定義名
 	 */
 	public String getTreeViewName() {
-	    return treeViewName;
+		return treeViewName;
 	}
 
 	/**
@@ -65,7 +65,7 @@ public class MetaTreeViewParts extends MetaTemplateParts {
 	 * @param treeViewName ツリービュー定義名
 	 */
 	public void setTreeViewName(String treeViewName) {
-	    this.treeViewName = treeViewName;
+		this.treeViewName = treeViewName;
 	}
 
 	/**
@@ -73,7 +73,7 @@ public class MetaTreeViewParts extends MetaTemplateParts {
 	 * @return アイコンタグ
 	 */
 	public String getIconTag() {
-	    return iconTag;
+		return iconTag;
 	}
 
 	/**
@@ -81,7 +81,7 @@ public class MetaTreeViewParts extends MetaTemplateParts {
 	 * @param iconTag アイコンタグ
 	 */
 	public void setIconTag(String iconTag) {
-	    this.iconTag = iconTag;
+		this.iconTag = iconTag;
 	}
 
 	@Override

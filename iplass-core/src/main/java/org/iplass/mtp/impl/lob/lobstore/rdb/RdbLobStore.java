@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,7 +32,7 @@ public class RdbLobStore implements LobStore {
 
 	private RdbAdapter rdb;
 	private boolean manageLobSizeOnRdb;
-	
+
 	private LobValidator lobValidator;
 
 	@Override
@@ -46,7 +46,8 @@ public class RdbLobStore implements LobStore {
 
 	@Override
 	public void inited(LobStoreService service, Config config) {
-		rdb = config.getDependentService(RdbAdapterService.class).getRdbAdapter();
+		rdb = config.getDependentService(RdbAdapterService.class)
+				.getRdbAdapter();
 		manageLobSizeOnRdb = service.isManageLobSizeOnRdb();
 	}
 

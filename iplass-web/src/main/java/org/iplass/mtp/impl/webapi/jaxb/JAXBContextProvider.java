@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,18 +20,20 @@
 
 package org.iplass.mtp.impl.webapi.jaxb;
 
-import javax.ws.rs.ext.ContextResolver;
-import javax.ws.rs.ext.Provider;
-import javax.xml.bind.JAXBContext;
-
 import org.iplass.mtp.spi.ServiceRegistry;
+
+import jakarta.ws.rs.ext.ContextResolver;
+import jakarta.ws.rs.ext.Provider;
+import jakarta.xml.bind.JAXBContext;
 
 @Provider
 public class JAXBContextProvider implements ContextResolver<JAXBContext> {
 
 	@Override
 	public JAXBContext getContext(Class<?> type) {
-		JAXBContext context = ServiceRegistry.getRegistry().getService(WebApiJaxbService.class).getJAXBContext();
+		JAXBContext context = ServiceRegistry.getRegistry()
+				.getService(WebApiJaxbService.class)
+				.getJAXBContext();
 		return context;
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright 2011 DENTSU SOKEN INC. All Rights Reserved.
  */
 
 package org.iplass.mtp.tools.batch.metadata;
@@ -12,6 +12,7 @@ import org.iplass.mtp.impl.tools.metaport.MetaDataPortingService;
 import org.iplass.mtp.impl.tools.metaport.PatchEntityDataParameter;
 import org.iplass.mtp.spi.ServiceRegistry;
 import org.iplass.mtp.tools.batch.ExecMode;
+import org.iplass.mtp.tools.batch.MtpBatchResourceDisposer;
 import org.iplass.mtp.tools.batch.MtpCuiBase;
 import org.iplass.mtp.util.StringUtil;
 import org.slf4j.Logger;
@@ -31,13 +32,15 @@ public class MetaDataPatch extends MtpCuiBase {
 	private String userId;
 	private String password;
 
-	private TenantContextService tenantContextService = ServiceRegistry.getRegistry().getService(TenantContextService.class);
-	private MetaDataPortingService service = ServiceRegistry.getRegistry().getService(MetaDataPortingService.class);
+	private TenantContextService tenantContextService = ServiceRegistry.getRegistry()
+			.getService(TenantContextService.class);
+	private MetaDataPortingService service = ServiceRegistry.getRegistry()
+			.getService(MetaDataPortingService.class);
 
 	/**
 	 * コンストラクタ
 	 *
-	 * args[0]・・・execMode["Wizard" or "Silent"]
+	 * args[0]・・・execMode["WIZARD" or "SILENT"]
 	 * args[1]・・・tenantId
 	 * args[2]・・・oldMetaDataFilePath
 	 * args[3]・・・newMetaDataFilePath
@@ -70,7 +73,7 @@ public class MetaDataPatch extends MtpCuiBase {
 				execMode = ExecMode.WIZARD;
 			}
 		}
-		// ユーザIDが未指定の場合は特権モードで実行
+		// ユーザーIDが未指定の場合は特権モードで実行
 		if (args.length > 4 && !isEmpty(args[4])) {
 			userId = args[4];
 		}
@@ -82,7 +85,7 @@ public class MetaDataPatch extends MtpCuiBase {
 	/**
 	 * メイン処理
 	 *
-	 * args[0]・・・execMode["Wizard" or "Silent"]
+	 * args[0]・・・execMode["WIZARD" or "SILENT"]
 	 * args[1]・・・tenantId
 	 * args[2]・・・oldMetaDataFilePath
 	 * args[3]・・・newMetaDataFilePath
@@ -96,6 +99,9 @@ public class MetaDataPatch extends MtpCuiBase {
 			new MetaDataPatch(args).execute();
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			// リソース破棄
+			MtpBatchResourceDisposer.disposeResource();
 		}
 	}
 
@@ -121,7 +127,7 @@ public class MetaDataPatch extends MtpCuiBase {
 			switchLog(false, true);
 
 			return proceed(silent());
-		default :
+		default:
 			logError("unsupport execute mode : " + execMode);
 			return false;
 		}
@@ -202,8 +208,8 @@ public class MetaDataPatch extends MtpCuiBase {
 			validNewMetaDataFilePath = true;
 		} while (!validNewMetaDataFilePath);
 
-		// ユーザID(任意)
-		// ユーザIDを入力してください。
+		// ユーザーID(任意)
+		// ユーザーIDを入力してください。
 		userId = readConsole(rs("Wizard.inputUserIdMsg"));
 
 		// パスワード(任意)
@@ -235,7 +241,8 @@ public class MetaDataPatch extends MtpCuiBase {
 	}
 
 	private boolean proceed(PatchEntityDataParameter param) {
-		if (param == null) return false;
+		if (param == null)
+			return false;
 
 		if (ExecMode.WIZARD == execMode) {
 			// 実行確認
@@ -247,7 +254,8 @@ public class MetaDataPatch extends MtpCuiBase {
 				if (!validExecute) {
 					// もう一度設定し直しますか？
 					boolean retry = readConsoleBoolean(rs("Wizard.confirmRetryMsg"), true);
-					if (retry) wizard();
+					if (retry)
+						wizard();
 				}
 			} while (!validExecute);
 		}
@@ -277,7 +285,7 @@ public class MetaDataPatch extends MtpCuiBase {
 	private boolean proceedPatch(PatchEntityDataParameter param) {
 
 		if (StringUtil.isNotBlank(userId)) {
-			// ユーザ認証
+			// ユーザー認証
 			service.patchEntityDataWithUserAuth(param, userId, password);
 		} else {
 			// 特権モード

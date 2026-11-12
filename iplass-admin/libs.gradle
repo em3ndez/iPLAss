@@ -1,31 +1,64 @@
-ext {
-	gwtVersion = "2.9.0"
-}
-
 configurations {
 	wjRuntime
+
+	compileOnly.extendsFrom(jeecoreapis)
+	compileOnly.extendsFrom(jeewebapis)
+	runtimeOnly.extendsFrom(wjRuntime)
+
+	gwtCompileOnly {
+		extendsFrom(jeecoreapis)
+		extendsFrom(jeewebapis)
+	}
 }
 
 dependencies {
-	compileOnly configurations.jeecoreapis
-	compileOnly configurations.jeewebapis
-	
 	//supercsv
 	implementation sharedLib('net.sf.supercsv:super-csv')
 
-	implementation sharedLib('com.googlecode.gwtupload:gwtupload')
+	// commons-lang
+	implementation sharedLib('org.apache.commons:commons-lang3')
 
+	// commons-io
+	implementation sharedLib('commons-io:commons-io')
+	
+	// commons-fileupload
+	implementation sharedLib('org.apache.commons:commons-fileupload2-jakarta-servlet6')
+	
 	//jackson
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
 
+	// gwt-servlet-jakarta
+	implementation sharedLib('org.gwtproject:gwt-servlet-jakarta')
+
 	wjRuntime sharedLib('org.webjars.npm:ace-builds')
-	runtimeOnly configurations.wjRuntime
 
 	//smart gwt has no public maven repository
 	compileOnly fileTree(rootProject.ext.localLibDir) {
-		include 'smartgwt/**'
+		include 'smartgwt/**/*.jar'
 	}
+	compileOnly sharedLib('org.gwtproject:gwt-user')
 
-	runtimeOnly "com.google.gwt:gwt-servlet:${gwtVersion}"
-
+ 	// GWTコンパイル用依存関係
+	// gwt
+	gwtCompileOnly(sharedLib('org.gwtproject:gwt-dev')) {
+		// java.xml パッケージを含む xml-apis ライブラリを推移依存するため除外
+		exclude group: 'net.sourceforge.htmlunit', module: 'htmlunit'
+		// NOTE: apache-jsp 関連のライブラリを推移依存する。害が無いので除外しないが不要ではある。
+		//exclude group: 'org.eclipse.jetty'
+	}
+	gwtCompileOnly(sharedLib('org.gwtproject:gwt-codeserver')) {
+		// java.xml パッケージを含む xml-apis ライブラリを推移依存するため除外
+		exclude group: 'net.sourceforge.htmlunit', module: 'htmlunit'
+		// NOTE: apache-jsp 関連のライブラリを推移依存する。害が無いので除外しないが不要ではある。
+		//exclude group: 'org.eclipse.jetty'
+	}
+	gwtCompileOnly sharedLib('org.gwtproject:gwt-user')
+	gwtCompileOnly sharedLib('org.gwtproject:gwt-servlet-jakarta')
+	// jackson
+	gwtCompileOnly platform(sharedLib('com.fasterxml.jackson:jackson-bom'))
+	gwtCompileOnly 'com.fasterxml.jackson.core:jackson-databind'
+	//smart gwt has no public maven repository
+	gwtCompileOnly fileTree(rootProject.ext.localLibDir) {
+		include 'smartgwt/**/*.jar'
+	}
 }

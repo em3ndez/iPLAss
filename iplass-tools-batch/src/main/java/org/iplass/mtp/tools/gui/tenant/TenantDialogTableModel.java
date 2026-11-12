@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,7 +29,7 @@ import org.iplass.mtp.impl.tools.tenant.TenantInfo;
 @SuppressWarnings("serial")
 public class TenantDialogTableModel extends DefaultTableModel {
 
-	public static final String[] COLUMNS = {"id", "name", "url"};
+	public static final String[] COLUMNS = { "id", "name", "url" };
 
 	private List<TenantInfo> data;
 
@@ -52,9 +52,9 @@ public class TenantDialogTableModel extends DefaultTableModel {
 		return data;
 	}
 
-    @Override
+	@Override
 	public int getRowCount() {
-		return data !=null ? data.size() : 0;
+		return data != null ? data.size() : 0;
 	}
 
 	@Override
@@ -65,21 +65,21 @@ public class TenantDialogTableModel extends DefaultTableModel {
 		}
 
 		switch (column) {
-			case 0:
-				return tenant.getId();
-			case 1:
-				return tenant.getName();
-			case 2:
-				return tenant.getUrl();
-			default:
-				break;
+		case 0:
+			return tenant.getId();
+		case 1:
+			return tenant.getName();
+		case 2:
+			return tenant.getUrl();
+		default:
+			break;
 		}
 
 		return super.getValueAt(row, column);
 	}
 
 	@Override
-    public Class<?> getColumnClass(int column) {
-        return getValueAt(0, column).getClass();
-    }
+	public Class<?> getColumnClass(int column) {
+		return getValueAt(0, column).getClass();
+	}
 }

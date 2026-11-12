@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,6 +20,7 @@
 package org.iplass.mtp.webhook;
 
 import java.util.List;
+
 /**
  * <% if (doclang == "ja") {%>
  * Webhookを送った後の返信を表するクラス。
@@ -35,6 +36,7 @@ public class WebhookResponse {
 	private String contentType;
 	private String contentEncoding;//nullable
 	private String responseBody;
+
 	/**
 	 * <% if (doclang == "ja") {%>
 	 * ステータスコードを取得.
@@ -68,6 +70,7 @@ public class WebhookResponse {
 	public String getReasonPhrase() {
 		return reasonPhrase;
 	}
+
 	/**
 	 * <% if (doclang == "ja") {%>
 	 * ステータスコードに応じる説明内容を設置する。
@@ -172,6 +175,4 @@ public class WebhookResponse {
 		this.contentEncoding = contentEncoding;
 	}
 
-	
-	
 }

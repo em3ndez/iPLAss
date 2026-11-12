@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,8 +35,8 @@ import org.iplass.mtp.impl.rdb.adapter.function.FunctionAdapter;
  * @author K.Higuchi
  *
  */
-public class LocalTimeFunctionAdapter implements FunctionAdapter {
-	
+public class LocalTimeFunctionAdapter implements FunctionAdapter<Function> {
+
 	@Override
 	public String getFunctionName() {
 		return "LOCALTIME";
@@ -49,19 +49,25 @@ public class LocalTimeFunctionAdapter implements FunctionAdapter {
 
 	@Override
 	public void toSQL(FunctionContext context, Function function, RdbAdapter rdb) {
-		String[] convertTZ = rdb.convertTZ(ExecuteContext.getCurrentContext().getTimeZone().getID());
+		String[] convertTZ = rdb.convertTZ(ExecuteContext.getCurrentContext()
+				.getTimeZone()
+				.getID());
 		context.append(convertTZ[0]);
-		if (function.getArguments() == null || function.getArguments().size() != 1) {
+		if (function.getArguments() == null || function.getArguments()
+				.size() != 1) {
 			throw new QueryException(function.getName() + " must have only one arguments.");
 		}
-		context.appendArgument(function.getArguments().get(0));
+		context.appendArgument(function.getArguments()
+				.get(0));
 		context.append(convertTZ[1]);
 	}
 
 	@Override
 	public void toSQL(StringBuilder context, List<CharSequence> args,
 			RdbAdapter rdb) {
-		String[] convertTZ = rdb.convertTZ(ExecuteContext.getCurrentContext().getTimeZone().getID());
+		String[] convertTZ = rdb.convertTZ(ExecuteContext.getCurrentContext()
+				.getTimeZone()
+				.getID());
 		context.append(convertTZ[0]);
 		if (args == null || args.size() != 1) {
 			throw new QueryException(getFunctionName() + " must have only one arguments.");

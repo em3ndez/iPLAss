@@ -71,12 +71,27 @@
 	display: block;
 }
 
+//original selectors
+//#detailForm .default-section > div, #detailForm .mass-reference-section > div, #detailForm .reference-section > div, #detailForm .version-section > div
+%extend_default_section {
+  display: block;
+  float: none;
+  width: 100%;
+}
+
 #detailForm {
 	> div {
 		@extend %extend_gdd_1;
 	}
 	.formArchive > div {
 		@extend %extend_gdd_1;
+	}
+	// default-section など、スクロール対応用に新規追加
+	.default-section > div,
+	.mass-reference-section > div,
+	.reference-section > div,
+	.version-section > div {
+	    @extend %extend_default_section;
 	}
 }
 .formArchive {
@@ -132,7 +147,10 @@
 	}
 	.inner-section > div > .sechead {
 		//inner-section に対して12pxのpaddingが設定されているので、タイトル上のSpaceを調整
-		padding-top: 8px;
+		padding-top: 12px;
+		&> h3 {
+			margin-bottom: 12px;;
+		}
 	}
 	.upload-button {
 		width: 100%;
@@ -165,6 +183,9 @@
 		width: 100%;
 	}
 	input[type=text] {
+		@extend %extend_gdd_2;
+	}
+	input.custom-type-text {
 		@extend %extend_gdd_2;
 	}
 	input[type=password] {
@@ -200,6 +221,9 @@
 			input[type=text] {
 				margin: 0;
 			}
+			input.custom-type-text {
+				margin: 0;
+			}
 			input[type=password] {
 				margin: 0;
 			}
@@ -212,14 +236,35 @@
 	.cke {
 		margin: 2px 0;
 	}
-	.numericRange input {
-		width: 45%;
+	.numericRange {
+		> span:nth-child(n+2) {
+			margin-left: 4px; //2つ目以降の先頭を空ける
+		}
+		input {
+			width: 45%;
+		}
 	}
-	.numericRange span:nth-child(2) input {
-		margin-left: 4px;
+	.dateRange > span:nth-child(n+2) {
+		margin-left: 4px; //2つ目以降の先頭を空ける
 	}
-	.dateRange span:nth-child(2) > input {
-		margin-left: 4px;
+	.layout-row {
+		height: auto;
+		visibility: collapse;
+		> th.section-data {
+			height: 0 !important;
+			border: none !important;
+			padding-top: 0 !important;
+			padding-bottom: 0 !important;
+		}
+		> td.section-data {
+			height: 0 !important;
+			border: none !important;
+			padding-top: 0 !important;
+			padding-bottom: 0 !important;
+		}
+	}
+	.data-label {
+		overflow-wrap: break-word;
 	}
 }
 .tbl-reference {
@@ -294,6 +339,8 @@
 	border: 1px solid $color_alto_approx;
 	margin-top: 2px;
 	margin-bottom: 8px;
+	overflow: auto;
+	overflow-wrap: break-word;
 	> a {
 		line-height: 25px;
 		padding-left: 5px;
@@ -312,6 +359,9 @@
 			float: none;
 			margin-left: 10px;
 		}
+	}
+	input.custom-type-text {
+		@extend %extend_gdd_5;
 	}
 	input[type=password] {
 		@extend %extend_gdd_5;
@@ -542,4 +592,25 @@ a + .binaryDelete {
 			}
 		}
 	}
+}
+.ref-select-filter {
+	display: flex;
+	flex-wrap: wrap; 
+	gap: 0.5rem;
+	align-items: flex-start;
+	justify-content: flex-start;
+	box-sizing: border-box;
+}
+.ref-select-filter .ref-select-filter-item {
+	flex: 1 1 calc(50% - 0.25rem);
+	max-width: 35rem;
+	min-width: 0;
+	width: auto;
+	order: 0;
+}
+.ref-select-filter .error-multiplicity{
+	flex: 0 0 100%; 
+	order: 1; 
+	margin-top: 0.5rem;
+	box-sizing: border-box;
 }

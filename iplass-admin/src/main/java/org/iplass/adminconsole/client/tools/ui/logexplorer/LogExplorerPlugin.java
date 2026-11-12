@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,7 +30,6 @@ import com.smartgwt.client.widgets.menu.MenuItem;
 import com.smartgwt.client.widgets.menu.events.ClickHandler;
 import com.smartgwt.client.widgets.menu.events.MenuItemClickEvent;
 
-
 public class LogExplorerPlugin extends DefaultAdminPlugin {
 
 	/** ノード表示名 */
@@ -52,19 +51,20 @@ public class LogExplorerPlugin extends DefaultAdminPlugin {
 
 	@Override
 	public void onNodeDoubleClick(AdminMenuTreeNode node) {
-		if (NODE_TYPE.equals(node.getType())){
+		if (NODE_TYPE.equals(node.getType())) {
 			addTab(node);
 		}
 	}
 
 	@Override
 	public void onNodeContextClick(final AdminMenuTreeNode node) {
-		if (NODE_TYPE.equals(node.getType())){
+		if (NODE_TYPE.equals(node.getType())) {
 
 			if (contextMenu == null) {
 				contextMenu = new Menu();
 				//contextMenu.setWidth(100);
-				MenuItem execMenuItem = new MenuItem(AdminClientMessageUtil.getString("ui_tools_logexplorer_LogExplorerPluginManager_startLogExplorer"), NODE_ICON);
+				MenuItem execMenuItem = new MenuItem(AdminClientMessageUtil.getString("ui_tools_logexplorer_LogExplorerPluginManager_startLogExplorer"),
+						NODE_ICON);
 				execMenuItem.addClickHandler(new ClickHandler() {
 
 					@Override
@@ -86,7 +86,7 @@ public class LogExplorerPlugin extends DefaultAdminPlugin {
 	@Override
 	public void onContentClosed(ContentClosedEvent event) {
 		if (event.getSource() instanceof LogExplorerMainPane) {
-			LogExplorerMainPane pane = (LogExplorerMainPane)event.getSource();
+			LogExplorerMainPane pane = (LogExplorerMainPane) event.getSource();
 			pane.onContentClosed(event);
 		}
 	}

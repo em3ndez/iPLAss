@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,11 +20,11 @@
 
 package org.iplass.adminconsole.client.tools.ui.entityexplorer.crawl;
 
-
 import org.iplass.adminconsole.client.base.i18n.AdminClientMessageUtil;
 import org.iplass.adminconsole.client.base.tenant.TenantInfoHolder;
 import org.iplass.adminconsole.client.base.ui.widget.GridActionImgButton;
 import org.iplass.adminconsole.client.base.ui.widget.MetaDataViewGridButton;
+import org.iplass.adminconsole.client.base.ui.widget.MtpListGrid;
 import org.iplass.adminconsole.client.base.util.SmartGWTUtil;
 import org.iplass.adminconsole.client.tools.data.entityexplorer.CrawlEntityInfoDS;
 import org.iplass.adminconsole.shared.tools.rpc.entityexplorer.EntityExplorerServiceAsync;
@@ -88,7 +88,8 @@ public class EntityCrawlListPane extends VLayout {
 		final ToolStripButton startCrawlButton = new ToolStripButton();
 		startCrawlButton.setIcon(EXECUTE_ICON);
 		startCrawlButton.setTitle("Start Crawl");
-		startCrawlButton.setTooltip(SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_tools_entityexplorer_EntityCrawlListPane_startCrawling")));
+		startCrawlButton
+				.setTooltip(SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_tools_entityexplorer_EntityCrawlListPane_startCrawling")));
 		startCrawlButton.addClickHandler(new ClickHandler() {
 
 			@Override
@@ -117,15 +118,16 @@ public class EntityCrawlListPane extends VLayout {
 				}
 
 				SC.ask(AdminClientMessageUtil.getString("ui_tools_entityexplorer_EntityCrawlListPane_confirm"),
-						AdminClientMessageUtil.getString("ui_tools_entityexplorer_EntityCrawlListPane_startReCreateDeleteAllIndex"), new BooleanCallback() {
+						AdminClientMessageUtil.getString("ui_tools_entityexplorer_EntityCrawlListPane_startReCreateDeleteAllIndex"),
+						new BooleanCallback() {
 
-					@Override
-					public void execute(Boolean value) {
-						if (value) {
-							startReCrawl();
-						}
-					}
-				});
+							@Override
+							public void execute(Boolean value) {
+								if (value) {
+									startReCrawl();
+								}
+							}
+						});
 			}
 
 		});
@@ -143,15 +145,16 @@ public class EntityCrawlListPane extends VLayout {
 			public void onClick(ClickEvent event) {
 
 				SC.ask(AdminClientMessageUtil.getString("ui_tools_entityexplorer_EntityCrawlListPane_confirm"),
-						AdminClientMessageUtil.getString("ui_tools_entityexplorer_EntityCrawlListPane_startRefreshIndexChanges"), new BooleanCallback() {
+						AdminClientMessageUtil.getString("ui_tools_entityexplorer_EntityCrawlListPane_startRefreshIndexChanges"),
+						new BooleanCallback() {
 
-					@Override
-					public void execute(Boolean value) {
-						if (value) {
-							startRefresh();
-						}
-					}
-				});
+							@Override
+							public void execute(Boolean value) {
+								if (value) {
+									startRefresh();
+								}
+							}
+						});
 			}
 
 		});
@@ -160,7 +163,8 @@ public class EntityCrawlListPane extends VLayout {
 
 		showCountItem = new CheckboxItem();
 		showCountItem.setTitle("Get Data Count");
-		showCountItem.setTooltip(SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_tools_entityexplorer_EntityCrawlListPane_entityDataNumberLarge")));
+		showCountItem.setTooltip(
+				SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_tools_entityexplorer_EntityCrawlListPane_entityDataNumberLarge")));
 		showCountItem.addChangedHandler(new ChangedHandler() {
 
 			@Override
@@ -180,7 +184,8 @@ public class EntityCrawlListPane extends VLayout {
 
 		final ToolStripButton refreshButton = new ToolStripButton();
 		refreshButton.setIcon(REFRESH_ICON);
-		refreshButton.setTooltip(SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_tools_entityexplorer_EntityCrawlListPane_refreshList")));
+		refreshButton
+				.setTooltip(SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_tools_entityexplorer_EntityCrawlListPane_refreshList")));
 		refreshButton.addClickHandler(new ClickHandler() {
 
 			@Override
@@ -190,14 +195,15 @@ public class EntityCrawlListPane extends VLayout {
 		});
 		toolStrip.addButton(refreshButton);
 
-		grid = new ListGrid(){
+		grid = new MtpListGrid() {
 			@Override
 			protected Canvas createRecordComponent(final ListGridRecord record, Integer colNum) {
 				final String fieldName = this.getFieldName(colNum);
 				if ("explorerButton".equals(fieldName)) {
-					if (!record.getAttributeAsBoolean("isError")){
+					if (!record.getAttributeAsBoolean("isError")) {
 						MetaDataViewGridButton button = new MetaDataViewGridButton(EntityDefinition.class.getName());
-						button.setActionButtonPrompt(SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_tools_entityexplorer_EntityCrawlListPane_showMetaDataEditScreen")));
+						button.setActionButtonPrompt(SmartGWTUtil.getHoverString(
+								AdminClientMessageUtil.getString("ui_tools_entityexplorer_EntityCrawlListPane_showMetaDataEditScreen")));
 						button.setMetaDataShowClickHandler(new MetaDataViewGridButton.MetaDataShowClickHandler() {
 							@Override
 							public String targetDefinitionName() {
@@ -207,7 +213,7 @@ public class EntityCrawlListPane extends VLayout {
 						return button;
 					}
 				} else if ("error".equals(fieldName)) {
-					if (record.getAttributeAsBoolean("isError")){
+					if (record.getAttributeAsBoolean("isError")) {
 						record.setEnabled(false);
 						GridActionImgButton recordCanvas = new GridActionImgButton();
 						recordCanvas.setActionButtonSrc(ERROR_ICON);
@@ -221,18 +227,19 @@ public class EntityCrawlListPane extends VLayout {
 
 		grid.setWidth100();
 		grid.setHeight100();
-		//grid.setShowAllRecords(true);		//これをtrueにすると件数が多い場合に全て表示されない不具合発生
-		grid.setLeaveScrollbarGap(false);	//falseで縦スクロールバー領域が自動表示制御される
-		grid.setShowRowNumbers(true);		//行番号表示
 
-		grid.setCanFreezeFields(false);
-		grid.setShowSelectedStyle(false);
-		grid.setCanGroupBy(false);
-		grid.setCanPickFields(false);
+		//データ件数が多い場合を考慮し、false
+		grid.setShowAllRecords(false);
+
+		//行番号表示
+		grid.setShowRowNumbers(true);
 
 		//CheckBox選択設定
 		grid.setSelectionType(SelectionStyle.SIMPLE);
 		grid.setSelectionAppearance(SelectionAppearance.CHECKBOX);
+
+		//ソートを許可
+		grid.setCanSort(true);
 
 		//この２つを指定することでcreateRecordComponentが有効
 		grid.setShowRecordComponents(true);
@@ -274,7 +281,7 @@ public class EntityCrawlListPane extends VLayout {
 		int cnt = 0;
 		for (ListGridRecord record : records) {
 			defNames[cnt] = record.getAttributeAsString("name");
-			cnt ++;
+			cnt++;
 		}
 
 		service.execCrawlEntity(TenantInfoHolder.getId(), defNames, new AsyncCallback<Void>() {
@@ -282,7 +289,7 @@ public class EntityCrawlListPane extends VLayout {
 			@Override
 			public void onFailure(Throwable caught) {
 				SmartGWTUtil.hideProgress();
-				SC.say("failed","Failed to crawling entity." + caught.getMessage());
+				SC.say("failed", "Failed to crawling entity." + caught.getMessage());
 				GWT.log(caught.toString(), caught);
 			}
 
@@ -304,7 +311,7 @@ public class EntityCrawlListPane extends VLayout {
 			@Override
 			public void onFailure(Throwable caught) {
 				SmartGWTUtil.hideProgress();
-				SC.say("failed","Failed to crawling entity." + caught.getMessage());
+				SC.say("failed", "Failed to crawling entity." + caught.getMessage());
 				GWT.log(caught.toString(), caught);
 			}
 
@@ -338,7 +345,6 @@ public class EntityCrawlListPane extends VLayout {
 			}
 		});
 	}
-
 
 	private void refreshGrid() {
 		boolean isGetDataCount = showCountItem.getValueAsBoolean();

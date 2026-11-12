@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 <%@ page import="java.util.ArrayList" %>
@@ -81,7 +81,6 @@
 	String rootDefName = (String)request.getAttribute(Constants.ROOT_DEF_NAME);
 	PropertyDefinition pd = (PropertyDefinition) request.getAttribute(Constants.EDITOR_PROPERTY_DEFINITION);
 	String scriptKey = (String)request.getAttribute(Constants.SECTION_SCRIPT_KEY);
-	boolean allowedContent = editor.isAllowedContent();
 	Boolean outputHidden = (Boolean) request.getAttribute(Constants.OUTPUT_HIDDEN);
 	if (outputHidden == null) outputHidden = false;
 
@@ -106,7 +105,7 @@
 		//詳細編集か詳細表示の場合だけ表示する
 		if (OutputType.EDIT == type || OutputType.VIEW == type) {
 %>
-<span class="data-label">
+<span name="data-label-<c:out value="<%=propName %>"/>" class="data-label">
 <%
 			if (isMultiple) {
 				String[] array = propValue instanceof String[] ? (String[]) propValue : null;
@@ -122,59 +121,38 @@
 				}
 			} else {
 				String str = propValue instanceof String ? (String) propValue : "";
+				String textId = "id_" + propName;
 %>
-<textarea name="<c:out value="<%=propName%>"/>" rows="5" cols="30" style="<c:out value="<%=customStyle %>"/>"><c:out value="<%=str %>"/></textarea>
+<textarea name="<c:out value="<%=propName%>"/>" rows="5" cols="30" style="<c:out value="<%=customStyle %>"/>" id="<c:out value="<%=textId %>"/>"><c:out value="<%=str %>"/></textarea>
 <%
 			}
-		}
+
+			request.setAttribute(Constants.EDITOR_RICHTEXT_LIBRARY, editor.getRichTextLibrary());
+			request.setAttribute(Constants.EDITOR_RICHTEXT_ALLOWED_CONTENT, editor.isAllowedContent());
+			request.setAttribute(Constants.EDITOR_RICHTEXT_HIDE_TOOL_BAR, editor.isHideRichtextEditorToolBar());
+			request.setAttribute(Constants.EDITOR_RICHTEXT_ALLOWED_LINK_ACTION, editor.isAllowRichTextEditorLinkAction());
+			request.setAttribute(Constants.EDITOR_RICHTEXT_EDITOR_OPTION, editor.getRichtextEditorOption());
+			request.setAttribute(Constants.EDITOR_RICHTEXT_TARGET_NAME, propName);
 %>
 </span>
-<%
-		if (request.getAttribute(Constants.RICHTEXT_LIB_LOADED) == null) {
-			request.setAttribute(Constants.RICHTEXT_LIB_LOADED, true);
-%>
-<%@include file="../../../layout/resource/ckeditorResource.inc.jsp" %>
-<%
-		}
-%>
-<script type="text/javascript">
-$(function() {
-<%		if (StringUtil.isNotBlank(editor.getRichtextEditorOption())) { %>
-	var opt = <%=editor.getRichtextEditorOption()%>;
-	if (typeof opt.readOnly === "undefined") opt.readOnly = true;
-<%		} else { %>
-	var opt = { readOnly: true, allowedContent:<%=allowedContent%> };
-<%		} %>
-	if (typeof opt.extraPlugins === "undefined") opt.extraPlugins = "autogrow";
-	if (typeof opt.autoGrow_onStartup === "undefined") opt.autoGrow_onStartup = true;
-<% 		if (editor.isHideRichtextEditorToolBar()) { %>
-	var readyOpt = {
-		on: {
-			instanceReady: function (evt) {
-				<%-- 全体border、ツールバーを非表示 --%>
-				var containerId = evt.editor.container.$.id;
-				var editorId = evt.editor.id;
-				$("#" + containerId).css("border", "none");
-				$("#" + editorId + "_top").hide();
-				$("#" + editorId + "_bottom").hide();
-			}
-		}
-	}
-	$.extend(opt, readyOpt);
-<% 		} %>
 
-	$("textarea[name='<%=StringUtil.escapeJavaScript(propName)%>']").ckeditor(
-		function() {}, opt
-	);
-});
-</script>
+<%@include file="../../../layout/resource/richtextEditorResource.inc.jsp" %>
+<jsp:include page="richtext/RichtextEditor_View.jsp" />
+
 <%
+			request.removeAttribute(Constants.EDITOR_RICHTEXT_LIBRARY);
+			request.removeAttribute(Constants.EDITOR_RICHTEXT_ALLOWED_CONTENT);
+			request.removeAttribute(Constants.EDITOR_RICHTEXT_HIDE_TOOL_BAR);
+			request.removeAttribute(Constants.EDITOR_RICHTEXT_ALLOWED_LINK_ACTION);
+			request.removeAttribute(Constants.EDITOR_RICHTEXT_EDITOR_OPTION);
+			request.removeAttribute(Constants.EDITOR_RICHTEXT_TARGET_NAME);
+		}
 	} else if (editor.getDisplayType() == StringDisplayType.SELECT) {
 		
 		if (isMultiple) {
 			List<EditorValue> values = getValues(editor, propValue, pd);
 %>
-<ul class="data-label" style="<c:out value="<%=customStyle %>"/>">
+<ul name="data-label-<c:out value="<%=propName %>"/>" class="data-label" style="<c:out value="<%=customStyle %>"/>">
 <%
 			for (EditorValue tmp : values) {
 				String label = EntityViewUtil.getStringPropertySelectTypeLabel(tmp);
@@ -195,22 +173,31 @@ $(function() {
 				label = EntityViewUtil.getStringPropertySelectTypeLabel(ev);
 			}
 %>
-<span class="data-label" style="<c:out value="<%=customStyle %>"/>">
+<span name="data-label-<c:out value="<%=propName %>"/>"  class="data-label" style="<c:out value="<%=customStyle %>"/>">
 <c:out value="<%=label %>"/>
 </span>
 <%
 		}
 	} else if (editor.getDisplayType() == StringDisplayType.HIDDEN) {
 		if (isMultiple) {
+			//複数
+%>
+<ul name="data-hidden-<c:out value="<%=propName %>"/>">
+<%
 			String[] array = propValue instanceof String[] ? (String[]) propValue : null;
 			if (array != null) {
 				for (int i = 0; i < array.length; i++) {
 					String str = array[i] != null ? array[i] : "";
 %>
+<li>
 <input type="hidden" name="<c:out value="<%=propName %>"/>" value="<c:out value="<%=str %>"/>" />
+</li>
 <%
 				}
 			}
+%>
+</ul>
+<%
 		} else {
 			//単一
 			String str = propValue instanceof String ? (String) propValue : "";
@@ -224,7 +211,7 @@ $(function() {
 		
 		if (isMultiple) {
 %>
-<ul class="data-label" style="<c:out value="<%=customStyle %>"/>">
+<ul name="data-label-<c:out value="<%=propName %>"/>"  class="data-label" style="<c:out value="<%=customStyle %>"/>">
 <%
 			String[] array = propValue instanceof String[] ? (String[]) propValue : null;
 			if (array != null) {
@@ -268,7 +255,7 @@ $(function() {
 				str = str.replaceAll("\r\n", "<BR>").replaceAll("\n", "<BR>").replaceAll("\r", "<BR>").replaceAll(" ", "&nbsp;");
 			}
 %>
-<span class="data-label" style="<c:out value="<%=customStyle %>"/>">
+<span name="data-label-<c:out value="<%=propName %>"/>" class="data-label" style="<c:out value="<%=customStyle %>"/>">
 <%-- XSS対応-エスケープ処理済み＆HTMLタグ出力のため対応なし --%>
 <%=str %>
 <%

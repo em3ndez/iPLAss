@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -93,7 +93,7 @@ public class DefragEntityInfoDS extends AbstractAdminDataSource {
 			@Override
 			public void onSuccess(List<DefragEntityInfo> entities) {
 				List<ListGridRecord> records = createRecord(entities);
-				response.setData(records.toArray(new ListGridRecord[]{}));
+				response.setData(records.toArray(new ListGridRecord[] {}));
 				response.setTotalRows(records.size());
 				response.setStartRow(0);
 				processResponse(requestId, response);
@@ -103,7 +103,8 @@ public class DefragEntityInfoDS extends AbstractAdminDataSource {
 			public void onFailure(Throwable caught) {
 				GWT.log("error!!!", caught);
 
-				SC.warn(AdminClientMessageUtil.getString("datasource_tools_entityexplorer_SimpleEntityInfoDS_failedToGetEntityList") + caught.getMessage());
+				SC.warn(AdminClientMessageUtil.getString("datasource_tools_entityexplorer_SimpleEntityInfoDS_failedToGetEntityList")
+						+ caught.getMessage());
 
 				response.setStatus(RPCResponse.STATUS_FAILURE);
 				processResponse(requestId, response);

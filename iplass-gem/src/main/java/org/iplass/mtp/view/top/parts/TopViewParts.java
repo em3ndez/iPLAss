@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,14 +24,16 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
 
 /**
  * TOP画面パーツ
  * @author lis3wg
  */
-@XmlSeeAlso({TopViewContentParts.class, ScriptParts.class, UserMaintenanceParts.class, FulltextSearchViewParts.class,
-	CsvDownloadSettingsParts.class, ApplicationMaintenanceParts.class, PreviewDateParts.class})
+@XmlSeeAlso({ TopViewContentParts.class, ScriptParts.class, UserMaintenanceParts.class, FulltextSearchViewParts.class,
+		CsvDownloadSettingsParts.class, ApplicationMaintenanceParts.class, PreviewDateParts.class })
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 public abstract class TopViewParts implements Serializable {
 
 	/** SerialVersionUID */
@@ -39,6 +41,9 @@ public abstract class TopViewParts implements Serializable {
 
 	/** パラメータ */
 	protected Map<String, String> params = new HashMap<>();
+
+	/** 最大高さ */
+	private Integer maxHeight;
 
 	/**
 	 * パラメータを設定します
@@ -71,5 +76,37 @@ public abstract class TopViewParts implements Serializable {
 	 */
 	public String getParam(String key) {
 		return params.get(key);
+	}
+
+	/**
+	 * パーツIDを設定します
+	 * @param partsId パーツID
+	 */
+	public void setPartsId(String partsId) {
+		setParam("partsId", partsId);
+	}
+
+	/**
+	 * パーツIDを取得します
+	 * @return パーツID
+	 */
+	public String getPartsId() {
+		return getParam("partsId");
+	}
+
+	/**
+	 * 最大高さを取得します。
+	 * @return 最大高さ
+	 */
+	public Integer getMaxHeight() {
+		return maxHeight;
+	}
+
+	/**
+	 * 最大高さを設定します。
+	 * @param maxHeight 最大高さ
+	 */
+	public void setMaxHeight(Integer maxHeight) {
+		this.maxHeight = maxHeight;
 	}
 }

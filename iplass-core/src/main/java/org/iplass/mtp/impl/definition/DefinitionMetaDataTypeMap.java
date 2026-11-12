@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,12 +27,14 @@ public abstract class DefinitionMetaDataTypeMap<D extends Definition, M extends 
 	protected String pathPrefix;
 	protected Class<M> metaType;
 	protected Class<D> defType;
+	private DefinitionNameChecker definitionNameChecker;
 //	boolean replaceDot;
 
 	protected DefinitionMetaDataTypeMap(String pathPrefix, Class<M> metaType, Class<D> defType) {
 		this.pathPrefix = pathPrefix;
 		this.metaType = metaType;
 		this.defType = defType;
+		this.definitionNameChecker = this.createDefinitionNameChecker();
 //		this.replaceDot = replaceDot;
 	}
 
@@ -43,15 +45,41 @@ public abstract class DefinitionMetaDataTypeMap<D extends Definition, M extends 
 		}
 		return null;
 	};
+
 	public abstract TypedDefinitionManager<D> typedDefinitionManager();
 
 	public String toPath(String defName) {
 		return pathPrefix + defName;
 	}
+
 	public String toDefName(String path) {
 		return path.substring(pathPrefix.length());
 	}
+
 	public String typeName() {
 		return defType.getSimpleName();
+	}
+
+	/**
+	 * メタデータ定義名Checkerを返却
+	 * 
+	 * @return メタデータ定義名Checker
+	 */
+	public DefinitionNameChecker getDefinitionNameChecker() {
+		return this.definitionNameChecker;
+	}
+
+	/**
+	 * メタデータ定義名Checker生成
+	 * 
+	 * <p>
+	 * デフォルトはメタデータ定義名が「パスにスラッシュを利用、名前にピリオド含む」になってるかチェックするChecker<br/>
+	 * デフォルト以外のCheckerを利用する場合はオーバーライドする
+	 * </p>
+	 * 
+	 * @return メタデータ定義名Checker
+	 */
+	protected DefinitionNameChecker createDefinitionNameChecker() {
+		return DefinitionNameChecker.getDefaultDefinitionNameChecker();
 	}
 }

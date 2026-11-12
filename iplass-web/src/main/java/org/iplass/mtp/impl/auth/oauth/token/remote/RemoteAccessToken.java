@@ -1,19 +1,19 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
- * 
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
+ *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
@@ -26,8 +26,15 @@ import org.iplass.mtp.auth.User;
 import org.iplass.mtp.impl.auth.oauth.token.AccessToken;
 import org.iplass.mtp.impl.auth.oauth.token.RefreshToken;
 
+/**
+ * RemoteAccessToken
+ *
+ * @author DENTSU SOKEN INC.
+ */
 public class RemoteAccessToken extends AccessToken {
-	
+	/** SerialVersionUID */
+	private static final long serialVersionUID = 5425823644475667735L;
+
 	private String tokenEncoded;
 	private User user;
 	private List<String> grantedScopes;
@@ -37,11 +44,11 @@ public class RemoteAccessToken extends AccessToken {
 	private long expiresIn;
 	private long issuedAt;
 	private long notBefore;
-	
+
 	private String audience;
 	private String issuer;
 	private String username;
-	
+
 	RemoteAccessToken(String tokenEncoded, IntroResponse jsonMap) {
 		this.tokenEncoded = tokenEncoded;
 		if (jsonMap.scope != null) {
@@ -64,7 +71,7 @@ public class RemoteAccessToken extends AccessToken {
 		this.audience = jsonMap.aud;
 		this.issuer = jsonMap.iss;
 		this.username = jsonMap.username;
-		
+
 		this.user = jsonMap.resource_owner;
 		if (user == null) {
 			user = new User();
@@ -73,7 +80,7 @@ public class RemoteAccessToken extends AccessToken {
 			user.setName(username);
 		}
 	}
-	
+
 	public long getExpires() {
 		return expires;
 	}
@@ -93,7 +100,7 @@ public class RemoteAccessToken extends AccessToken {
 	public String getSub() {
 		return sub;
 	}
-	
+
 	public void setUser(User user) {
 		this.user = user;
 	}
@@ -102,7 +109,7 @@ public class RemoteAccessToken extends AccessToken {
 	public List<String> getGrantedScopes() {
 		return grantedScopes;
 	}
-	
+
 	@Override
 	public String getTokenEncoded() {
 		return tokenEncoded;
@@ -117,7 +124,7 @@ public class RemoteAccessToken extends AccessToken {
 	public User getUser() {
 		return user;
 	}
-	
+
 	@Override
 	public RefreshToken getRefreshToken() {
 		return null;

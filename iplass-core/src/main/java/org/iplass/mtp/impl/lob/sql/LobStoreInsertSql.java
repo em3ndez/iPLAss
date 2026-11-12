@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,12 +24,12 @@ import org.iplass.mtp.impl.rdb.adapter.RdbAdapter;
 import org.iplass.mtp.impl.rdb.adapter.UpdateSqlHandler;
 
 public class LobStoreInsertSql extends UpdateSqlHandler {
-	
+
 	public String toSql(int tenantId, long lobId, Long size, RdbAdapter rdb) {
 		StringBuilder sql = new StringBuilder();
 		sql.append("INSERT INTO " + LobStoreTable.TABLE_NAME + "("
 				+ LobStoreTable.TENANT_ID
-				+ "," + LobStoreTable.LOB_DATA_ID 
+				+ "," + LobStoreTable.LOB_DATA_ID
 				+ "," + LobStoreTable.CRE_DATE
 				+ "," + LobStoreTable.REF_COUNT
 				+ "," + LobStoreTable.B_DATA);
@@ -37,16 +37,20 @@ public class LobStoreInsertSql extends UpdateSqlHandler {
 			sql.append("," + LobStoreTable.LOB_SIZE);
 		}
 		sql.append(") VALUES(");
-		sql.append(tenantId).append(",");
-		sql.append(lobId).append(",");
-		sql.append(rdb.systimestamp()).append(",");
+		sql.append(tenantId)
+				.append(",");
+		sql.append(lobId)
+				.append(",");
+		sql.append(rdb.systimestamp())
+				.append(",");
 		sql.append("1,");
 		sql.append("null");
 		if (size != null) {
-			sql.append(",").append(size.longValue());
+			sql.append(",")
+					.append(size.longValue());
 		}
 		sql.append(")");
-		
+
 		return sql.toString();
 	}
 

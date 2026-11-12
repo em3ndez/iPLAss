@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,7 +26,6 @@ import java.nio.file.Path;
 
 import org.iplass.mtp.entity.BinaryReference;
 
-
 /**
  * アップロードされたファイルを表すインタフェース。
  * 
@@ -36,18 +35,18 @@ import org.iplass.mtp.entity.BinaryReference;
  *
  */
 public interface UploadFileHandle {
-	
+
 	/**
 	 * アップロードされたファイルをBinaryReferenceのインスタンスに変換。
 	 * 変換されたBinaryReferenceはEntityの属性として保存されるまでは、
-	 * テンポラリLOBとしてアップロードしたユーザのみが参照可能な状態。
+	 * テンポラリLOBとしてアップロードしたユーザーのみが参照可能な状態。
 	 * 
 	 * 
 	 * @return
 	 * @throws UploadFileSizeOverException アップロードされたファイルのファイルサイズが上限値を超えていた場合
 	 */
 	public BinaryReference toBinaryReference();
-	
+
 	/**
 	 * アップロードされたファイルのバイナリを読み込むためのInputStreamを取得。
 	 * 
@@ -55,7 +54,7 @@ public interface UploadFileHandle {
 	 * @throws UploadFileSizeOverException アップロードされたファイルのファイルサイズが上限値を超えていた場合
 	 */
 	public InputStream getInputStream();
-	
+
 	/**
 	 * アップロードされたファイルを指定のtargetへコピーする。
 	 * 
@@ -64,7 +63,7 @@ public interface UploadFileHandle {
 	 * @return コピー先のpath
 	 */
 	public Path copyTo(Path target, CopyOption... options);
-	
+
 	/**
 	 * アップロードされたファイルを指定のtargetへ移動する。
 	 * 
@@ -73,18 +72,18 @@ public interface UploadFileHandle {
 	 * @return 移動先のpath
 	 */
 	public Path moveTo(Path target, CopyOption... options);
-	
+
 	public String getType();
-	
+
 	public String getFileName();
-	
+
 	public long getSize();
-	
+
 	/**
 	 * アップロードされたファイルのファイルサイズが上限値を超えていた場合true。
 	 * 
 	 * @return
 	 */
 	public boolean isSizeOver();
-	
+
 }

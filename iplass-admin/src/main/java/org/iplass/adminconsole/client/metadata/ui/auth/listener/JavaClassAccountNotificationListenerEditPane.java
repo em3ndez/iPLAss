@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -65,7 +65,7 @@ public class JavaClassAccountNotificationListenerEditPane extends Authentication
 	 */
 	@Override
 	public void setDefinition(AccountNotificationListenerDefinition definition) {
-		JavaClassAccountNotificationListenerDefinition listener = (JavaClassAccountNotificationListenerDefinition)definition;
+		JavaClassAccountNotificationListenerDefinition listener = (JavaClassAccountNotificationListenerDefinition) definition;
 		txtClassNameField.setValue(listener.getClassName());
 	}
 
@@ -76,7 +76,7 @@ public class JavaClassAccountNotificationListenerEditPane extends Authentication
 	 */
 	@Override
 	public AccountNotificationListenerDefinition getEditDefinition(AccountNotificationListenerDefinition definition) {
-		JavaClassAccountNotificationListenerDefinition listener = (JavaClassAccountNotificationListenerDefinition)definition;
+		JavaClassAccountNotificationListenerDefinition listener = (JavaClassAccountNotificationListenerDefinition) definition;
 		listener.setClassName(SmartGWTUtil.getStringValue(txtClassNameField, true));
 		return listener;
 	}

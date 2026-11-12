@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -19,18 +19,24 @@
  */
 package org.iplass.mtp.impl.http;
 
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.iplass.mtp.spi.Config;
 import org.iplass.mtp.spi.Service;
 
 /**
  * カスタムのHttpClientを生成するためのHttpClientBuilderのFactoryのインタフェース。
- * 
+ *
  * @author K.Higuchi
  *
  */
 public interface HttpClientBuilderFactory {
-	
+	/**
+	 * HttpClientBuilderFactory を生成する
+	 * @param service Service
+	 * @param config Config
+	 * @param httpClientConfig
+	 * @return HttpClientBuilder インスタンス
+	 */
 	HttpClientBuilder create(Service service, Config config, HttpClientConfig httpClientConfig);
 
 }

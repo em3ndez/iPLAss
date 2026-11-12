@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,6 +23,7 @@ package org.iplass.adminconsole.shared.tools.rpc.pack;
 import java.util.List;
 
 import org.iplass.adminconsole.shared.tools.dto.entityexplorer.EntityDataImportResultInfo;
+import org.iplass.adminconsole.shared.tools.dto.metaexplorer.MetaDataCheckResultInfo;
 import org.iplass.adminconsole.shared.tools.dto.metaexplorer.MetaDataImportResultInfo;
 import org.iplass.adminconsole.shared.tools.dto.pack.PackageCreateInfo;
 import org.iplass.adminconsole.shared.tools.dto.pack.PackageCreateResultInfo;
@@ -51,6 +52,9 @@ public interface PackageRpcService extends XsrfProtectedService {
 
 	public MetaDataImportResultInfo importPackageMetaData(final int tenantId, final String packOid, final Tenant importTenant);
 
-	public EntityDataImportResultInfo importPackageEntityData(final int tenantId, final String packOid, final String path, final PackageImportCondition condition);
+	public EntityDataImportResultInfo importPackageEntityData(final int tenantId, final String packOid, final String path,
+			final PackageImportCondition condition);
+
+	public MetaDataCheckResultInfo checkPackageMetaData(final int tenantId, final String packOid);
 
 }

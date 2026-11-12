@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,12 +20,19 @@
 
 package org.iplass.mtp.impl.view.top;
 
+import java.util.List;
+
 import org.iplass.mtp.ManagerLocator;
 import org.iplass.mtp.definition.TypedDefinitionManager;
 import org.iplass.mtp.impl.definition.AbstractTypedMetaDataService;
 import org.iplass.mtp.impl.definition.DefinitionMetaDataTypeMap;
+import org.iplass.mtp.impl.definition.DefinitionNameChecker;
+import org.iplass.mtp.impl.util.KeyGenerator;
+import org.iplass.mtp.impl.view.top.parts.MetaTopViewParts;
 import org.iplass.mtp.spi.Config;
 import org.iplass.mtp.spi.Service;
+import org.iplass.mtp.util.CollectionUtil;
+import org.iplass.mtp.util.StringUtil;
 import org.iplass.mtp.view.top.TopViewDefinition;
 import org.iplass.mtp.view.top.TopViewDefinitionManager;
 
@@ -37,14 +44,35 @@ public class TopViewDefinitionService extends AbstractTypedMetaDataService<MetaT
 	/** メタデータのパス */
 	public static final String META_PATH = "/view/top/";
 
+	private KeyGenerator generator = new KeyGenerator();
+
 	public static class TypeMap extends DefinitionMetaDataTypeMap<TopViewDefinition, MetaTopView> {
 		public TypeMap() {
 			super(getFixedPath(), MetaTopView.class, TopViewDefinition.class);
 		}
+
 		@Override
 		public TypedDefinitionManager<TopViewDefinition> typedDefinitionManager() {
-			return ManagerLocator.getInstance().getManager(TopViewDefinitionManager.class);
+			return ManagerLocator.getInstance()
+					.getManager(TopViewDefinitionManager.class);
 		}
+
+		@Override
+		protected DefinitionNameChecker createDefinitionNameChecker() {
+			return DefinitionNameChecker.getPathSlashDefinitionNameChecker();
+		}
+	}
+
+	@Override
+	public void createMetaData(MetaTopView meta) {
+		this.setPartsId(meta, true);
+		super.createMetaData(meta);
+	}
+
+	@Override
+	public void updateMetaData(MetaTopView meta) {
+		this.setPartsId(meta, false);
+		super.updateMetaData(meta);
 	}
 
 	@Override
@@ -67,5 +95,30 @@ public class TopViewDefinitionService extends AbstractTypedMetaDataService<MetaT
 	@Override
 	public Class<TopViewHandler> getRuntimeType() {
 		return TopViewHandler.class;
+	}
+
+	private void setPartsId(MetaTopView meta, boolean forceGenerate) {
+		setPartsId(meta.getParts(), forceGenerate);
+		setPartsId(meta.getWidgets(), forceGenerate);
+	}
+
+	private void setPartsId(List<MetaTopViewParts> metaPartsList, boolean forceGenerate) {
+		if (CollectionUtil.isEmpty(metaPartsList)) {
+			return;
+		}
+
+		for (MetaTopViewParts metaParts : metaPartsList) {
+			if (generatePartsId(forceGenerate, metaParts.generatePartsId(), metaParts.getPartsId())) {
+				metaParts.setPartsId(generator.generateId());
+			}
+		}
+	}
+
+	private boolean generatePartsId(boolean forceGenerate, boolean generate, String partsId) {
+		if (forceGenerate) {
+			return true;
+		}
+
+		return (generate && StringUtil.isEmpty(partsId));
 	}
 }

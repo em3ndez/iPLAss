@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,16 +24,22 @@ import java.util.List;
 import org.iplass.mtp.auth.login.Credential;
 
 /**
- * ユーザに紐付く認証トークンの一覧を表すインタフェースです。
+ * ユーザーに紐付く認証トークンの一覧を表すインタフェースです。
  * 
  * @author K.Higuchi
  *
  */
 public interface AuthTokenInfoList {
-	
+
 	public List<AuthTokenInfo> getList();
+
+	public List<AuthTokenInfo> getList(String type);
+
 	public AuthTokenInfo get(String type, String key);
+
 	public void remove(String type);
+
 	public void remove(String type, String key);
+
 	public Credential generateNewToken(AuthTokenInfo newTokenInfo);
 }

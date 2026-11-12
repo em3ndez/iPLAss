@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -39,6 +39,7 @@ public class I18nMetaDisplayInfo implements Serializable {
 	public String getI18nDisplayName() {
 		return i18nDisplayName;
 	}
+
 	public void setI18nDisplayName(String i18nDisplayName) {
 		this.i18nDisplayName = i18nDisplayName;
 	}
@@ -46,6 +47,7 @@ public class I18nMetaDisplayInfo implements Serializable {
 	public String getI18nDescription() {
 		return i18nDescription;
 	}
+
 	public void setI18nDescription(String i18nDescription) {
 		this.i18nDescription = i18nDescription;
 	}

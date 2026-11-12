@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 <%@ page import="org.iplass.mtp.entity.Entity"%>
@@ -105,7 +105,10 @@
 				String buttonDisplayLabel = TemplateUtil.getMultilingualString(button.getDisplayLabel(), button.getLocalizedDisplayLabelList());
 %>
 <%-- XSS対応-メタの設定のため対応なし(button.getOnclickEvent) --%>
-<li class="btn"><input type="button" value="<c:out value="<%=buttonDisplayLabel %>"/>" class="<c:out value="<%=cssClass %>"/>" style="<c:out value="<%=customStyle %>"/>" onclick="<%=button.getOnclickEvent() %>" /></li>
+<li class="btn">
+<input type="button" class="<c:out value="<%=cssClass %>"/>" value="<c:out value="<%=buttonDisplayLabel %>"/>" 
+	style="<c:out value="<%=customStyle %>"/>" onclick="<%=button.getOnclickEvent() %>" />
+</li>
 <%
 			}
 		}
@@ -118,7 +121,10 @@
 				updateDisplayLabel = localizedUpdateDisplayLabel;
 			}
 %>
-<li class="btn save-btn"><input type="button" class="gr-btn" value="<c:out value="<%=updateDisplayLabel %>"/>" onclick="onclick_save('<%=StringUtil.escapeJavaScript(update) %>', this)" /></li>
+<li class="btn save-btn">
+<input type="button" class="gr-btn disabled-btn" value="<c:out value="<%=updateDisplayLabel %>"/>" 
+	disabled="disabled" onclick="onclick_save('<%=StringUtil.escapeJavaScript(update) %>', this)" />
+</li>
 <%
 		}
 		if (data.isCanDelete() && !form.isHideDelete()) {
@@ -128,7 +134,10 @@
 				deleteDisplayLabel = localizedDeleteDisplayLabel;
 			}
 %>
-<li class="btn delete-btn"><input type="button" class="gr-btn" value="<c:out value="<%=deleteDisplayLabel %>"/>" onclick="confirm_delete('<%=StringUtil.escapeJavaScript(delete) %>', this)" /></li>
+<li class="btn delete-btn">
+<input type="button" class="gr-btn disabled-btn" value="<c:out value="<%=deleteDisplayLabel %>"/>" 
+	disabled="disabled" onclick="confirm_delete('<%=StringUtil.escapeJavaScript(delete) %>', this)" />
+</li>
 <%
 		}
 		if (data.getEntityDefinition().getVersionControlType() != VersionControlType.NONE
@@ -139,7 +148,10 @@
 				displayLabel = localizedDisplayLabel;
 			}
 %>
-<li class="btn delete-version-btn"><input type="button" class="gr-btn" value="<c:out value="<%=displayLabel %>"/>" onclick="confirm_delete('<%=StringUtil.escapeJavaScript(delete) %>', this, {'<%=DeleteCommand.DELETE_SPECIFIC_VERSION%>':true})" /></li>
+<li class="btn delete-version-btn">
+<input type="button" class="gr-btn disabled-btn" value="<c:out value="<%=displayLabel %>"/>" 
+	disabled="disabled" onclick="confirm_delete('<%=StringUtil.escapeJavaScript(delete) %>', this, {'<%=DeleteCommand.DELETE_SPECIFIC_VERSION%>':true})" />
+</li>
 <%
 		}
 	} else {
@@ -150,10 +162,15 @@
 				insertDisplayLabel = localizedInsertDisplayLabel;
 			}
 %>
-<li class="btn insert-btn"><input type="button" class="gr-btn" value="<c:out value="<%=insertDisplayLabel %>"/>" onclick="onclick_insert('<%=StringUtil.escapeJavaScript(insert) %>', this)" /></li>
+<li class="btn insert-btn">
+<input type="button" class="gr-btn disabled-btn" value="<c:out value="<%=insertDisplayLabel %>"/>" 
+	disabled="disabled" onclick="onclick_insert('<%=StringUtil.escapeJavaScript(insert) %>', this)" />
+</li>
 <%
 		}
 	}
 %>
-<li class="mt05 cancel-link"><a href="javascript:void(0)" onclick="cancel();return false;">${m:rs("mtp-gem-messages", "generic.detail.detailButton.cancel")}</a></li>
+<li class="mt05 cancel-link">
+<a href="javascript:void(0)" onclick="cancel();return false;">${m:rs("mtp-gem-messages", "generic.detail.detailButton.cancel")}</a>
+</li>
 </ul>

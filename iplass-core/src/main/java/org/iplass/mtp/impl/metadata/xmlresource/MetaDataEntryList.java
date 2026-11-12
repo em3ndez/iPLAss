@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,11 +22,11 @@ package org.iplass.mtp.impl.metadata.xmlresource;
 
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name="metaDataList")
+@XmlRootElement(name = "metaDataList")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class MetaDataEntryList {
 	private List<ContextPath> contextPath;
@@ -38,10 +38,10 @@ public class MetaDataEntryList {
 	public void setContextPath(List<ContextPath> contextPath) {
 		this.contextPath = contextPath;
 	}
-	
+
 	public ContextPath getContextPath(String name) {
 		if (contextPath != null) {
-			for (ContextPath c: contextPath) {
+			for (ContextPath c : contextPath) {
 				if (name.equals(c.getName())) {
 					return c;
 				}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,8 +24,9 @@ import org.iplass.mtp.impl.auth.authenticate.token.AuthToken;
 import org.iplass.mtp.impl.auth.oauth.MetaOAuthClient.OAuthClientRuntime;
 
 public interface TokenCreationStrategy {
-	
+
 	public AuthToken create(OAuthClientRuntime client, AccessTokenHandler handler, String userUniqueId, AccessTokenInfo accessTokenInfo);
+
 	public AuthToken create(OAuthClientRuntime client, AccessTokenHandler handler, OpaqueRefreshToken refreshToken);
 
 }

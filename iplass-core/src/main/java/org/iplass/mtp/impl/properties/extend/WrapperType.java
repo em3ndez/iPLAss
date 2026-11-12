@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,14 +31,11 @@ public abstract class WrapperType extends ExtendType {
 	public boolean isVirtual() {
 		return false;
 	}
-	
-	
+
 	//public abstract ValueExpression translate(EntityField field, VirtualPropertyNormalizer normalizer);
 	//FIXME 変換メソッド次の3つ定義
 	//select句での変換メソッド
 	//where句での変換メソッド
 	//Sortでの変換メソッド
-	
-	
-	
+
 }

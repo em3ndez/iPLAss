@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,15 +30,18 @@ package org.iplass.mtp.web.template.report.definition;
  *
  */
 public class JxlsReportType extends ReportType {
-	
+
 	private static final long serialVersionUID = 4425769299483314155L;
-	
+
 	private ReportOutputLogicDefinition reportOutputLogicDefinition;
-	
+
 	private ReportParamMapDefinition[] paramMap;
-	
+
 	private String passwordAttributeName;
-	
+
+	/** オーナーパスワードAttribute名 */
+	private String ownerPasswordAttributeName;
+
 	private String templateName;
 
 	public ReportOutputLogicDefinition getReportOutputLogicDefinition() {
@@ -63,6 +66,22 @@ public class JxlsReportType extends ReportType {
 
 	public void setPasswordAttributeName(String passwordAttributeName) {
 		this.passwordAttributeName = passwordAttributeName;
+	}
+
+	/**
+	 * オーナーパスワードAttribute名を取得する
+	 * @return オーナーパスワードAttribute名
+	 */
+	public String getOwnerPasswordAttributeName() {
+		return ownerPasswordAttributeName;
+	}
+
+	/**
+	 * オーナーパスワードAttribute名を設定する
+	 * @param ownerPasswordAttributeName オーナーパスワードAttribute名
+	 */
+	public void setOwnerPasswordAttributeName(String ownerPasswordAttributeName) {
+		this.ownerPasswordAttributeName = ownerPasswordAttributeName;
 	}
 
 	public String getTemplateName() {

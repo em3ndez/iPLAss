@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -29,6 +29,7 @@
 <%@ page import="org.iplass.mtp.auth.AuthContext" %>
 <%@ page import="org.iplass.mtp.entity.permission.EntityPropertyPermission" %>
 <%@ page import="org.iplass.mtp.entity.BinaryReference"%>
+<%@ page import="org.iplass.mtp.entity.definition.EntityDefinition" %>
 <%@ page import="org.iplass.mtp.entity.definition.PropertyDefinition" %>
 <%@ page import="org.iplass.mtp.util.StringUtil" %>
 <%@ page import="org.iplass.mtp.view.generic.editor.BinaryPropertyEditor" %>
@@ -38,6 +39,8 @@
 <%@ page import="org.iplass.gem.command.binary.DownloadCommand"%>
 <%@ page import="org.iplass.gem.command.binary.UploadCommand"%>
 <%@ page import="org.iplass.gem.command.Constants" %>
+<%@ page import="org.iplass.gem.GemConfigService" %>
+<%@ page import="org.iplass.mtp.spi.ServiceRegistry" %>
 
 <%!
 	String url(BinaryReference br, String action) {
@@ -74,6 +77,9 @@
 		}
 	}
 	boolean updatable = ((pd == null || pd.isUpdatable()) || isInsert) && isEditable;
+	
+	GemConfigService service = ServiceRegistry.getRegistry().getService(GemConfigService.class);
+	boolean binaryUploadAsync = service.isBinaryUploadAsync();
 
 	//詳細編集
 	if (editor.getDisplayType() != BinaryDisplayType.HIDDEN && editor.getDisplayType() != BinaryDisplayType.LABEL && updatable) {
@@ -136,23 +142,37 @@
 		String multiple = "";
 		if (pd.getMultiplicity() > 1) multiple = "multiple";
 
+		String viewName = (String)request.getAttribute(Constants.VIEW_NAME);
+		if (viewName == null) {
+			viewName = "";
+		}
+		// NOTE ネストプロパティの場合、defName ではネスト先のエンティティ名が取得できてしまう。
+		//      entityDefinition キーで取得する値は表示しているビューのエンティティ定義なので、そこからエンティティ名を取得する
+		EntityDefinition entityDefinition = (EntityDefinition)request.getAttribute(Constants.ENTITY_DEFINITION);
+		String rootDefName = defName;
+		if (entityDefinition != null) {
+			rootDefName = entityDefinition.getName();
+		}
+
 		if (request.getAttribute(Constants.UPLOAD_LIB_LOADED) == null) {
 			request.setAttribute(Constants.UPLOAD_LIB_LOADED, true);
 %>
-<script type="text/javascript" src="${m:esc(staticContentPath)}/webjars/blueimp-file-upload/10.30.1/js/jquery.fileupload.js?cv=<%=TemplateUtil.getAPIVersion()%>"></script>
-<script type="text/javascript" src="${m:esc(staticContentPath)}/webjars/blueimp-file-upload/10.30.1/js/jquery.iframe-transport.js?cv=<%=TemplateUtil.getAPIVersion()%>"></script>
+<script type="text/javascript" src="${m:esc(staticContentPath)}/webjars/blueimp-file-upload/10.32.0/js/jquery.fileupload.js?cv=<%=TemplateUtil.getAPIVersion()%>"></script>
+<script type="text/javascript" src="${m:esc(staticContentPath)}/webjars/blueimp-file-upload/10.32.0/js/jquery.iframe-transport.js?cv=<%=TemplateUtil.getAPIVersion()%>"></script>
 <%
 		}
 		if (!hideSelectButton){
 %>
 <input type="file" id="<c:out value="<%=fileId %>"/>" name="filePath" value="${m:rs('mtp-gem-messages', 'generic.editor.binary.BinaryPropertyEditor_Edit.upload')}"
  style="<c:out value="<%=style %>"/>" class="<c:out value="<%=cls %>"/>" data-pname="<c:out value="<%=propName %>"/>" data-displayType="<c:out value="<%=displayType%>"/>"
- data-binCount="<c:out value="<%=length %>" />" data-uploadUrl="<c:out value="<%=upload %>" />" data-downloadUrl="<c:out value="<%=download %>" />" data-refUrl="<c:out value="<%=ref %>" />"
- data-pdfviewerUrl="<c:out value="<%=pdfviewer %>" />" data-usePdfjs="<%=editor.isUsePdfjs()%>"
+ data-binCount="<c:out value="<%=length %>" />" data-uploadUrl="<c:out value="<%=upload %>" />" data-downloadUrl="<c:out value="<%=download %>" />" data-binaryUploadAsync="<%= binaryUploadAsync %>"
+ data-refUrl="<c:out value="<%=ref %>" />" data-pdfviewerUrl="<c:out value="<%=pdfviewer %>" />" data-usePdfjs="<%=editor.isUsePdfjs()%>"
  data-imgviewerUrl="<c:out value="<%=imgviewer %>" />" data-useImageViewer="<%=editor.isUseImageViewer()%>"
  data-showImageRotateButton="<%=editor.isShowImageRotateButton() %>"  data-openNewTab="<%=editor.isOpenNewTab() %>"
  data-multiplicity="<c:out value="<%=pd.getMultiplicity() %>" />" data-binWidth="<c:out value="<%=editor.getWidth() %>" />"
- data-binHeight="<c:out value="<%=editor.getHeight() %>" />" data-token="${m:fixToken()}" <c:out value="<%=multiple%>" /> />
+ data-binHeight="<c:out value="<%=editor.getHeight() %>" />" data-token="${m:fixToken()}" <c:out value="<%=multiple%>" /> 
+ data-vname="<c:out value="<%=viewName %>"/>" data-dname="<c:out value="<%=rootDefName %>"/>"
+ />
  <%
 		}
  %>

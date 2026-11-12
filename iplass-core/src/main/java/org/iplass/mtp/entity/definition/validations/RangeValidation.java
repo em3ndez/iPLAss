@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,16 +32,16 @@ import org.iplass.mtp.entity.definition.ValidationDefinition;
  */
 public class RangeValidation extends ValidationDefinition {
 	private static final long serialVersionUID = -2998587323247851969L;
-	
+
 	private String max;
 	private String min;
-	
+
 	private boolean maxValueExcluded;
 	private boolean minValueExcluded;
-	
+
 	public RangeValidation() {
 	}
-	
+
 	public RangeValidation(String max, boolean maxValueExcluded,
 			String min, boolean minValueExcluded, String errorMessage) {
 		this(max, maxValueExcluded, min, minValueExcluded, errorMessage, null);
@@ -57,7 +57,7 @@ public class RangeValidation extends ValidationDefinition {
 		setErrorMessage(errorMessage);
 		setErrorCode(errorCode);
 	}
-	
+
 	public String getMax() {
 		return max;
 	}

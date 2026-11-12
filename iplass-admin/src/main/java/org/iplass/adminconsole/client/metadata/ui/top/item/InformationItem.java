@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -39,11 +39,10 @@ import org.iplass.adminconsole.client.base.util.SmartGWTUtil;
 import org.iplass.adminconsole.client.metadata.ui.MetaDataUtil;
 import org.iplass.adminconsole.client.metadata.ui.top.PartsOperationHandler;
 import org.iplass.mtp.view.generic.editor.DateTimePropertyEditor.TimeDispRange;
+import org.iplass.mtp.view.generic.editor.StringPropertyEditor.RichTextLibrary;
 import org.iplass.mtp.view.top.parts.InformationParts;
 
 import com.smartgwt.client.types.Alignment;
-import com.smartgwt.client.types.HeaderControls;
-import com.smartgwt.client.widgets.HeaderControl;
 import com.smartgwt.client.widgets.IButton;
 import com.smartgwt.client.widgets.events.ClickEvent;
 import com.smartgwt.client.widgets.events.ClickHandler;
@@ -67,27 +66,23 @@ public class InformationItem extends PartsItem {
 	/**
 	 * コンストラクタ
 	 */
-	public InformationItem(InformationParts parts, 	PartsOperationHandler controler) {
+	public InformationItem(InformationParts parts, PartsOperationHandler controler) {
 		this.parts = parts;
 		this.controler = controler;
 
 		setTitle("Information List");
 		setBackgroundColor("#BBBBFF");
-
-		setHeaderControls(HeaderControls.HEADER_LABEL, new HeaderControl(HeaderControl.SETTINGS, new ClickHandler() {
-
-			@Override
-			public void onClick(ClickEvent event) {
-				InformationItemSettingDialog dialog = new InformationItemSettingDialog();
-				dialog.show();
-			}
-
-		}), HeaderControls.CLOSE_BUTTON);
 	}
 
 	@Override
 	public InformationParts getParts() {
 		return parts;
+	}
+
+	@Override
+	protected void onOpen() {
+		InformationItemSettingDialog dialog = new InformationItemSettingDialog();
+		dialog.show();
 	}
 
 	@Override
@@ -103,11 +98,15 @@ public class InformationItem extends PartsItem {
 		private MetaDataLangTextItem titleField;
 		private TextItem iconTagField;
 		private TextItem styleField;
+		private IntegerItem maxHeightField;
 
 		private SelectItem dispRangeField;
 		private IntegerItem numberOfDisplayField;
+		private CheckboxItem chkEnableDataLocalization;
 		private CheckboxItem chkEnableHtmlTag;
 		private CheckboxItem chkUseRichtextEditor;
+		private SelectItem richTextLibraryField;
+		private CheckboxItem chkAllowRichTextEditorLinkAction;
 		private MtpTextAreaItem txaRichtextEditorOption;
 		private MtpTextAreaItem txaDetailCustomStyle;
 
@@ -137,9 +136,15 @@ public class InformationItem extends PartsItem {
 			SmartGWTUtil.addHoverToFormItem(iconTagField, AdminClientMessageUtil.getString("ui_metadata_top_item_InformationItem_iconTagComment"));
 
 			styleField = new MtpTextItem("style", "Class");
-			SmartGWTUtil.addHoverToFormItem(styleField, AdminClientMessageUtil.getString("ui_metadata_top_item_TopViewContentParts_styleDescriptionKey"));
+			SmartGWTUtil.addHoverToFormItem(styleField,
+					AdminClientMessageUtil.getString("ui_metadata_top_item_TopViewContentParts_styleDescriptionKey"));
 
-			commonForm.setItems(titleField, iconTagField, styleField);
+			maxHeightField = new IntegerItem("maxHeight", "Max Height");
+			maxHeightField.setWidth("100%");
+			SmartGWTUtil.addHoverToFormItem(maxHeightField,
+					AdminClientMessageUtil.getString("ui_metadata_top_item_TopViewContentParts_maxHeightDescriptionKey"));
+
+			commonForm.setItems(titleField, iconTagField, styleField, maxHeightField);
 
 			//------------------------------
 			//Information List
@@ -149,23 +154,38 @@ public class InformationItem extends PartsItem {
 			infoListForm.setGroupTitle("Information List Settings");
 
 			dispRangeField = new MtpSelectItem("dispRange", "Time Range");
-			SmartGWTUtil.addHoverToFormItem(dispRangeField, AdminClientMessageUtil.getString("ui_metadata_top_item_InformationItem_partsTimeDispRange"));
+			SmartGWTUtil.addHoverToFormItem(dispRangeField,
+					AdminClientMessageUtil.getString("ui_metadata_top_item_InformationItem_partsTimeDispRange"));
 			setDispRangeValues();
 
 			numberOfDisplayField = new IntegerItem();
 			numberOfDisplayField.setTitle("Scroll display number");
 			numberOfDisplayField.setWidth("100%");
-			SmartGWTUtil.addHoverToFormItem(numberOfDisplayField, AdminClientMessageUtil.getString("ui_metadata_top_item_InformationItem_numberOfDisplay"));
+			SmartGWTUtil.addHoverToFormItem(numberOfDisplayField,
+					AdminClientMessageUtil.getString("ui_metadata_top_item_InformationItem_numberOfDisplay"));
+
+			chkEnableDataLocalization = new CheckboxItem();
+			chkEnableDataLocalization.setTitle("Enable Data Localization");
+			SmartGWTUtil.addHoverToFormItem(chkEnableDataLocalization,
+					AdminClientMessageUtil.getString("ui_metadata_top_item_InformationItem_dataLocalization"));
 
 			chkEnableHtmlTag = new CheckboxItem();
 			chkEnableHtmlTag.setTitle("Enable Html Tag");
 			chkUseRichtextEditor = new CheckboxItem();
-			chkUseRichtextEditor.setTitle("Use Richtext Editor");
+			chkUseRichtextEditor.setTitle("Use RichText Editor");
+
+			richTextLibraryField = new MtpSelectItem("richTextLibrary", "RichText Library");
+			SmartGWTUtil.addHoverToFormItem(richTextLibraryField,
+					AdminClientMessageUtil.getString("ui_metadata_top_item_InformationItem_richTextLibrary"));
+			setRichTextLibraryValues();
 
 			txaRichtextEditorOption = new MtpTextAreaItem();
 			txaRichtextEditorOption.setColSpan(2);
-			txaRichtextEditorOption.setTitle("Richtext Editor Option");
+			txaRichtextEditorOption.setTitle("RichText Editor Option");
 			txaRichtextEditorOption.setHeight(100);
+
+			chkAllowRichTextEditorLinkAction = new CheckboxItem();
+			chkAllowRichTextEditorLinkAction.setTitle("Allow RichText Editor Link Action (CKEditor)");
 
 			ButtonItem btnEditEetailCustomStyle = new ButtonItem();
 			btnEditEetailCustomStyle.setTitle("Edit");
@@ -185,6 +205,7 @@ public class InformationItem extends PartsItem {
 							public void onSave(String text) {
 								txaDetailCustomStyle.setValue(text);
 							}
+
 							@Override
 							public void onCancel() {
 							}
@@ -198,8 +219,9 @@ public class InformationItem extends PartsItem {
 			txaDetailCustomStyle.setHeight(100);
 			SmartGWTUtil.setReadOnlyTextArea(txaDetailCustomStyle);
 
-			infoListForm.setItems(dispRangeField, numberOfDisplayField, chkEnableHtmlTag,
-					chkUseRichtextEditor, txaRichtextEditorOption, btnEditEetailCustomStyle, txaDetailCustomStyle);
+			infoListForm.setItems(dispRangeField, numberOfDisplayField, chkEnableDataLocalization, chkEnableHtmlTag,
+					chkUseRichtextEditor, richTextLibraryField, txaRichtextEditorOption, chkAllowRichTextEditorLinkAction,
+					btnEditEetailCustomStyle, txaDetailCustomStyle);
 
 			//------------------------------
 			//Password Warning Message
@@ -211,7 +233,8 @@ public class InformationItem extends PartsItem {
 
 			showPasswordWarnField = new CheckboxItem();
 			showPasswordWarnField.setTitle("show warning message of the password expiration date.");
-			SmartGWTUtil.addHoverToFormItem(showPasswordWarnField, AdminClientMessageUtil.getString("ui_metadata_top_item_InformationItem_showPasswordWarn"));
+			SmartGWTUtil.addHoverToFormItem(showPasswordWarnField,
+					AdminClientMessageUtil.getString("ui_metadata_top_item_InformationItem_showPasswordWarn"));
 
 			passwordWarningAgeField = new SliderItem();
 			passwordWarningAgeField.setTitle("Remain days threshold");
@@ -219,26 +242,30 @@ public class InformationItem extends PartsItem {
 			passwordWarningAgeField.setHeight(20);
 			passwordWarningAgeField.setMinValue(0.0);
 			passwordWarningAgeField.setMaxValue(30.0);
-			passwordWarningAgeField.setDefaultValue(5);	//初期値5
-			SmartGWTUtil.addHoverToFormItem(passwordWarningAgeField, AdminClientMessageUtil.getString("ui_metadata_top_item_InformationItem_specifyPasswordWarnremainDay"));
+			passwordWarningAgeField.setDefaultValue(5); //初期値5
+			SmartGWTUtil.addHoverToFormItem(passwordWarningAgeField,
+					AdminClientMessageUtil.getString("ui_metadata_top_item_InformationItem_specifyPasswordWarnremainDay"));
 
-			passwordWarningMessageField = new MetaDataLangTextAreaItem();
-			passwordWarningMessageField.setTitle("Custom message");
+			passwordWarningMessageField = new MetaDataLangTextAreaItem("passwordWarningMessage", "Custom message");
 			passwordWarningMessageField.setColSpan(2);
 			passwordWarningMessageField.setHeight(100);
-			SmartGWTUtil.addHoverToFormItem(passwordWarningMessageField, AdminClientMessageUtil.getString("ui_metadata_top_item_InformationItem_specifyCustomWarnMessage"));
+			SmartGWTUtil.addHoverToFormItem(passwordWarningMessageField,
+					AdminClientMessageUtil.getString("ui_metadata_top_item_InformationItem_specifyCustomWarnMessage"));
 
 			passwordWarnAreaStyleField = new MtpComboBoxItem();
 			passwordWarnAreaStyleField.setTitle("Custom message area style class");
-			SmartGWTUtil.addHoverToFormItem(passwordWarnAreaStyleField, AdminClientMessageUtil.getString("ui_metadata_top_item_InformationItem_warnMessageDispAreaStyle"));
+			SmartGWTUtil.addHoverToFormItem(passwordWarnAreaStyleField,
+					AdminClientMessageUtil.getString("ui_metadata_top_item_InformationItem_warnMessageDispAreaStyle"));
 			setPasswordWarnAreaStyleValues();
 
 			passwordWarnMarkStyleField = new MtpComboBoxItem();
 			passwordWarnMarkStyleField.setTitle("Custom message mark style class");
-			SmartGWTUtil.addHoverToFormItem(passwordWarnMarkStyleField, AdminClientMessageUtil.getString("ui_metadata_top_item_InformationItem_warnMessageDispAreaIcon"));
+			SmartGWTUtil.addHoverToFormItem(passwordWarnMarkStyleField,
+					AdminClientMessageUtil.getString("ui_metadata_top_item_InformationItem_warnMessageDispAreaIcon"));
 			setPasswordWarnMarkStyleValues();
 
-			pwWarnform.setItems(showPasswordWarnField, passwordWarningAgeField, passwordWarningMessageField, passwordWarnAreaStyleField, passwordWarnMarkStyleField);
+			pwWarnform.setItems(showPasswordWarnField, passwordWarningAgeField, passwordWarningMessageField, passwordWarnAreaStyleField,
+					passwordWarnMarkStyleField);
 
 			container.addMember(commonForm);
 			container.addMember(infoListForm);
@@ -251,28 +278,39 @@ public class InformationItem extends PartsItem {
 			save.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent event) {
-					if (commonForm.validate() && infoListForm.validate() && pwWarnform.validate()){
+					if (commonForm.validate() && infoListForm.validate() && pwWarnform.validate()) {
 						//入力情報をパーツに
 						parts.setTitle(SmartGWTUtil.getStringValue(titleField));
 						parts.setLocalizedTitleList(titleField.getLocalizedList());
 						parts.setIconTag(SmartGWTUtil.getStringValue(iconTagField));
 						parts.setStyle(SmartGWTUtil.getStringValue(styleField));
-						if (dispRangeField.getValue() != null && !dispRangeField.getValueAsString().isEmpty()) {
+						parts.setMaxHeight(maxHeightField.getValueAsInteger());
+						if (dispRangeField.getValue() != null && !dispRangeField.getValueAsString()
+								.isEmpty()) {
 							parts.setDispRange(TimeDispRange.valueOf(SmartGWTUtil.getStringValue(dispRangeField)));
 						} else {
 							parts.setDispRange(null);
 						}
 						parts.setShowWarningPasswordAge(SmartGWTUtil.getBooleanValue(showPasswordWarnField));
 						if (parts.isShowWarningPasswordAge()) {
-							parts.setPasswordWarningAge(passwordWarningAgeField.getValueAsFloat().intValue());
+							parts.setPasswordWarningAge(passwordWarningAgeField.getValueAsFloat()
+									.intValue());
 							parts.setPasswordWarningMessage(SmartGWTUtil.getStringValue(passwordWarningMessageField));
 							parts.setLocalizedPasswordWarningMessageList(passwordWarningMessageField.getLocalizedList());
 							parts.setPasswordWarnAreaStyleClass(SmartGWTUtil.getStringValue(passwordWarnAreaStyleField));
 							parts.setPasswordWarnMarkStyleClass(SmartGWTUtil.getStringValue(passwordWarnMarkStyleField));
 						}
 						parts.setNumberOfDisplay(SmartGWTUtil.getIntegerValue(numberOfDisplayField));
+						parts.setEnableDataLocalization(SmartGWTUtil.getBooleanValue(chkEnableDataLocalization));
 						parts.setEnableHtmlTag(SmartGWTUtil.getBooleanValue(chkEnableHtmlTag));
 						parts.setUseRichtextEditor(SmartGWTUtil.getBooleanValue(chkUseRichtextEditor));
+						if (richTextLibraryField.getValue() != null && !richTextLibraryField.getValueAsString()
+								.isEmpty()) {
+							parts.setRichTextLibrary(RichTextLibrary.valueOf(SmartGWTUtil.getStringValue(richTextLibraryField)));
+						} else {
+							parts.setRichTextLibrary(null);
+						}
+						parts.setAllowRichTextEditorLinkAction(SmartGWTUtil.getBooleanValue(chkAllowRichTextEditorLinkAction));
 						parts.setRichtextEditorOption(SmartGWTUtil.getStringValue(txaRichtextEditorOption));
 						parts.setDetailCustomStyle(SmartGWTUtil.getStringValue(txaDetailCustomStyle));
 						destroy();
@@ -302,6 +340,15 @@ public class InformationItem extends PartsItem {
 			dispRangeField.setValueMap(valueMap);
 		}
 
+		private void setRichTextLibraryValues() {
+			final LinkedHashMap<String, String> valueMap = new LinkedHashMap<>();
+			valueMap.put("", "default");
+			for (RichTextLibrary value : RichTextLibrary.values()) {
+				valueMap.put(value.name(), value.name());
+			}
+			richTextLibraryField.setValueMap(valueMap);
+		}
+
 		private void setPasswordWarnAreaStyleValues() {
 			final LinkedHashMap<String, String> valueMap = new LinkedHashMap<>();
 			//valueMap.put("", "default");
@@ -329,15 +376,26 @@ public class InformationItem extends PartsItem {
 			titleField.setLocalizedList(parts.getLocalizedTitleList());
 			iconTagField.setValue(parts.getIconTag());
 			styleField.setValue(parts.getStyle());
-
+			if (parts.getMaxHeight() != null && parts.getMaxHeight() > 0) {
+				maxHeightField.setValue(parts.getMaxHeight());
+			}
 			if (parts.getDispRange() != null) {
-				dispRangeField.setValue(parts.getDispRange().name());
+				dispRangeField.setValue(parts.getDispRange()
+						.name());
 			} else {
 				dispRangeField.setValue("");
 			}
 
+			chkEnableDataLocalization.setValue(parts.isEnableDataLocalization());
 			chkEnableHtmlTag.setValue(parts.isEnableHtmlTag());
 			chkUseRichtextEditor.setValue(parts.isUseRichtextEditor());
+			if (parts.getRichTextLibrary() != null) {
+				richTextLibraryField.setValue(parts.getRichTextLibrary()
+						.name());
+			} else {
+				richTextLibraryField.setValue("");
+			}
+			chkAllowRichTextEditorLinkAction.setValue(parts.isAllowRichTextEditorLinkAction());
 			txaRichtextEditorOption.setValue(parts.getRichtextEditorOption());
 			txaDetailCustomStyle.setValue(parts.getDetailCustomStyle());
 			numberOfDisplayField.setValue(parts.getNumberOfDisplay());

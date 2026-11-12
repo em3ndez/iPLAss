@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,27 +29,27 @@ import org.iplass.mtp.impl.parser.Syntax;
 import org.iplass.mtp.impl.parser.SyntaxContext;
 
 public class OrderBySyntax implements Syntax<OrderBy>, QueryConstants {
-	
+
 	private SortSpecSyntax sortSpec;
 
 	public OrderBy parse(ParseContext str) throws ParseException {
-		
+
 		//ORDER
 		if (!str.equalsNextToken(ORDER, ParseContext.TOKEN_DELIMITERS)) {
 			throw new ParseException(new EvalError("ORDER BY expected.", this, str));
 		}
 		str.consumeChars(ORDER.length());
 		str.consumeChars(ParseContext.WHITE_SPACES);
-		
+
 		//BY
 		if (!str.equalsNextToken(BY, ParseContext.TOKEN_DELIMITERS)) {
 			throw new ParseException(new EvalError("BY expected.", this, str));
 		}
 		str.consumeChars(BY.length());
 		str.consumeChars(ParseContext.WHITE_SPACES);
-		
+
 		OrderBy orderBy = new OrderBy();
-		
+
 		//SortSpec
 		boolean isFirst = true;
 		while (true) {
@@ -65,10 +65,9 @@ public class OrderBySyntax implements Syntax<OrderBy>, QueryConstants {
 			SortSpec sortSpecNode = sortSpec.parse(str);
 			orderBy.add(sortSpecNode);
 		}
-		
+
 		return orderBy;
 	}
-
 
 	public void init(SyntaxContext context) {
 		sortSpec = context.getSyntax(SortSpecSyntax.class);

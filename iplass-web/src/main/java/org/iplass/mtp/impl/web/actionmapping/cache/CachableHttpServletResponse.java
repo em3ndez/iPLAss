@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,23 +27,24 @@ import java.io.PrintWriter;
 import java.util.Formatter;
 import java.util.Locale;
 
-import javax.servlet.ServletOutputStream;
-import javax.servlet.WriteListener;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
-
 import org.iplass.mtp.impl.web.actionmapping.cache.Header.OpeType;
 import org.iplass.mtp.impl.web.actionmapping.cache.Header.ValType;
 import org.iplass.mtp.impl.web.actionmapping.cache.blocks.BinaryContentBlock;
 import org.iplass.mtp.impl.web.actionmapping.cache.blocks.TextContentBlock;
+
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.WriteListener;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponseWrapper;
 
 public class CachableHttpServletResponse extends HttpServletResponseWrapper {
 
 	public static final String CONTENT_CACHE_NAME = "org.iplass.mtp.contentCache";
 	public static final String CHSR_NAME = "org.iplass.mtp.cachableHttpServletResponse";
 	public static final String ACTION_RUNTIME_NAME = "org.iplass.mtp.actionRuntime";
-	private static final char[] LINE = System.getProperty("line.separator").toCharArray();
+	private static final char[] LINE = System.getProperty("line.separator")
+			.toCharArray();
 
 	private ByteArrayOutputStream binaryCache;
 	private StringBuilder textCache;
@@ -70,12 +71,12 @@ public class CachableHttpServletResponse extends HttpServletResponseWrapper {
 
 	public void setCurrentContentCache(ContentCache cc) {
 		this.currentContentCache = cc;
-//		RequestStack.getCurrent().setAttribute(CONTENT_CACHE_NAME, cc);
+		//		RequestStack.getCurrent().setAttribute(CONTENT_CACHE_NAME, cc);
 	}
 
 	public ContentCache getCurrentContentCache() {
 		return currentContentCache;
-//		return (ContentCache) RequestStack.getCurrent().getAttribute(CONTENT_CACHE_NAME);
+		//		return (ContentCache) RequestStack.getCurrent().getAttribute(CONTENT_CACHE_NAME);
 	}
 
 	public void flushToContentCache() throws IOException {
@@ -91,7 +92,6 @@ public class CachableHttpServletResponse extends HttpServletResponseWrapper {
 				contentCache.addContent(tb);
 			}
 		}
-
 
 		binaryCache = null;
 		textCache = null;
@@ -145,22 +145,22 @@ public class CachableHttpServletResponse extends HttpServletResponseWrapper {
 		return super.encodeRedirectURL(url);
 	}
 
-	@SuppressWarnings("deprecation")
-	@Override
-	public String encodeRedirectUrl(String url) {
-		return super.encodeRedirectUrl(url);
-	}
+	//	@SuppressWarnings("deprecation")
+	//	@Override
+	//	public String encodeRedirectUrl(String url) {
+	//		return super.encodeRedirectUrl(url);
+	//	}
 
 	@Override
 	public String encodeURL(String url) {
 		return super.encodeURL(url);
 	}
 
-	@SuppressWarnings("deprecation")
-	@Override
-	public String encodeUrl(String url) {
-		return super.encodeUrl(url);
-	}
+	//	@SuppressWarnings("deprecation")
+	//	@Override
+	//	public String encodeUrl(String url) {
+	//		return super.encodeUrl(url);
+	//	}
 
 	@Override
 	public void sendError(int sc, String msg) throws IOException {
@@ -204,15 +204,15 @@ public class CachableHttpServletResponse extends HttpServletResponseWrapper {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
-	@Override
-	public void setStatus(int sc, String sm) {
-		super.setStatus(sc, sm);
-		if (doCache) {
-			getCurrentContentCache().setHttpStatus(sc);
-//			contentCache.setHttpStatusMessage(sm);//setStatus(int sc, String sm)は非推奨なので、smは保存しない
-		}
-	}
+	//	@SuppressWarnings("deprecation")
+	//	@Override
+	//	public void setStatus(int sc, String sm) {
+	//		super.setStatus(sc, sm);
+	//		if (doCache) {
+	//			getCurrentContentCache().setHttpStatus(sc);
+	////			contentCache.setHttpStatusMessage(sm);//setStatus(int sc, String sm)は非推奨なので、smは保存しない
+	//		}
+	//	}
 
 	@Override
 	public void setStatus(int sc) {
@@ -324,7 +324,7 @@ public class CachableHttpServletResponse extends HttpServletResponseWrapper {
 
 		private OutputStream getOS() {
 			if (binaryCache == null) {
-				binaryCache = new ByteArrayOutputStream(1024*8);//8K
+				binaryCache = new ByteArrayOutputStream(1024 * 8);//8K
 			}
 			return binaryCache;
 		}
@@ -395,12 +395,10 @@ public class CachableHttpServletResponse extends HttpServletResponseWrapper {
 			return textCache;
 		}
 
-
-	    @Override
-	    public void flush() {
+		@Override
+		public void flush() {
 			actual.flush();
-	    }
-
+		}
 
 		@Override
 		public void write(int c) {
@@ -526,7 +524,8 @@ public class CachableHttpServletResponse extends HttpServletResponseWrapper {
 		public void println(boolean x) {
 			actual.println(x);
 			if (doCache) {
-				getSb().append(x).append(LINE);
+				getSb().append(x)
+						.append(LINE);
 			}
 		}
 
@@ -534,7 +533,8 @@ public class CachableHttpServletResponse extends HttpServletResponseWrapper {
 		public void println(char x) {
 			actual.println(x);
 			if (doCache) {
-				getSb().append(x).append(LINE);
+				getSb().append(x)
+						.append(LINE);
 			}
 		}
 
@@ -542,7 +542,8 @@ public class CachableHttpServletResponse extends HttpServletResponseWrapper {
 		public void println(int x) {
 			actual.println(x);
 			if (doCache) {
-				getSb().append(x).append(LINE);
+				getSb().append(x)
+						.append(LINE);
 			}
 		}
 
@@ -550,7 +551,8 @@ public class CachableHttpServletResponse extends HttpServletResponseWrapper {
 		public void println(long x) {
 			actual.println(x);
 			if (doCache) {
-				getSb().append(x).append(LINE);
+				getSb().append(x)
+						.append(LINE);
 			}
 		}
 
@@ -558,7 +560,8 @@ public class CachableHttpServletResponse extends HttpServletResponseWrapper {
 		public void println(float x) {
 			actual.println(x);
 			if (doCache) {
-				getSb().append(x).append(LINE);
+				getSb().append(x)
+						.append(LINE);
 			}
 		}
 
@@ -566,7 +569,8 @@ public class CachableHttpServletResponse extends HttpServletResponseWrapper {
 		public void println(double x) {
 			actual.println(x);
 			if (doCache) {
-				getSb().append(x).append(LINE);
+				getSb().append(x)
+						.append(LINE);
 			}
 		}
 
@@ -574,7 +578,8 @@ public class CachableHttpServletResponse extends HttpServletResponseWrapper {
 		public void println(char[] x) {
 			actual.println(x);
 			if (doCache) {
-				getSb().append(x).append(LINE);
+				getSb().append(x)
+						.append(LINE);
 			}
 		}
 
@@ -582,7 +587,8 @@ public class CachableHttpServletResponse extends HttpServletResponseWrapper {
 		public void println(String x) {
 			actual.println(x);
 			if (doCache) {
-				getSb().append(x).append(LINE);
+				getSb().append(x)
+						.append(LINE);
 			}
 		}
 
@@ -590,7 +596,8 @@ public class CachableHttpServletResponse extends HttpServletResponseWrapper {
 		public void println(Object x) {
 			actual.println(x);
 			if (doCache) {
-				getSb().append(x).append(LINE);
+				getSb().append(x)
+						.append(LINE);
 			}
 		}
 

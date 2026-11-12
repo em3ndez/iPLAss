@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -57,13 +57,14 @@
 <%@ page import="org.iplass.mtp.web.template.TemplateUtil"%>
 <%@ page import="org.iplass.mtp.ManagerLocator"%>
 <%@ page import="org.iplass.gem.command.generic.delete.TrashCommand"%>
-<%@ page import="org.iplass.gem.command.generic.search.CsvDownloadCommand"%>
+<%@ page import="org.iplass.gem.command.generic.search.EntityFileDownloadCommand"%>
 <%@ page import="org.iplass.gem.command.generic.search.SearchCommand"%>
 <%@ page import="org.iplass.gem.command.generic.search.SearchFormViewData"%>
 <%@ page import="org.iplass.gem.command.generic.search.SearchValidateCommand"%>
 <%@ page import="org.iplass.gem.command.Constants"%>
 <%@ page import="org.iplass.gem.command.GemResourceBundleUtil"%>
 <%@ page import="org.iplass.gem.command.ViewUtil"%>
+<%@ page import="org.iplass.gem.GemConfigService"%>
 <%@ page import="org.iplass.mtp.spi.ServiceRegistry"%>
 <%@ page import="org.iplass.mtp.impl.entity.property.PropertyService"%>
 
@@ -108,7 +109,7 @@
 
 			for (NestProperty np : editor.getNestProperties()) {
 				String npName = propName + "." + np.getPropertyName();
-				PropertyDefinition pd = ed.getProperty(np.getPropertyName());
+				PropertyDefinition pd = EntityViewUtil.getNestTablePropertyDefinition(np, ed);
 				if (np.getEditor() instanceof ReferencePropertyEditor) {
 				    createReferencePropTypesMap((ReferencePropertyEditor) np.getEditor(), npName, (ReferenceProperty) pd, propTypeMap);
 				} else {
@@ -169,11 +170,23 @@
 			}
 		} else if (editor instanceof NumberPropertyEditor) {
 			NumberPropertyEditor _editor = (NumberPropertyEditor) editor;
-			properties.append(",");
-			properties.append("\"").append(StringUtil.escapeJavaScript(originPropName)).append("\"");
-			if (isNormal && _editor.isSearchInRange()) {
+			if (isNormal) {
+				if (!_editor.isSearchInRange()) {
+					properties.append(",");
+					properties.append("\"").append(StringUtil.escapeJavaScript(originPropName)).append("\"");
+				} else {
+					if (!_editor.isHideSearchConditionFrom()) {
+						properties.append(",");
+						properties.append("\"").append(StringUtil.escapeJavaScript(originPropName)).append("From\"");
+					}
+					if (!_editor.isHideSearchConditionTo()) {
+						properties.append(",");
+						properties.append("\"").append(StringUtil.escapeJavaScript(originPropName)).append("To\"");
+					}
+				}
+			} else {
 				properties.append(",");
-				properties.append("\"").append(StringUtil.escapeJavaScript(originPropName)).append("To\"");
+				properties.append("\"").append(StringUtil.escapeJavaScript(originPropName)).append("\"");
 			}
 		} else if (editor instanceof ReferencePropertyEditor) {
 			if (!propName.contains(".")) {
@@ -238,6 +251,10 @@
 			}
 		}
 		return map;
+	}
+	int getMaxOfDetailSearchItems() {
+		GemConfigService service = ServiceRegistry.getRegistry().getService(GemConfigService.class);
+		return service.getMaxOfDetailSearchItems();
 	}
 %>
 <%
@@ -353,7 +370,7 @@
 	if (StringUtil.isNotBlank(view.getDownloadActionName())) {
 		download = "/" + view.getDownloadActionName();
 	} else {
-		download = "/" + CsvDownloadCommand.ACTION_NAME;
+		download = "/" + EntityFileDownloadCommand.ACTION_NAME;
 	}
 
 	//ごみ箱アクション
@@ -375,6 +392,9 @@
 	//定型検索表示
 	boolean showFixed = !section.isHideFixedCondition() && filters.size() > 0;
 
+	//詳細検索における検索項目の上限数
+	int maxOfDetailSearchItems = getMaxOfDetailSearchItems();
+
 	//検索結果件数表示
 	boolean showCount = !view.getResultSection().isHideCount();
 
@@ -390,8 +410,19 @@
 	//連打防止のインターバル
 	int searchInterval = ViewUtil.getSearchInterval();
 	int csvDownloadInterval = ViewUtil.getCsvDownloadInterval();
+
+	String id = "";
+	if (StringUtil.isNotBlank(section.getId())) {
+		id = "id=\"" + StringUtil.escapeHtml(section.getId()) + "\"";
+	}
+
+	String secStyle = "";
+	if (StringUtil.isNotBlank(section.getStyle())) {
+		secStyle = section.getStyle();
+	}
+	String styleAttr = ViewUtil.buildHeightStyleAttr(section.getSectionHeight());
 %>
-<div class="tab-wrap">
+<div <%=id %> class="tab-wrap search-condition-section <c:out value="<%=secStyle %>"/>">
 <script type="text/javascript">
 function validation(searchType) {
 	<%-- common.js --%>
@@ -470,16 +501,16 @@ function onclick_detailReset() {
 <%
 	}
 %>
-function onclick_normalCsvDownload(target) {
-	doCsvDownload('normal', target);
+function onclick_normalFileDownload(target) {
+	doFileDownload('normal', target);
 }
-function onclick_detailCsvDownload(target) {
-	doCsvDownload('detail', target);
+function onclick_detailFileDownload(target) {
+	doFileDownload('detail', target);
 }
-function onclick_fixedCsvDownload(target) {
-	doCsvDownload('fixed', target);
+function onclick_fixedFileDownload(target) {
+	doFileDownload('fixed', target);
 }
-function doCsvDownload(searchType, target) {
+function doFileDownload(searchType, target) {
 	if (!validation(searchType)) return;
 
 	$(".chagne-condition").hide();
@@ -492,7 +523,7 @@ function doCsvDownload(searchType, target) {
 	searchValidate("<%=StringUtil.escapeJavaScript(validate)%>", searchType, searchType + 'Form', function() {
 		$(".searching").hide();
 		<%-- common.js --%>
-		csvDownload(searchType, searchType + "Form", "<%=StringUtil.escapeJavaScript(download)%>", $(target), <%=csvDownloadInterval%>);
+		fileDownload(searchType, searchType + "Form", "<%=StringUtil.escapeJavaScript(download)%>", $(target), <%=csvDownloadInterval%>);
 	}, function() {
 		$(".searching").hide();
 	});
@@ -500,7 +531,7 @@ function doCsvDownload(searchType, target) {
 	} else {
 %>
 	<%-- common.js --%>
-	csvDownload(searchType, searchType + "Form", "<%=StringUtil.escapeJavaScript(download)%>", $(target), <%=csvDownloadInterval%>);
+	fileDownload(searchType, searchType + "Form", "<%=StringUtil.escapeJavaScript(download)%>", $(target), <%=csvDownloadInterval%>);
 <%
 	}
 %>
@@ -654,7 +685,7 @@ $(function() {
 </div><!--tabList-search-01-->
 
 <div class="box-search-01">
-<div class="data-search tab-panel" style="display: none;">
+<div class="data-search tab-panel" style="display: none;<%= styleAttr %>">
 <form name="normalForm" method="POST">
 <input type="hidden" name="viewName" value="<c:out value="<%=viewName%>"/>"/>
 <input type="text" style="display: none;" />
@@ -736,7 +767,7 @@ $(function() {
 				}
 %>
 </th>
-<td id="id_td_<c:out value="<%=property.getPropertyName() %>"/>" class="<c:out value="<%=style %>"/>">
+<td id="id_td_<c:out value="<%=property.getPropertyName() %>"/>" class="<c:out value="<%=style %>"/> property-data">
 <%
 				property.getEditor().setPropertyName(property.getPropertyName());
 				String path = EntityViewUtil.getJspPath(property.getEditor(), ViewConst.DESIGN_TYPE_GEM);
@@ -824,6 +855,7 @@ $(function() {
 						//指定検索条件がある場合は、Editor側ではセットせずSearchResultSection側で設定
 					}
 					request.setAttribute(Constants.EDITOR_DEFAULT_VALUE, defaultValue);
+					request.setAttribute(Constants.AUTOCOMPLETION_SETTING, property.getAutocompletionSetting());
 %>
 <jsp:include page="<%=path%>" />
 <%
@@ -834,6 +866,22 @@ $(function() {
 					request.removeAttribute(Constants.EDITOR_PROPERTY_DEFINITION);
 					request.removeAttribute(Constants.EDITOR_PROP_VALUE);
 					request.removeAttribute(Constants.EDITOR_DEFAULT_VALUE);
+				}
+				if (property.getAutocompletionSetting() != null) {
+					request.setAttribute(Constants.AUTOCOMPLETION_DEF_NAME, ed.getName());
+					request.setAttribute(Constants.AUTOCOMPLETION_VIEW_NAME, viewName);
+					request.setAttribute(Constants.AUTOCOMPLETION_PROP_NAME, property.getPropertyName());
+					request.setAttribute(Constants.AUTOCOMPLETION_MULTIPLICTTY, 1);
+					String autocompletionPath = "/jsp/gem/generic/common/SearchConditionAutocompletion.jsp";
+%>
+<jsp:include page="<%=autocompletionPath %>"/>
+<%
+					request.removeAttribute(Constants.AUTOCOMPLETION_SETTING);
+					request.removeAttribute(Constants.AUTOCOMPLETION_DEF_NAME);
+					request.removeAttribute(Constants.AUTOCOMPLETION_VIEW_NAME);
+					request.removeAttribute(Constants.AUTOCOMPLETION_PROP_NAME);
+					request.removeAttribute(Constants.AUTOCOMPLETION_MULTIPLICTTY);
+					request.removeAttribute(Constants.AUTOCOMPLETION_SCRIPT_PATH);
 				}
 %>
 </td>
@@ -850,14 +898,35 @@ $(function() {
 <%
 	}
 	if ((selectType == null || permitVersionedSelect) && ed.getVersionControlType() != VersionControlType.NONE) {
-		String allVersion = getSearchCondParam(searchCond, "allVersion");
+		String allVersion = getSearchCondParam(searchCond, Constants.SEARCH_ALL_VERSION);
 		String checked = "";
 		if ("1".equals(allVersion)) checked = "checked";
 %>
 <tr class="version-area col<%=section.getColNum()%>">
 <th>&nbsp;</th>
 <td>
-<label for="cb-version"><input type="checkbox" value="1" name="allVersion" id="cb-version" <c:out value="<%=checked %>"/>/>${m:rs("mtp-gem-messages", "generic.element.section.SearchConditionSection.allVerSearch")}</label>
+<label for="cb-version">
+<input type="checkbox" value="1" name="<%=Constants.SEARCH_ALL_VERSION %>" id="cb-version" <c:out value="<%=checked %>"/>/>
+${m:rs("mtp-gem-messages", "generic.element.section.SearchConditionSection.allVerSearch")}
+</label>
+</td>
+</tr>
+<%
+	} else if (selectType == null 
+			&& ed.getVersionControlType() == VersionControlType.NONE
+			&& view.isCanVersionedReferenceSearchForNoneVersionedEntity()) {
+	
+			String savedVersion = getSearchCondParam(searchCond, Constants.SEARCH_SAVED_VERSION);
+			String checked = "";
+			if ("1".equals(savedVersion)) checked = "checked";
+%>
+<tr class="version-area col<%=section.getColNum()%>">
+<th>&nbsp;</th>
+<td>
+<label for="cb-version">
+<input type="checkbox" value="1" name="<%=Constants.SEARCH_SAVED_VERSION%>" id="cb-version" <c:out value="<%=checked %>"/>/>
+${m:rs("mtp-gem-messages", "generic.element.section.SearchConditionSection.savedVerSearch")}
+</label>
 </td>
 </tr>
 <%
@@ -874,11 +943,11 @@ $(function() {
 		//編集等でデータを選択する場合は、CSVダウンロードボタン非表示
 		if (section.isHideCsvdownloadDialog()) {
 %>
-<input type="button" class="btn-csv-01 gr-btn gr-size-02" value="${m:rs('mtp-gem-messages', 'generic.element.section.SearchConditionSection.dwnCsv')}" onclick="onclick_normalCsvDownload(this)"/>
+<input type="button" class="btn-csv-01 gr-btn gr-size-02" value="${m:rs('mtp-gem-messages', 'generic.element.section.SearchConditionSection.dwnCsv')}" onclick="onclick_normalFileDownload(this)"/>
 <%
 		} else {
 %>
-<input type="button" class="btn-csv-01 gr-btn gr-size-02" value="${m:rs('mtp-gem-messages', 'generic.element.section.SearchConditionSection.dwnCsv')}" id="csv-download" />
+<input type="button" class="btn-csv-01 gr-btn gr-size-02" value="${m:rs('mtp-gem-messages', 'generic.element.section.SearchConditionSection.dwnCsv')}" id="file-download" />
 <%
 		}
 	}
@@ -918,7 +987,9 @@ $(function() {
 			pd = EntityViewUtil.getPropertyDefinition(property);
 			editor = property.getEditor();
 			editor.setPropertyName(propertyName);
+			autocompletionSetting = property.getAutocompletionSetting();
 		}
+
 		String path = EntityViewUtil.getJspPath(editor, ViewConst.DESIGN_TYPE_GEM);
 		if (path != null) {
 //			request.setAttribute(Constants.EDITOR_STYLE, style);//nest項目があった場合のクラスのプレフィックスに
@@ -946,6 +1017,22 @@ $(function() {
 			request.removeAttribute(Constants.EDITOR_PROP_VALUE);
 			request.removeAttribute(Constants.EDITOR_DEFAULT_VALUE);
 		}
+		if (autocompletionSetting != null) {
+			request.setAttribute(Constants.AUTOCOMPLETION_DEF_NAME, ed.getName());
+			request.setAttribute(Constants.AUTOCOMPLETION_VIEW_NAME, viewName);
+			request.setAttribute(Constants.AUTOCOMPLETION_PROP_NAME, propertyName);
+			request.setAttribute(Constants.AUTOCOMPLETION_MULTIPLICTTY, 1);
+			String autocompletionPath = "/jsp/gem/generic/common/SearchConditionAutocompletion.jsp";
+%>
+<jsp:include page="<%=autocompletionPath %>"/>
+<%
+			request.removeAttribute(Constants.AUTOCOMPLETION_SETTING);
+			request.removeAttribute(Constants.AUTOCOMPLETION_DEF_NAME);
+			request.removeAttribute(Constants.AUTOCOMPLETION_VIEW_NAME);
+			request.removeAttribute(Constants.AUTOCOMPLETION_PROP_NAME);
+			request.removeAttribute(Constants.AUTOCOMPLETION_MULTIPLICTTY);
+			request.removeAttribute(Constants.AUTOCOMPLETION_SCRIPT_PATH);
+		}
 	}
 %>
 </div>
@@ -966,6 +1053,9 @@ $(function() {
 				dtlCndCount = Integer.parseInt(tmp);
 			} catch (NumberFormatException e) {
 			}
+		}
+		if (dtlCndCount > maxOfDetailSearchItems) {
+			dtlCndCount = maxOfDetailSearchItems;
 		}
 		String searchCondSearchType = getSearchCondParam(searchCond, "searchType");
 
@@ -1022,7 +1112,21 @@ function detailDatetimeChange(obj, cnt) {
 	var value = obj.value;
 	var ms = dateUtil.newFormatString(value, dateUtil.getServerDatetimeFormat(), "SSS");
 	var datetime = convertFromLocaleDatetimeString(value, dateUtil.getServerDatetimeFormat());
-	$("#" + condKey + " :hidden").attr("value", datetime);
+
+	// 入力されたミリ秒を取得する。
+	var strInputMs = value.replace(/[^0-9]/g, '').substr(14); 
+	// 選択された条件を取得する。
+	var condPredicate = "<%=Constants.DETAIL_COND_PREDICATE%>" + cnt;
+	var valPredicate = document.getElementsByName(condPredicate).item(0).value;
+
+	// ミリ秒が未入力、「以下」又は「より大きい」の場合だけ、ディフォルトで999補完する。
+	if (valPredicate == "<%=Constants.GREATER %>" || valPredicate == "<%=Constants.LESSEREQUALS %>"){
+		if (strInputMs == null || strInputMs == "") {
+			ms = "999";
+		}
+	}
+
+	$("#" + condKey + " :hidden").attr("value", datetime + ms);
 }
 
 $(function() {
@@ -1046,7 +1150,7 @@ $(function() {
 					var ret = false;
 					$opt.each(function() {
 						var val = $(this).parents("td").next().next().children(":text").val();
-						if (typeof val !== "undeined" && val != null && val != "") {
+						if (val != null && val != "") {
 							ret = true;
 							return false;
 						}
@@ -1063,9 +1167,11 @@ $(function() {
 });
 </script>
 
-<div class="data-deep-search tab-panel" style="display: none;">
+<div class="data-deep-search tab-panel" style="display: none;<%= styleAttr %>">
+
 <form name="detailForm" method="POST">
 <input type="hidden" name="viewName" value="<c:out value="<%=viewName%>"/>"/>
+<input type="hidden" id="maxOfDetailSearchItems" value="<c:out value="<%=maxOfDetailSearchItems%>"/>"/>
 <table class="tbl-search-01">
 <thead>
 <tr>
@@ -1203,12 +1309,31 @@ $(function() {
 </ul>
 <%
 		if ((selectType == null || permitVersionedSelect) && ed.getVersionControlType() != VersionControlType.NONE) {
-			String allVersion = getSearchCondParam(searchCond, "allVersionDtl");
+			String allVersion = getSearchCondParam(searchCond, Constants.SEARCH_ALL_VERSION_DETAIL);
 			String checked = "";
 			if ("1".equals(allVersion)) checked = "checked";
 %>
-<p><label for="cb-version-02"><input type="checkbox" value="1" name="allVersionDtl" id="cb-version-02" <c:out value="<%=checked %>"/>/>${m:rs("mtp-gem-messages", "generic.element.section.SearchConditionSection.allVerSearch")}</label></p>
+<p>
+<label for="cb-version-02">
+<input type="checkbox" value="1" name="<%=Constants.SEARCH_ALL_VERSION_DETAIL %>" id="cb-version-02" <c:out value="<%=checked %>"/>/>
+${m:rs("mtp-gem-messages", "generic.element.section.SearchConditionSection.allVerSearch")}
+</label>
+</p>
 <input type="hidden" name="specVersion" value="<c:out value="<%=specVersion%>"/>"/>
+<%
+		} else if (selectType == null 
+				&& ed.getVersionControlType() == VersionControlType.NONE
+				&& view.isCanVersionedReferenceSearchForNoneVersionedEntity()) {
+			String savedVersion = getSearchCondParam(searchCond, Constants.SEARCH_SAVED_VERSION_DETAIL);
+			String checked = "";
+			if ("1".equals(savedVersion)) checked = "checked";
+%>
+<p>
+<label for="cb-version-02">
+<input type="checkbox" value="1" name="<%=Constants.SEARCH_SAVED_VERSION_DETAIL%>" id="cb-version-02" <c:out value="<%=checked %>"/>/>
+${m:rs("mtp-gem-messages", "generic.element.section.SearchConditionSection.savedVerSearch")}
+</label>
+</p>
 <%
 		}
 %>
@@ -1224,11 +1349,11 @@ $(function() {
 			//編集等でデータを選択する場合は、CSVダウンロードボタン非表示
 			if (section.isHideCsvdownloadDialog()) {
 %>
-<input type="button" class="btn-csv-01 gr-btn gr-size-02" value="${m:rs('mtp-gem-messages', 'generic.element.section.SearchConditionSection.dwnCsv')}" onclick="onclick_detailCsvDownload(this)"/>
+<input type="button" class="btn-csv-01 gr-btn gr-size-02" value="${m:rs('mtp-gem-messages', 'generic.element.section.SearchConditionSection.dwnCsv')}" onclick="onclick_detailFileDownload(this)"/>
 <%
 			} else {
 %>
-<input type="button" class="btn-csv-01 gr-btn gr-size-02" value="${m:rs('mtp-gem-messages', 'generic.element.section.SearchConditionSection.dwnCsv')}" id="detail-csv-download" />
+<input type="button" class="btn-csv-01 gr-btn gr-size-02" value="${m:rs('mtp-gem-messages', 'generic.element.section.SearchConditionSection.dwnCsv')}" id="detail-file-download" />
 <%
 			}
 		}
@@ -1275,7 +1400,7 @@ $(function() {
 			showFilters.add(setting.getFilterName());
 		}
 %>
-<div class="data-fixed-search tab-panel" style="display: none;">
+<div class="data-fixed-search tab-panel" style="display: none;<%= styleAttr %>">
 <form name="fixedForm" method="POST">
 <input type="hidden" name="viewName" value="<c:out value="<%=viewName%>"/>"/>
 <table class="tbl-search-01">
@@ -1311,11 +1436,11 @@ $(function() {
 			//編集等でデータを選択する場合は、CSVダウンロードボタン非表示
 			if (section.isHideCsvdownloadDialog()) {
 %>
-<input type="button" class="btn-csv-01 gr-btn gr-size-02" value="${m:rs('mtp-gem-messages', 'generic.element.section.SearchConditionSection.dwnCsv')}" onclick="onclick_fixedCsvDownload(this)"/>
+<input type="button" class="btn-csv-01 gr-btn gr-size-02" value="${m:rs('mtp-gem-messages', 'generic.element.section.SearchConditionSection.dwnCsv')}" onclick="onclick_fixedFileDownload(this)"/>
 <%
 			} else {
 %>
-<input type="button" class="btn-csv-01 gr-btn gr-size-02" value="${m:rs('mtp-gem-messages', 'generic.element.section.SearchConditionSection.dwnCsv')}" id="fixed-csv-download" />
+<input type="button" class="btn-csv-01 gr-btn gr-size-02" value="${m:rs('mtp-gem-messages', 'generic.element.section.SearchConditionSection.dwnCsv')}" id="fixed-file-download" />
 <%
 			}
 		}
@@ -1333,30 +1458,31 @@ $(function() {
 	if (!section.isHideCsvdownload()) {
 		if (!section.isHideCsvdownloadDialog()) {
 %>
-<%-- CsvDownloadダイアログ --%>
-<jsp:include page="SearchConditionSection_CsvDownloadDialog.jsp" />
+<%-- FileDownloadダイアログ --%>
+<jsp:include page="SearchConditionSection_EntityFileDownloadDialog.jsp" />
 
 <script type="text/javascript">
-function applyCsvDownloadDialog(searchType, buttonId) {
-	<%-- SearchConditionSection_CsvDownloadDialog.jsp --%>
-	showCsvDownloadDialog(searchType, buttonId, "<%=StringUtil.escapeJavaScript(validate)%>", function(searchType, forUpload, characterCode, noDispName, outputResult, downloadCodeValue){
-		csvDownload(searchType, searchType + "Form", "<%=StringUtil.escapeJavaScript(download)%>", this, <%=csvDownloadInterval%>, forUpload, characterCode, noDispName, outputResult, downloadCodeValue);
+function applyFileDownloadDialog(searchType, buttonId) {
+	<%-- SearchConditionSection_EntityFileDownloadDialog.jsp --%>
+	showFileDownloadDialog(searchType, buttonId, "<%=StringUtil.escapeJavaScript(validate)%>", function(searchType, forUpload, characterCode, noDispName, outputResult, downloadCodeValue, fileSupportType){
+		<%-- common.js --%>
+		fileDownload(searchType, searchType + "Form", "<%=StringUtil.escapeJavaScript(download)%>", this, <%=csvDownloadInterval%>, forUpload, characterCode, noDispName, outputResult, downloadCodeValue, fileSupportType);
 	});
 }
 
 $(function() {
 	$("#dialog:ui-dialog").dialog("destroy");
 
-	applyCsvDownloadDialog("normal","csv-download");
+	applyFileDownloadDialog("normal","file-download");
 <%
 			if (showDetail) {
 %>
-	applyCsvDownloadDialog("detail", "detail-csv-download");
+	applyFileDownloadDialog("detail", "detail-file-download");
 <%
 			}
 			if (showFixed) {
 %>
-	applyCsvDownloadDialog("fixed", "fixed-csv-download");
+	applyFileDownloadDialog("fixed", "fixed-file-download");
 <%
 			}
 %>
@@ -1367,11 +1493,11 @@ $(function() {
 	}
 %>
 
-<input type="hidden" name="defName" value="<c:out value="<%=ed.getName()%>"/>">
-<input type="hidden" name="searchType" value="<c:out value="<%=_searchType%>"/>">
+<input type="hidden" name="<%=Constants.DEF_NAME %>" value="<c:out value="<%=ed.getName()%>"/>">
+<input type="hidden" name="<%=Constants.SEARCH_TYPE %>" value="<c:out value="<%=_searchType%>"/>">
 <input type="hidden" name="formName" value="<c:out value="<%=_searchType%>"/>Form">
-<input type="hidden" name="sortKey" value="">
-<input type="hidden" name="sortType" value="">
-<input type="hidden" name="isForUpload" value="">
+<input type="hidden" name="<%=Constants.SEARCH_SORTKEY %>" value="">
+<input type="hidden" name="<%=Constants.SEARCH_SORTTYPE %>" value="">
+<input type="hidden" name="<%=Constants.FILE_IS_FOR_UPLOAD %>" value="">
 </div><!--box-search-01-->
 </div><!--tab-wrap-->

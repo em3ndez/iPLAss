@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -117,7 +117,7 @@ public class SearchResult<T> implements Iterable<T>, AutoCloseable {
 			throw new EntityRuntimeException("for use getValueList(propertyName), result type must Entity.");
 		}
 		List<P> res = new ArrayList<P>();
-		for (Entity e: (List<Entity>) list) {
+		for (Entity e : (List<Entity>) list) {
 			res.add((P) e.getValue(propertyName));
 		}
 		return res;
@@ -139,7 +139,7 @@ public class SearchResult<T> implements Iterable<T>, AutoCloseable {
 			throw new EntityRuntimeException("for use getValueList(index), result type must Object[].");
 		}
 		List<P> res = new ArrayList<P>();
-		for (Object[] e: (List<Object[]>) list) {
+		for (Object[] e : (List<Object[]>) list) {
 			res.add((P) e[index]);
 		}
 		return res;

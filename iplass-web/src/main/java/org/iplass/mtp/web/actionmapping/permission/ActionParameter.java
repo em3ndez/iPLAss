@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,7 +29,7 @@ package org.iplass.mtp.web.actionmapping.permission;
  *
  */
 public interface ActionParameter {
-	
+
 	/**
 	 * 当該のnameで指定されるパラメータ値を返却するよう実装する。
 	 * 

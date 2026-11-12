@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,13 +25,14 @@ import java.util.List;
 import org.iplass.mtp.entity.Entity;
 import org.iplass.mtp.entity.ValidateResult;
 
-
 public interface EntityValidateInvocation extends EntityInvocation<ValidateResult> {
-	
+
 	public Entity getEntity();
+
 	public void setEntity(Entity entity);
-	
+
 	public List<String> getValidatePropertyList();
+
 	public void setValidatePropertyList(List<String> validatePropertyList);
-	
+
 }

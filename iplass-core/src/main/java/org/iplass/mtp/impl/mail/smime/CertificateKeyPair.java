@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,7 +25,7 @@ import java.security.cert.X509Certificate;
 public class CertificateKeyPair {
 	private final PrivateKey key;
 	private final X509Certificate certificate;
-	
+
 	CertificateKeyPair(X509Certificate certificate, PrivateKey key) {
 		this.certificate = certificate;
 		this.key = key;

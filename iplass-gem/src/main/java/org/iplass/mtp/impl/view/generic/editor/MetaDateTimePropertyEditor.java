@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,8 +23,6 @@ package org.iplass.mtp.impl.view.generic.editor;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
-
 import org.iplass.mtp.view.generic.editor.DatePropertyEditor;
 import org.iplass.mtp.view.generic.editor.DateTimeFormatSetting;
 import org.iplass.mtp.view.generic.editor.DateTimePropertyEditor;
@@ -34,11 +32,13 @@ import org.iplass.mtp.view.generic.editor.PropertyEditor;
 import org.iplass.mtp.view.generic.editor.TimePropertyEditor;
 import org.iplass.mtp.view.generic.editor.TimestampPropertyEditor;
 
+import jakarta.xml.bind.annotation.XmlSeeAlso;
+
 /**
  * 日付・時間型プロパティエディタのメタデータのスーパークラス
  * @author lis3wg
  */
-@XmlSeeAlso({MetaDatePropertyEditor.class, MetaTimePropertyEditor.class, MetaTimestampPropertyEditor.class})
+@XmlSeeAlso({ MetaDatePropertyEditor.class, MetaTimePropertyEditor.class, MetaTimestampPropertyEditor.class })
 public abstract class MetaDateTimePropertyEditor extends MetaPrimitivePropertyEditor {
 
 	/** シリアルバージョンUID */
@@ -72,6 +72,9 @@ public abstract class MetaDateTimePropertyEditor extends MetaPrimitivePropertyEd
 
 	/** 検索条件To非表示設定 */
 	private boolean hideSearchConditionTo;
+
+	/** 検索条件範囲記号非表示設定 */
+	private boolean hideSearchConditionRangeSymbol = true;
 
 	/** Label形式の場合の登録制御 */
 	private boolean insertWithLabelValue = true;
@@ -148,7 +151,7 @@ public abstract class MetaDateTimePropertyEditor extends MetaPrimitivePropertyEd
 	 * @return 検索条件From非表示設定
 	 */
 	public boolean isHideSearchConditionFrom() {
-	    return hideSearchConditionFrom;
+		return hideSearchConditionFrom;
 	}
 
 	/**
@@ -156,7 +159,7 @@ public abstract class MetaDateTimePropertyEditor extends MetaPrimitivePropertyEd
 	 * @param hideSearchConditionFrom 検索条件From非表示設定
 	 */
 	public void setHideSearchConditionFrom(boolean hideSearchConditionFrom) {
-	    this.hideSearchConditionFrom = hideSearchConditionFrom;
+		this.hideSearchConditionFrom = hideSearchConditionFrom;
 	}
 
 	/**
@@ -164,7 +167,7 @@ public abstract class MetaDateTimePropertyEditor extends MetaPrimitivePropertyEd
 	 * @return 検索条件To非表示設定
 	 */
 	public boolean isHideSearchConditionTo() {
-	    return hideSearchConditionTo;
+		return hideSearchConditionTo;
 	}
 
 	/**
@@ -172,7 +175,23 @@ public abstract class MetaDateTimePropertyEditor extends MetaPrimitivePropertyEd
 	 * @param hideSearchConditionTo 検索条件To非表示設定
 	 */
 	public void setHideSearchConditionTo(boolean hideSearchConditionTo) {
-	    this.hideSearchConditionTo = hideSearchConditionTo;
+		this.hideSearchConditionTo = hideSearchConditionTo;
+	}
+
+	/**
+	 * 検索条件範囲記号非表示設定を取得します。
+	 * @return 検索条件範囲記号非表示設定
+	 */
+	public boolean isHideSearchConditionRangeSymbol() {
+		return hideSearchConditionRangeSymbol;
+	}
+
+	/**
+	 * 検索条件範囲記号非表示設定を設定します。
+	 * @param hideSearchConditionRangeSymbol 検索条件範囲記号非表示設定
+	 */
+	public void setHideSearchConditionRangeSymbol(boolean hideSearchConditionRangeSymbol) {
+		this.hideSearchConditionRangeSymbol = hideSearchConditionRangeSymbol;
 	}
 
 	/**
@@ -220,14 +239,18 @@ public abstract class MetaDateTimePropertyEditor extends MetaPrimitivePropertyEd
 		singleDayCondition = e.isSingleDayCondition();
 		hideSearchConditionFrom = e.isHideSearchConditionFrom();
 		hideSearchConditionTo = e.isHideSearchConditionTo();
+		hideSearchConditionRangeSymbol = e.isHideSearchConditionRangeSymbol();
 		insertWithLabelValue = e.isInsertWithLabelValue();
 		updateWithLabelValue = e.isUpdateWithLabelValue();
 
 		if (e.getDatetimeFormat() != null) {
 			MetaDateTimeFormatSetting metaDtf = new MetaDateTimeFormatSetting();
-			metaDtf.setDatetimeFormat(e.getDatetimeFormat().getDatetimeFormat());
-			if (e.getDatetimeFormat().getDatetimeLocale() != null) {
-				metaDtf.setDatetimeLocale(e.getDatetimeFormat().getDatetimeLocale());
+			metaDtf.setDatetimeFormat(e.getDatetimeFormat()
+					.getDatetimeFormat());
+			if (e.getDatetimeFormat()
+					.getDatetimeLocale() != null) {
+				metaDtf.setDatetimeLocale(e.getDatetimeFormat()
+						.getDatetimeLocale());
 			}
 			datetimeFormat = metaDtf;
 		}
@@ -254,21 +277,22 @@ public abstract class MetaDateTimePropertyEditor extends MetaPrimitivePropertyEd
 		pe.setSingleDayCondition(singleDayCondition);
 		pe.setHideSearchConditionFrom(hideSearchConditionFrom);
 		pe.setHideSearchConditionTo(hideSearchConditionTo);
+		pe.setHideSearchConditionRangeSymbol(hideSearchConditionRangeSymbol);
 		pe.setInsertWithLabelValue(insertWithLabelValue);
 		pe.setUpdateWithLabelValue(updateWithLabelValue);
 
-		if(datetimeFormat != null){
+		if (datetimeFormat != null) {
 			DateTimeFormatSetting defDtf = new DateTimeFormatSetting();
 			defDtf.setDatetimeFormat(datetimeFormat.getDatetimeFormat());
-			if(datetimeFormat.getDatetimeLocale() != null) {
+			if (datetimeFormat.getDatetimeLocale() != null) {
 				defDtf.setDatetimeLocale(datetimeFormat.getDatetimeLocale());
 			}
 			pe.setDatetimeFormat(defDtf);
 		}
 
-		if(LocalizedDateTimeFormatList != null) {
+		if (LocalizedDateTimeFormatList != null) {
 			List<LocalizedDateTimeFormatSetting> defList = new ArrayList<>();
-			for(MetaLocalizedDateTimeFormatSetting metaLdf : LocalizedDateTimeFormatList) {
+			for (MetaLocalizedDateTimeFormatSetting metaLdf : LocalizedDateTimeFormatList) {
 				LocalizedDateTimeFormatSetting defLdf = new LocalizedDateTimeFormatSetting();
 				defLdf.setLangage(metaLdf.getLangage());
 				defLdf.setDateTimeFormat(metaLdf.getDateTimeFormat());

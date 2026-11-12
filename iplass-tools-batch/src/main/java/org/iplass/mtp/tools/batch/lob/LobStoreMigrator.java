@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright 2016 DENTSU SOKEN INC. All Rights Reserved.
  */
 package org.iplass.mtp.tools.batch.lob;
 
@@ -18,7 +18,6 @@ import org.iplass.mtp.impl.core.ExecuteContext;
 import org.iplass.mtp.impl.core.TenantContextService;
 import org.iplass.mtp.impl.core.config.ConfigImpl;
 import org.iplass.mtp.impl.lob.Lob;
-import org.iplass.mtp.impl.lob.LobDao;
 import org.iplass.mtp.impl.lob.LobStoreService;
 import org.iplass.mtp.impl.lob.lobstore.LobData;
 import org.iplass.mtp.impl.lob.lobstore.LobStore;
@@ -32,6 +31,7 @@ import org.iplass.mtp.impl.rdb.adapter.RdbAdapter;
 import org.iplass.mtp.impl.rdb.adapter.RdbAdapterService;
 import org.iplass.mtp.impl.tools.tenant.TenantInfo;
 import org.iplass.mtp.spi.ServiceRegistry;
+import org.iplass.mtp.tools.batch.MtpBatchResourceDisposer;
 import org.iplass.mtp.tools.batch.MtpSilentBatch;
 import org.iplass.mtp.transaction.Transaction;
 import org.slf4j.Logger;
@@ -41,7 +41,8 @@ public class LobStoreMigrator extends MtpSilentBatch {
 
 	private static Logger logger = LoggerFactory.getLogger(LobStoreMigrator.class);
 
-	private static TenantContextService tenantContextService = ServiceRegistry.getRegistry().getService(TenantContextService.class);
+	private static TenantContextService tenantContextService = ServiceRegistry.getRegistry()
+			.getService(TenantContextService.class);
 
 	private int tenantId;
 
@@ -73,15 +74,20 @@ public class LobStoreMigrator extends MtpSilentBatch {
 		String rootDir = args[2];
 		int tenantId = Integer.parseInt(args[3]);
 
-		if (tenantId >= 0) {
-			(new LobStoreMigrator(mode, target, rootDir, tenantId)).execute();
-		} else {
-			List<TenantInfo> tenants = getValidTenantInfoList();
-			if (tenants != null) {
-				for (TenantInfo t: tenants) {
-					(new LobStoreMigrator(mode, target, rootDir, t.getId())).execute();
+		try {
+			if (tenantId >= 0) {
+				(new LobStoreMigrator(mode, target, rootDir, tenantId)).execute();
+			} else {
+				List<TenantInfo> tenants = getValidTenantInfoList();
+				if (tenants != null) {
+					for (TenantInfo t : tenants) {
+						(new LobStoreMigrator(mode, target, rootDir, t.getId())).execute();
+					}
 				}
 			}
+		} finally {
+			// リソース破棄
+			MtpBatchResourceDisposer.disposeResource();
 		}
 	}
 
@@ -111,56 +117,56 @@ public class LobStoreMigrator extends MtpSilentBatch {
 				logArguments();
 
 				Transaction.required(t -> {
-						ServiceRegistry sr = ServiceRegistry.getRegistry();
-						LobStoreService lobStoreService = sr.getService(LobStoreService.class);
+					ServiceRegistry sr = ServiceRegistry.getRegistry();
+					LobStoreService lobStoreService = sr.getService(LobStoreService.class);
 
-						ConfigImpl config = new ConfigImpl("lobStoreMigrator", null, null);
-						config.addDependentService(RdbAdapterService.class.getName(), sr.getService(RdbAdapterService.class));
+					ConfigImpl config = new ConfigImpl("lobStoreMigrator", null, null);
+					config.addDependentService(RdbAdapterService.class.getName(), sr.getService(RdbAdapterService.class));
 
-						RdbLobStore rdbLobStore = new RdbLobStore();
-						FileLobStore fileLobStore = new FileLobStore();
-						fileLobStore.setRootDir(rootDir);
+					RdbLobStore rdbLobStore = new RdbLobStore();
+					FileLobStore fileLobStore = new FileLobStore();
+					fileLobStore.setRootDir(rootDir);
 
-						rdbLobStore.inited(lobStoreService, config);
-						fileLobStore.inited(lobStoreService, config);
+					rdbLobStore.inited(lobStoreService, config);
+					fileLobStore.inited(lobStoreService, config);
 
-						LobStore lobStore = MigrateMode.F2R.equals(migrateMode) ? fileLobStore : rdbLobStore;
+					LobStore lobStore = MigrateMode.F2R.equals(migrateMode) ? fileLobStore : rdbLobStore;
 
-						RdbAdapter rdb = sr.getService(RdbAdapterService.class).getRdbAdapter();
-						LobDao dao = lobStoreService.getLobDao();
+					RdbAdapter rdb = sr.getService(RdbAdapterService.class)
+							.getRdbAdapter();
 
-						SqlExecuter<Void> exec = new SqlExecuter<Void>() {
-							@Override
-							public Void logic() throws SQLException {
-								BlobSearchSql sqlCreator = rdb.getQuerySqlCreator(BlobSearchSql.class);
-								String sql = sqlCreator.toSqlForMigrate(rdb, tenantId);
+					SqlExecuter<Void> exec = new SqlExecuter<Void>() {
+						@Override
+						public Void logic() throws SQLException {
+							BlobSearchSql sqlCreator = rdb.getQuerySqlCreator(BlobSearchSql.class);
+							String sql = sqlCreator.toSqlForMigrate(rdb, tenantId);
 
-								try (ResultSet rs = getStatement().executeQuery(sql)) {
-									while (rs.next()) {
-										Lob lob = sqlCreator.toBinaryData(rs, lobStore, dao, lobStoreService.isManageLobSizeOnRdb());
+							try (ResultSet rs = getStatement().executeQuery(sql)) {
+								while (rs.next()) {
+									Lob lob = sqlCreator.toBinaryData(rs, lobStore, lobStoreService);
 
-										if ((MigrateTarget.BINARY.equals(migrateTarget) && LongTextType.LOB_NAME.equals(lob.getName())) ||
-												(MigrateTarget.LONGTEXT.equals(migrateTarget) && !LongTextType.LOB_NAME.equals(lob.getName()))) {
-											continue;
-										}
-
-										// 移行処理
-										switch (migrateMode) {
-										case R2F:	// RDB to File
-											migrateRdbToFile(lob, fileLobStore);
-											break;
-										case F2R:	// File to RDB
-											migrateFileToRdb(lob, rdbLobStore);
-											break;
-										}
+									if ((MigrateTarget.BINARY.equals(migrateTarget) && LongTextType.LOB_NAME.equals(lob.getName())) ||
+											(MigrateTarget.LONGTEXT.equals(migrateTarget) && !LongTextType.LOB_NAME.equals(lob.getName()))) {
+										continue;
 									}
-									return null;
-								}
-							}
-						};
-						exec.execute(rdb, true);
 
-						return null;
+									// 移行処理
+									switch (migrateMode) {
+									case R2F: // RDB to File
+										migrateRdbToFile(lob, fileLobStore);
+										break;
+									case F2R: // File to RDB
+										migrateFileToRdb(lob, rdbLobStore);
+										break;
+									}
+								}
+								return null;
+							}
+						}
+					};
+					exec.execute(rdb, true);
+
+					return null;
 				});
 
 				setSuccess(true);

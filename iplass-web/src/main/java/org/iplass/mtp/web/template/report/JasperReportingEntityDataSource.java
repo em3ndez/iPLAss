@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -41,7 +41,7 @@ public class JasperReportingEntityDataSource extends JRBeanCollectionDataSource 
 	@Override
 	protected Object getFieldValue(Object bean, JRField field) throws JRException {
 		if (bean instanceof Entity) {
-			return getEntityFieldValue((Entity)bean, getPropertyName(field));
+			return getEntityFieldValue((Entity) bean, getPropertyName(field));
 		} else {
 			return getBeanProperty(bean, getPropertyName(field));
 		}

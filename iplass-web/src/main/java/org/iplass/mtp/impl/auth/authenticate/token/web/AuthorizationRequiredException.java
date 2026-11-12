@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -19,8 +19,8 @@
  */
 package org.iplass.mtp.impl.auth.authenticate.token.web;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 public class AuthorizationRequiredException extends WebApplicationException {
 	private static final long serialVersionUID = 2602027263698869909L;
@@ -29,11 +29,11 @@ public class AuthorizationRequiredException extends WebApplicationException {
 	public static final String CODE_INVALID_REQUEST = "invalid_request";
 	public static final String CODE_INVALID_TOKEN = "invalid_token";
 	public static final String CODE_INSUFFICIENT_SCOPE = "insufficient_scope";
-	
+
 	public AuthorizationRequiredException(String scheme, String realm, String errorCode, String errorDescription) {
 		super(errorDescription, buildResponse(scheme, realm, errorCode, errorDescription));
 	}
-	
+
 	private static Response buildResponse(String scheme, String realm, String errorCode, String errorDescription) {
 		int status;
 		switch (errorCode) {
@@ -51,7 +51,7 @@ public class AuthorizationRequiredException extends WebApplicationException {
 			status = 500;
 			break;
 		}
-		
+
 		StringBuilder resMsg = new StringBuilder();
 		resMsg.append(scheme);
 		resMsg.append(" ");
@@ -60,30 +60,39 @@ public class AuthorizationRequiredException extends WebApplicationException {
 		} else {
 			boolean appended = false;
 			if (realm != null) {
-				resMsg.append("realm=\"").append(realm).append("\"");
+				resMsg.append("realm=\"")
+						.append(realm)
+						.append("\"");
 				appended = true;
 			}
 			if (errorCode != null) {
 				if (appended) {
 					resMsg.append(",");
 				}
-				resMsg.append("error=\"").append(errorCode).append("\"");
+				resMsg.append("error=\"")
+						.append(errorCode)
+						.append("\"");
 				appended = true;
 			}
 			if (errorDescription != null) {
 				if (appended) {
 					resMsg.append(",");
 				}
-				resMsg.append("error_description=\"").append(errorDescription).append("\"");
+				resMsg.append("error_description=\"")
+						.append(errorDescription)
+						.append("\"");
 				appended = true;
 			}
 		}
-		
+
 		if (errorDescription == null) {
 			errorDescription = "";
 		}
-		
-		return Response.status(status).header("WWW-Authenticate", resMsg.toString()).entity(errorDescription).build();
+
+		return Response.status(status)
+				.header("WWW-Authenticate", resMsg.toString())
+				.entity(errorDescription)
+				.build();
 	}
 
 }

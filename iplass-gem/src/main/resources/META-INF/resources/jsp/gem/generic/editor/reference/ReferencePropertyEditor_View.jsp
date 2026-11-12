@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -17,8 +17,7 @@
  You should have received a copy of the GNU Affero General Public License
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
-
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 <%@ page import="java.math.BigDecimal" %>
@@ -59,6 +58,7 @@
 <%@ page import="org.iplass.mtp.web.template.TemplateUtil" %>
 <%@ page import="org.iplass.gem.command.Constants" %>
 <%@ page import="org.iplass.gem.command.ViewUtil"%>
+<%@ page import="org.iplass.gem.command.generic.editor.ReferencePropertyEditorUtil" %>
 <%@ page import="org.iplass.gem.command.generic.detail.DetailViewCommand"%>
 <%@ page import="org.iplass.gem.command.generic.detail.UpdateReferencePropertyCommand"%>
 <%@ page import="org.iplass.gem.command.generic.detail.UpdateTableOrderCommand"%>
@@ -219,8 +219,7 @@
 		String str = ConvertUtil.convertToString(refEntity.getValue(uniquePropName));
 		return StringUtil.escapeHtml(str);
 	}
-%>
-<%!
+
 	Integer toInteger(Object val) {
 		if (val == null) return null;
 		if (val instanceof Integer) {
@@ -236,6 +235,16 @@
 		}
 		return -1; // 数値以外
 	}
+
+	boolean checkActionType(List<UrlParameterActionType> actions, UrlParameterActionType actionType) {
+		if (actions == null) {
+			//未指定の場合は、SELECTとADDはOK
+			return actionType == UrlParameterActionType.SELECT || actionType == UrlParameterActionType.ADD;
+		} else {
+			//指定されている場合は、対象かどうかをチェック
+			return actions.contains(actionType);
+		}
+	}
 %>
 <%
 	String contextPath = TemplateUtil.getTenantContextPath();
@@ -243,6 +252,7 @@
 
 	//Request情報取得
 	ReferencePropertyEditor editor = (ReferencePropertyEditor) request.getAttribute(Constants.EDITOR_EDITOR);
+	String referenceModalSizeAttributes = ReferencePropertyEditorUtil.getDialogSizeAttributes(editor);
 	OutputType outputType = (OutputType) request.getAttribute(Constants.OUTPUT_TYPE);
 
 	Entity entity = request.getAttribute(Constants.ENTITY_DATA) instanceof Entity ? (Entity) request.getAttribute(Constants.ENTITY_DATA) : null;
@@ -275,6 +285,7 @@
 
 	//refSectionIndexがnullではなければ、参照セクション内でネストされています。
 	Integer refSectionIndex = (Integer)request.getAttribute(Constants.REF_SECTION_INDEX);
+	String _refSectionIndex = refSectionIndex != null ? refSectionIndex.toString() : "";
 
 	//Property情報取得
 	boolean isMappedby = pd.getMappedBy() != null;
@@ -383,7 +394,8 @@
 			|| editor.getDisplayType() == ReferenceDisplayType.CHECKBOX
 			|| editor.getDisplayType() == ReferenceDisplayType.TREE
 			|| editor.getDisplayType() == ReferenceDisplayType.LABEL
-			|| editor.getDisplayType() == ReferenceDisplayType.UNIQUE) {
+			|| editor.getDisplayType() == ReferenceDisplayType.UNIQUE
+			|| editor.getDisplayType() == ReferenceDisplayType.SELECTFILTER) {
 
 		//リンク or リスト
 		String ulId = "ul_" + propName;
@@ -396,7 +408,10 @@
 			}
 		}
 %>
-<ul class="data-label" id="<c:out value="<%=ulId %>"/>" data-deletable="<c:out value="<%=(!hideDeleteButton && updatable) %>"/>">
+<ul name="data-label-<c:out value="<%=propName %>"/>" class="data-label" id="
+	<c:out value="<%=ulId %>" />" data-deletable="
+	<c:out value="<%=(!hideDeleteButton && updatable) %>" />" data-reference-modal="true"<%=referenceModalSizeAttributes
+		%>>
 <%
 		for (int i = 0; i < entityList.size(); i++) {
 			Entity refEntity = entityList.get(i);
@@ -414,7 +429,7 @@
 
 				if (StringUtil.isNotEmpty(customStyle)) {
 %>
-<span style="<c:out value="<%=customStyle %>"/>">
+<span name="data-label-<c:out value="<%=propName %>"/>"  style="<c:out value="<%=customStyle %>"/>">
 <%
 				}
 %>
@@ -456,17 +471,42 @@
 					EntityViewManager evm = ManagerLocator.getInstance().getManager(EntityViewManager.class);
 					String _viewUrlParam = StringUtil.escapeJavaScript(
 							evm.getUrlParameter(rootDefName, editor, parentEntity, UrlParameterActionType.VIEW));
+					String _dynamicParamCallback = "viewDynamicParamCallback_" + StringUtil.escapeJavaScript(propName);
+
+					String viewEditableReference = "viewEditableReference(" 
+						+ "'" + _viewAction + "'" 
+						+ ", '" + _refDefName + "'"
+						+ ", '" + _entityOid + "'"
+						+ ", '" + _reloadUrl + "'"
+						+ ", true"
+						+ ", '" + _viewUrlParam + "'"
+						+ ", '" + _dynamicParamCallback + "'"
+						+ ")";
 %>
-<a href="javascript:void(0)" class="modal-lnk" style="<c:out value="<%=customStyle%>"/>"
- onclick="viewEditableReference('<%=_viewAction%>', '<%=_refDefName%>', '<%=_entityOid%>', '<%=_reloadUrl%>', true, '<%=_viewUrlParam%>')">
- <c:out value="<%=displayPropLabel %>" /></a>
+<script>
+$(function() {
+	var dynamicParamCallback = function(urlParam) {
+		<%if (checkActionType(editor.getDynamicUrlParameterAction(), UrlParameterActionType.VIEW) && StringUtil.isNotBlank(editor.getDynamicUrlParameter())) {%>
+		<%=editor.getDynamicUrlParameter()%>
+		<%} else {%>
+		return urlParam;
+		<%}%>
+	};
+	var dynamicParamCallbackKey = "<%=_dynamicParamCallback%>";
+	scriptContext[dynamicParamCallbackKey] = dynamicParamCallback;
+});
+</script>
+<a href="javascript:void(0)" class="modal-lnk" data-reference-modal="true" <%=referenceModalSizeAttributes %> style="
+	<c:out value="<%=customStyle%>" />"
+ onclick="<c:out value="<%=viewEditableReference %>"/>"><c:out value="<%=displayPropLabel %>" /></a>
 <input type="hidden" name="<c:out value="<%=propName %>"/>" value="<c:out value="<%=_value %>"/>" />
 <%
 					if (!hideDeleteButton && updatable) {
 						//削除ボタン
 						String deleteId = "del_" + propName + i;
 %>
-<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_View.delete')}" class="gr-btn-02" id="<c:out value="<%=deleteId %>"/>" />
+<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_View.delete')}" class="gr-btn-02 reference-view-delete"
+ id="<c:out value="<%=deleteId %>"/>" data-propertyName="<%=StringUtil.escapeJavaScript(propName)%>"/>
 <script type="text/javascript">
 $(function() {
 	$(":button[id='<%=StringUtil.escapeJavaScript(deleteId)%>']").click(function() {
@@ -486,19 +526,59 @@ $(function() {
 				} else {
 					//参照のみ
 					String linkId = propName + "_" + refEntity.getOid();
+
+					String showReference = "showReference(" 
+						+ "'" + StringUtil.escapeJavaScript(viewAction) + "'" 
+						+ ", '" + StringUtil.escapeJavaScript(refDefName) + "'"
+						+ ", '" + StringUtil.escapeJavaScript(refEntity.getOid()) + "'"
+						+ ", '" + refEntity.getVersion() + "'"
+						+ ", '" + StringUtil.escapeJavaScript(linkId) + "'"
+						+ ", " + refEdit
+						+ ", null"
+						+ ", '" + StringUtil.escapeJavaScript(rootDefName) + "'"
+						+ ", '" + StringUtil.escapeJavaScript(viewName) + "'"
+						+ ", '" + StringUtil.escapeJavaScript(propName) + "'"
+						+ ", 'detail'"
+						+ ", '" + _refSectionIndex + "'"
+						+ ", '" + StringUtil.escapeJavaScript(rootOid) + "'"
+						+ ", '" + StringUtil.escapeJavaScript(rootVersion) + "'"
+						+ ")";
 %>
-<a href="javascript:void(0)" class="modal-lnk" style="<c:out value="<%=customStyle%>"/>" id="<c:out value="<%=linkId %>"/>" data-linkId="<c:out value="<%=linkId %>" />"
- onclick="showReference('<%=StringUtil.escapeJavaScript(viewAction)%>', '<%=StringUtil.escapeJavaScript(refDefName)%>', '<%=StringUtil.escapeJavaScript(refEntity.getOid())%>', '<%=refEntity.getVersion()%>', '<%=StringUtil.escapeJavaScript(linkId)%>', <%=refEdit %>, null, '<%=rootDefName%>', '<%=viewName%>', '<%=propName%>', 'detail', '<c:out value="<%=refSectionIndex%>" />', '<%=StringUtil.escapeJavaScript(rootOid) %>', '<%=StringUtil.escapeJavaScript(rootVersion) %>')">
- <c:out value="<%=displayPropLabel %>" /></a>
+<a href="javascript:void(0)" class="modal-lnk" data-reference-modal="true" <%=referenceModalSizeAttributes %> style="
+	<c:out value="<%=customStyle%>" />"
+	id="
+	<c:out value="<%=linkId %>" />" data-linkId="
+	<c:out value="<%=linkId %>" />"
+ onclick="<c:out value="<%=showReference %>"/>"><c:out value="<%=displayPropLabel %>" /></a>
 <%
 				}
 			} else {
 				//Select,Checkbox,RefCombo
 				String linkId = propName + "_" + refEntity.getOid();
+
+				String showReference = "showReference(" 
+					+ "'" + StringUtil.escapeJavaScript(viewAction) + "'" 
+					+ ", '" + StringUtil.escapeJavaScript(refDefName) + "'"
+					+ ", '" + StringUtil.escapeJavaScript(refEntity.getOid()) + "'"
+					+ ", '" + refEntity.getVersion() + "'"
+					+ ", '" + StringUtil.escapeJavaScript(linkId) + "'"
+					+ ", " + refEdit
+					+ ", null"
+					+ ", '" + StringUtil.escapeJavaScript(rootDefName) + "'"
+					+ ", '" + StringUtil.escapeJavaScript(viewName) + "'"
+					+ ", '" + StringUtil.escapeJavaScript(propName) + "'"
+					+ ", 'detail'"
+					+ ", '" + _refSectionIndex + "'"
+					+ ", '" + StringUtil.escapeJavaScript(rootOid) + "'"
+					+ ", '" + StringUtil.escapeJavaScript(rootVersion) + "'"
+					+ ")";
 %>
-<a href="javascript:void(0)" class="modal-lnk" style="<c:out value="<%=customStyle%>"/>" id="<c:out value="<%=linkId %>"/>" data-linkId="<c:out value="<%=linkId %>" />"
- onclick="showReference('<%=StringUtil.escapeJavaScript(viewAction)%>', '<%=StringUtil.escapeJavaScript(refDefName)%>', '<%=StringUtil.escapeJavaScript(refEntity.getOid())%>', '<%=refEntity.getVersion() %>', '<%=StringUtil.escapeJavaScript(linkId)%>', <%=refEdit %>, null, '<%=rootDefName%>', '<%=viewName%>', '<%=propName%>', 'detail', '<c:out value="<%=refSectionIndex%>" />', '<%=StringUtil.escapeJavaScript(rootOid) %>', '<%=StringUtil.escapeJavaScript(rootVersion) %>')">
- <c:out value="<%=displayPropLabel %>" /></a>
+<a href="javascript:void(0)" class="modal-lnk" data-reference-modal="true" <%=referenceModalSizeAttributes %> style="
+	<c:out value="<%=customStyle%>" />"
+	id="
+	<c:out value="<%=linkId %>" />" data-linkId="
+	<c:out value="<%=linkId %>" />"
+ onclick="<c:out value="<%=showReference %>"/>"><c:out value="<%=displayPropLabel %>" /></a>
 <%
 			}
 			if (outputHidden) {
@@ -547,12 +627,22 @@ $(function() {
 
 					String selBtnUrlParam = evm.getUrlParameter(rootDefName, editor, parentEntity, UrlParameterActionType.SELECT);
 %>
-<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_View.select')}" class="gr-btn-02 modal-btn mt05" id="<c:out value="<%=selBtnId %>"/>" data-specVersionKey="<c:out value="<%=specVersionKey%>" />" />
+<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_View.select')}"
+	class="gr-btn-02 modal-btn mt05" data-reference-modal="true"<%=referenceModalSizeAttributes %> id="<c:out value="<%=selBtnId %>"/>"
+data-specVersionKey="
+<c:out value="<%=specVersionKey%>" />" />
 <script type="text/javascript">
 $(function() {
+	var dynamicParamCallback = function(urlParam) {
+<%if (checkActionType(editor.getDynamicUrlParameterAction(), UrlParameterActionType.SELECT) && StringUtil.isNotBlank(editor.getDynamicUrlParameter())) {%>
+<%=editor.getDynamicUrlParameter()%>
+<%} else {%>
+		return urlParam;
+<%}%>
+	};
 	$(":button[id='<%=StringUtil.escapeJavaScript(selBtnId)%>']").click(function() {
 		searchReferenceFromView("<%=StringUtil.escapeJavaScript(selectAction)%>", "<%=StringUtil.escapeJavaScript(updateRefAction)%>", "<%=StringUtil.escapeJavaScript(refDefName)%>", "<%=StringUtil.escapeJavaScript(ulId)%>", "<%=StringUtil.escapeJavaScript(propName)%>",
-				<%=pd.getMultiplicity() %>, <%=isMultiple %>, "<%=StringUtil.escapeJavaScript(selBtnUrlParam)%>", "<%=StringUtil.escapeJavaScript(reloadUrl)%>", this, <%=editor.isPermitConditionSelectAll()%>, <%=editor.isPermitVersionedSelect()%>);
+				<%=pd.getMultiplicity() %>, <%=isMultiple %>, "<%=StringUtil.escapeJavaScript(selBtnUrlParam)%>", "<%=StringUtil.escapeJavaScript(reloadUrl)%>", this, <%=editor.isPermitConditionSelectAll()%>, <%=editor.isPermitVersionedSelect()%>, dynamicParamCallback);
 	});
 });
 </script>
@@ -583,7 +673,7 @@ $(function() {
  data-viewAction="<c:out value="<%=viewAction%>"/>"
  data-refDefName="<c:out value="<%=refDefName%>"/>"
  data-refEdit="<c:out value="<%=refEdit%>"/>"
- data-refSectionIndex="<c:out value="<%=refSectionIndex%>"/>"
+ data-refSectionIndex="<%=_refSectionIndex%>"
  data-updateRefAction="<c:out value="<%=updateRefAction%>"/>"
  data-reloadUrl="<c:out value="<%=reloadUrl%>"/>"
  data-entityOid="<c:out value="<%=StringUtil.escapeJavaScript(rootOid)%>"/>"
@@ -617,15 +707,24 @@ $(function() {
 					}
 				}
 %>
-<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.new')}" class="gr-btn-02 modal-btn mt05" id="<c:out value="<%=insBtnId %>"/>" style="<c:out value="<%=insBtnStyle %>"/>" />
+<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Edit.new')}"
+	class="gr-btn-02 modal-btn mt05" data-reference-modal="true"<%=referenceModalSizeAttributes %> id="<c:out value="<%=insBtnId %>"/>" style="
+<c:out value="<%=insBtnStyle %>" />" />
 <script type="text/javascript">
 $(function() {
+	var dynamicParamCallback = function(urlParam) {
+		<%if (checkActionType(editor.getDynamicUrlParameterAction(), UrlParameterActionType.ADD) && StringUtil.isNotBlank(editor.getDynamicUrlParameter())) {%>
+		<%=editor.getDynamicUrlParameter()%>
+		<%} else {%>
+		return urlParam;
+		<%}%>
+	};
 	$(":button[id='<%=StringUtil.escapeJavaScript(insBtnId)%>']").click(function() {
 		insertReferenceFromView("<%=StringUtil.escapeJavaScript(addAction)%>", "<%=StringUtil.escapeJavaScript(refDefName)%>", "<%=StringUtil.escapeJavaScript(ulId)%>", <%=pd.getMultiplicity() %>,
 				"<%=StringUtil.escapeJavaScript(insBtnUrlParam)%>", "<%=StringUtil.escapeJavaScript(parentOid)%>", "<%=StringUtil.escapeJavaScript(parentVersion)%>", "<%=StringUtil.escapeJavaScript(defName)%>",
 				"<%=StringUtil.escapeJavaScript(mappedBy)%>", $(":hidden[name='oid']").val(), "<%=StringUtil.escapeJavaScript(updateRefAction)%>",
 				"<%=StringUtil.escapeJavaScript(propName)%>", "<%=StringUtil.escapeJavaScript(reloadUrl)%>", "<%=StringUtil.escapeJavaScript(rootOid)%>",
-				"<%=StringUtil.escapeJavaScript(rootVersion)%>", "<%=UpdateTableOrderCommand.WEBAPI_NAME%>", "<%=orderPropName%>", <%=orderPropValue%>, <%=editor.getInsertType() == InsertType.TOP%>);
+				"<%=StringUtil.escapeJavaScript(rootVersion)%>", "<%=UpdateTableOrderCommand.WEBAPI_NAME%>", "<%=orderPropName%>", <%=orderPropValue%>, <%=editor.getInsertType() == InsertType.TOP%>, dynamicParamCallback);
 	});
 });
 </script>
@@ -636,7 +735,7 @@ $(function() {
 		//参照コンボ
 		String ulId = "ul_" + propName;
 %>
-<ul class="data-label" id="<c:out value="<%=ulId %>"/>">
+<ul class="data-label" id="<c:out value="<%=ulId %>"/>" data-reference-modal="true"<%=referenceModalSizeAttributes %>>
 <%
 		for (int i = 0; i < entityList.size(); i++) {
 			Entity refEntity = entityList.get(i);
@@ -666,10 +765,30 @@ $(function() {
 			}
 
 			String linkId = propName + "_" + refEntity.getOid();
+
+			String showReference = "showReference(" 
+				+ "'" + StringUtil.escapeJavaScript(viewAction) + "'" 
+				+ ", '" + StringUtil.escapeJavaScript(refDefName) + "'"
+				+ ", '" + StringUtil.escapeJavaScript(refEntity.getOid()) + "'"
+				+ ", '" + refEntity.getVersion() + "'"
+				+ ", '" + StringUtil.escapeJavaScript(linkId) + "'"
+				+ ", " + refEdit
+				+ ", null"
+				+ ", '" + StringUtil.escapeJavaScript(rootDefName) + "'"
+				+ ", '" + StringUtil.escapeJavaScript(viewName) + "'"
+				+ ", '" + StringUtil.escapeJavaScript(propName) + "'"
+				+ ", 'detail'"
+				+ ", '" + _refSectionIndex + "'"
+				+ ", '" + StringUtil.escapeJavaScript(rootOid) + "'"
+				+ ", '" + StringUtil.escapeJavaScript(rootVersion) + "'"
+				+ ")";
 %>
-<a href="javascript:void(0)" class="modal-lnk" style="<c:out value="<%=customStyle%>"/>" id="<c:out value="<%=linkId %>"/>" data-linkId="<c:out value="<%=linkId %>" />"
- onclick="showReference('<%=StringUtil.escapeJavaScript(viewAction)%>', '<%=StringUtil.escapeJavaScript(refDefName)%>', '<%=StringUtil.escapeJavaScript(refEntity.getOid())%>', '<%=refEntity.getVersion() %>', '<%=StringUtil.escapeJavaScript(linkId)%>', <%=refEdit %>, null, '<%=rootDefName%>', '<%=viewName%>', '<%=propName%>', 'detail', '<c:out value="<%=refSectionIndex%>" />', '<%=StringUtil.escapeJavaScript(rootOid) %>', '<%=StringUtil.escapeJavaScript(rootVersion) %>')">
- <c:out value="<%=displayPropLabel %>" /></a>
+<a href="javascript:void(0)" class="modal-lnk" data-reference-modal="true" <%=referenceModalSizeAttributes %> style="
+	<c:out value="<%=customStyle%>" />"
+	id="
+	<c:out value="<%=linkId %>" />" data-linkId="
+	<c:out value="<%=linkId %>" />"
+ onclick="<c:out value="<%=showReference %>"/>"><c:out value="<%=displayPropLabel %>" /></a>
 <%
 			if (outputHidden) {
 				String _value = refEntity.getOid() + "_" + refEntity.getVersion();
@@ -686,15 +805,23 @@ $(function() {
 <%
 	} else if (editor.getDisplayType() == ReferenceDisplayType.HIDDEN) {
 		//HIDDEN
+%>
+<ul name="data-hidden-<c:out value="<%=propName %>"/>">
+<%
 		for (int i = 0; i < entityList.size(); i++) {
 			Entity refEntity = entityList.get(i);
 			if (refEntity == null) continue;
 
 			String _value = refEntity.getOid() + "_" + refEntity.getVersion();
 %>
+<li>
 <input type="hidden" name="<c:out value="<%=propName %>"/>" value="<c:out value="<%=_value %>"/>" />
+</li>
 <%
 		}
+%>
+</ul>
+<%
 	} else if (editor.getDisplayType() == ReferenceDisplayType.NESTTABLE) {
 		//テーブル
 		//include先で利用するためパラメータを詰めなおし

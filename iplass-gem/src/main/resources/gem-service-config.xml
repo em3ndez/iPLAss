@@ -4,7 +4,6 @@
 	<service>
 		<interface>org.iplass.mtp.impl.core.ManagerFactory</interface>
 		<property name="org.iplass.mtp.view.calendar.EntityCalendarManager" value="org.iplass.mtp.impl.view.calendar.EntityCalendarManagerImpl" additional="true" />
-		<property name="org.iplass.mtp.view.filter.EntityFilterManager" value="org.iplass.mtp.impl.view.filter.EntityFilterManagerImpl" additional="true" />
 		<property name="org.iplass.mtp.view.generic.EntityViewManager" value="org.iplass.mtp.impl.view.generic.EntityViewManagerImpl" additional="true" />
 		<property name="org.iplass.mtp.view.menu.MenuItemManager" value="org.iplass.mtp.impl.view.menu.MenuItemManagerImpl" additional="true" />
 		<property name="org.iplass.mtp.view.menu.MenuTreeManager" value="org.iplass.mtp.impl.view.menu.MenuTreeManagerImpl" additional="true" />
@@ -29,7 +28,6 @@
 	<service>
 		<interface>org.iplass.mtp.impl.definition.DefinitionService</interface>
 		<property name="typeMap" value="org.iplass.mtp.impl.view.calendar.EntityCalendarService$TypeMap" additional="true" />
-		<property name="typeMap" value="org.iplass.mtp.impl.view.filter.EntityFilterService$TypeMap" additional="true" />
 		<property name="typeMap" value="org.iplass.mtp.impl.view.generic.EntityViewService$TypeMap" additional="true" />
 		<property name="typeMap" value="org.iplass.mtp.impl.view.menu.MenuItemService$TypeMap" additional="true" />
 		<property name="typeMap" value="org.iplass.mtp.impl.view.top.TopViewDefinitionService$TypeMap" additional="true" />
@@ -80,11 +78,25 @@
 	<service>
 		<interface>org.iplass.gem.GemConfigService</interface>
 		<class>org.iplass.gem.GemConfigService</class>
+
+		<!-- リクエストのパラメータをもとに参照データを更新する際に、参照データをロードしなおすか -->
+		<property name="mustLoadWithReference" value="true" />
+
+		<!-- リクエストのパラメータを基に参照データを更新する際に、参照エンティティの参照プロパティも合わせてロードするか -->
 		<property name="loadWithReference" value="false" />
+
 		<property name="formatNumberWithComma" value="true" />
+
+		<!-- Entityデータのサポートファイルタイプ。CSV, EXCEL, SPECIFY -->
+		<property name="fileSupportType" value="CSV" />
 
 		<!-- CSVダウンロード件数上限値 -->
 		<property name="csvDownloadMaxCount" value="65535" />
+
+		<!-- Upload形式のCSVダウンロード時に多重度複数の参照を含む場合の一括ロード件数 -->
+		<!--
+		<property name="uploadableCsvDownloadLoadSize" value="1" />
+		-->
 
 		<!-- CSVダウンロード文字コード -->
 		<property name="csvDownloadCharacterCode" value="UTF-8"/>
@@ -116,6 +128,12 @@
 		<!-- 検索画面で表示する検索結果の件数 -->
 		<property name="searchResultDispRowCount" value="10"/>
 
+		<!-- 検索画面のテーブル高さ自動調節モード -->
+		<property name="searchResultAutoHeightAdjustMode" value="FIT_TO_ROW_COUNT"/>
+
+		<!-- 詳細検索における検索項目の上限数 -->
+		<property name="maxOfDetailSearchItems" value="100"/>
+
 		<!-- 検索処理のインターバル、無期限(0)/指定ミリ秒(1以上) -->
 		<property name="searchInterval" value="60000"/>
 
@@ -128,6 +146,12 @@
 		<!-- 汎用検索のCSVダウンロードのフッター文言 -->
 		<property name="csvDownloadFooter" value=""/>
 
+		<!-- 検索処理で表示ラベルとして扱うプロパティを検索条件に利用するか -->
+		<property name="useDisplayLabelItemInSearch" value="false"/>
+
+		<!-- CSVダウンロード処理で表示ラベルとして扱うプロパティを出力するか -->
+		<property name="useDisplayLabelItemInCsvDownload" value="false"/>
+
 		<!-- CSVアップロード非同期設定 -->
 		<!-- true(非同期)を設定する場合は、 RdbQueueServiceのuseQueueプロパティをtrueに設定してください。 -->
 		<property name="csvUploadAsync" value="false"/>
@@ -137,6 +161,18 @@
 
 		<!-- プルダウンの「選択してください」を表示するか -->
 		<property name="showPulldownPleaseSelectLabel" value="true" />
+
+		<!-- ReferencePropertyEditorのモーダル初期サイズ設定 -->
+		<!-- 未設定時は既定値（幅:750 / 高さ:735） -->
+		<!--
+		<property name="referenceModal" class="org.iplass.gem.GemConfigService$ReferenceModal">
+			<property name="width" value="1200" />
+			<property name="height" value="900" />
+		</property>
+		-->
+
+		<!-- binaryファイルアップロード非同期設定 -->
+		<property name="binaryUploadAsync" value="true" />
 
 		<!-- DatePickerのデフォルトオプション -->
 		<property name="datePickerDefaultOption" value="changeMonth:true,changeYear:true,yearRange:&quot;c-10:c+10&quot;" />
@@ -150,11 +186,23 @@
 		<!-- 一括更新のコミット件数 -->
 		<property name="bulkUpdateAllCommandBatchSize" value="100" />
 
+		<!-- 参照型選択フィルターの毎回検索件数 -->
+		<property name="selectFilterSearchPageSizeDefault" value="40" />
 
 		<property name="binaryDownloadLoggingTargetProperty">
 			<property name="entityName" value="mtp.maintenance.Package" />
 			<property name="propertyName" value="archive" />
 		</property>
+
+		<!-- バイナリファイルアップロード受け入れ可能な MIME Type パターン。正規表現を指定する。 -->
+		<!-- 
+		<property name="binaryUploadAcceptMimeTypesPattern" value="^(image/.*|application/pdf|text/csv)$" />
+		-->
+
+		<!-- デフォルトのRichTextライブラリ、QUILL(デフォルト) または CKEDITOR を指定 -->
+		<!-- 
+		<property name="richTextLibrary" value="CKEDITOR" />
+		-->
 
 		<!-- 汎用画面、メニュー用のイメージカラー設定 -->
 		<property name="imageColors">
@@ -317,10 +365,6 @@
 		<property name ="filterSettingProperty" value="true" />
 	</service>
 	<service final="true">
-		<interface>org.iplass.mtp.impl.view.filter.EntityFilterService</interface>
-		<class>org.iplass.mtp.impl.view.filter.EntityFilterService</class>
-	</service>
-	<service final="true">
 		<interface>org.iplass.mtp.impl.view.menu.MenuTreeService</interface>
 		<class>org.iplass.mtp.impl.view.menu.MenuTreeService</class>
 	</service>
@@ -339,5 +383,25 @@
 	<service final="true">
 		<interface>org.iplass.mtp.impl.view.top.TopViewDefinitionService</interface>
 		<class>org.iplass.mtp.impl.view.top.TopViewDefinitionService</class>
+	</service>
+	
+	<!-- ウォームアップ -->
+	<service>
+		<interface>org.iplass.mtp.impl.warmup.WarmupService</interface>
+
+		<!--
+			taskMap は Map 形式でプロパティを設定してください。
+				name = ウォームアップタスク名
+				value = org.iplass.mtp.impl.warmup.WarmupTask の実装クラス
+		-->
+		<property name="taskMap">
+			<!-- defaultMetaDataWarmupTask はメタデータウォームアップのデフォルト定義。core プロジェクトの定義に追加 -->
+			<property name="defaultMetaDataWarmupTask" class="org.iplass.mtp.impl.warmup.MetaDataWarmupTask">
+				<property name="metadataPathList" value="/action/gem/*" additional="true" />
+				<property name="metadataPathList" value="/commandClass/gem/*" additional="true" />
+				<property name="metadataPathList" value="/template/gem/*" additional="true" />
+				<property name="metadataPathList" value="/webapi/gem/*" additional="true" />
+			</property>
+		</property>
 	</service>
 </serviceDefinition>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,19 +27,20 @@ class PropertyRef {
 	private PropertyInfo propertyInfo;
 	private Object bean;
 	private ReferencePropertyHandler rph;
-	
+
 	PropertyRef(Object bean, PropertyInfo propertyInfo) {
 		this.bean = bean;
 		this.propertyInfo = propertyInfo;
-		this.propertyName = propertyInfo.getDescriptor().getName();
+		this.propertyName = propertyInfo.getDescriptor()
+				.getName();
 	}
-	
+
 	PropertyRef(Object bean, ReferencePropertyHandler rph) {
 		this.bean = bean;
 		this.propertyName = rph.getName();
 		this.rph = rph;
 	}
-	
+
 	public TypeKind getComponentTypeKind() {
 		if (propertyInfo != null) {
 			return propertyInfo.getComponentTypeKind();

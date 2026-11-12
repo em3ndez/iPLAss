@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,18 +21,22 @@
 package org.iplass.mtp.impl.webapi.jackson;
 
 public class WebApiParameterType {
-	
+
 	private String typeName;
 	private String className;
+
 	public String getTypeName() {
 		return typeName;
 	}
+
 	public void setTypeName(String typeName) {
 		this.typeName = typeName;
 	}
+
 	public String getClassName() {
 		return className;
 	}
+
 	public void setClassName(String className) {
 		this.className = className;
 	}

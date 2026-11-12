@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-fragment xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+<web-fragment xmlns="https://jakarta.ee/xml/ns/jakartaee"
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-fragment_4_0.xsd"
-		version="4.0">
+		xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-fragment_6_0.xsd"
+		version="6.0">
 
 	<name>mtp_admin</name>
 
@@ -15,7 +15,7 @@
 	<!-- gwt XSRF security -->
 	<servlet>
 		<servlet-name>xsrf</servlet-name>
-		<servlet-class>com.google.gwt.user.server.rpc.XsrfTokenServiceServlet</servlet-class>
+		<servlet-class>com.google.gwt.user.server.rpc.jakarta.XsrfTokenServiceServlet</servlet-class>
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>xsrf</servlet-name>
@@ -55,6 +55,15 @@
 	<servlet-mapping>
 		<servlet-name>adminTenantService</servlet-name>
 		<url-pattern>/admin/mtpadmin/service/tenant</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>adminScreenModuleService</servlet-name>
+		<servlet-class>org.iplass.adminconsole.server.base.rpc.screen.ScreenModuleServiceImpl</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>adminScreenModuleService</servlet-name>
+		<url-pattern>/admin/mtpadmin/service/screen</url-pattern>
 	</servlet-mapping>
 
 	<servlet>
@@ -343,6 +352,33 @@
 	<servlet-mapping>
 		<servlet-name>adminStaticResourceDownloadService</servlet-name>
 		<url-pattern>/admin/mtpadmin/service/staticresourcedownload</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>adminOpenApiSupportExportService</servlet-name>
+		<servlet-class>org.iplass.adminconsole.server.tools.rpc.openapisupport.OpenApiSupportExportService</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>adminOpenApiSupportExportService</servlet-name>
+		<url-pattern>/admin/mtpadmin/service/exportopenapi</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>openApiSupportImportService</servlet-name>
+		<servlet-class>org.iplass.adminconsole.server.tools.rpc.openapisupport.OpenApiSupportImportService</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>openApiSupportImportService</servlet-name>
+		<url-pattern>/admin/mtpadmin/service/importopenapi</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>openApiSupportService</servlet-name>
+		<servlet-class>org.iplass.adminconsole.server.tools.rpc.openapisupport.OpenApiSupportServiceImpl</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>openApiSupportService</servlet-name>
+		<url-pattern>/admin/mtpadmin/service/openapi</url-pattern>
 	</servlet-mapping>
 
 </web-fragment>

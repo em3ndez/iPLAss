@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -48,7 +48,16 @@ public enum RequestType {
 	 * リクエストのパラメータはXML形式で受け渡されます。
 	 * WebApiリクエスト時のContent-Typeに"application/xml"が指定された場合リクエストはこの形式とみなされて処理されます。
 	 */
-	REST_XML;
+	REST_XML,
 
+	/**
+	 * 上記以外のリクエストを表します。
+	 * リクエストのパラメータは InputStream 形式で受け渡されます。
+	 */
+	REST_OTHERS;
+
+	/**
+	 * 全てのリクエスト形式
+	 */
 	public static RequestType[] ACCEPT_ALL = values();
 }

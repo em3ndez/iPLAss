@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,7 +26,7 @@ public class OAuthApplicationException extends ApplicationException {
 
 	private String code;
 	private String description;
-	
+
 	private static String toMsg(String code, String desc) {
 		if (desc == null) {
 			return code;
@@ -34,7 +34,7 @@ public class OAuthApplicationException extends ApplicationException {
 			return code + ":" + desc;
 		}
 	}
-	
+
 	public OAuthApplicationException() {
 		super();
 	}

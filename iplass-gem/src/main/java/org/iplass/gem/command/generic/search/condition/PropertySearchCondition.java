@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,7 +23,7 @@ package org.iplass.gem.command.generic.search.condition;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.text.StrTokenizer;
+import org.apache.commons.text.StringTokenizer;
 import org.iplass.gem.command.Constants;
 import org.iplass.gem.command.generic.search.SearchConditionDetail;
 import org.iplass.mtp.entity.definition.PropertyDefinition;
@@ -147,10 +147,11 @@ public abstract class PropertySearchCondition {
 				conditions.add(new IsNull(detail.getPropertyName()));
 			} else if (Constants.IN.equals(detail.getPredicate())) {
 				Object[] array = null;
-				if (conditionValue.getClass().isArray()) {
+				if (conditionValue.getClass()
+						.isArray()) {
 					array = (Object[]) conditionValue;
 				} else {
-					array = new Object[]{ conditionValue };
+					array = new Object[] { conditionValue };
 				}
 				conditions.add(new In(detail.getPropertyName(), array));
 			}
@@ -163,7 +164,7 @@ public abstract class PropertySearchCondition {
 				|| Constants.NULL.equals(detail.getPredicate())) {
 			return null;
 		} else if (Constants.IN.equals(detail.getPredicate())) {
-			StrTokenizer st = StrTokenizer.getCSVInstance(detail.getValue());
+			StringTokenizer st = StringTokenizer.getCSVInstance(detail.getValue());
 			String[] values = st.getTokenArray();
 			String[] ret = new String[values.length];
 			for (int i = 0; i < values.length; i++) {
@@ -194,7 +195,8 @@ public abstract class PropertySearchCondition {
 	}
 
 	public boolean checkDetailParameter(PropertyItem property) {
-		if (!(getValue() instanceof SearchConditionDetail)) return false;
+		if (!(getValue() instanceof SearchConditionDetail))
+			return false;
 		return true;
 	}
 
@@ -203,7 +205,7 @@ public abstract class PropertySearchCondition {
 	 * @return プロパティ定義
 	 */
 	public PropertyDefinition getDefinition() {
-	    return definition;
+		return definition;
 	}
 
 	/**
@@ -211,7 +213,7 @@ public abstract class PropertySearchCondition {
 	 * @param definition プロパティ定義
 	 */
 	public void setDefinition(PropertyDefinition definition) {
-	    this.definition = definition;
+		this.definition = definition;
 	}
 
 	/**
@@ -219,7 +221,7 @@ public abstract class PropertySearchCondition {
 	 * @return プロパティエディタ
 	 */
 	public PropertyEditor getEditor() {
-	    return editor;
+		return editor;
 	}
 
 	/**
@@ -227,15 +229,26 @@ public abstract class PropertySearchCondition {
 	 * @param editor プロパティエディタ
 	 */
 	public void setEditor(PropertyEditor editor) {
-	    this.editor = editor;
+		this.editor = editor;
 	}
 
 	/**
-	 * 検索用の値を取得します。
-	 * @return 検索用の値
+	 * 検索条件の生成に使用する値を取得します。
+	 * <p>
+	 * 返されるオブジェクトは、コンストラクタまたは{@link #setValue(Object)}で設定された値です。
+	 * プロパティ定義、プロパティエディタ、および通常検索／詳細検索の別によって、値の型や構造は異なります。
+	 * たとえば、通常検索のStringPropertyでは、通常値・From値・To値を格納したString配列が設定される場合があり、
+	 * 詳細検索では{@link SearchConditionDetail}が設定されます。
+	 * このメソッドは値の型変換やコピーを行いません。
+	 * 呼び出し元は検索モードやプロパティエディタに応じて、{@code instanceof}等で戻り値の型を確認し、
+	 * 該当する型および構造として解釈してから条件生成に使用してください。
+	 * </p>
+	 *
+	 * @return 設定された検索条件値。型や構造は検索モード等により異なるため、呼び出し元で型を確認して使用してください。
+	 *         詳細は説明本文を参照してください。値が設定されていない場合は{@code null}
 	 */
 	public Object getValue() {
-	    return value;
+		return value;
 	}
 
 	/**
@@ -243,7 +256,7 @@ public abstract class PropertySearchCondition {
 	 * @param value 検索用の値
 	 */
 	public void setValue(Object value) {
-	    this.value = value;
+		this.value = value;
 	}
 
 	/**
@@ -258,6 +271,7 @@ public abstract class PropertySearchCondition {
 			PropertyEditor editor, Object value) {
 		return newInstance(definition, editor, value, null);
 	}
+
 	public static PropertySearchCondition newInstance(PropertyDefinition definition,
 			PropertyEditor editor, Object value, String parent) {
 		if (definition instanceof AutoNumberProperty) {
@@ -267,29 +281,29 @@ public abstract class PropertySearchCondition {
 		} else if (definition instanceof BooleanProperty) {
 			return new BooleanPropertySearchCondition(definition, editor, value, parent);
 		} else if (definition instanceof DateProperty) {
-			if(editor instanceof DateRangePropertyEditor) {
+			if (editor instanceof DateRangePropertyEditor) {
 				return new DateRangePropertySearchCondition(definition, editor, value, parent);
 			}
 			return new DatePropertySearchCondition(definition, editor, value, parent);
 		} else if (definition instanceof DateTimeProperty) {
-			if(editor instanceof DateRangePropertyEditor) {
+			if (editor instanceof DateRangePropertyEditor) {
 				return new DateRangePropertySearchCondition(definition, editor, value, parent);
 			}
 			return new TimestampPropertySearchCondition(definition, editor, value, parent);
 		} else if (definition instanceof DecimalProperty) {
-			if(editor instanceof NumericRangePropertyEditor) {
+			if (editor instanceof NumericRangePropertyEditor) {
 				return new NumericRangePropertySearchCondition(definition, editor, value, parent);
 			}
 			return new DecimalPropertySearchCondition(definition, editor, value, parent);
 		} else if (definition instanceof ExpressionProperty) {
 			return new ExpressionPropertySearchCondition(definition, editor, value, parent);
 		} else if (definition instanceof FloatProperty) {
-			if(editor instanceof NumericRangePropertyEditor) {
+			if (editor instanceof NumericRangePropertyEditor) {
 				return new NumericRangePropertySearchCondition(definition, editor, value, parent);
 			}
 			return new FloatPropertySearchCondition(definition, editor, value, parent);
 		} else if (definition instanceof IntegerProperty) {
-			if(editor instanceof NumericRangePropertyEditor) {
+			if (editor instanceof NumericRangePropertyEditor) {
 				return new NumericRangePropertySearchCondition(definition, editor, value, parent);
 			}
 			return new IntegerPropertySearchCondition(definition, editor, value, parent);
@@ -302,7 +316,7 @@ public abstract class PropertySearchCondition {
 		} else if (definition instanceof StringProperty) {
 			return new StringPropertySearchCondition(definition, editor, value, parent);
 		} else if (definition instanceof TimeProperty) {
-			if(editor instanceof DateRangePropertyEditor) {
+			if (editor instanceof DateRangePropertyEditor) {
 				return new DateRangePropertySearchCondition(definition, editor, value, parent);
 			}
 			return new TimePropertySearchCondition(definition, editor, value, parent);

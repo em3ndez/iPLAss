@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 <%@ page import="java.util.ArrayList" %>
@@ -97,6 +97,7 @@
 	String scriptKey = (String)request.getAttribute(Constants.SECTION_SCRIPT_KEY);
 	String execType = (String) request.getAttribute(Constants.EXEC_TYPE);
 	Integer colNum = (Integer) request.getAttribute(Constants.COL_NUM);
+
 	Boolean nest = (Boolean) request.getAttribute(Constants.EDITOR_REF_NEST);
 	Boolean nestDummyRow = (Boolean) request.getAttribute(Constants.EDITOR_REF_NEST_DUMMY_ROW);
 
@@ -146,10 +147,13 @@
 		if (isMultiple) {
 			//複数
 			String[] array = propValue instanceof String[] ? (String[]) propValue : null;
+			String ulId = "ul_" + propName;
+
 			if (updatable) {
 				List<String> values = new ArrayList<String>();
 				if (array != null && array.length > 0) values.addAll(Arrays.asList(array));
 %>
+<ul id="<c:out value="<%=ulId %>"/>">
 <select name="<c:out value="<%=propName %>"/>" size="6" class="<c:out value="<%=cls %>"/>" style="<c:out value="<%=customStyle%>"/>" multiple>
 <%
 				for (EditorValue tmp : editor.getValues()) {
@@ -162,6 +166,37 @@
 				}
 %>
 </select>
+<c:set var="multiplicity" value="<%= pd.getMultiplicity() %>" />
+<p class="error-multiplicity" style="display: none;">
+<span class="error">${m:rsp("mtp-gem-messages","generic.editor.string.StringPropertyEditor_Edit.maxMultipleError",multiplicity)}</span>
+</p>
+</ul>
+<script>
+$(function() {
+	const $ul = $("#" + es("<%=StringUtil.escapeJavaScript(ulId)%>"));
+	const $errorMsg = $(".error-multiplicity", $ul); 
+
+	$("select[name='" + es("<%=StringUtil.escapeJavaScript(propName)%>") + "']").on("change", function() {
+        const selectedCount = $(this).find("option:selected").length;
+
+        if (selectedCount > <%=pd.getMultiplicity()%>) {
+        	$errorMsg.show();  
+		} else {
+			$errorMsg.hide(); 
+		}
+    });
+    
+	<%-- common.js --%>
+	addEditValidator(function() {
+		const selectedCount = $("select[name='" + es("<%=StringUtil.escapeJavaScript(propName)%>") + "'] option:selected", $ul).length;
+		if (selectedCount > <%=pd.getMultiplicity()%>) {
+			alert("${m:rs("mtp-gem-messages","command.generic.detail.DetailCommandBase.inputErr")}");
+			return false;
+		}
+		return true;
+	});
+});
+</script>
 <%
 			} else {
 				//更新不可
@@ -235,8 +270,40 @@
 			//cls = "form-size-08 inpbr";
 		}
 		String maxlength = "";
-		if (editor.getMaxlength() > 0) {
-			maxlength = " maxlength=" + editor.getMaxlength();
+		String inputType = "text";
+		String inputPattern = "";
+		if (editor.getDisplayType() == StringDisplayType.TEXT) {
+			//テキスト
+			if (editor.getMaxlength() > 0) {
+				maxlength = "maxlength=\"" + editor.getMaxlength() + "\"";
+			}
+			if (StringUtil.isNotEmpty(editor.getInputType())) {
+				inputType = editor.getInputType();
+			}
+		}
+		if (editor.getDisplayType() == StringDisplayType.TEXT 
+				|| editor.getDisplayType() == StringDisplayType.PASSWORD) {
+			if (StringUtil.isNotEmpty(editor.getInputPattern())) {
+				inputPattern = "pattern=\"" + StringUtil.escapeHtml(editor.getInputPattern()) + "\"";
+			}
+			if (editor.getHtmlValidationMessage() != null) {
+				String editorId = (String)request.getAttribute(Constants.EDITOR_UNIQUE_ID);
+%>
+<script type="text/javascript">
+$(function() {
+<%				if (StringUtil.isNotEmpty(editor.getHtmlValidationMessage().getTypeMismatch())) {
+					String message = TemplateUtil.getMultilingualString(editor.getHtmlValidationMessage().getTypeMismatch(), editor.getHtmlValidationMessage().getLocalizedTypeMismatchList());
+%>
+	addHtmlValidationMessage("<%=StringUtil.escapeJavaScript(editorId)%>", "typeMismatch", "<%=StringUtil.escapeJavaScript(message)%>");
+<%				}
+				if (StringUtil.isNotEmpty(editor.getHtmlValidationMessage().getPatternMismatch())) {
+					String message = TemplateUtil.getMultilingualString(editor.getHtmlValidationMessage().getPatternMismatch(), editor.getHtmlValidationMessage().getLocalizedPatternMismatchList());
+%>
+	addHtmlValidationMessage("<%=StringUtil.escapeJavaScript(editorId)%>", "patternMismatch", "<%=StringUtil.escapeJavaScript(message)%>");
+<%				} %>
+});
+</script>
+<%			}
 		}
 
 		if (editor.getDisplayType() != StringDisplayType.LABEL
@@ -248,27 +315,30 @@
 				String dummyRowId = "id_li_" + propName + "Dummmy";
 				String selector = null;
 				String toggleAddBtnFunc = "toggleAddBtn_" + escapedPropName;
-				if (editor.getDisplayType() == StringDisplayType.RICHTEXT && request.getAttribute(Constants.RICHTEXT_LIB_LOADED) == null) {
-					request.setAttribute(Constants.RICHTEXT_LIB_LOADED, true);
+				if (editor.getDisplayType() == StringDisplayType.RICHTEXT) {
+					request.setAttribute(Constants.EDITOR_RICHTEXT_LIBRARY, editor.getRichTextLibrary());
 %>
-<%@include file="../../../layout/resource/ckeditorResource.inc.jsp" %>
+<%@include file="../../../layout/resource/richtextEditorResource.inc.jsp" %>
 <%
 				}
 %>
 <ul id="<c:out value="<%=ulId %>"/>" class="mb05">
+
+<% 				// ダミー行出力 %>
 <li id="<c:out value="<%=dummyRowId %>"/>" class="list-add" style="display: none;">
 <%
 				if (editor.getDisplayType() == StringDisplayType.TEXT) {
 					//テキスト
-					selector = ":text";
+					selector = "input[type='" + inputType + "']";
 %>
-<input type="text" class="<c:out value="<%=cls %>"/>" style="<c:out value="<%=customStyle%>"/>" <c:out value="<%=maxlength%>"/> />
+<input type="<%=inputType %>" class="<c:out value="<%=cls %>"/> custom-type-text" style="<c:out value="<%=customStyle%>"/>" <%=maxlength%> <%=inputPattern%> 
+	onblur="typeValidate(this)" oninvalid="typeInvalid(arguments[0], this)"/>
 <%
 				} else if (editor.getDisplayType() == StringDisplayType.TEXTAREA) {
 					//テキストエリア
 					selector = "textarea";
 %>
-<textarea class="form-size-05 inpbr" style="<c:out value="<%=customStyle%>"/>" rows="5" cols="30"></textarea>
+<textarea class="form-size-05 inpbr width-constraint" style="<c:out value="<%=customStyle%>"/>" rows="5" cols="30"></textarea>
 <%
 				} else if (editor.getDisplayType() == StringDisplayType.RICHTEXT) {
 					//リッチテキスト
@@ -278,15 +348,17 @@
 <%
 				} else if (editor.getDisplayType() == StringDisplayType.PASSWORD) {
 					//パスワード
-					selector = ":password";
+					selector = "input[type='password']";
 %>
-<input type="password" class="<c:out value="<%=cls %>"/>" style="<c:out value="<%=customStyle%>"/>"/>
+<input type="password" class="<c:out value="<%=cls %>"/>" style="<c:out value="<%=customStyle%>"/>"  <%=inputPattern%>
+	onblur="typeValidate(this)" oninvalid="typeInvalid(arguments[0], this)"/>
 <%
 				}
 %>
 <input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.string.StringPropertyEditor_Edit.delete')}" class="gr-btn-02 del-btn" />
 </li>
 <%
+				// 既存値出力
 				String[] array = propValue instanceof String[] ? (String[]) propValue : null;
 				int length = 0;
 				if (array != null) {
@@ -300,62 +372,88 @@
 						if (editor.getDisplayType() == StringDisplayType.TEXT) {
 							//テキスト
 %>
-<input type="text" name="<c:out value="<%=propName %>"/>" value="<c:out value="<%=str %>"/>" class="<c:out value="<%=cls %>"/>" style="<c:out value="<%=customStyle%>"/>" <c:out value="<%=maxlength%>"/> />
+<input type="<%=inputType %>" name="<c:out value="<%=propName %>"/>" value="<c:out value="<%=str %>"/>" class="<c:out value="<%=cls %>"/> custom-type-text" style="<c:out value="<%=customStyle%>"/>" <%=maxlength%> <%=inputPattern%> 
+	onblur="typeValidate(this)" oninvalid="typeInvalid(arguments[0], this)"/>
 <%
 						} else if (editor.getDisplayType() == StringDisplayType.TEXTAREA) {
 							//テキストエリア
 %>
-<textarea name="<c:out value="<%=propName %>"/>" class="form-size-05 inpbr" style="<c:out value="<%=customStyle%>"/>" rows="5" cols="30"><c:out value="<%=str %>"/></textarea>
+<textarea name="<c:out value="<%=propName %>"/>" class="form-size-05 inpbr width-constraint" style="<c:out value="<%=customStyle%>"/>" rows="5" cols="30"><c:out value="<%=str %>"/></textarea>
 <%
 						} else if (editor.getDisplayType() == StringDisplayType.RICHTEXT) {
 							//リッチテキスト
 							String textId = "id_" + propName + i;
 %>
 <textarea name="<c:out value="<%=propName %>"/>" style="<c:out value="<%=customStyle%>"/>" rows="5" cols="30" id="<c:out value="<%=textId %>"/>"><c:out value="<%=str %>"/></textarea>
-<script type="text/javascript">
-$(function() {
-<%if (StringUtil.isNotBlank(editor.getRichtextEditorOption())) {%>
-	var opt = <%=editor.getRichtextEditorOption()%>;
-<%} else {%>
-	var opt = { allowedContent:<%=allowedContent%> };
-<%}%>
-	$("textarea[name='<%=escapedPropName%>']").ckeditor(
-		function() {}, opt
-	);
-});
-</script>
-
 <%
 						} else if (editor.getDisplayType() == StringDisplayType.PASSWORD) {
 							//パスワード
 %>
-<input type="password" name="<c:out value="<%=propName %>"/>" class="<c:out value="<%=cls %>"/>" style="<c:out value="<%=customStyle%>"/>" value="<c:out value="<%=str %>"/>" />
+<input type="password" name="<c:out value="<%=propName %>"/>" class="<c:out value="<%=cls %>"/>" style="<c:out value="<%=customStyle%>"/>" value="<c:out value="<%=str %>"/>" <%=inputPattern%>
+	onblur="typeValidate(this)" oninvalid="typeInvalid(arguments[0], this)"/>
 <%
 						}
 %>
 <%
+						// 削除ボタン
 						if (editor.getDisplayType() == StringDisplayType.RICHTEXT) {
 %>
- <input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.string.StringPropertyEditor_Edit.delete')}" class="gr-btn-02 del-btn" onclick="delete_<%=escapedPropName + i %>('<%=StringUtil.escapeJavaScript(liId)%>')" />
+<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.string.StringPropertyEditor_Edit.delete')}" class="gr-btn-02 del-btn" 
+    onclick="delete_<%=escapedPropName + i %>('<%=StringUtil.escapeJavaScript(liId)%>')" />
+
 <script type="text/javascript">
 function delete_<%=escapedPropName + i%>(liId) {
-	if (CKEDITOR.instances.id_<%=escapedPropName + i%>) CKEDITOR.instances.id_<%=escapedPropName + i%>.destroy();
+	deleteRichtextItem_<%=escapedPropName%>("id_<%=escapedPropName + i%>");
 	deleteItem(liId, <%=toggleAddBtnFunc%>);
 }
 </script>
 <%
 						} else {
 %>
- <input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.string.StringPropertyEditor_Edit.delete')}" class="gr-btn-02 del-btn" onclick="deleteItem('<%=StringUtil.escapeJavaScript(liId)%>', <%=toggleAddBtnFunc%>)" />
+<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.string.StringPropertyEditor_Edit.delete')}" class="gr-btn-02 del-btn" 
+    onclick="deleteItem('<%=StringUtil.escapeJavaScript(liId)%>', <%=toggleAddBtnFunc%>)" />
 <%
 						}
 %>
 </li>
 <%
 					}
+					if (editor.getDisplayType() == StringDisplayType.RICHTEXT) {
+						request.setAttribute(Constants.EDITOR_RICHTEXT_LIBRARY, editor.getRichTextLibrary());
+						request.setAttribute(Constants.EDITOR_RICHTEXT_ALLOWED_CONTENT, allowedContent);
+						request.setAttribute(Constants.EDITOR_RICHTEXT_EDITOR_OPTION, editor.getRichtextEditorOption());
+						request.setAttribute(Constants.EDITOR_RICHTEXT_TARGET_NAME, propName);
+%>
+<jsp:include page="richtext/RichtextEditor_Edit.jsp" />
+
+<%
+						request.removeAttribute(Constants.EDITOR_RICHTEXT_LIBRARY);
+						request.removeAttribute(Constants.EDITOR_RICHTEXT_ALLOWED_CONTENT);
+						request.removeAttribute(Constants.EDITOR_RICHTEXT_EDITOR_OPTION);
+						request.removeAttribute(Constants.EDITOR_RICHTEXT_TARGET_NAME);
+					}
 				}
 %>
 </ul>
+
+<%
+				if (editor.getDisplayType() == StringDisplayType.RICHTEXT) {
+					request.setAttribute(Constants.EDITOR_RICHTEXT_LIBRARY, editor.getRichTextLibrary());
+					request.setAttribute(Constants.EDITOR_RICHTEXT_ALLOWED_CONTENT, allowedContent);
+					request.setAttribute(Constants.EDITOR_RICHTEXT_EDITOR_OPTION, editor.getRichtextEditorOption());
+					request.setAttribute(Constants.EDITOR_RICHTEXT_TARGET_NAME, propName);
+
+					// 削除処理、追加処理を定義
+%>
+<jsp:include page="richtext/RichtextEditor_Delete.jsp" />
+<jsp:include page="richtext/RichtextEditor_Add.jsp" />
+<% 
+					request.removeAttribute(Constants.EDITOR_RICHTEXT_LIBRARY);
+					request.removeAttribute(Constants.EDITOR_RICHTEXT_ALLOWED_CONTENT);
+					request.removeAttribute(Constants.EDITOR_RICHTEXT_EDITOR_OPTION);
+					request.setAttribute(Constants.EDITOR_RICHTEXT_TARGET_NAME, propName);
+				}
+%>
 <script type="text/javascript">
 $(function() {
 	$("#id_addBtn_<%=escapedPropName%>").on("click", function() {
@@ -369,14 +467,14 @@ $(function() {
 					var $delBtn = $(elem).next();
 					$delBtn.off("click");
 					$delBtn.on("click", function() {
-						if (CKEDITOR.instances["id_<%=escapedPropName%>" + count]) CKEDITOR.instances["id_<%=escapedPropName%>" + count].destroy();
+						deleteRichtextItem_<%=escapedPropName%>("id_<%=escapedPropName%>" + count);
 						deleteItem($(this).parent().attr("id"), <%=toggleAddBtnFunc%>);
 					});
 
 					$(elem).attr("id", "id_<%=escapedPropName%>" + count);
-					$(elem).ckeditor(
-						function() {}, { allowedContent:<%=allowedContent%> }
-					);
+
+					addRichtextItem_<%=escapedPropName%>("id_<%=escapedPropName%>" + count);
+
 					<%=toggleAddBtnFunc%>();
 				}
 <%
@@ -392,6 +490,11 @@ $(function() {
 function <%=toggleAddBtnFunc%>(){
 	var display = $("#<%=StringUtil.escapeJavaScript(ulId)%> li:not(:hidden)").length < <%=pd.getMultiplicity()%>;
 	$("#id_addBtn_<%=escapedPropName%>").toggle(display);
+
+	var $parent = $("#<%=StringUtil.escapeJavaScript(ulId)%>").closest(".property-data");
+	if ($(".validate-error", $parent).length === 0) {
+		$(".format-error", $parent).remove();
+	}
 }
 </script>
 <%
@@ -407,41 +510,55 @@ function <%=toggleAddBtnFunc%>(){
 				if (editor.getDisplayType() == StringDisplayType.TEXT) {
 					//テキスト
 %>
-<input type="text" name="<c:out value="<%=propName%>"/>" value="<c:out value="<%=str %>"/>" class="<c:out value="<%=cls %>"/>" style="<c:out value="<%=customStyle%>"/>" <c:out value="<%=maxlength%>"/> />
+<input type="<%=inputType %>" name="<c:out value="<%=propName%>"/>" value="<c:out value="<%=str %>"/>" class="<c:out value="<%=cls %>"/> custom-type-text" style="<c:out value="<%=customStyle%>"/>" <%=maxlength%> <%=inputPattern%> 
+	onblur="typeValidate(this)" oninvalid="typeInvalid(arguments[0], this)"/>
 <%
 				} else if (editor.getDisplayType() == StringDisplayType.TEXTAREA) {
 					//テキストエリア
 %>
-<textarea name="<c:out value="<%=propName%>"/>" rows="5" cols="30" class="form-size-05 inpbr" style="<c:out value="<%=customStyle%>"/>"><c:out value="<%=str %>"/></textarea>
+<textarea name="<c:out value="<%=propName%>"/>" rows="5" cols="30" class="form-size-05 inpbr width-constraint" style="<c:out value="<%=customStyle%>"/>"><c:out value="<%=str %>"/></textarea>
 <%
 				} else if (editor.getDisplayType() == StringDisplayType.RICHTEXT) {
 					//リッチテキスト
+					request.setAttribute(Constants.EDITOR_RICHTEXT_LIBRARY, editor.getRichTextLibrary());
+
+					String textId = "id_" + propName;
 %>
-<textarea name="<c:out value="<%=propName%>"/>" style="<c:out value="<%=customStyle%>"/>" rows="5" cols="30" ><c:out value="<%=str %>"/></textarea>
+<textarea name="<c:out value="<%=propName%>"/>" style="<c:out value="<%=customStyle%>"/>" id="<c:out value="<%=textId %>"/>" rows="5" cols="30" ><c:out value="<%=str %>"/></textarea>
+<%@include file="../../../layout/resource/richtextEditorResource.inc.jsp" %>
+
 <%
-					if (request.getAttribute(Constants.RICHTEXT_LIB_LOADED) == null) {
-						request.setAttribute(Constants.RICHTEXT_LIB_LOADED, true);
+					if (nestDummyRow == null || !nestDummyRow) {
+						// NestTableダミー行は適用しない＆追加(コピー)時は追加処理側から適用
+
+						request.setAttribute(Constants.EDITOR_RICHTEXT_ALLOWED_CONTENT, allowedContent);
+						request.setAttribute(Constants.EDITOR_RICHTEXT_EDITOR_OPTION, editor.getRichtextEditorOption());
+						request.setAttribute(Constants.EDITOR_RICHTEXT_TARGET_NAME, propName);
 %>
-<%@include file="../../../layout/resource/ckeditorResource.inc.jsp" %>
+<jsp:include page="richtext/RichtextEditor_Edit.jsp" />
+<%
+					} else {
+						// NestTableダミー行の場合は、追加時の適用処理を設定
+
+						request.setAttribute(Constants.EDITOR_RICHTEXT_ALLOWED_CONTENT, allowedContent);
+						request.setAttribute(Constants.EDITOR_RICHTEXT_EDITOR_OPTION, editor.getRichtextEditorOption());
+						// NestTableではEditorのプロパティ名にIndexが付くため、プロパティ定義から設定
+						request.setAttribute(Constants.EDITOR_RICHTEXT_TARGET_NAME, pd.getName());
+%>
+<jsp:include page="richtext/RichtextEditor_NestTable.jsp" />
 <%
 					}
-%>
-<script type="text/javascript">
-$(function() {
-<%					if (StringUtil.isNotBlank(editor.getRichtextEditorOption())) {%>
-	var opt = <%=editor.getRichtextEditorOption()%>;
-<%					} else {%>
-	var opt = { allowedContent:<%=allowedContent%> };
-<%					}%>
-	$("textarea[name='<%=escapedPropName%>']").ckeditor(
-		function() {}, opt
-	);
-});
-</script><%
+
+					request.removeAttribute(Constants.EDITOR_RICHTEXT_LIBRARY);
+					request.removeAttribute(Constants.EDITOR_RICHTEXT_ALLOWED_CONTENT);
+					request.removeAttribute(Constants.EDITOR_RICHTEXT_EDITOR_OPTION);
+					request.removeAttribute(Constants.EDITOR_RICHTEXT_TARGET_NAME);
+
 				} else if (editor.getDisplayType() == StringDisplayType.PASSWORD) {
 					//パスワード
 %>
-<input type="password" name="<c:out value="<%=propName %>"/>" class="<c:out value="<%=cls %>"/>" style="<c:out value="<%=customStyle%>"/>" value="<c:out value="<%=str %>"/>" />
+<input type="password" name="<c:out value="<%=propName %>"/>" class="<c:out value="<%=cls %>"/>" style="<c:out value="<%=customStyle%>"/>" value="<c:out value="<%=str %>"/>" <%=inputPattern%>
+	onblur="typeValidate(this)" oninvalid="typeInvalid(arguments[0], this)"/>
 <%
 				}
 			}

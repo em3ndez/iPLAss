@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,17 +31,19 @@ public class MetaDataSharableControllerImpl implements MetaDataSharableControlle
 	public boolean isDataSharableEnabled(Class<? extends Definition> defClass) {
 		//TODO instanceofで判断したほうがいいいかも
 		//Entityの場合はデータ共有設定可
-		return (EntityDefinition.class.getName().equals(defClass.getName())
-				);
+		return (EntityDefinition.class.getName()
+				.equals(defClass.getName()));
 	}
 
 	@Override
 	public boolean isPermissionSharableEnabled(Class<? extends Definition> defClass) {
 		//TODO instanceofで判断したほうがいいいかも
-		return (EntityDefinition.class.getName().equals(defClass.getName())
-				|| ActionMappingDefinition.class.getName().equals(defClass.getName())
-				|| WebApiDefinition.class.getName().equals(defClass.getName())
-				);
+		return (EntityDefinition.class.getName()
+				.equals(defClass.getName())
+				|| ActionMappingDefinition.class.getName()
+						.equals(defClass.getName())
+				|| WebApiDefinition.class.getName()
+						.equals(defClass.getName()));
 	}
 
 }

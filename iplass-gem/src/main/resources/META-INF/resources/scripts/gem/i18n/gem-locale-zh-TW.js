@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,6 +24,12 @@ scriptContext.gem.locale.common.name = "名稱";
 scriptContext.gem.locale.common.numcheckMsg = "請輸入數值。";
 scriptContext.gem.locale.common.pleaseSelect = "請選擇";
 scriptContext.gem.locale.common.requiredMsg = "請輸入{0}。";
+scriptContext.gem.locale.common.numFormatErrorMsg = "請輸入數值 {0}。";
+scriptContext.gem.locale.common.stringFormatErrorMsg = "請輸符合条件的文字列 {0}。";
+scriptContext.gem.locale.common.dateFormatErrorMsg = "請輸入正確的日期 {0}。 ({1})";
+scriptContext.gem.locale.common.timeFormatErrorMsg = "請輸入正確的時間 {0}。 ({1})";
+scriptContext.gem.locale.common.timestampFormatErrorMsg = "請輸入正確的日期或​​時間 {0}。 ({1})";
+scriptContext.gem.locale.common.maxOfDetailSearchItemsWarningMsg = "搜尋條件已達到最大數量，無法再新增。";
 
 scriptContext.gem.locale.apendCategory("binary");
 scriptContext.gem.locale.binary.deleteLink = "刪除";
@@ -34,6 +40,7 @@ scriptContext.gem.locale.binary.notVewFlash = "不能顯示Flash。";
 scriptContext.gem.locale.apendCategory("date");
 scriptContext.gem.locale.date.datepickerBtn = "從日曆輸入";
 scriptContext.gem.locale.date.timepickerBtn = "從滑動條輸入";
+scriptContext.gem.locale.date.pickerClearBtn = "清除";
 scriptContext.gem.locale.date.validateDateErrMsg = "請輸入正確的日期。 ({0})";
 scriptContext.gem.locale.date.validateTimeErrMsg = "請輸入正確的時間。 ({0})";
 scriptContext.gem.locale.date.validateTimestampErrMsg = "請輸入正確的日期或​​時間。 ({0})";
@@ -43,6 +50,7 @@ scriptContext.gem.locale.reference.deleteBtn = "刪除";
 scriptContext.gem.locale.reference.deleteLabel = "刪除";
 scriptContext.gem.locale.reference.detail = "詳細";
 scriptContext.gem.locale.reference.duplicateData = "重複的數據。";
+scriptContext.gem.locale.reference.notSelectedData = "未選擇目標數據。";
 scriptContext.gem.locale.reference.edit = "編輯";
 scriptContext.gem.locale.reference.noResult = "沒找到數據。";
 scriptContext.gem.locale.reference.pleaseSelectAny = "請選擇 {0}";

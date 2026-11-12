@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -42,7 +42,7 @@ import groovy.lang.Binding;
  *
  */
 public class GroovyTemplateBinding extends Binding {
-	
+
 	public GroovyTemplateBinding(Writer out) {
 		setVariable("out", out);
 		ManagerLocator sl = ManagerLocator.getInstance();
@@ -54,7 +54,7 @@ public class GroovyTemplateBinding extends Binding {
 	public GroovyTemplateBinding(Writer out, Map<String, Object> bindings) {
 		this(out);
 		if (bindings != null) {
-			for (Map.Entry<String, Object> e: bindings.entrySet()) {
+			for (Map.Entry<String, Object> e : bindings.entrySet()) {
 				setVariable(e.getKey(), e.getValue());
 			}
 		}

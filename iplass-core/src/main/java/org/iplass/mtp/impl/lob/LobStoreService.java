@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -44,9 +44,25 @@ public class LobStoreService implements Service {
 	private int cleanCommitLimit = 100;
 
 	private LobDao lobDao;
+	private AbandonedStreamDetector abandonedStreamDetector;
 
 	/** LobのサイズをDB(lob_store)で管理するかを指定します */
 	private boolean manageLobSizeOnRdb = true;
+
+	private boolean detectAbandonedStream;
+	private boolean logAbandoned;
+
+	public boolean isDetectAbandonedStream() {
+		return detectAbandonedStream;
+	}
+
+	public boolean isLogAbandoned() {
+		return logAbandoned;
+	}
+
+	public AbandonedStreamDetector getAbandonedStreamDetector() {
+		return abandonedStreamDetector;
+	}
 
 	public LobDao getLobDao() {
 		return lobDao;
@@ -86,11 +102,15 @@ public class LobStoreService implements Service {
 
 	@Override
 	public void init(Config config) {
+		detectAbandonedStream = config.getValue("detectAbandonedStream", Boolean.TYPE, Boolean.FALSE);
+		logAbandoned = config.getValue("logAbandoned", Boolean.TYPE, Boolean.FALSE);
+		abandonedStreamDetector = new AbandonedStreamDetector(detectAbandonedStream, logAbandoned);
+
 		if (config.getValue(DEFAULT_LOB_STORE_CONFIG_NAME) != null) {
 			defaultLobStoreName = config.getValue(DEFAULT_LOB_STORE_CONFIG_NAME);
 		}
 		stores = new HashMap<String, LobStore>();
-		for (String propName: config.getNames()) {
+		for (String propName : config.getNames()) {
 			Object val = config.getValue(propName, Object.class);
 			if (val instanceof LobStore) {
 				stores.put(propName, (LobStore) val);
@@ -115,9 +135,10 @@ public class LobStoreService implements Service {
 		if (lobDao == null) {
 			lobDao = new LobDao();
 		}
-		lobDao.init(config.getDependentService(RdbAdapterService.class).getRdbAdapter(),
+		lobDao.init(config.getDependentService(RdbAdapterService.class)
+				.getRdbAdapter(),
 				config.getDependentService(CounterService.OID_COUNTER_SERVICE_NAME),
-				manageLobSizeOnRdb);
+				this);
 	}
 
 	@Override

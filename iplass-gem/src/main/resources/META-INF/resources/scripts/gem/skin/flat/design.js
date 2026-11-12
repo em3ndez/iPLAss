@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -126,11 +126,13 @@ $(function() {
 
 	$(".massReference").massReferenceTable();
 	$(".refCombo").refCombo();
+	$(".ref-combo-sync").refComboSync();
 	$(".refComboController").refComboController();
 	$(".recursiveTreeTrigger").refRecursiveTree();
 	$(".refLinkSelect").refLinkSelect();
 	$(".refLinkRadio").refLinkRadio();
 	$(".refUnique").refUnique();
+	$(".ref-select-filter").refSelectFilter();
 
 	if (typeof CKEDITOR !== "undefined") {
 		CKEDITOR.on("instanceReady", function(ev) {
@@ -549,6 +551,13 @@ function onClickPseudoRadio() {
 		}
 	}
 	return false;
+}
+
+/**
+ * 連動プロパティへデザイン毎の処理を適用
+ */
+var applyDesignRefLinkRadio = function(elements) {
+	elements.each(createPseudoObject);
 }
 
 /**

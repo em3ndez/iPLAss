@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -28,6 +28,7 @@
 <%@ page import="org.iplass.mtp.web.template.TemplateUtil" %>
 <%@ page import="org.iplass.gem.command.generic.search.SearchFormViewData" %>
 <%@ page import="org.iplass.gem.command.Constants" %>
+<%@ page import="org.iplass.gem.command.ViewUtil"%>
 <%
 	//データ取得
 	String selectType = request.getParameter(Constants.SELECT_TYPE);
@@ -71,6 +72,9 @@
 
 	if (modalTarget == null) modalTarget = "";
 
+	//数値のカンマ区切りのセパレータ
+	String separator = ViewUtil.getGroupingSeparator();
+
 	request.setAttribute(Constants.ENTITY_DEFINITION, data.getEntityDefinition());
 
 	//権限チェック用に定義名をリクエストに保存
@@ -85,6 +89,7 @@
 <div class="generic_select s_<c:out value="<%=className %>"/>">
 <%@include file="../../layout/resource/mediaelementResource.inc.jsp" %>
 <script type="text/javascript">
+separator = "<%= separator %>";
 var selectArray = new Array();
 var multiplicity = <%=_multiplicity%>;
 var key = "<%=modalTarget%>";
@@ -98,7 +103,7 @@ if (!modalTarget) {
 <%}%>
 $(function() {
 	var target = null;
-	var windowManager = document.rootWindow.scriptContext["windowManager"];
+	var windowManager = document.rootDocument.scriptContext["windowManager"];
 	if (modalTarget && windowManager && windowManager[document.targetName]) {
 		$("#modal-title-" + modalTarget, parent.document).text("<%=displayName%>");
 		target = windowManager[modalTarget];
@@ -117,7 +122,7 @@ $(function() {
 });
 function closeModal() {
 	var func = null;
-	var windowManager = document.rootWindow.scriptContext["windowManager"];
+	var windowManager = document.rootDocument.scriptContext["windowManager"];
 	if (modalTarget && windowManager && windowManager[document.targetName]) {
 		var win = windowManager[modalTarget];
 		func = win.scriptContext["searchReferenceCallback"];

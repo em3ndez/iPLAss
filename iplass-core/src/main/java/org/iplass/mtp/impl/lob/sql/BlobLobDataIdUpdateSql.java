@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,18 +23,22 @@ package org.iplass.mtp.impl.lob.sql;
 import org.iplass.mtp.impl.rdb.adapter.RdbAdapter;
 import org.iplass.mtp.impl.rdb.adapter.UpdateSqlHandler;
 
-
 public class BlobLobDataIdUpdateSql extends UpdateSqlHandler {
-	
+
 	public String toSql(int tenantId, long lobId, long prevLobDataId, long newLobDataId, RdbAdapter rdb) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("UPDATE " + ObjBlobTable.TABLE_NAME + " SET ");
-		sb.append(ObjBlobTable.LOB_DATA_ID+ "=");
-		sb.append(newLobDataId).append(",");
-		sb.append(ObjBlobTable.UP_DATE + "=").append(rdb.systimestamp());
-		sb.append(" WHERE " + ObjBlobTable.TENANT_ID + "=").append(tenantId);
-		sb.append(" AND " + ObjBlobTable.LOB_ID + "=").append(lobId);
-		sb.append(" AND " + ObjBlobTable.LOB_DATA_ID + "=").append(prevLobDataId);
+		sb.append(ObjBlobTable.LOB_DATA_ID + "=");
+		sb.append(newLobDataId)
+				.append(",");
+		sb.append(ObjBlobTable.UP_DATE + "=")
+				.append(rdb.systimestamp());
+		sb.append(" WHERE " + ObjBlobTable.TENANT_ID + "=")
+				.append(tenantId);
+		sb.append(" AND " + ObjBlobTable.LOB_ID + "=")
+				.append(lobId);
+		sb.append(" AND " + ObjBlobTable.LOB_DATA_ID + "=")
+				.append(prevLobDataId);
 		return sb.toString();
 	}
 

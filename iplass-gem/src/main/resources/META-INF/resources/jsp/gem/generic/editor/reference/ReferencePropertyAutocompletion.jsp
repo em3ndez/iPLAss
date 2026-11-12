@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -17,8 +17,7 @@
  You should have received a copy of the GNU Affero General Public License
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
-
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
 <%@ page import="org.iplass.mtp.entity.Entity" %>
@@ -56,34 +55,7 @@ if (StringUtil.isNotBlank(editor.getViewrefActionName())) {
 } else {
 	viewAction = contextPath + "/" + DetailViewCommand.REF_VIEW_ACTION_NAME + urlPath;
 }
-%>
-function appendIfHasMore(propName, value) {
-	<%-- 他の自動補完機能に合わせて、既存データで取得したデータの件数以上のものを捨てないので、配列の最後に保存します。 --%>
-	$("[name='" + propName +"']:gt(" + (value.length - 1) +")").each(function(index) {
-		var key = $(this).val();
-		var tmp = keySplit(key);
-<%
-	if (editor.getDisplayType() == ReferenceDisplayType.LINK
-		|| editor.getDisplayType() == ReferenceDisplayType.TREE
-		|| editor.getDisplayType() == ReferenceDisplayType.UNIQUE) {
-%>
-		var label = "<%=editor.getDisplayLabelItem() == null ? "name" : editor.getDisplayLabelItem()%>";
-		var linkId = propName + "_" + tmp.oid;
-		tmp[label] = $("[data-linkId='" + linkId +"']").text();
-<%
-	}
 
-	if (editor.getDisplayType() == ReferenceDisplayType.UNIQUE) {
-%>
-		var unique = "<%=editor.getUniqueItem() %>";
-		tmp[unique] = $(this).parent().children("span.unique-key").children("input[type='text']").val();
-<%
-	}
-%>
-		value.push(tmp);
-	});
-}
-<%
 if (Constants.VIEW_TYPE_DETAIL.equals(viewType)) {
 	// 詳細画面
 	boolean refEdit = editor.isEditableReference();
@@ -105,32 +77,60 @@ if (multiplicity == 1) {
 			value = value.slice(0, multiplicity);
 		}
 	} else {
-		value = [value];
+		if (value != null) {
+			value = [value];
+		}
+	}
+
+	if (value != null) {
+		var propLength = $("[name='" + propName + "']").length;
+		if (value.length < propLength) {
+			value = value.concat(new Array(propLength - value.length));
+		}
+	} else {
+		// nullの場合は1件のみクリアとする
+		value = new Array(1);
 	}
 }
-if (value.length > 0) {
-	appendIfHasMore(propName, value);
-}
+
 var _propName = propName.replace(/\[/g, "\\[").replace(/\]/g, "\\]").replace(/\./g, "\\.");
+var clearReferenceItems = function() {
+	if (value.length > 0) {
+		$("#ul_" + _propName).children("li").remove();
+	}
+};
 <%
 	if (editor.getDisplayType() == ReferenceDisplayType.LINK) {
 %>
 var callback = function() {
 	toggleRefInsertBtn("ul_" + _propName, multiplicity, "ins_btn_" + _propName);
 };
-if (value.length > 0) {
-	$("#ul_" + _propName).children().remove();
-}
+
+clearReferenceItems();
 for (var i = 0; i < value.length; i++) {
+	if (!value[i]) {
+		continue;
+	}
 	var key = value[i].oid + "_" + (value[i].version ? value[i].version : "0");
 	var label = <%=editor.getDisplayLabelItem() == null ? "value[i].name" : "value[i]." + editor.getDisplayLabelItem() %>;
 	addReference("li_" + propName + key, "<%=viewAction%>", "<%=defName%>", key, label, propName, "ul_" + _propName, <%=refEdit%>, callback, "<%=parentDefName%>", "<%=parentViewName%>", "<%=viewType%>", null, "<%=entityOid%>", "<%=entityVersion%>");
 }
+
 toggleRefInsertBtn("ul_" + _propName, multiplicity, "ins_btn_" + _propName);
 <%
 	} else if (editor.getDisplayType() == ReferenceDisplayType.CHECKBOX) {
 %>
+// クリック状態を解除する
+$("[name='" + propName + "']").each(function() {
+	if ($(this).is(":checked")) {
+		$(this).click();
+	}
+});
+
 for (var i = 0; i < value.length; i++) {
+	if (!value[i]) {
+		continue;
+	}
 	var key = value[i].oid + "_" + (value[i].version ? value[i].version : "0");
 	$("[name='" + propName + "'][value='" + key + "']").click();
 }
@@ -139,6 +139,9 @@ for (var i = 0; i < value.length; i++) {
 %>
 var oid = [];
 for (var i = 0; i < value.length; i++) {
+	if (!value[i]) {
+		continue;
+	}
 	var key = value[i].oid + "_" + (value[i].version ? value[i].version : "0");
 	oid.push(key);
 }
@@ -149,7 +152,7 @@ $("[name='" + propName + "']").val(oid);
 for (var i = 0; i < value.length; i++) {
 	$("select[name='" + propName + "']").refCombo({
 		reset:true,
-		oid:value[i].oid
+		oid:value[i] == null ? "" : value[i].oid
 	});
 }
 <%
@@ -158,10 +161,12 @@ for (var i = 0; i < value.length; i++) {
 var callback = function() {
 	toggleRefInsertBtn("ul_" + _propName, multiplicity, "ins_btn_" + _propName);
 };
-if (value.length > 0) {
-	$("#ul_" + _propName).children().remove();
-}
+
+clearReferenceItems();
 for (var i = 0; i < value.length; i++) {
+	if (!value[i]) {
+		continue;
+	}
 	var key = value[i].oid + "_" + (value[i].version ? value[i].version : "0");
 	var label = <%=editor.getDisplayLabelItem() == null ? "value[i].name" : "value[i]." + editor.getDisplayLabelItem() %>;
 	addReference("li_" + propName + key, "<%=viewAction%>", "<%=defName%>", key, label, propName, "ul_" + _propName, <%=refEdit%>, callback, "<%=parentDefName%>", "<%=parentViewName%>", "<%=viewType%>", null, "<%=entityOid%>", "<%=entityVersion%>");
@@ -170,22 +175,85 @@ toggleRefInsertBtn("ul_" + _propName, multiplicity, "ins_btn_" + _propName);
 <%
 	} else if (editor.getDisplayType() == ReferenceDisplayType.UNIQUE) {
 %>
+<%-- Dummy行が存在するので multiplicity + 1。ただし無制限(-1)は-1のまま(canAddItemの無制限判定を壊さない) --%>
+var uniqueMultiplicity = (multiplicity == -1 ? -1 : multiplicity + 1);
 var callback = function() {
-	<%-- Dummy行が存在するので、 multiplicity + 1 --%>
-	toggleRefInsertBtn("ul_" + _propName, multiplicity + 1, "id_addBtn_" + _propName);
+	toggleRefInsertBtn("ul_" + _propName, uniqueMultiplicity, "id_addBtn_" + _propName);
 };
-if (value.length > 0) {
-	$("#ul_" + _propName).children(":visible").remove();
-}
+
+<%-- 設定すべき実値(非null)が1件でもあるか --%>
+var hasValue = false;
 for (var i = 0; i < value.length; i++) {
-	var key = value[i].oid + "_" + (value[i].version ? value[i].version : "0");
-	var label = <%=editor.getDisplayLabelItem() == null ? "value[i].name" : "value[i]." + editor.getDisplayLabelItem() %>;
-	var unique = <%="value[i]." + editor.getUniqueItem() %>;
-	<%-- Dummy行が存在するので、 multiplicity + 1 --%>
-	addUniqueReference("<%=viewAction %>", key, label, unique, "<%=defName %>", propName, multiplicity + 1, "ul_" + _propName, "id_li_" + _propName + "Dummmy", <%=refEdit%>, "id_count_" + _propName, callback ,"<%=parentDefName%>", "<%=parentViewName%>", "<%=viewType%>", null, "<%=entityOid%>", "<%=entityVersion%>");
+	if (value[i]) {
+		hasValue = true;
+		break;
+	}
 }
-<%-- Dummy行が存在するので、 multiplicity + 1 --%>
-toggleRefInsertBtn("ul_" + _propName, multiplicity + 1, "id_addBtn_" + _propName);
+
+if (value.length == 0) {
+	<%-- 空配列(対象データなし) → 既存値を維持するため何もしない(他表示形式の多数派に合わせる) --%>
+} else if (!hasValue) {
+	<%-- null(該当なし)返却 → 入力行は消さず値のみクリアして入力可能な状態を維持する --%>
+	$("#ul_" + _propName).children(":visible").each(function() {
+		$(":text", this).val("").change();
+	});
+} else {
+	<%-- 実値あり → 可視の入力行を全消しして返却結果で作り直す --%>
+	$("#ul_" + _propName).children(":visible").remove();
+	for (var i = 0; i < value.length; i++) {
+		if (!value[i]) {
+			continue;
+		}
+		var key = value[i].oid + "_" + (value[i].version ? value[i].version : "0");
+		var label = <%=editor.getDisplayLabelItem() == null ? "value[i].name" : "value[i]." + editor.getDisplayLabelItem() %>;
+		var unique = <%="value[i]." + editor.getUniqueItem() %>;
+		addUniqueReference("<%=viewAction %>", key, label, unique, "<%=defName %>", propName, uniqueMultiplicity, "ul_" + _propName, "id_li_" + propName + "Dummmy", <%=refEdit%>, "id_count_" + propName, callback ,"<%=parentDefName%>", "<%=parentViewName%>", "<%=viewType%>", null, "<%=entityOid%>", "<%=entityVersion%>");
+	}
+}
+toggleRefInsertBtn("ul_" + _propName, uniqueMultiplicity, "id_addBtn_" + _propName);
+<%
+	} else if (editor.getDisplayType() == ReferenceDisplayType.LABEL) {
+%>
+var newContent = '';
+
+var dataLabelEle = $("[name='data-label-" + propName + "'] li");
+
+for (var i = 0; i < value.length; i++) {
+	if (dataLabelEle[i] != null) dataLabelEle[i].remove();
+	if (!value[i]) {
+		continue;
+	}
+	var liId = "li_" + propName + i;
+	var label = <%=editor.getDisplayLabelItem() == null ? "value[i].name" : "value[i]." + editor.getDisplayLabelItem() %>;
+	var _value = value[i].oid + "_" + (value[i].version ? value[i].version : "0");
+	newContent = newContent + '<li id="' + liId + '" >' + label
+			+ '<input type="hidden" name="' + propName + '" value="' + _value + '">' + '</li>';
+}
+
+$(newContent).prependTo($("[name='data-label-" + propName + "']"));
+<%
+	} else if (editor.getDisplayType() == ReferenceDisplayType.HIDDEN) {
+%>
+
+var propLength = $('[name=' + propName + ']').length;
+var newContent = '';
+for (i =  0; i < value.length; i++) {
+	var hiddenValue = value[i] ? value[i].oid + "_" + (value[i].version ? value[i].version : "0") : "";
+	if (i > propLength - 1) {
+		newContent = newContent + '<input type="hidden" name="' + propName + '" value="' + hiddenValue + '">';
+		continue;
+	}
+	$("[name='" + propName + "']:eq(" + i + ")").val(hiddenValue);
+}
+
+// 項目数が増える場合に追加する
+if (propLength && value.length > propLength) {
+	$("[name='" + propName + "']:eq(" + (propLength - 1) + ")").after($(newContent));
+// 項目に値が無い場合は新規に追加する
+} else if (!propLength) {
+	$(".hidden-input-area:first").append($(newContent));
+}
+
 <%
 	}
 } else {
@@ -194,23 +262,27 @@ toggleRefInsertBtn("ul_" + _propName, multiplicity + 1, "id_addBtn_" + _propName
 if (!(value instanceof Array)) {
 	value = [value];
 }
-if (value.length > 0) {
-	appendIfHasMore("sc_" + propName, value);
-}
+
 var _propName = propName.replace(/\[/g, "\\[").replace(/\]/g, "\\]").replace(/\./g, "\\.");
 <%
 	if (editor.getDisplayType() == ReferenceDisplayType.SELECT) {
 %>
-var oid = [];
-for (var i = 0; i < value.length; i++) {
-	oid.push(value[i].oid);
-}
-$("[name='sc_" + propName + "']").val(oid);
+// 1つのみ選択可能なため先頭の値を設定
+$("[name='sc_" + propName + "']").val(!value[0] ? "" : value[0].oid);
 <%
 	} else if (editor.getDisplayType() == ReferenceDisplayType.CHECKBOX) {
 %>
+
+// クリック状態を解除する
+$("[name='sc_" + propName + "']").each(function() {
+	if ($(this).is(":checked")) {
+		$(this).click();
+	}
+});
+
 for (var i = 0; i < value.length; i++) {
-	$("[name='sc_" + propName + "'][value='" + value[i].oid + "']").click();
+	var clickValue = !value[i] ? "" : value[i].oid; 
+	$("[name='sc_" + propName + "'][value='" + clickValue + "']").click();
 }
 <%
 	} else if (editor.getDisplayType() == ReferenceDisplayType.REFCOMBO) {
@@ -218,7 +290,7 @@ for (var i = 0; i < value.length; i++) {
 for (var i = 0; i < value.length; i++) {
 	$("select[name='sc_" + propName + "']").refCombo({
 		reset:true,
-		oid:value[i].oid
+		oid:value[i] == null ? "" : value[i].oid
 	});
 }
 <%
@@ -229,22 +301,40 @@ for (var i = 0; i < value.length; i++) {
 value = value.length > 0 ? value.slice(0, 1) : [];
 <%
 		}
+		if (editor.isUseSearchDialog()) {
 %>
 if (value.length > 0) {
 	$("#ul_sc_" + _propName).children().remove();
 }
 for (var i = 0; i < value.length; i++) {
+	if (!value[i]) {
+		continue;
+	}
 	var key = value[i].oid + "_" + (value[i].version ? value[i].version : "0");
 	var label = <%=editor.getDisplayLabelItem() == null ? "value[i].name" : "value[i]." + editor.getDisplayLabelItem() %>;
 	addReference("li_sc_" + propName + key, "<%=viewAction%>", "<%=defName%>", key, label, "sc_" + propName, "ul_sc_" + _propName, false);
 }
 <%
+		} else {
+%>
+value = value[0];
+var label = '';
+if (value != null) {
+	label = <%=editor.getDisplayLabelItem() == null ? "value.name" : "value." + editor.getDisplayLabelItem() %>;
+}
+$("[name='sc_" + propName + "']").val(label);
+<%
+		}
 	} else if (editor.getDisplayType() == ReferenceDisplayType.TREE) {
 %>
 if (value.length > 0) {
 	$("#ul_sc_" + _propName).children().remove();
 }
+
 for (var i = 0; i < value.length; i++) {
+	if (!value[i]) {
+		continue;
+	}
 	var key = value[i].oid + "_" + (value[i].version ? value[i].version : "0");
 	var label = <%=editor.getDisplayLabelItem() == null ? "value[i].name" : "value[i]." + editor.getDisplayLabelItem() %>;
 	addReference("li_sc_" + propName + key, "<%=viewAction%>", "<%=defName%>", key, label, "sc_" + propName, "ul_sc_" + _propName, false);
@@ -257,18 +347,32 @@ for (var i = 0; i < value.length; i++) {
 value = value.length > 0 ? value.slice(0, 1) : [];
 <%
 		}
+		if (editor.isUseSearchDialog()) {
 %>
 if (value.length > 0) {
 	$("#ul_sc_" + _propName).children(":visible").remove();
 }
 for (var i = 0; i < value.length; i++) {
+	if (!value[i]) {
+		continue;
+	}
 	var key = value[i].oid + "_" + (value[i].version ? value[i].version : "0");
 	var label = <%=editor.getDisplayLabelItem() == null ? "value[i].name" : "value[i]." + editor.getDisplayLabelItem() %>;
 	var unique = <%="value[i]." + editor.getUniqueItem() %>;
 	<%-- Dummy行が存在するので、 multiplicity + 1 --%>
-	addUniqueReference("<%=viewAction %>", key, label, unique, "<%=defName %>", "sc_" + propName, -1, "ul_sc_" + _propName, "id_li_sc_" + _propName + "Dummmy", false, "id_count_sc_" + _propName);
+	addUniqueReference("<%=viewAction %>", key, label, unique, "<%=defName %>", "sc_" + propName, -1, "ul_sc_" + _propName, "id_li_sc_" + propName + "Dummmy", false, "id_count_sc_" + propName);
 }
 <%
+		} else {
+%>
+value = value[0];
+var label = '';
+if (value != null) {
+	label = <%=editor.getDisplayLabelItem() == null ? "value.name" : "value." + editor.getDisplayLabelItem() %>;
+}
+$("[name='sc_" + propName + "']").val(label);
+<%
+		}
 	}
 }
 %>

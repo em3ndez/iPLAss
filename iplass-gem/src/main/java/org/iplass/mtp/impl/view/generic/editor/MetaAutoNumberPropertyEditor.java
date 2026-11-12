@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -59,7 +59,7 @@ public class MetaAutoNumberPropertyEditor extends MetaPrimitivePropertyEditor {
 	 * @return 表示タイプ
 	 */
 	public AutoNumberDisplayType getDisplayType() {
-	    return displayType;
+		return displayType;
 	}
 
 	/**
@@ -67,7 +67,7 @@ public class MetaAutoNumberPropertyEditor extends MetaPrimitivePropertyEditor {
 	 * @param displayType 表示タイプ
 	 */
 	public void setDisplayType(AutoNumberDisplayType displayType) {
-	    this.displayType = displayType;
+		this.displayType = displayType;
 	}
 
 	public boolean isSearchExactMatchCondition() {

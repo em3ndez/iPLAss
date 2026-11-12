@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -34,12 +34,12 @@ public class From implements ASTNode {
 
 	public From() {
 	}
-	
+
 	public From(String entityName) {
 		this.entityName = entityName;
 		checkValidEntityName();
 	}
-	
+
 	private void checkValidEntityName() {
 		//簡易チェック
 		if (entityName != null && entityName.length() > 0) {
@@ -64,7 +64,6 @@ public class From implements ASTNode {
 		}
 	}
 
-	
 //	public From(String entityName, String alias) {
 //		this.entityName = entityName;
 //		this.alias = alias;
@@ -86,7 +85,7 @@ public class From implements ASTNode {
 		this.entityName = entityName;
 		checkValidEntityName();
 	}
-	
+
 	public AsOf getAsOf() {
 		return asOf;
 	}
@@ -98,7 +97,7 @@ public class From implements ASTNode {
 	public void accept(QueryVisitor visitor) {
 		visitor.visit(this);
 	}
-	
+
 	@Override
 	public String toString() {
 		if (asOf == null) {
@@ -143,5 +142,5 @@ public class From implements ASTNode {
 	public ASTNode accept(ASTTransformer transformer) {
 		return transformer.visit(this);
 	}
-	
+
 }

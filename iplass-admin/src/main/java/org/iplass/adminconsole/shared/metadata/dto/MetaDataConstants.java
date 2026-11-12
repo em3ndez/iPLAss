@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,11 +25,11 @@ package org.iplass.adminconsole.shared.metadata.dto;
  */
 public interface MetaDataConstants {
 
-	public static final String META_CATEGORY_SECURITY						= "Security";
-	public static final String META_CATEGORY_DATA_MODEL				= "Data Model";
-	public static final String META_CATEGORY_VIEW_COMPONENTS			= "View Components";
-	public static final String META_CATEGORY_CUSTOMIZATION			= "Customization";
-	public static final String META_CATEGORY_NOTIFICATION			= "Notification";
+	public static final String META_CATEGORY_SECURITY = "Security";
+	public static final String META_CATEGORY_DATA_MODEL = "Data Model";
+	public static final String META_CATEGORY_VIEW_COMPONENTS = "View Components";
+	public static final String META_CATEGORY_CUSTOMIZATION = "Customization";
+	public static final String META_CATEGORY_NOTIFICATION = "Notification";
 
 	/** 名前の正規表現(パスにスラッシュを利用) */
 	public static final String NAME_REG_EXP_PATH_SLASH = "^[0-9a-zA-Z_][0-9a-zA-Z_-]*(/[0-9a-zA-Z_-]+)*$";
@@ -65,7 +65,6 @@ public interface MetaDataConstants {
 	public static final String CONTEXT_MENU_ICON_COPY = "page_copy.png";
 	/** コンテキストメニューアイコン(リフレッシュ) */
 	public static final String CONTEXT_MENU_ICON_REFRESH = "page_refresh.png";
-
 
 	/** ロールEntity名 */
 	public static final String ENTITY_NAME_ROLE = "mtp.auth.Role";

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,21 +26,23 @@ public class AnnotateMetaDataEntry {
 	private RootMetaData metaData;
 	private boolean overwritable;
 	private boolean permissionSharable;
-	
+
 	public AnnotateMetaDataEntry(RootMetaData metaData, boolean overwritable, boolean permissionSharable) {
 		this.metaData = metaData;
 		this.overwritable = overwritable;
 		this.permissionSharable = permissionSharable;
 	}
-	
+
 	public RootMetaData getMetaData() {
 		return metaData;
 	}
+
 	public boolean isOverwritable() {
 		return overwritable;
 	}
+
 	public boolean isPermissionSharable() {
 		return permissionSharable;
 	}
-	
+
 }

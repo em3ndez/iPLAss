@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,7 +27,7 @@ class AuthTokenKey implements Serializable {
 	private final int tenantId;
 	private final String type;
 	private final String series;
-	
+
 	public AuthTokenKey(int tenantId, String type, String series) {
 		this.tenantId = tenantId;
 		this.type = type;

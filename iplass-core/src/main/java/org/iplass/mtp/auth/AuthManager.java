@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -56,6 +56,7 @@ public interface AuthManager extends Manager {
 	 * @return
 	 */
 	public boolean canUpdateCredential();
+
 	/**
 	 * 指定の認証ポリシーの定義にて、パスワード更新が可能か否か。
 	 * 複数のパスワード更新可能な認証プロバイダが存在する場合、認証ポリシーの定義によって、
@@ -153,7 +154,7 @@ public interface AuthManager extends Manager {
 	 * @param policyName
 	 */
 	public void resetLockoutStatus(String accountId, String policyName);
-	
+
 	/**
 	 * groupCodeで指定したグループのoid（のリスト）を一括で取得する。
 	 * typeによって、子グループ、親グループのoidのリストを一括で取得可能。
@@ -166,7 +167,7 @@ public interface AuthManager extends Manager {
 	 * </pre>
 	 *
 	 * といった形で、Userなどを検索する際の条件に指定可能。<br>
-	 * 返却されるoidのリストは、実行するユーザのセキュリティ権限によらず、すべてのoidが返却される。
+	 * 返却されるoidのリストは、実行するユーザーのセキュリティ権限によらず、すべてのoidが返却される。
 	 *
 	 * @param type
 	 * @param groupCode
@@ -177,7 +178,7 @@ public interface AuthManager extends Manager {
 	public void login(Credential credential) throws LoginFailedException, CredentialExpiredException;
 
 	/**
-	 * 現在のログインセッションを信頼されたものにするために再認証する（セッション内に格納されているユーザ情報以外のものは保持される）。
+	 * 現在のログインセッションを信頼されたものにするために再認証する（セッション内に格納されているユーザー情報以外のものは保持される）。
 	 *
 	 * @param credential
 	 * @throws LoginFailedException

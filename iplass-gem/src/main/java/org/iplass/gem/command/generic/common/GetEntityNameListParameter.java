@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,15 +29,15 @@ public class GetEntityNameListParameter implements GemWebApiParameter {
 	private String defName;
 
 	private String viewName;
-	
+
 	private String parentDefName;
-	
+
 	private String parentViewName;
-	
+
 	private String parentPropName;
-	
+
 	private String viewType;
-	
+
 	private Integer referenceSectionIndex;
 
 	private GetEntityNameListEntityParameter entity;

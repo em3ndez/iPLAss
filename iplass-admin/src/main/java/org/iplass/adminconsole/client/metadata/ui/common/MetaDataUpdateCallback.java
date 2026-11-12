@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -71,7 +71,7 @@ public abstract class MetaDataUpdateCallback implements AsyncCallback<AdminDefin
 				@Override
 				public void execute(Boolean value) {
 					if (value) {
-						beforeOverwriteUpdate((MetaVersionCheckException)caught);
+						beforeOverwriteUpdate((MetaVersionCheckException) caught);
 
 						//上書き更新処理を実行
 						overwriteUpdate();

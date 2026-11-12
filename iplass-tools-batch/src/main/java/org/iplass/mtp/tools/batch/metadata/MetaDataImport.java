@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright 2018 DENTSU SOKEN INC. All Rights Reserved.
  */
 
 package org.iplass.mtp.tools.batch.metadata;
@@ -28,12 +28,14 @@ import org.iplass.mtp.impl.core.TenantContext;
 import org.iplass.mtp.impl.core.TenantContextService;
 import org.iplass.mtp.impl.tenant.MetaTenant;
 import org.iplass.mtp.impl.tenant.TenantService;
+import org.iplass.mtp.impl.tools.metaport.MetaDataCheckResult;
 import org.iplass.mtp.impl.tools.metaport.MetaDataImportResult;
 import org.iplass.mtp.impl.tools.metaport.MetaDataPortingService;
 import org.iplass.mtp.impl.tools.metaport.XMLEntryInfo;
 import org.iplass.mtp.spi.ServiceRegistry;
 import org.iplass.mtp.tenant.Tenant;
 import org.iplass.mtp.tools.batch.ExecMode;
+import org.iplass.mtp.tools.batch.MtpBatchResourceDisposer;
 import org.iplass.mtp.tools.batch.MtpCuiBase;
 import org.iplass.mtp.tools.batch.pack.PackageExport;
 import org.iplass.mtp.transaction.Transaction;
@@ -41,7 +43,6 @@ import org.iplass.mtp.util.CollectionUtil;
 import org.iplass.mtp.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 public class MetaDataImport extends MtpCuiBase {
 
@@ -59,9 +60,12 @@ public class MetaDataImport extends MtpCuiBase {
 	//インポートファイル(引数)
 	private String importFile;
 
-	private TenantService ts = ServiceRegistry.getRegistry().getService(TenantService.class);
-	private TenantContextService tcs = ServiceRegistry.getRegistry().getService(TenantContextService.class);
-	private MetaDataPortingService mdps = ServiceRegistry.getRegistry().getService(MetaDataPortingService.class);
+	private TenantService ts = ServiceRegistry.getRegistry()
+			.getService(TenantService.class);
+	private TenantContextService tcs = ServiceRegistry.getRegistry()
+			.getService(TenantContextService.class);
+	private MetaDataPortingService mdps = ServiceRegistry.getRegistry()
+			.getService(MetaDataPortingService.class);
 
 	/**
 	 * args[0]・・・execMode
@@ -77,6 +81,8 @@ public class MetaDataImport extends MtpCuiBase {
 		} catch (Throwable e) {
 			e.printStackTrace();
 		} finally {
+			// リソース破棄
+			MtpBatchResourceDisposer.disposeResource();
 		}
 	}
 
@@ -123,13 +129,13 @@ public class MetaDataImport extends MtpCuiBase {
 		logEnvironment();
 
 		switch (execMode) {
-		case WIZARD :
+		case WIZARD:
 			logInfo("■Start Import Wizard");
 			logInfo("");
 
 			//Wizardの実行
 			return wizard();
-		case SILENT :
+		case SILENT:
 			logInfo("■Start Import Silent");
 			logInfo("");
 
@@ -138,7 +144,7 @@ public class MetaDataImport extends MtpCuiBase {
 
 			//Silentの実行
 			return silent();
-		default :
+		default:
 			logError("unsupport execute mode : " + execMode);
 			return false;
 		}
@@ -174,9 +180,10 @@ public class MetaDataImport extends MtpCuiBase {
 			@Override
 			public Boolean apply(Transaction t) {
 
-				TenantContext tc  = tcs.getTenantContext(param.getTenantId());
-				return ExecuteContext.executeAs(tc, ()->{
-					ExecuteContext.getCurrentContext().setLanguage(getLanguage());
+				TenantContext tc = tcs.getTenantContext(param.getTenantId());
+				return ExecuteContext.executeAs(tc, () -> {
+					ExecuteContext.getCurrentContext()
+							.setLanguage(getLanguage());
 
 					logInfo(rs("MetaDataImport.startImportMetaLog"));
 
@@ -184,8 +191,39 @@ public class MetaDataImport extends MtpCuiBase {
 						//ファイルに含まれるMetaData情報を取得
 						XMLEntryInfo entryInfo = mdps.getXMLMetaDataEntryInfo(is);
 
+						// メタデータ整合性チェック
+						MetaDataCheckResult checkResult = mdps.checkMetaData(param.getImportFile()
+								.getName(), entryInfo);
+						if (checkResult.isError()) {
+							if (StringUtil.isNotEmpty(checkResult.getMessage())) {
+								logError(checkResult.getMessage());
+								logInfo("");
+							}
+
+							logError(rs("Common.errorMsg"));
+							return false;
+						}
+
+						if (checkResult.isWarn()) {
+							if (param.isOutputCheckResultConfirm()) {
+								// 処理続行確認メッセージ出力する場合
+								String confirmMessage = checkResult.createMessage(System.lineSeparator()) + System.lineSeparator()
+										+ rs("Common.continueMsg");
+								// 誤ってimport続行してしまわないようにデフォルトはfalse
+								boolean confirmContinue = readConsoleBoolean(confirmMessage, false);
+								if (!confirmContinue) {
+									logWarn(rs("MetaDataImport.stopImportMetaLog"));
+									return false;
+								}
+							} else {
+								// 処理続行確認メッセージ出力しない場合はログ出力（警告）のみ
+								logWarn(checkResult.createMessage(System.lineSeparator()));
+							}
+						}
+
 						//インポート処理の実行
-						MetaDataImportResult result = mdps.importMetaData(param.getImportFile().getName(), entryInfo, param.getImportTenant());
+						MetaDataImportResult result = mdps.importMetaData(param.getImportFile()
+								.getName(), entryInfo, param.getImportTenant());
 
 						if (result.isError()) {
 							if (result.getMessages() != null) {
@@ -207,7 +245,8 @@ public class MetaDataImport extends MtpCuiBase {
 
 						logInfo(rs("MetaDataImport.completedImportMetaLog"));
 					} catch (IOException e) {
-						throw new SystemException("failed to read metadata configure. file=" + param.getImportFile().getName(), e);
+						throw new SystemException("failed to read metadata configure. file=" + param.getImportFile()
+								.getName(), e);
 					}
 
 					return true;
@@ -230,9 +269,11 @@ public class MetaDataImport extends MtpCuiBase {
 		logInfo("■Execute Argument");
 		logInfo("\ttenant name :" + param.getTenantName());
 		logInfo("\timport file :" + param.getImportFilePath());
+		logInfo("\toutput check result confirm :" + param.isOutputCheckResultConfirm());
 
 		if (CollectionUtil.isNotEmpty(param.getMetaDataPaths())) {
-			logInfo("\tmetadata count :" + param.getMetaDataPaths().size());
+			logInfo("\tmetadata count :" + param.getMetaDataPaths()
+					.size());
 		} else {
 			logInfo("\tmetadata count :" + "0");
 		}
@@ -286,10 +327,13 @@ public class MetaDataImport extends MtpCuiBase {
 		}
 
 		MetaDataImportParameter param = new MetaDataImportParameter(tenant.getId(), tenant.getName());
+		// Wizard形式の場合、プロパティチェックは常に実行する
+		param.setOutputCheckResultConfirm(true);
 
 		TenantContext tc = tcs.getTenantContext(param.getTenantId());
-		ExecuteContext.executeAs(tc, ()->{
-			ExecuteContext.getCurrentContext().setLanguage(getLanguage());
+		return ExecuteContext.executeAs(tc, () -> {
+			ExecuteContext.getCurrentContext()
+					.setLanguage(getLanguage());
 
 			//Importファイル
 			boolean validFile = false;
@@ -318,7 +362,8 @@ public class MetaDataImport extends MtpCuiBase {
 					}
 
 					//対象メタデータチェック
-					int metaCount = (CollectionUtil.isNotEmpty(param.getMetaDataPaths()) ? param.getMetaDataPaths().size() : 0);
+					int metaCount = (CollectionUtil.isNotEmpty(param.getMetaDataPaths()) ? param.getMetaDataPaths()
+							.size() : 0);
 					if (metaCount == 0) {
 						logInfo(rs("MetaDataImport.Wizard.notIncludeMetaMsg"));
 					} else {
@@ -345,7 +390,7 @@ public class MetaDataImport extends MtpCuiBase {
 				} else {
 					logWarn(rs("MetaDataImport.Wizard.requiredImportFilePathMsg"));
 				}
-			} while(validFile == false);
+			} while (validFile == false);
 
 			boolean validExecute = false;
 			do {
@@ -364,17 +409,15 @@ public class MetaDataImport extends MtpCuiBase {
 						return wizard();
 					}
 				}
-			} while(validExecute == false);
+			} while (validExecute == false);
 
-			return null;
-		});
+			//Consoleを削除してLogに切り替え
+			switchLog(false, true);
 
-		//Consoleを削除してLogに切り替え
-		switchLog(false, true);
-
-		//Import処理実行
-		return executeTask(param, (paramA) -> {
-			return importMeta(paramA);
+			//Import処理実行
+			return executeTask(param, (paramA) -> {
+				return importMeta(paramA);
+			});
 		});
 	}
 
@@ -397,7 +440,7 @@ public class MetaDataImport extends MtpCuiBase {
 				if (Files.exists(path)) {
 					logDebug("load config file from file path:" + configFileName);
 					try (InputStream is = new FileInputStream(path.toFile());
-						InputStreamReader reader = new InputStreamReader(is, "UTF-8");) {
+							InputStreamReader reader = new InputStreamReader(is, "UTF-8");) {
 						prop.load(reader);
 					}
 				} else {
@@ -458,8 +501,9 @@ public class MetaDataImport extends MtpCuiBase {
 		MetaDataImportParameter param = new MetaDataImportParameter(tenant.getId(), tenant.getName());
 
 		TenantContext tc = tcs.getTenantContext(param.getTenantId());
-		return ExecuteContext.executeAs(tc, ()->{
-			ExecuteContext.getCurrentContext().setLanguage(getLanguage());
+		return ExecuteContext.executeAs(tc, () -> {
+			ExecuteContext.getCurrentContext()
+					.setLanguage(getLanguage());
 
 			String importFilePath = importFile;
 			if (StringUtil.isEmpty(importFilePath)) {
@@ -493,6 +537,12 @@ public class MetaDataImport extends MtpCuiBase {
 			}
 			param.setImportFile(file);
 
+			// Entityメタデータのプロパティ整合性チェック時の確認メッセージを出すかどうか
+			String outputCheckResultConfirm = prop.getProperty(MetaDataImportParameter.PROP_META_OUTPUT_CHECK_RESULT_CONFIRM);
+			if (StringUtil.isNotEmpty(outputCheckResultConfirm)) {
+				param.setOutputCheckResultConfirm(Boolean.valueOf(outputCheckResultConfirm));
+			}
+
 			//実行情報出力
 			logArguments(param);
 
@@ -517,7 +567,9 @@ public class MetaDataImport extends MtpCuiBase {
 		try (InputStream is = new FileInputStream(file)) {
 
 			XMLEntryInfo entryInfo = mdps.getXMLMetaDataEntryInfo(is);
-			List<String> pathList = entryInfo.getPathEntryMap().keySet().stream()
+			List<String> pathList = entryInfo.getPathEntryMap()
+					.keySet()
+					.stream()
 					.sorted((path1, path2) -> {
 						//大文字・小文字区別しない
 						return path1.compareToIgnoreCase(path2);
@@ -526,12 +578,15 @@ public class MetaDataImport extends MtpCuiBase {
 			param.setMetaDataPaths(pathList);
 
 			//テナントのチェック
-			Optional<MetaTenant> importMetaTenant = entryInfo.getPathEntryMap().entrySet().stream()
+			Optional<MetaTenant> importMetaTenant = entryInfo.getPathEntryMap()
+					.entrySet()
+					.stream()
 					.filter(entry -> {
 						return mdps.isTenantMeta(entry.getKey());
 					})
 					.map(entry -> {
-						return (MetaTenant)entry.getValue().getMetaData();
+						return (MetaTenant) entry.getValue()
+								.getMetaData();
 					})
 					.findFirst();
 
@@ -544,8 +599,10 @@ public class MetaDataImport extends MtpCuiBase {
 				importTenant.setName(metaTenant.getName()); //nameはapplyToTenantでセットされないのでセット(DB側優先)
 				importTenant.setDescription(metaTenant.getDescription()); //descriptionはapplyToTenantでセットされないのでセット(DB側優先)
 
-				Tenant currentTenant = ExecuteContext.getCurrentContext().getCurrentTenant();
-				if (!currentTenant.getName().equals(metaTenant.getName())) {
+				Tenant currentTenant = ExecuteContext.getCurrentContext()
+						.getCurrentTenant();
+				if (!currentTenant.getName()
+						.equals(metaTenant.getName())) {
 					//名前が違う場合はWarning対象
 					param.setWarningTenant(true);
 					param.setImportTenant(null);

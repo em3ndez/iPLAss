@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,7 +35,8 @@ public class WebApiDefinitionManagerImpl extends AbstractTypedDefinitionManager<
 //	private DefinitionManager dm;
 
 	public WebApiDefinitionManagerImpl() {
-		service = ServiceRegistry.getRegistry().getService(WebApiService.class);
+		service = ServiceRegistry.getRegistry()
+				.getService(WebApiService.class);
 //		dm = ManagerLocator.getInstance().getManager(DefinitionManager.class);
 	}
 

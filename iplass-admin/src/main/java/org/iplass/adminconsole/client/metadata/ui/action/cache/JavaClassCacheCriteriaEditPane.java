@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -50,7 +50,7 @@ public class JavaClassCacheCriteriaEditPane extends CacheCriteriaTypeEditPane {
 		form.setWidth100();
 //		form.setNumCols(5);	//間延びしないように最後に１つ余分に作成
 //		form.setColWidths(100, "*", 100, "*", "*");
-		form.setNumCols(3);	//間延びしないように最後に１つ余分に作成
+		form.setNumCols(3); //間延びしないように最後に１つ余分に作成
 		form.setColWidths(100, "*", "*");
 
 		classNameField = new TextItem("className", "Java ClassName");
@@ -76,7 +76,7 @@ public class JavaClassCacheCriteriaEditPane extends CacheCriteriaTypeEditPane {
 
 	@Override
 	public void setDefinition(CacheCriteriaDefinition definition) {
-		JavaClassCacheCriteriaDefinition def = (JavaClassCacheCriteriaDefinition)definition;
+		JavaClassCacheCriteriaDefinition def = (JavaClassCacheCriteriaDefinition) definition;
 		if (def != null) {
 			classNameField.setValue(def.getClassName());
 		} else {
@@ -86,7 +86,7 @@ public class JavaClassCacheCriteriaEditPane extends CacheCriteriaTypeEditPane {
 
 	@Override
 	public CacheCriteriaDefinition getEditDefinition(CacheCriteriaDefinition definition) {
-		JavaClassCacheCriteriaDefinition def = (JavaClassCacheCriteriaDefinition)definition;
+		JavaClassCacheCriteriaDefinition def = (JavaClassCacheCriteriaDefinition) definition;
 		def.setClassName(SmartGWTUtil.getStringValue(classNameField));
 		return def;
 	}

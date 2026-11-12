@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,7 +33,7 @@ import org.iplass.mtp.impl.query.value.expr.PolynomialSyntax;
 public class ElseSyntax implements Syntax<Else>, QueryConstants {
 
 	private PolynomialSyntax polynomial;
-	
+
 	@Override
 	public void init(SyntaxContext context) {
 		polynomial = context.getSyntax(PolynomialSyntax.class);
@@ -46,13 +46,13 @@ public class ElseSyntax implements Syntax<Else>, QueryConstants {
 			throw new ParseException(new EvalError("ELSE expected.", this, str));
 		}
 		str.consumeChars(ELSE.length());
-		
+
 		Else elseClause = new Else();
-		
+
 		if (!str.consumeChars(ParseContext.WHITE_SPACES)) {
 			throw new ParseException(new EvalError("space expected.", this, str));
 		}
-		
+
 		ValueExpression result = polynomial.parse(str);
 		elseClause.setResult(result);
 

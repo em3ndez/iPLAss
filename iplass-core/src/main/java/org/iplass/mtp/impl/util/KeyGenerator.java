@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,14 +23,15 @@ package org.iplass.mtp.impl.util;
 import java.util.UUID;
 
 public class KeyGenerator {
-	
+
 	//FIXME UUIDが重複することを考慮したロジックにする。（このクラスを使用する側で。）
-	
+
 	public String generateId() {
-		
+
 		//TODO 	Long.toString(i, 32)でやったほうが文字列が短くなる
-		
-		return UUID.randomUUID().toString();
+
+		return UUID.randomUUID()
+				.toString();
 	}
-	
+
 }

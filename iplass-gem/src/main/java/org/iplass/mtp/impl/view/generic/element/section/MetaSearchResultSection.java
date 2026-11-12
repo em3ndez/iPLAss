@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -42,6 +42,7 @@ import org.iplass.mtp.impl.view.generic.element.property.MetaPropertyColumn;
 import org.iplass.mtp.view.generic.PagingPosition;
 import org.iplass.mtp.view.generic.element.Element;
 import org.iplass.mtp.view.generic.element.section.SearchResultSection;
+import org.iplass.mtp.view.generic.element.section.SearchResultSection.AutoHeightAdjustMode;
 import org.iplass.mtp.view.generic.element.section.SearchResultSection.BulkUpdateAllCommandTransactionType;
 import org.iplass.mtp.view.generic.element.section.SearchResultSection.DeleteAllCommandTransactionType;
 import org.iplass.mtp.view.generic.element.section.SearchResultSection.ExclusiveControlPoint;
@@ -62,11 +63,17 @@ public class MetaSearchResultSection extends MetaSection {
 	/** 表示行数 */
 	private Integer dispRowCount;
 
-	/** 表示高さ */
+	/** 表示TABLEの高さ */
 	private int dispHeight;
+
+	/** 検索結果TABLEの高さ自動調節 */
+	private AutoHeightAdjustMode autoHeightAdjustMode;
 
 	/** 検索結果をまとめる設定 */
 	private boolean groupingData;
+
+	/** カラム固定を許可 */
+	private boolean frozenEnabled;
 
 	/** 編集リンク非表示設定 */
 	private boolean hideDetailLink;
@@ -140,7 +147,6 @@ public class MetaSearchResultSection extends MetaSection {
 	/** 一括更新コミットトランザクション制御設定*/
 	private BulkUpdateAllCommandTransactionType bulkUpdateAllCommandTransactionType = BulkUpdateAllCommandTransactionType.DIVISION;
 
-
 	/**
 	 * 表示行数を取得します。
 	 * @return 表示行数
@@ -157,7 +163,6 @@ public class MetaSearchResultSection extends MetaSection {
 		this.dispRowCount = dispRowCount;
 	}
 
-
 	/**
 	 * 表示高さを取得します。
 	 * @return 表示高さ
@@ -172,6 +177,22 @@ public class MetaSearchResultSection extends MetaSection {
 	 */
 	public void setDispHeight(int dispHeight) {
 		this.dispHeight = dispHeight;
+	}
+
+	/**
+	 * テーブル高さの自動調節モードを取得します。
+	 * @return テーブル高さの自動調節モード（未設定の場合 null）
+	 */
+	public AutoHeightAdjustMode getAutoHeightAdjustMode() {
+		return autoHeightAdjustMode;
+	}
+
+	/**
+	 * テーブル高さの自動調節モードを設定します。
+	 * @param autoHeightAdjustMode 検索結果TABLEの高さ自動調節
+	 */
+	public void setAutoHeightAdjustMode(AutoHeightAdjustMode autoHeightAdjustMode) {
+		this.autoHeightAdjustMode = autoHeightAdjustMode;
 	}
 
 	/**
@@ -191,11 +212,27 @@ public class MetaSearchResultSection extends MetaSection {
 	}
 
 	/**
+	 * カラム固定を許可するかを取得します。
+	 * @return カラム固定を許可するか
+	 */
+	public boolean isFrozenEnabled() {
+		return frozenEnabled;
+	}
+
+	/**
+	 * カラム固定を許可するかを設定します。
+	 * @param frozenEnabled カラム固定を許可するか
+	 */
+	public void setFrozenEnabled(boolean frozenEnabled) {
+		this.frozenEnabled = frozenEnabled;
+	}
+
+	/**
 	 * 編集リンク非表示設定を取得します。
 	 * @return 編集リンク非表示設定
 	 */
 	public boolean isHideDetailLink() {
-	    return hideDetailLink;
+		return hideDetailLink;
 	}
 
 	/**
@@ -203,7 +240,7 @@ public class MetaSearchResultSection extends MetaSection {
 	 * @param hideDetailLink 編集リンク非表示設定
 	 */
 	public void setHideDetailLink(boolean hideDetailLink) {
-	    this.hideDetailLink = hideDetailLink;
+		this.hideDetailLink = hideDetailLink;
 	}
 
 	/**
@@ -227,7 +264,7 @@ public class MetaSearchResultSection extends MetaSection {
 	 * @return 削除ボタン非表示設定
 	 */
 	public boolean isHideDelete() {
-	    return hideDelete;
+		return hideDelete;
 	}
 
 	/**
@@ -235,7 +272,7 @@ public class MetaSearchResultSection extends MetaSection {
 	 * @param hideDelete 削除ボタン非表示設定
 	 */
 	public void setHideDelete(boolean hideDelete) {
-	    this.hideDelete = hideDelete;
+		this.hideDelete = hideDelete;
 	}
 
 	/**
@@ -243,7 +280,7 @@ public class MetaSearchResultSection extends MetaSection {
 	 * @return ページング非表示設定
 	 */
 	public boolean isHidePaging() {
-	    return hidePaging;
+		return hidePaging;
 	}
 
 	/**
@@ -251,7 +288,7 @@ public class MetaSearchResultSection extends MetaSection {
 	 * @param hidePaging ページング非表示設定
 	 */
 	public void setHidePaging(boolean hidePaging) {
-	    this.hidePaging = hidePaging;
+		this.hidePaging = hidePaging;
 	}
 
 	/**
@@ -259,7 +296,7 @@ public class MetaSearchResultSection extends MetaSection {
 	 * @return ページジャンプ非表示設定
 	 */
 	public boolean isHidePageJump() {
-	    return hidePageJump;
+		return hidePageJump;
 	}
 
 	/**
@@ -267,7 +304,7 @@ public class MetaSearchResultSection extends MetaSection {
 	 * @param hidePageJump ページジャンプ非表示設定
 	 */
 	public void setHidePageJump(boolean hidePageJump) {
-	    this.hidePageJump = hidePageJump;
+		this.hidePageJump = hidePageJump;
 	}
 
 	/**
@@ -275,7 +312,7 @@ public class MetaSearchResultSection extends MetaSection {
 	 * @return ページリンク非表示設定
 	 */
 	public boolean isHidePageLink() {
-	    return hidePageLink;
+		return hidePageLink;
 	}
 
 	/**
@@ -283,7 +320,7 @@ public class MetaSearchResultSection extends MetaSection {
 	 * @param hidePageLink ページリンク非表示設定
 	 */
 	public void setHidePageLink(boolean hidePageLink) {
-	    this.hidePageLink = hidePageLink;
+		this.hidePageLink = hidePageLink;
 	}
 
 	/**
@@ -291,7 +328,7 @@ public class MetaSearchResultSection extends MetaSection {
 	 * @return 件数非表示設定
 	 */
 	public boolean isHideCount() {
-	    return hideCount;
+		return hideCount;
 	}
 
 	/**
@@ -299,7 +336,7 @@ public class MetaSearchResultSection extends MetaSection {
 	 * @param hideCount 件数非表示設定
 	 */
 	public void setHideCount(boolean hideCount) {
-	    this.hideCount = hideCount;
+		this.hideCount = hideCount;
 	}
 
 	/**
@@ -307,7 +344,7 @@ public class MetaSearchResultSection extends MetaSection {
 	 * @return ページング表示位置
 	 */
 	public PagingPosition getPagingPosition() {
-	    return pagingPosition;
+		return pagingPosition;
 	}
 
 	/**
@@ -315,7 +352,7 @@ public class MetaSearchResultSection extends MetaSection {
 	 * @param pagingPosition ページング表示位置
 	 */
 	public void setPagingPosition(PagingPosition pagingPosition) {
-	    this.pagingPosition = pagingPosition;
+		this.pagingPosition = pagingPosition;
 	}
 
 	/**
@@ -333,7 +370,6 @@ public class MetaSearchResultSection extends MetaSection {
 	public void setShowBulkUpdate(boolean showBulkUpdate) {
 		this.showBulkUpdate = showBulkUpdate;
 	}
-
 
 	/**
 	 * Bulk Viewの定義を利用を取得します。
@@ -549,8 +585,9 @@ public class MetaSearchResultSection extends MetaSection {
 	 * @return 要素
 	 */
 	public List<MetaElement> getElements() {
-		if (elements == null) elements = new ArrayList<>();
-	    return elements;
+		if (elements == null)
+			elements = new ArrayList<>();
+		return elements;
 	}
 
 	/**
@@ -558,7 +595,7 @@ public class MetaSearchResultSection extends MetaSection {
 	 * @param elements 要素
 	 */
 	public void setElements(List<MetaElement> elements) {
-	    this.elements = elements;
+		this.elements = elements;
 	}
 
 	/**
@@ -581,7 +618,9 @@ public class MetaSearchResultSection extends MetaSection {
 		SearchResultSection section = (SearchResultSection) element;
 		this.dispRowCount = section.getDispRowCount();
 		this.dispHeight = section.getDispHeight();
+		this.autoHeightAdjustMode = section.getAutoHeightAdjustMode();
 		this.groupingData = section.isGroupingData();
+		this.frozenEnabled = section.isFrozenEnabled();
 		this.hideDetailLink = section.isHideDetailLink();
 		this.checkEntityPermissionLimitConditionOfEditLink = section.isCheckEntityPermissionLimitConditionOfEditLink();
 		this.hideDelete = section.isHideDelete();
@@ -612,7 +651,8 @@ public class MetaSearchResultSection extends MetaSection {
 //				if (p.getPropertyId() != null) this.addProperty(p);
 //			}
 //		}
-		if (section.getElements().size() > 0) {
+		if (section.getElements()
+				.size() > 0) {
 			for (Element elem : section.getElements()) {
 				MetaElement e = MetaElement.createInstance(elem);
 				e.applyConfig(elem, definitionId);
@@ -629,7 +669,9 @@ public class MetaSearchResultSection extends MetaSection {
 		section.setScriptKey(scriptKey);
 		section.setDispRowCount(this.dispRowCount);
 		section.setDispHeight(this.dispHeight);
+		section.setAutoHeightAdjustMode(this.autoHeightAdjustMode);
 		section.setGroupingData(this.isGroupingData());
+		section.setFrozenEnabled(this.frozenEnabled);
 		section.setHideDetailLink(hideDetailLink);
 		section.setCheckEntityPermissionLimitConditionOfEditLink(checkEntityPermissionLimitConditionOfEditLink);
 		section.setHideDelete(hideDelete);
@@ -653,7 +695,8 @@ public class MetaSearchResultSection extends MetaSection {
 		section.setBulkUpdateAllCommandTransactionType(this.bulkUpdateAllCommandTransactionType);
 		section.setDeleteAllCommandTransactionType(this.deleteAllCommandTransactionType);
 
-		if (this.getElements().size() > 0) {
+		if (this.getElements()
+				.size() > 0) {
 			for (MetaElement elem : this.getElements()) {
 				Element e = elem.currentConfig(definitionId);
 				//プロパティが無効な場合など、生成できない場合は追加しない
@@ -664,6 +707,7 @@ public class MetaSearchResultSection extends MetaSection {
 		}
 		return section;
 	}
+
 	@Override
 	public SearchResultSectionRuntime createRuntime(EntityViewRuntime entityView, FormViewRuntime formView) {
 		return new SearchResultSectionRuntime(this, entityView, formView);
@@ -683,10 +727,12 @@ public class MetaSearchResultSection extends MetaSection {
 			super(metadata, entityView);
 
 			EntityContext context = EntityContext.getCurrentContext();
-			EntityHandler eh = context.getHandlerById(entityView.getMetaData().getDefinitionId());
+			EntityHandler eh = context.getHandlerById(entityView.getMetaData()
+					.getDefinitionId());
 
 			Map<String, GroovyTemplate> customStyleMap = new HashMap<>();
-			List<MetaPropertyColumn> properties = metadata.getElements().stream()
+			List<MetaPropertyColumn> properties = metadata.getElements()
+					.stream()
 					.filter(e -> e instanceof MetaPropertyColumn)
 					.map(e -> (MetaPropertyColumn) e)
 					.collect(Collectors.toList());
@@ -696,15 +742,16 @@ public class MetaSearchResultSection extends MetaSection {
 
 				MetaPropertyEditor editor = column.getEditor();
 				if (editor != null) {
-					PropertyEditorRuntime runtime = (PropertyEditorRuntime)editor.createRuntime(entityView, formView, column, context, eh);
+					PropertyEditorRuntime runtime = (PropertyEditorRuntime) editor.createRuntime(entityView, formView, column, context, eh);
 					customStyleMap.put(editor.getOutputCustomStyleScriptKey(), runtime.getOutputCustomStyleScript());
 				}
 			}
 			//Script用のKEYを設定
-			metadata.scriptKey = "SearchResultSection_Style_" + GroovyTemplateCompiler.randomName().replace("-", "_");
+			metadata.scriptKey = "SearchResultSection_Style_" + GroovyTemplateCompiler.randomName()
+					.replace("-", "_");
 
 			//EntityViewに登録
-			entityView.addCustomStyle(scriptKey , customStyleMap);
+			entityView.addCustomStyle(scriptKey, customStyleMap);
 		}
 
 		@Override

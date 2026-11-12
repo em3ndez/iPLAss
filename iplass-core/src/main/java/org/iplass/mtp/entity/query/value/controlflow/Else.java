@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -39,7 +39,7 @@ public class Else implements ASTNode {
 
 	public Else() {
 	}
-	
+
 	public Else(ValueExpression result) {
 		this.result = result;
 	}
@@ -51,7 +51,7 @@ public class Else implements ASTNode {
 			this.result = new Literal(resultLiteral);
 		}
 	}
-	
+
 	public ValueExpression getResult() {
 		return result;
 	}
@@ -72,7 +72,7 @@ public class Else implements ASTNode {
 			}
 		}
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,18 +27,18 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 public class LoggingInterceptor implements CommandInterceptor {
-	
+
 	private static final String MDC_CMD = "command";
-	
+
 	private static Logger commandLogger = LoggerFactory.getLogger("mtp.command");
-	
+
 	@Override
 	public String intercept(CommandInvocation invocation) {
 		String prev = MDC.get(MDC_CMD);
 		ExecuteContext ec = ExecuteContext.getCurrentContext();
 		ec.mdcPut(MDC_CMD, invocation.getCommandName());
 		try {
-			
+
 			if (commandLogger.isDebugEnabled()) {
 				long start = System.currentTimeMillis();
 				String res = null;
@@ -51,14 +51,15 @@ public class LoggingInterceptor implements CommandInterceptor {
 				} finally {
 					String cmd = "";
 					if (invocation.getCommand() != null) {
-						cmd = invocation.getCommand().toString();
+						cmd = invocation.getCommand()
+								.toString();
 					}
 					commandLogger.debug(cmd + "," + res + "," + (System.currentTimeMillis() - start) + "ms");
 				}
 			} else {
 				return invocation.proceedCommand();
 			}
-			
+
 		} finally {
 			if (prev == null) {
 				MDC.remove(MDC_CMD);

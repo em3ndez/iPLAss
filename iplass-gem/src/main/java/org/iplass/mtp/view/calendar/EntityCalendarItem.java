@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,8 +22,8 @@ package org.iplass.mtp.view.calendar;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlEnumValue;
-import javax.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.XmlEnumValue;
+import jakarta.xml.bind.annotation.XmlType;
 
 /**
  * カレンダーに表示するEntityの設定
@@ -32,12 +32,14 @@ import javax.xml.bind.annotation.XmlType;
 public class EntityCalendarItem implements Serializable {
 
 	/** カレンダーの検索方法 */
-	@XmlType(namespace="http://mtp.iplass.org/xml/definition/view/calendar")
+	@XmlType(namespace = "http://mtp.iplass.org/xml/definition/view/calendar")
 	public enum CalendarSearchType {
 		/** 日付で検索 */
-		@XmlEnumValue("Date")DATE,
+		@XmlEnumValue("Date")
+		DATE,
 		/** 期間で検索 */
-		@XmlEnumValue("Period")PERIOD,
+		@XmlEnumValue("Period")
+		PERIOD,
 	}
 
 	/** SerialVersionUID */
@@ -66,6 +68,9 @@ public class EntityCalendarItem implements Serializable {
 
 	/** 追加アクション名 */
 	private String addAction;
+
+	/** レコードの新規登録を許可するか */
+	private Boolean allowNewRecordRegistration;
 
 	/** ビュー名 */
 	private String viewName;
@@ -211,6 +216,22 @@ public class EntityCalendarItem implements Serializable {
 	}
 
 	/**
+	 * レコードの新規登録を許可するかを取得
+	 * @return レコードの新規登録を許可するか
+	 */
+	public Boolean getAllowNewRecordRegistration() {
+		return allowNewRecordRegistration;
+	}
+
+	/**
+	 * レコードの新規登録を許可するかを設定
+	 * @param allowNewRecordRegistration レコードの新規登録を許可するか
+	 */
+	public void setAllowNewRecordRegistration(Boolean allowNewRecordRegistration) {
+		this.allowNewRecordRegistration = allowNewRecordRegistration;
+	}
+
+	/**
 	 * ビュー名を取得
 	 * @return ビュー名
 	 */
@@ -247,7 +268,7 @@ public class EntityCalendarItem implements Serializable {
 	 * @return 検索上限
 	 */
 	public Integer getLimit() {
-	    return limit;
+		return limit;
 	}
 
 	/**
@@ -255,7 +276,7 @@ public class EntityCalendarItem implements Serializable {
 	 * @param limit 検索上限
 	 */
 	public void setLimit(Integer limit) {
-	    this.limit = limit;
+		this.limit = limit;
 	}
 
 	/**

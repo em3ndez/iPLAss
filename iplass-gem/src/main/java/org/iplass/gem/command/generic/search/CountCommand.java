@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,18 +25,18 @@ import org.iplass.mtp.command.Command;
 import org.iplass.mtp.command.RequestContext;
 import org.iplass.mtp.command.annotation.CommandClass;
 import org.iplass.mtp.command.annotation.webapi.WebApi;
-import org.iplass.mtp.webapi.definition.RequestType;
 import org.iplass.mtp.webapi.definition.MethodType;
+import org.iplass.mtp.webapi.definition.RequestType;
 
 @WebApi(
-	name=CountCommand.WEBAPI_NAME,
-	displayName="全件数取得",
-	accepts=RequestType.REST_FORM,
-	methods=MethodType.POST,
-	results={"count", "message"},
-	checkXRequestedWithHeader=true
+		name = CountCommand.WEBAPI_NAME,
+		displayName = "全件数取得",
+		accepts = RequestType.REST_FORM,
+		methods = MethodType.POST,
+		results = { "count", "message" },
+		checkXRequestedWithHeader = true
 )
-@CommandClass(name="gem/generic/search/CountCommand", displayName="全件数取得")
+@CommandClass(name = "gem/generic/search/CountCommand", displayName = "全件数取得")
 public final class CountCommand implements Command {
 
 	public static final String WEBAPI_NAME = "gem/generic/search/count";

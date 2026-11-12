@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,18 +23,18 @@ package org.iplass.mtp.impl.metadata;
 import java.io.Serializable;
 
 public interface MetaData extends Serializable {
-	
+
 	/**
 	 * 当該のメタデータのコピーを作成する。
 	 * 
 	 * @return コピーされたメタデータ
 	 */
 	public MetaData copy();
-	
+
 	public boolean equals(Object obj);
-	
+
 	public int hashCode();
-	
+
 //	/**
 //	 * このメタデータの情報から、何らかの処理を実際に実行するMetaDataRuntimeを取得する。
 //	 * メタデータ自身は、リポジトリ上に保存するデータのみを保持する形に作成し、
@@ -43,7 +43,5 @@ public interface MetaData extends Serializable {
 //	 * @return MetaDataRuntimeのインスタンス
 //	 */
 //	public MetaDataRuntime createRuntime();
-	
-	
 
 }

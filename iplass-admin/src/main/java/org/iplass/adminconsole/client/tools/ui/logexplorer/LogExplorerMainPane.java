@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -45,8 +45,8 @@ public class LogExplorerMainPane extends VLayout implements ContentStateChangeHa
 
 		LogExplorerFileListPane listPane = new LogExplorerFileListPane();
 		listPane.setWidth("50%");
-		listPane.setShowResizeBar(true);	//リサイズ可能
-		listPane.setResizeBarTarget("next");	//リサイズバーをダブルクリックした際、下を収縮
+		listPane.setShowResizeBar(true); //リサイズ可能
+		listPane.setResizeBarTarget("next"); //リサイズバーをダブルクリックした際、下を収縮
 
 		LogExplorerConditionPane conditionPane = new LogExplorerConditionPane();
 		conditionPane.setWidth("50%");

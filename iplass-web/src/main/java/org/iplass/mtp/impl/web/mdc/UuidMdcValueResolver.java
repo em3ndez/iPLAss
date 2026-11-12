@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,10 +23,10 @@ package org.iplass.mtp.impl.web.mdc;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class UuidMdcValueResolver implements MdcValueResolver {
-	
+
 	private boolean secure = true;
 
 	public UuidMdcValueResolver() {
@@ -47,7 +47,8 @@ public class UuidMdcValueResolver implements MdcValueResolver {
 	@Override
 	public String resolve(HttpServletRequest request) {
 		if (secure) {
-			return UUID.randomUUID().toString();
+			return UUID.randomUUID()
+					.toString();
 		} else {
 			return insecureUUID().toString();
 		}

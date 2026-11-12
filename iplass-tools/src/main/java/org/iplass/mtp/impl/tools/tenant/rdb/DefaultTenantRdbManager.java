@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,11 +27,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.iplass.mtp.impl.auth.authenticate.builtin.sql.AccountTable;
 import org.iplass.mtp.impl.datastore.StoreService;
 import org.iplass.mtp.impl.datastore.grdb.GRdbDataStore;
 import org.iplass.mtp.impl.datastore.grdb.StorageSpaceMap;
 import org.iplass.mtp.impl.rdb.SqlExecuter;
 import org.iplass.mtp.impl.rdb.adapter.RdbAdapter;
+import org.iplass.mtp.impl.tenant.rdb.TenantTable;
 import org.iplass.mtp.impl.tools.ToolsResourceBundleUtil;
 import org.iplass.mtp.impl.tools.tenant.TenantDeleteParameter;
 import org.iplass.mtp.impl.tools.tenant.TenantInfo;
@@ -42,11 +44,11 @@ import org.iplass.mtp.transaction.Transaction;
 
 public abstract class DefaultTenantRdbManager implements TenantRdbManager {
 
-	private static final String TENANT_EXISTS_SQL = "select 1 from dual where exists(select * from t_tenant where url = ?)";
+	private static final String TENANT_EXISTS_SQL = "select 1 from dual where exists(select * from " + TenantTable.TABLE_NAME + " where url = ?)";
 
 	private static final String TENANT_SELECT_SQL = "select id, name, description, host_name, url," +
 			"yuko_date_from, yuko_date_to, cre_user, cre_date, up_user, up_date " +
-			"from t_tenant ";
+			"from " + TenantTable.TABLE_NAME + " ";
 
 	private static final String ALL_TENANT_SQL = TENANT_SELECT_SQL +
 			"order by id ";
@@ -59,14 +61,18 @@ public abstract class DefaultTenantRdbManager implements TenantRdbManager {
 			"where url = ? " +
 			"order by id ";
 
-	private static final String DELETE_TENANT_SQL = "delete from t_tenant where id = ?";
+	private static final String DELETE_TENANT_SQL = "delete from " + TenantTable.TABLE_NAME + " where id = ?";
 
-	private static final String DELETE_ACCOUNT_SQL = "delete from t_account where tenant_id = ? ";
+	private static final String DELETE_ACCOUNT_SQL = "delete from " + AccountTable.TABLE_NAME + " where tenant_id = ? ";
 
 	private RdbAdapter adapter;
 
-	public DefaultTenantRdbManager(RdbAdapter adapter) {
+	/** TenantRdbManager パラメータ */
+	private TenantRdbManagerParameter tenantRdbManagerParameter;
+
+	public DefaultTenantRdbManager(RdbAdapter adapter, TenantRdbManagerParameter tenantRdbManagerParameter) {
 		this.adapter = adapter;
+		this.tenantRdbManagerParameter = tenantRdbManagerParameter;
 	}
 
 	protected abstract boolean isExistsTable(String tableName);
@@ -151,7 +157,7 @@ public abstract class DefaultTenantRdbManager implements TenantRdbManager {
 				ResultSet rs = statement.executeQuery();
 				List<TenantInfo> result = new ArrayList<TenantInfo>();
 				try {
-					while(rs.next()) {
+					while (rs.next()) {
 						TenantInfo tenant = convert(rs);
 						result.add(tenant);
 					}
@@ -185,21 +191,20 @@ public abstract class DefaultTenantRdbManager implements TenantRdbManager {
 
 	@Override
 	public boolean deleteTenant(final TenantDeleteParameter param, final boolean deleteAccount, final LogHandler logHandler) {
+		// その他の削除（各テーブル削除時に、個別トランザクションを開始し処理を行う）
+		deleteTenantTables(param, logHandler);
 
 		boolean isSuccess = Transaction.requiresNew(t -> {
 
-				//テナントの削除
-				deleteTenantTable(param, logHandler);
+			//アカウントの削除
+			if (deleteAccount) {
+				deleteAccountTable(param, logHandler);
+			}
 
-				//アカウントの削除
-				if (deleteAccount) {
-					deleteAccountTable(param, logHandler);
-				}
+			// テナントの削除
+			deleteTenantTable(param, logHandler);
 
-				//その他の削除
-				deleteTenantTables(param, logHandler);
-
-				return true;
+			return true;
 		});
 
 		if (isSuccess) {
@@ -250,38 +255,94 @@ public abstract class DefaultTenantRdbManager implements TenantRdbManager {
 	private void deleteTenantTables(TenantDeleteParameter param, LogHandler logHandler) {
 
 		for (String tableName : getTableList()) {
+			String deletionUnitColumns = getDeletionUnitColumns(tableName);
 			if (isStorageSpaceTable(tableName)) {
 				//StorageSpaceの場合、Postfix分Loop
 				for (String postfix : getStorageSpacePostfix(false)) {
 					String storageSpaceTableName = tableName + postfix;
 					if (isExistsTable(storageSpaceTableName, true)) {
-						int row = deleteTenantTables(param.getTenantId(), storageSpaceTableName);
+						int row = deleteTenantRecords(param, storageSpaceTableName, deletionUnitColumns, logHandler);
 						logHandler.info(getDeleteResourceMessage(param.getLoggerLanguage(), "deletedTableMsg", storageSpaceTableName, row));
 					}
 				}
 			} else {
 				if (isExistsTable(tableName, false)) {
-					int row = deleteTenantTables(param.getTenantId(), tableName);
+					int row = deleteTenantRecords(param, tableName, deletionUnitColumns, logHandler);
 					logHandler.info(getDeleteResourceMessage(param.getLoggerLanguage(), "deletedTableMsg", tableName, row));
 				}
 			}
 		}
 	}
 
-	private int deleteTenantTables(int tenantId, String tableName) {
+	/**
+	 * テナントレコードを削除する
+	 *
+	 * <p>
+	 * 削除単位カラムは PostgreSQL タイプの削除時のみ利用する変数。
+	 * </p>
+	 *
+	 * @see #getTenantRecordDeleteExecuter(int, String, String, int)
+	 * @param param テナント削除パラメーター
+	 * @param tableName 物理テーブル名
+	 * @param deletionUnitColumns 物理テーブルの削除単位カラム (値例： column1, column2, .... )
+	 * @param logHandler ログハンドラ
+	 * @return レコード削除件数
+	 */
+	private int deleteTenantRecords(TenantDeleteParameter param, String tableName, String deletionUnitColumns,
+			LogHandler logHandler) {
+		int actualDeletedRows = 0;
+		int deleteRows = getTenantRdbManagerParameter().getDeleteRows();
+		boolean isContinue = true;
 
-		SqlExecuter<Integer> exec = new SqlExecuter<Integer>() {
-			@Override
-			public Integer logic() throws SQLException {
-				String sql = "delete from " + tableName + " where tenant_id = ?";
-				PreparedStatement ps = getPreparedStatement(sql);
-				ps.setInt(1, tenantId);
+		SqlExecuter<Integer> tenantRecordDeleteExecuter = getTenantRecordDeleteExecuter(param.getTenantId(), tableName,
+				deletionUnitColumns, deleteRows);
 
-				return ps.executeUpdate();
+		do {
+			// トランザクション開始し、削除実行
+			Integer actual = Transaction.<Integer> requiresNew(t -> {
+				return tenantRecordDeleteExecuter.execute(adapter, true);
+			});
+
+			// 削除件数の加算
+			actualDeletedRows += actual;
+			// 削除の継続判断（削除予定行よりも実際削除行が多いもしくは同一であれば継続。PKが無いテーブルもあるため、想定よりも多く削除する可能性があると考えられる）
+			isContinue = deleteRows <= actual;
+
+			// 処理継続時のみログ出力（最終的な削除ログは、呼び出し元で出力）
+			if (isContinue) {
+				logHandler.info(getDeleteResourceMessage(param.getLoggerLanguage(), "deletingTableMsg", tableName, actualDeletedRows));
 			}
-		};
-		return exec.execute(adapter, true);
+		} while (isContinue);
+
+		return actualDeletedRows;
 	}
+
+	/**
+	 * テナントレコードを削除するSQLExecuterインスタンスを取得する
+	 *
+	 * <p>
+	 * 大量データ場合に一度に大量削除を行わないように deleteRows で指定された件数ずつ削除を行う。
+	 * 件数削除が実施できない場合（limit 句が利用できず、deletionUnitColumns の指定が無い場合。実質、PostgreSQL のみ）はテーブルのテナントID単位で削除を行う。
+	 * </p>
+	 *
+	 * <p>
+	 * 削除時の件数指定方法（PostgreSQL のみ DELETE 時に件数指定ができない）
+	 * <ul>
+	 * <li>MySQL: <code>delete from ${TABLE_NAME} where tenant_id = ${TENANT_ID} limit ${DELETE_NUMBER}</code></li>
+	 * <li>Oracle: <code>delete from ${TABLE_NAME} where tenant_id = ${TENANT_ID} and rownum &lt;= ${DELETE_NUMBER}</code></li>
+	 * <li>PostgreSQL: <code>delete from ${TABLE_NAME} where ( ${DELETION_UNIT_COLS} ) in ( select ${DELETION_UNIT_COLS} from ${TABLE_NAME} where tenant_id = ${TENANT_ID} limit ${DELETE_NUMBER} )</code></li>
+	 * <li>SQL Server: <code>delete top(${DELETE_NUMBER}) from ${TABLE_NAME} where tenant_id = ${TENANT_ID}</code></li>
+	 * </ul>
+	 * </p>
+	 *
+	 * @param tenantId 削除対象テナントID
+	 * @param tableName 削除対象テーブル名
+	 * @param deletionUnitColumns 削除対象テーブルの削除単位カラム。削除単位カラム空文字が設定される場合もある（旧バージョン互換テーブル）。{@link #getDeletionUnitColumns(String)} で取得する。
+	 * @param deleteRows 削除行数
+	 * @return SQLExecuterインスタンス
+	 */
+	abstract protected SqlExecuter<Integer> getTenantRecordDeleteExecuter(int tenantId, String tableName, String deletionUnitColumns,
+			int deleteRows);
 
 	protected String[] getTableList() {
 		return TenantRdbConstants.TABLE_LIST;
@@ -318,10 +379,13 @@ public abstract class DefaultTenantRdbManager implements TenantRdbManager {
 	 * @return StorageSpaceのPostfixのリスト
 	 */
 	protected List<String> getStorageSpacePostfix(boolean isPartition) {
-		GRdbDataStore store = (GRdbDataStore)ServiceRegistry.getRegistry().getService(StoreService.class).getDataStore();
+		GRdbDataStore store = (GRdbDataStore) ServiceRegistry.getRegistry()
+				.getService(StoreService.class)
+				.getDataStore();
 
 		List<String> postfixList = new ArrayList<String>();
-		for (StorageSpaceMap e: store.getStorageSpaceMap().values()) {
+		for (StorageSpaceMap e : store.getStorageSpaceMap()
+				.values()) {
 			if (isPartition) {
 				//Partitionの場合はカスタムは除外
 				if (e.isCustomPartition()) {
@@ -329,7 +393,7 @@ public abstract class DefaultTenantRdbManager implements TenantRdbManager {
 				}
 			}
 			List<String> allPostFix = e.allTableNamePostfix();
-			for (String pf: allPostFix) {
+			for (String pf : allPostFix) {
 				if (pf != null) {
 					postfixList.add("__" + pf);
 				} else {
@@ -353,6 +417,28 @@ public abstract class DefaultTenantRdbManager implements TenantRdbManager {
 
 		//存在チェック対象以外は、true
 		return true;
+	}
+
+	/**
+	 * TenantRdbManager パラメータを取得する
+	 * @return TenantRdbManager パラメータ
+	 */
+	protected TenantRdbManagerParameter getTenantRdbManagerParameter() {
+		return this.tenantRdbManagerParameter;
+	}
+
+	/**
+	 * テーブル削除時の削除単位カラムを取得する
+	 *
+	 * <p>
+	 * 削除単位カラムはユニークキーに近しいカラムを指定する。テーブルによってはカラムの指定が無い場合（空文字）もあり得る。
+	 * </p>
+	 *
+	 * @param tableName テーブル名
+	 * @return 削除単位カラム
+	 */
+	private String getDeletionUnitColumns(String tableName) {
+		return TenantRdbConstants.TABLE_LIST_DELETION_UNIT_COLS.get(tableName);
 	}
 
 	private String getDeleteResourceMessage(String lang, String suffix, Object... args) {

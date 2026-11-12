@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,6 +26,7 @@ import java.util.List;
 import org.iplass.adminconsole.client.base.i18n.AdminClientMessageUtil;
 import org.iplass.adminconsole.client.base.tenant.TenantInfoHolder;
 import org.iplass.adminconsole.client.base.ui.widget.MessageTabSet;
+import org.iplass.adminconsole.client.base.ui.widget.MtpListGrid;
 import org.iplass.adminconsole.client.base.util.SmartGWTUtil;
 import org.iplass.adminconsole.client.tools.data.queueexplorer.AsyncTaskDS;
 import org.iplass.adminconsole.shared.metadata.rpc.MetaDataServiceAsync;
@@ -76,8 +77,8 @@ public class QueueInfoPane extends VLayout {
 		setHeight100();
 
 		gridPane = new QueueGridPane();
-		gridPane.setShowResizeBar(true);		//リサイズ可能
-		gridPane.setResizeBarTarget("next");	//リサイズバーをダブルクリックした際、下を収縮
+		gridPane.setShowResizeBar(true); //リサイズ可能
+		gridPane.setResizeBarTarget("next"); //リサイズバーをダブルクリックした際、下を収縮
 
 		messageTabSet = new MessageTabSet();
 		messageTabSet.setHeight(120);
@@ -111,7 +112,6 @@ public class QueueInfoPane extends VLayout {
 
 		private static final String CANCEL_ICON = "cancel.png";
 		private static final String DELETE_ICON = "error_delete.png";
-
 
 		private CheckboxItem showHistory;
 		private Label pageNumLabel;
@@ -243,17 +243,22 @@ public class QueueInfoPane extends VLayout {
 			//------------------------
 			//Grid
 			//------------------------
-			grid = new ListGrid() {
+			grid = new MtpListGrid() {
 				@Override
 				protected String getBaseStyle(ListGridRecord record, int rowNum, int colNum) {
 					String status = record.getAttribute("status");
-					if (TaskStatus.SUBMITTED.name().equals(status)
-							|| TaskStatus.EXECUTING.name().equals(status)) {
+					if (TaskStatus.SUBMITTED.name()
+							.equals(status)
+							|| TaskStatus.EXECUTING.name()
+									.equals(status)) {
 						return "taskActiveGridRow";
-					} else if (TaskStatus.ABORTED.name().equals(status)) {
+					} else if (TaskStatus.ABORTED.name()
+							.equals(status)) {
 						return "taskAbortGridRow";
-					} else if (TaskStatus.COMPLETED.name().equals(status)
-									|| TaskStatus.RETURNED.name().equals(status)) {
+					} else if (TaskStatus.COMPLETED.name()
+							.equals(status)
+							|| TaskStatus.RETURNED.name()
+									.equals(status)) {
 						return "taskCompletedGridRow";
 					} else {
 						return super.getBaseStyle(record, rowNum, colNum);
@@ -263,22 +268,22 @@ public class QueueInfoPane extends VLayout {
 
 			grid.setWidth100();
 			grid.setHeight100();
-			grid.setShowAllRecords(false);		//データ件数が多い場合を考慮し、false
-			grid.setLeaveScrollbarGap(false);	//falseで縦スクロールバー領域が自動表示制御される
 
-			grid.setAutoFitFieldWidths(true);							//データにより幅自動調節
-//			grid.setAutoFitWidthApproach(AutoFitWidthApproach.BOTH);	//幅の調節をタイトルとデータに設定
-			grid.setAutoFitWidthApproach(AutoFitWidthApproach.TITLE);	//幅の調節をタイトルとデータに設定
-			grid.setAutoFitFieldsFillViewport(false);					//幅が足りないときに先頭行の自動的に伸ばさない
+			//データ件数が多い場合を考慮し、false
+			grid.setShowAllRecords(false);
+			//列数が多い場合を考慮し、false
+			grid.setShowAllColumns(false);
 
-			grid.setShowRowNumbers(true);		//行番号表示
-			grid.setCanDragSelectText(true);	//セルの値をドラッグで選択可能（コピー用）にする
+			//列幅自動調節（タイトルに設定）
+			grid.setAutoFitFieldWidths(true);
+			grid.setAutoFitWidthApproach(AutoFitWidthApproach.TITLE);
+			//幅が足りないときに先頭行を自動的に伸ばさない
+			grid.setAutoFitFieldsFillViewport(false);
 
-			grid.setCanSort(false);
-			grid.setCanGroupBy(false);
-			grid.setCanPickFields(false);
-			grid.setCanFreezeFields(false);
+			//行番号表示
+			grid.setShowRowNumbers(true);
 
+			//CheckBox選択設定
 			grid.setSelectionType(SelectionStyle.SIMPLE);
 			grid.setSelectionAppearance(SelectionAppearance.CHECKBOX);
 
@@ -287,8 +292,12 @@ public class QueueInfoPane extends VLayout {
 				@Override
 				public void onDataArrived(DataArrivedEvent event) {
 					if (ds.getCondition() != null) {
-						messageTabSet.addMessage("With history : " + ds.getCondition().isWithHistory()
-								+ ", Limit : limit = " + ds.getCondition().getLimit() + ", offset = " + ds.getCondition().getOffset());
+						messageTabSet.addMessage("With history : " + ds.getCondition()
+								.isWithHistory()
+								+ ", Limit : limit = " + ds.getCondition()
+										.getLimit()
+								+ ", offset = " + ds.getCondition()
+										.getOffset());
 						messageTabSet.addMessage("Count : " + grid.getRecords().length);
 					}
 					finishExecute();
@@ -302,14 +311,14 @@ public class QueueInfoPane extends VLayout {
 				@Override
 				public void onRecordDoubleClick(RecordDoubleClickEvent event) {
 					//FIXME 詳細結果を表示するか？
-					long taskId = event.getRecord().getAttributeAsLong("taskId");
+					long taskId = event.getRecord()
+							.getAttributeAsLong("taskId");
 					loadDetail(taskId);
 				}
 			});
 
 			//明示的にFetchする
 			grid.setAutoFetchData(false);
-
 
 			addMember(toolStrip);
 			addMember(grid);
@@ -423,8 +432,10 @@ public class QueueInfoPane extends VLayout {
 			for (ListGridRecord record : grid.getSelectedRecords()) {
 				//削除用に他のステータスも選択可能なため、キャンセル可能なもののみ抽出
 				String status = record.getAttribute("status");
-				if (TaskStatus.SUBMITTED.name().equals(status)
-						|| TaskStatus.EXECUTING.name().equals(status)) {
+				if (TaskStatus.SUBMITTED.name()
+						.equals(status)
+						|| TaskStatus.EXECUTING.name()
+								.equals(status)) {
 					long taskId = record.getAttributeAsLong("taskId");
 					canCancelTaskIdList.add(taskId);
 				}
@@ -450,8 +461,8 @@ public class QueueInfoPane extends VLayout {
 								messageTabSet.addMessage("DETAIL:");
 								for (CancelResult result : info.getResultList()) {
 									messageTabSet.addMessage("Task[" + result.getTaskId() + "] cancel result = " + result.isCanceled() + "."
-											+ " ,before status = " + (result.getBeforeStatus() != null ? result.getBeforeStatus() :"null")
-											+ " ,after status = " + (result.getResultStatus() != null ? result.getResultStatus() :"null"));
+											+ " ,before status = " + (result.getBeforeStatus() != null ? result.getBeforeStatus() : "null")
+											+ " ,after status = " + (result.getResultStatus() != null ? result.getResultStatus() : "null"));
 								}
 								messageTabSet.addMessage("-------------------------------------------");
 
@@ -485,7 +496,8 @@ public class QueueInfoPane extends VLayout {
 			//選択データをチェック
 			for (ListGridRecord record : grid.getSelectedRecords()) {
 				String status = record.getAttribute("status");
-				if (!TaskStatus.COMPLETED.name().equals(status)) {
+				if (!TaskStatus.COMPLETED.name()
+						.equals(status)) {
 					long taskId = record.getAttributeAsLong("taskId");
 					deleteTaskIdList.add(taskId);
 				}
@@ -502,36 +514,37 @@ public class QueueInfoPane extends VLayout {
 				public void execute(Boolean value) {
 					if (value) {
 						startExecute();
-						service.forceDeleteAsyncTask(TenantInfoHolder.getId(), queueName, deleteTaskIdList, new AsyncCallback<TaskForceDeleteResultInfo>() {
+						service.forceDeleteAsyncTask(TenantInfoHolder.getId(), queueName, deleteTaskIdList,
+								new AsyncCallback<TaskForceDeleteResultInfo>() {
 
-							@Override
-							public void onSuccess(TaskForceDeleteResultInfo info) {
+									@Override
+									public void onSuccess(TaskForceDeleteResultInfo info) {
 
-								messageTabSet.addMessage(getResString("completeDeleteTask"));
-								messageTabSet.addMessage("DETAIL:");
-								for (Long taskId : info.getTaskList()) {
-									messageTabSet.addMessage("Task[" + taskId + "] deleted.");
-								}
-								messageTabSet.addMessage("-------------------------------------------");
+										messageTabSet.addMessage(getResString("completeDeleteTask"));
+										messageTabSet.addMessage("DETAIL:");
+										for (Long taskId : info.getTaskList()) {
+											messageTabSet.addMessage("Task[" + taskId + "] deleted.");
+										}
+										messageTabSet.addMessage("-------------------------------------------");
 
-								finishExecute();
+										finishExecute();
 
-								SC.say(getResString("completeDeleteTask"));
+										SC.say(getResString("completeDeleteTask"));
 
-								refreshGrid(false);
-							}
+										refreshGrid(false);
+									}
 
-							@Override
-							public void onFailure(Throwable caught) {
-								GWT.log(caught.toString(), caught);
+									@Override
+									public void onFailure(Throwable caught) {
+										GWT.log(caught.toString(), caught);
 
-								messageTabSet.addErrorMessage(getResString("errDeleteTask") + caught.toString());
+										messageTabSet.addErrorMessage(getResString("errDeleteTask") + caught.toString());
 
-								finishExecute();
+										finishExecute();
 
-								SC.warn(getResString("errDeleteTask") + caught.toString());
-							}
-						});
+										SC.warn(getResString("errDeleteTask") + caught.toString());
+									}
+								});
 					}
 				}
 
@@ -571,6 +584,7 @@ public class QueueInfoPane extends VLayout {
 	}
 
 	private static final String RES_PREFIX = "ui_tools_queueexplorer_QueueInfoPane_";
+
 	private String getResString(String key) {
 		return AdminClientMessageUtil.getString(RES_PREFIX + key);
 	}

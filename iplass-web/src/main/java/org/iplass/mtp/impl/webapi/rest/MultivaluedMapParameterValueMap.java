@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,16 +25,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.core.MultivaluedMap;
-
 import org.iplass.mtp.impl.web.ParameterValueMap;
 
+import jakarta.ws.rs.core.MultivaluedMap;
+
 public class MultivaluedMapParameterValueMap implements ParameterValueMap {
-	
+
 	private MultivaluedMap<String, String> multivaluedMap;
-	
+
 	private HashMap<String, Object> paramMap;
-	
+
 	public MultivaluedMapParameterValueMap(MultivaluedMap<String, String> multivaluedMap) {
 		this.multivaluedMap = multivaluedMap;
 	}
@@ -48,7 +48,7 @@ public class MultivaluedMapParameterValueMap implements ParameterValueMap {
 	public Object[] getParams(String name) {
 		Object val = getParamMap().get(name);
 		if (val instanceof String) {
-			return new String[]{(String) val};
+			return new String[] { (String) val };
 		} else {
 			return (String[]) val;
 		}
@@ -58,7 +58,7 @@ public class MultivaluedMapParameterValueMap implements ParameterValueMap {
 	public Map<String, Object> getParamMap() {
 		if (paramMap == null) {
 			paramMap = new HashMap<String, Object>();
-			for (Map.Entry<String, List<String>> e: multivaluedMap.entrySet()) {
+			for (Map.Entry<String, List<String>> e : multivaluedMap.entrySet()) {
 				List<String> vals = e.getValue();
 				if (vals != null && vals.size() > 0) {
 					paramMap.put(e.getKey(), vals.toArray(new String[vals.size()]));
@@ -70,7 +70,8 @@ public class MultivaluedMapParameterValueMap implements ParameterValueMap {
 
 	@Override
 	public Iterator<String> getParamNames() {
-		return multivaluedMap.keySet().iterator();
+		return multivaluedMap.keySet()
+				.iterator();
 	}
 
 	@Override

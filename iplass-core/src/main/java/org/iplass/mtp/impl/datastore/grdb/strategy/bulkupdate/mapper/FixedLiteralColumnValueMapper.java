@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,10 +27,10 @@ import org.iplass.mtp.impl.rdb.adapter.bulk.ColumnValue;
 import org.iplass.mtp.impl.rdb.adapter.bulk.DynamicColumnValue;
 
 public class FixedLiteralColumnValueMapper implements ColumnValueMapper {
-	
+
 	private String colName;
 	private Object value;
-	
+
 	public FixedLiteralColumnValueMapper(String colName, Object value) {
 		this.colName = colName;
 		this.value = value;

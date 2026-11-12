@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -63,7 +63,8 @@ public class TenantInfoHolder {
 	}
 
 	public static int getId() {
-		return tenantEnv.getTenant().getId();
+		return tenantEnv.getTenant()
+				.getId();
 	}
 
 	public static String getLanguage() {
@@ -71,7 +72,9 @@ public class TenantInfoHolder {
 	}
 
 	public static boolean isUseMultilingual() {
-		return tenantEnv.getTenant().getTenantConfig(TenantI18nInfo.class).isUseMultilingual();
+		return tenantEnv.getTenant()
+				.getTenantConfig(TenantI18nInfo.class)
+				.isUseMultilingual();
 	}
 
 	public static String getInputLocale() {
@@ -139,4 +142,7 @@ public class TenantInfoHolder {
 		return serverTimeZone;
 	}
 
+	public static String getRdbAdapterName() {
+		return tenantEnv.getRdbAdapterName();
+	}
 }

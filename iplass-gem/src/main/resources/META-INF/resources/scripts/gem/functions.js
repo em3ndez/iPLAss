@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -40,6 +40,7 @@
  * pager
  * nameList
  * refCombo
+ * refComboSync
  * refComboController
  * refLinkSelect
  * refLinkRadio
@@ -50,6 +51,7 @@
  * applyDatetimepicker
  * treeViewList
  * treeViewGrid
+ * refSelectFilter
  */
 
 $(function(){
@@ -609,94 +611,184 @@ $.fn.allInputCheck = function(){
  */
 (function($){
 	$.fn.modalDialog = function(option){
-		var defaults = {
+		if (!this) return false;
+
+		const defaults = {
 			dialogs : '.modal-dialogs',
 			controls : '.modal-body .modal-btn, .modal-body .modal-lnk'
 		};
-		var options = $.extend(defaults, option);
-		if (!this) return false;
+		const options = $.extend(defaults, option);
+
 		return this.each(function() {
-			var rootWindow = null;
-			if (!parent.document.rootWindow) {
-				rootWindow = parent.document;
+			let rootDocument = null;
+			if (!parent.document.rootDocument) {
+				rootDocument = parent.document;
 			} else {
-				rootWindow = parent.document.rootWindow
+				rootDocument = parent.document.rootDocument;
 			}
-			document.rootWindow = rootWindow;
-			var name = uniqueId();
+			document.rootDocument = rootDocument;
+			// 既存のカスタムScriptの利用を想定し、rootWindowも設定
+			// @deprecated use document.rootDocument
+			document.rootWindow = rootDocument;
+
+			const name = uniqueId();
 			document.targetName = name;
-			var windowManager = null;
-			if (!rootWindow.scriptContext["windowManager"]) {
+
+			let windowManager = null;
+			if (!rootDocument.scriptContext["windowManager"]) {
 				windowManager = {};
-				rootWindow.scriptContext["windowManager"] = windowManager;
+				rootDocument.scriptContext["windowManager"] = windowManager;
 			} else {
-				windowManager = rootWindow.scriptContext["windowManager"];
+				windowManager = rootDocument.scriptContext["windowManager"];
 			}
 			windowManager[name] = document;
 
-			//↓IE7ではIFrame内から親にアクセスできないので、
-			//　ロード時にscriptContextに登録し、親側の処理を呼び出すよう変更
-			//ルートウィンドウにダイアログの素を作成
-//			var $dialogs = $(options.dialogs, document.rootWindow);
-//			$dialog = $("<div class='modal-dialog' />").attr({id: "modal-dialog-" + name}).appendTo($dialogs);
-//			$("<div class='modal-wrap sub-modal-wrap' />").appendTo($dialog);
-//			var $under = $("<div class='modal-inner sub-modal-inner' />").appendTo($dialog);
-//			var $title = $("<h2 class='hgroup-01' />").appendTo($under);
-//			$("<span />").attr({id: "modal-title-" + name}).appendTo($title);
-//			$("<p class='modal-close sub-modal-close' />").text("閉じる").appendTo($under);
-//			var $frame = $("<iframe />").attr({name:name, src:"about:blank", height:"686", width:"100%", frameborder:"0"}).appendTo($under);
-//			$(options.btn).subModalWindow();	//モーダルウィンドウ
-//			$(options.lnk).subModalWindow();
-
-			rootWindow.scriptContext["createModalFunction"].call(this, options.dialogs, name, function(){
-				$(options.controls).subModalWindow();	//モーダルウィンドウ
+			rootDocument.scriptContext["createModalFunction"].call(this, options.dialogs, name, function(){
+				// サブモーダルウィンドウ化
+				const subModals = $.find(options.controls);
+				if (subModals.length) {
+					$(subModals).subModalWindow();
+				}
 			});
 		});
 	};
 })(jQuery);
 
 /**
+ * 参照型モーダルの初期サイズオプション取得
+ * modalWindow、subModalWindowで共通利用
+ *
+ * 参照型のトリガーの場合のみ、以下の優先順でサイズを返す
+ * 1. トリガーのdata-dialog-width/data-dialog-height属性
+ * 2. GemConfigServiceのreferenceModal設定(scriptContext.gem.referenceModal)
+ * maximizeはdata-dialog-maximize、未指定時にGemConfigService設定を参照する
+ * 未設定の場合は空オブジェクトを返す(各プラグインのデフォルトを利用)
+ */
+(function($){
+	$.fn.referenceModalOption = function () {
+		function toPositiveNumber(value) {
+			const num = Number(value);
+			if (!isNaN(num) && num > 0) {
+				return num;
+			}
+			return null;
+		}
+		//true/false文字列をbooleanに変換、未設定はnullを返す
+		function toBoolean(value) {
+			if (value === true || value === "true") {
+				return true;
+			}
+			if (value === false || value === "false") {
+				return false;
+			}
+			return null;
+		}
+
+		const $el = this.first();
+		// ReferencePropertyEditorのJSPが出力するdata-reference-modal="true"のトリガーのみ対象
+		if (!$el.length || $el.attr("data-reference-modal") !== "true") {
+			return {};
+		}
+
+		const config = scriptContext && scriptContext.gem ? scriptContext.gem.referenceModal : null;
+		const width = toPositiveNumber($el.attr("data-dialog-width"))
+			|| toPositiveNumber(config && config.width);
+		const height = toPositiveNumber($el.attr("data-dialog-height"))
+			|| toPositiveNumber(config && config.height);
+		const attrDialogMaximize = toBoolean($el.attr("data-dialog-maximize"));
+		const configDialogMaximize = toBoolean(config && config.maximize);
+
+		const option = {};
+		if (width != null) {
+			option.dialogWidth = width;
+		}
+		if (height != null) {
+			option.dialogHeight = height;
+		}
+		if (attrDialogMaximize != null) {
+			option.dialogMaximize = attrDialogMaximize;
+		} else if (configDialogMaximize != null) {
+			option.dialogMaximize = configDialogMaximize;
+		}
+		return option;
+	};
+})(jQuery);
+
+/**
+ * モーダルウィンドウのサイズを表示領域に収まるよう調整
+ */
+function getModalWindowSize(windowWidth, windowHeight, runtimeOptions) {
+	let dialogHeight = runtimeOptions.dialogHeight;
+	let dialogWidth = runtimeOptions.dialogWidth;
+	const maxDialogWidth = Math.max(windowWidth - 30, 0);
+	//windowの高さより大きい場合はwindowの高さに設定
+	if (dialogHeight > windowHeight - 80) {
+		dialogHeight = windowHeight - 80;
+	}
+	//windowの幅より大きい場合はwindowの幅に設定
+	if (dialogWidth > maxDialogWidth) {
+		dialogWidth = maxDialogWidth;
+	}
+	//最小高さを200
+	if (dialogHeight < 200) {
+		dialogHeight = 200;
+	}
+
+	return {dialogHeight: dialogHeight, dialogWidth: dialogWidth};
+}
+
+const FULL_WINDOW_CLASS = "fullWindow";
+const UNRESIZABLE_CLASS = "unresizable";
+
+/**
  * モーダルウィンドウ
  *
  * [オプション]
- * overlay:	バックグランドコンテンツ
- * under:  モーダルコンテンツ
- *
+ * overlay: バックグランドコンテンツSelector
+ * under: モーダルコンテンツSelector
+ * dialogHeight: ダイアログの高さ
+ * dialogWidth: ダイアログの幅
+ * resizable: 最大化可能か
  */
 (function($){
-	var $trigger = null;
+	let $trigger = null;
 	$.fn.modalWindow = function(option){
-		var defaults = {
+		if (!this) return false;
+		// モーダルウィンドウ内では実行しない
+		if ($("body.modal-body").length != 0) return false;
+
+		const defaults = {
 			overlay : '#modal-dialog-root .modal-wrap',
 			under : '#modal-dialog-root .modal-inner',
 			dialogHeight: 735,
 			dialogWidth: 750,
 			resizable: true
 		};
-		var options = $.extend(defaults, option);
-		if (!this) return false;
-		if ($("body.modal-body").length != 0) return false;
+		const options = $.extend(defaults, option);
+
 		return this.each(function(){
-			var $this = $(this);
-			var $document = $(document);
-			var $window = $(window);
-			var $overlay = $(options.overlay, document);
-			var $under = $(options.under, document);
-			var $frame = $("iframe", $under);
+			const $this = $(this);
+			let runtimeOptions = $.extend({}, options);
+			const $document = $(document);
+			const $window = $(window);
+			const $overlay = $document.find(options.overlay);
+			const $under = $document.find(options.under);
+			const $frame = $("iframe", $under);
 
 			$this.attr("targetName", $frame.attr("name"));
-			var fade = {
+
+			const fade = {
 				show : function() {
-					$under.height(options.dialogHeight);
+					$under.height(runtimeOptions.dialogHeight);
 					$overlay.fadeIn(options.speed);
 					$under.fadeIn(options.speed);
 					scriptContext.overlayManager.addOverlay($overlay);
-					$under.css({zIndex:scriptContext.overlayManager.nextZindex()});
+					$under.css({zIndex: scriptContext.overlayManager.nextZindex()});
 				},
 				hide : function() {
 					$overlay.fadeOut(options.speed);
 					$under.fadeOut(options.speed);
-					$("iframe", $under).attr("src", "about:blank");
+					$frame.attr("src", "about:blank");
 					$("#modal-title").text("");
 					$(".modal-restore", $under).click();
 					scriptContext.overlayManager.removeOverlay($overlay);
@@ -704,19 +796,25 @@ $.fn.allInputCheck = function(){
 			};
 			$this.on("click", function(){
 				//ダイアログを起動したものをトリガーとして保持しておき、
-				//maximize,restoreから呼び出せるようにする。
+				//maximize,restore,resizeHandlerから呼び出せるようにする。
 				$trigger = $this;
 
-				$under.removeClass("unresizable");
-				if (options.resizable == false) {
-					$under.addClass("unresizable");
+				runtimeOptions = $.extend({}, options, $this.referenceModalOption());
+				$under.removeClass(FULL_WINDOW_CLASS);
+				if (runtimeOptions.dialogMaximize === true) {
+					$under.addClass(FULL_WINDOW_CLASS);
+				}
+
+				$under.removeClass(UNRESIZABLE_CLASS);
+				if (runtimeOptions.resizable == false) {
+					$under.addClass(UNRESIZABLE_CLASS);
 				}
 
 				fade.show();
 				resizeHandler();
-				$window.on("resize", resizeHandler);
 			});
-			//maximize,restoreで起動したtriggerにあわせてサイズ調整できるようfunction紐づけ
+
+			//maximize,restore,resizeHandlerで起動したtriggerにあわせてサイズ調整できるようfunction紐づけ
 			$this.setModalWindowToCenter = setModalWindowToCenter;
 
 			//メインのレイアウトから呼ばれるダイアログは共通のため、初期化は1回だけ
@@ -732,17 +830,15 @@ $.fn.allInputCheck = function(){
 					$frame.parents(".modal-dialog").trigger(new $.Event('closeModalDialog', {}));
 				});
 				$under.on("click", ".modal-maximize", function() {
-					$under.addClass("fullWindow");
+					$under.addClass(FULL_WINDOW_CLASS);
 					//$thisと違って共通部分なので、複数のダイアログがいると最初の初期化時のものが実行されてしまう
 					//⇒dialogHeigth:550を指定しても、先に730で指定してると730になってしまう
-//					setModalWindowToCenter();
 					//ダイアログを呼び出したトリガーに紐づくfunctionを呼び出し、
 					//別のトリガーで指定したサイズにならないようにする
 					$trigger.setModalWindowToCenter();
 				});
 				$under.on("click", ".modal-restore", function() {
-					$under.removeClass("fullWindow");
-//					setModalWindowToCenter();
+					$under.removeClass(FULL_WINDOW_CLASS);
 					$trigger.setModalWindowToCenter();
 				});
 				$overlay.on("click", function(){
@@ -755,12 +851,16 @@ $.fn.allInputCheck = function(){
 					fade.hide();
 					$frame.parents(".modal-dialog").trigger(new $.Event('closeModalDialog', {}));
 				});
+
+				// ウインドウのリサイズでサイズ、配置調整
+				$window.on("resize", resizeHandler);
+
 				$under.attr("initialized", true);
 			}
 
 			function resizeHandler(e){
 				$overlay.width(0);
-				var width = $window.width() > $document.width() ? $window.width() : $document.width();
+				const width = $window.width() > $document.width() ? $window.width() : $document.width();
 				$overlay.css({
 					height : $document.height(),
 //					width : $window.width(),
@@ -769,14 +869,21 @@ $.fn.allInputCheck = function(){
 					left: 0,
 					position:"absolute"
 				});
-				setModalWindowToCenter()
+
+				// トリガーが指定されている場合は、トリガーのオプションで配置調整
+				if ($trigger) {
+					$trigger.setModalWindowToCenter();
+				} else {
+					setModalWindowToCenter();
+				}
 			}
 
 			function setModalWindowToCenter(){
-				if ($under.hasClass("fullWindow")) {
-					var dialogHeight = $window.height() - 40;
+				if ($under.hasClass(FULL_WINDOW_CLASS)) {
+					const dialogHeight = $window.height() - 40;
+
 					//frameはheader分減らす
-					var frameHeight = dialogHeight - 49;
+					const frameHeight = dialogHeight - 49;
 
 					$under.css({
 						height : dialogHeight,
@@ -787,27 +894,23 @@ $.fn.allInputCheck = function(){
 					});
 					$frame.height(frameHeight);
 				} else {
-					var windowHeight = $window.height();
-					var windowWidth = $window.width();
+					const windowHeight = $window.height();
+					const windowWidth = $window.width();
+					const { dialogWidth, dialogHeight } = getModalWindowSize(
+						windowWidth,
+						windowHeight,
+						runtimeOptions,
+					);
 
-					var dialogHeight = options.dialogHeight;
-					//windowの高さより大きい場合はwindowの高さに設定
-					if (dialogHeight > (windowHeight -80)) {
-						dialogHeight = windowHeight -80;
-					}
-					//最小高さを200
-					if (dialogHeight < 200) {
-						dialogHeight = 200;
-					}
 					//frameはheader分減らす
-					var frameHeight = dialogHeight - 49;
+					const frameHeight = dialogHeight - 49;
 
 					$under.css({
 						height: dialogHeight,
-						width: options.dialogWidth,
+						width: dialogWidth,
 						top: $document.scrollTop() + 20,
 						left: "auto",
-						marginLeft:(windowWidth - options.dialogWidth - 30)/2
+						marginLeft: (windowWidth - dialogWidth - 30) / 2,
 					});
 					$frame.height(frameHeight);
 				}
@@ -820,47 +923,46 @@ $.fn.allInputCheck = function(){
  * サブモーダルウィンドウ
  *
  * [オプション]
- * overlay:	バックグランドコンテンツ
- * under:  モーダルコンテンツ
- *
+ * dialogHeight: ダイアログの高さ
+ * dialogWidth: ダイアログの幅
+ * resizable: 最大化可能か
  */
 (function($){
+	let $trigger = null;
 	$.fn.subModalWindow = function(option){
-		var defaults = {
-			overlay : 'body.modal-body .modal-wrap',
-			under : 'body.modal-body .modal-inner',
+		if (!this) return false;
+
+		const defaults = {
 			dialogHeight: 735,
 			dialogWidth: 750,
 			resizable: true
 		};
 
-		var rootWindow = document.rootWindow;
-		var targetName = document.targetName;
-		var $document = $(document);
-		var $window = $(window);
-		var $frame = $("iframe[name='" + targetName + "']", rootWindow);
-		var $under = $frame.parent();
-		var $overlay = $under.prev();
-		var $dialog = $under.parent();
+		const rootDocument = document.rootDocument;
+		const targetName = document.targetName;
+		const $frame = $("iframe[name='" + targetName + "']", rootDocument);
+		const $under = $frame.parent();
+		const $overlay = $under.prev();
 
-		var options = $.extend(defaults, option);
-		if (!this) return false;
-		var fade = {
+		const options = $.extend(defaults, option);
+		let runtimeOptions = $.extend({}, options);
+
+		const fade = {
 			show : function() {
-				$under.height(options.dialogHeight);
+				$under.height(runtimeOptions.dialogHeight);
 				$overlay.fadeIn(options.speed);
 				$under.fadeIn(options.speed);
-				rootWindow.scriptContext.overlayManager.addOverlay($overlay);
-				$under.css({zIndex:rootWindow.scriptContext.overlayManager.nextZindex()});
+				rootDocument.scriptContext.overlayManager.addOverlay($overlay);
+				$under.css({zIndex: rootDocument.scriptContext.overlayManager.nextZindex()});
 			},
 			hide : function() {
 //				$overlay.fadeOut(options.speed);
 //				$under.fadeOut(options.speed);
 				$overlay.fadeOut(0);
 				$under.fadeOut(0);
-				$("iframe", $under).attr("src", "about:blank");
+				$frame.attr("src", "about:blank");
 				$(".modal-restore", $under).click();
-				rootWindow.scriptContext.overlayManager.removeOverlay($overlay);
+				rootDocument.scriptContext.overlayManager.removeOverlay($overlay);
 				$under.css({zIndex:0});
 			}
 		};
@@ -877,13 +979,12 @@ $.fn.allInputCheck = function(){
 				$frame.parents(".modal-dialog").trigger(new $.Event('closeModalDialog', {}));
 			});
 			$under.on("click", ".modal-maximize.sub-modal-maximize", function(){
-				var pw = $(rootWindow).width();
-				$under.addClass("fullWindow");
-				setModalWindowToCenter(pw);
+				$under.addClass(FULL_WINDOW_CLASS);
+				$trigger.setModalWindowToCenter();
 			});
 			$under.on("click", ".modal-restore.sub-modal-restore", function(){
-				$under.removeClass("fullWindow");
-				setModalWindowToCenter();
+				$under.removeClass(FULL_WINDOW_CLASS);
+				$trigger.setModalWindowToCenter();
 			});
 			$overlay.on("click", function(){
 				//GemConfigServiceで編集画面でキャンセル時に確認ダイアログを表示する設定になってる場合確認を行う
@@ -895,74 +996,94 @@ $.fn.allInputCheck = function(){
 				fade.hide();
 				$frame.parents(".modal-dialog").trigger(new $.Event('closeModalDialog', {}));
 			});
+
+			// ルートウインドウのリサイズでサイズ、配置調整
+			const $rootWindow = $(rootDocument.scriptContext.getWindow());
+			$rootWindow.on("resize", resizeHandler);
+
 			$under.attr("initialized", true);
 		}
 
 		return this.each(function(){
-			var $this = $(this);
+			const $this = $(this);
 
 			$this.on("click", function(){
-				$under.removeClass("unresizable");
-				if (options.resizable == false) {
-					$under.addClass("unresizable");
+				// ダイアログを起動したものをトリガーとして保持しておき、
+				// maximize,restore,resizeHandlerから呼び出せるようにする。
+				$trigger = $this;
+
+				runtimeOptions = $.extend({}, options, $this.referenceModalOption());
+				$under.removeClass(FULL_WINDOW_CLASS);
+				if (runtimeOptions.dialogMaximize === true) {
+					$under.addClass(FULL_WINDOW_CLASS);
+				}
+
+				$under.removeClass(UNRESIZABLE_CLASS);
+				if (runtimeOptions.resizable == false) {
+					$under.addClass(UNRESIZABLE_CLASS);
 				}
 
 				fade.show();
 				resizeHandler();
-				$window.on("resize", resizeHandler);
 			});
+
+			//maximize,restore,resizeHandlerで、起動したtriggerにあわせてサイズ調整できるようfunction紐づけ
+			$this.setModalWindowToCenter = setModalWindowToCenter;
 		});
 
 		function resizeHandler(){
 			$overlay.width(0);
 			$overlay.css({
-				height : $(rootWindow).height(),//$document.height(),
-				width : $(rootWindow).width(),//$window.width()
+				height : $(rootDocument).height(),
+				width : $(rootDocument).width(),
 				top: 0,
 				left: 0,
 				position:"absolute"
 			});
-			setModalWindowToCenter()
+
+			// トリガーが指定されている場合は、トリガーのオプションで配置調整
+			if ($trigger) {
+				$trigger.setModalWindowToCenter();
+			} else {
+				setModalWindowToCenter();
+			}
 		}
 
-		function setModalWindowToCenter(pw){
-			if ($under.hasClass("fullWindow")) {
-				var pwd = rootWindow.scriptContext.getWindow();
-				var dialogHeight = $(pwd).height() - 40;
+		function setModalWindowToCenter(){
+			if ($under.hasClass(FULL_WINDOW_CLASS)) {
+				const $rootWindow = $(rootDocument.scriptContext.getWindow());
+				const dialogHeight = $rootWindow.height() - 40;
+
 				//frameはheader分減らす
-				var frameHeight = dialogHeight - 49;
+				const frameHeight = dialogHeight - 49;
 
 				$under.css({
 					height : dialogHeight,
-					width : $(pwd).width() - 30,
-					top: $(pwd).scrollTop(),
+					width : $rootWindow.width() - 30,
+					top: $rootWindow.scrollTop(),
 					left: 0,
 					marginLeft: 0
 				});
 				$frame.height(frameHeight);
 			} else {
-				var pwd = rootWindow.scriptContext.getWindow();
-				var windowHeight = $(pwd).height();
-				var windowWidth = pw != null ? pw : $(pwd).width();
+				const $rootWindow = $(rootDocument.scriptContext.getWindow());
+				const windowHeight = $rootWindow.height();
+				const windowWidth = $rootWindow.width();
+				const { dialogWidth, dialogHeight } = getModalWindowSize(
+					windowWidth,
+					windowHeight,
+					runtimeOptions,
+				);
 
-				var dialogHeight = options.dialogHeight;
-				//windowの高さより大きい場合はwindowの高さに設定
-				if (dialogHeight > (windowHeight -80)) {
-					dialogHeight = windowHeight -80;
-				}
-				//最小高さを200
-				if (dialogHeight < 200) {
-					dialogHeight = 200;
-				}
 				//frameはheader分減らす
-				var frameHeight = dialogHeight - 49;
+				const frameHeight = dialogHeight - 49;
 
 				$under.css({
 					height: dialogHeight,
-					width: options.dialogWidth,
-					top: $(pwd).scrollTop() + 20,
-					left:"auto",
-					marginLeft:(windowWidth - options.dialogWidth - 30)/2
+					width: dialogWidth,
+					top: $rootWindow.scrollTop() + 20,
+					left: "auto",
+					marginLeft: (windowWidth - dialogWidth - 30) / 2,
 				});
 				$frame.height(frameHeight);
 			}
@@ -980,16 +1101,35 @@ $.fn.allInputCheck = function(){
 
 		this.each(function(){
 			var $this = $(this);
+			var $parent = $this.closest(".property-data");
 
 			//あらかじめ設定されてるイベント消しとく
 			$this.removeAttr("onblur").off("blur");
 			$this.on("blur", function () {
 				var tb = this;
 				var val = $(tb).val().trim();	//空白だけの場合にNaNになるので除去
-				if(isNaN(val)) {
-					alert(scriptContext.gem.locale.common.numcheckMsg);
+				if (val.length == 0) {
+					//未入力時はアラート出さない
 					$(tb).val("");
+					$(tb).removeClass("validate-error");
+					if ($(".validate-error", $parent).length === 0) {
+						$(".format-error", $parent).remove();
+					}
 					return true;
+				}
+				val = replaceAll(val, ",", "");
+				if(isNaN(val)) {
+					$(tb).addClass("validate-error");
+					if ($(".format-error", $parent).length === 0) {
+						var $p = $("<p />").addClass("error format-error").appendTo($parent);
+						$("<span />").addClass("error").text(scriptContext.gem.locale.common.numcheckMsg).appendTo($p);
+					}
+					return true;
+				}
+
+				$(tb).removeClass("validate-error");
+				if ($(".validate-error", $parent).length === 0) {
+					$(".format-error", $parent).remove();
 				}
 
 				if (val != null && val != "") {
@@ -1114,7 +1254,7 @@ $.fn.allInputCheck = function(){
 		if ("setSelectionRange" in item) {
 			item.focus();
 			item.setSelectionRange(pos, pos);
-		} else if (item.createTextRange) {
+		} else if ("createTextRange" in item) {
 			//旧FireFox、Chrome
 			var range = item.createTextRange();
 			range.collapse(true);
@@ -1441,6 +1581,8 @@ $.fn.allInputCheck = function(){
 							if ($pager) {
 								$pager.setPage($v.offset, list.length, count);
 							}
+
+							$(".fixHeight").fixHeight();
 						});
 					}
 				}
@@ -1526,10 +1668,35 @@ $.fn.allInputCheck = function(){
 
 							$v.tokenValue = _t;
 
-							if (errors == null || erros.length == 0) {
+							if (errors == null || errors.length == 0) {
 								$v.getMassReference();
 							} else {
-								alert(errors);
+								// テキストの改行を除去するヘルパー関数
+								const normalizeText = (text) => {
+									// CRLF(\r\n)、LF(\n)、CR(\r) など連続する改行コードをまとめて空白に正規化する
+									return String(text).replace(/[\r\n]+/g, ' ');
+								};
+
+								// エラーメッセージを文字列に変換して表示
+								// errorsは配列形式（List<ValidateError>またはList<String>）
+								const errorMessage = errors.map((error) => {
+									if (typeof error === 'string') {
+										// 文字列の場合（ApplicationException）
+										return normalizeText(error);
+									} else if (error && error.errorMessages) {
+										// ValidateErrorオブジェクトの場合
+										// 各メッセージから改行を除去してからカンマで結合
+										const messages = error.errorMessages.map(normalizeText).join(', ');
+										if (error.propertyDisplayName) {
+											return error.propertyDisplayName + ': ' + messages;
+										}
+										return messages;
+									} else {
+										// その他の場合
+										return normalizeText(error);
+									}
+								}).join('\n\n');
+								alert(errorMessage);
 							}
 						});
 					});
@@ -1638,6 +1805,17 @@ $.fn.allInputCheck = function(){
 				previewFunc: null,
 				nextFunc: null,
 				searchFunc: null,
+				pagingInputErrorFunc: null,
+				hasPreviewFunc: function(offset, length, count, limit, notCount) {
+					return notCount
+						? offset > 0
+						: offset > 0 && count > 0
+				},
+				hasNextFunc: function(offset, length, count, limit, notCount) {
+					return notCount
+						? hasNext = limit <= length
+						: hasNext = limit < (count - offset)
+				},
 				previousLabel: scriptContext.gem.locale.pager.previous,
 				nextLabel: scriptContext.gem.locale.pager.next
 		};
@@ -1648,7 +1826,7 @@ $.fn.allInputCheck = function(){
 			init($this, options);
 
 			//jQueryオブジェクトのメソッドをjavascriptオブジェクトで利用する為、内部メソッドをバインド
-			var methods = ["setPage"];
+			var methods = ["setPage", "lock", "unlock"];
 			for (var i = 0; i < methods.length; i++) {
 				_bindMethod($this, this, methods[i]);
 			}
@@ -1662,6 +1840,18 @@ $.fn.allInputCheck = function(){
 		ret.setPage = function(offset, length, count) {
 			$(this).each(function() {
 				this.setPage(offset, length, count);
+			});
+		};
+
+		ret.lock = function() {
+			$(this).each(function() {
+				this.lock(this);
+			});
+		};
+
+		ret.unlock = function() {
+			$(this).each(function() {
+				this.unlock(this);
 			});
 		};
 
@@ -1777,6 +1967,10 @@ $.fn.allInputCheck = function(){
 					}
 
 					$("a", $linkList).on("click", function() {
+						if ($v.lockStatus === true) {
+							return false;
+						}
+
 						var offset = $(this).attr("offset");
 						if ($v.searchFunc && $.isFunction($v.searchFunc)) {
 							$v.searchFunc.call(this, offset);
@@ -1802,20 +1996,24 @@ $.fn.allInputCheck = function(){
 				previewFunc: options.previewFunc,
 				nextFunc: options.nextFunc,
 				searchFunc: options.searchFunc,
+				pagingInputErrorFunc: options.pagingInputErrorFunc,
+				lockStatus: false,
+				lock: function() {
+					this.lockStatus = true;
+				},
+				unlock: function() {
+					this.lockStatus = false;
+				},
 				setPage: function(offset, length, count) {
 					//件数
 					var tail = offset + limit;
 					var hasPreview;
 					var hasNext;
 					var notCount = typeof count === "undefined" || count == null;
-					if (notCount) {
-						hasPreview = offset > 0;
-						hasNext = limit == length;
-					} else {
-						hasPreview = offset > 0 && count > 0;
-						hasNext= limit < (count - offset);
-						if (tail > count) { tail = count; }
-					}
+
+					hasPreview = options.hasPreviewFunc(offset, length, count, limit, notCount);
+					hasNext = options.hasNextFunc(offset, length, count, limit, notCount);
+					if (!notCount && tail > count) { tail = count; }
 
 					if (!options.showNoPage && !hasPreview && !hasNext) {
 						$v.hide();
@@ -1898,11 +2096,19 @@ $.fn.allInputCheck = function(){
 			});
 
 			$("a", $preview).on("click", function() {
+				if ($v.lockStatus === true) {
+					return false;
+				}
+
 				if ($v.previewFunc && $.isFunction($v.previewFunc)) {
 					$v.previewFunc.call(this, limit);
 				}
 			});
 			$("a", $next).on("click", function() {
+				if ($v.lockStatus === true) {
+					return false;
+				}
+
 				if ($v.nextFunc && $.isFunction($v.nextFunc)) {
 					$v.nextFunc.call(this, limit);
 				}
@@ -1911,8 +2117,12 @@ $.fn.allInputCheck = function(){
 			if (options.showPageJump) {
 				$current.css("ime-mode", "disabled").on("change", function() {
 					var v = Number($(this).val());
-					if (isNaN(v)) {
-						alert(scriptContext.gem.locale.common.numcheckMsg);
+					if (!isValidNumber(v)) {
+						if ($v.pagingInputErrorFunc && $.isFunction($v.pagingInputErrorFunc)) {
+							$v.pagingInputErrorFunc(this);
+						} else {
+							alert(scriptContext.gem.locale.common.numcheckMsg);
+						}
 						if ($(this).attr("beforeValue")) {
 							$(this).val($(this).attr("beforeValue"));
 						} else {
@@ -1920,6 +2130,10 @@ $.fn.allInputCheck = function(){
 						}
 					}
 				}).on("keypress", function(event) {
+					if ($v.lockStatus === true) {
+						return false;
+					}
+
 					if( event.which === 13 ){
 						$searchBtn.click();
 					}
@@ -1932,6 +2146,10 @@ $.fn.allInputCheck = function(){
 				}).on("mouseleave", function() {
 					$(this).removeClass("hover");
 				}).on("click", function() {
+					if ($v.lockStatus === true) {
+						return false;
+					}
+
 					var currentPage = $current.val();
 					//notCount=trueかつshowSearchBtn=trueの場合、maxPageが設定されてません。
 					if (!$v.maxPage || $v.maxPage && currentPage > 0 && currentPage <= $v.maxPage) {
@@ -1946,6 +2164,30 @@ $.fn.allInputCheck = function(){
 				var $clickable = $("<span />").addClass("clickable").appendTo($parent);
 				var $link = $("<a />").attr("href", "javascript:void(0)").text(label).appendTo($clickable);
 				var $unclickable = $("<span />").addClass("unclickable").text(label).appendTo($parent);
+			}
+
+			function isValidNumber(value) {
+				if (isNaN(value)) {
+					// 数字変換不可
+					return false;
+				}
+				
+				if (!$v.maxPage) {
+					// maxPage未設定
+					return false;
+				}
+				
+				var num = value - 0;
+				if (num < 1) {
+					// 0以下値入力
+					return false;
+				}
+				if (num > $v.maxPage) {
+					// maxPageを超える
+					return false;
+				}
+				
+				return true;
 			}
 		}
 	};
@@ -1989,6 +2231,9 @@ $.fn.allInputCheck = function(){
 					offset += limit;
 					search();
 				},
+				hasNextFunc: function(offset, length, count, limit, notCount) {
+					return length > limit;
+				},
 				previousLabel: prevLabel,
 				nextLabel: nextLabel
 			});
@@ -2009,8 +2254,12 @@ $.fn.allInputCheck = function(){
 			search();
 
 			function search() {
-				searchNameList(webapiName, defName, viewName, filterName, offset, function(count, list) {
-					$pager.setPage(offset, list.length, count);
+				searchNameList(webapiName, defName, viewName, filterName, offset, function(list) {
+					$pager.setPage(offset, list.length, null);
+					// listのサイズを表示件数設定に従い補正
+					if (list.length > limit) {
+						list = list.slice(0, limit);
+					}
 
 					//一覧にリンク再作成
 					$linkList.children().remove();
@@ -2071,8 +2320,7 @@ $.fn.allInputCheck = function(){
 			}
 			$("<option />").attr({value:""}).text(pleaseSelectLabel).appendTo($v);
 
-			getPropertyEditor($v.getEditorWebapiName, $v.defName, $v.viewName, $v.propName, $v.viewType, $v.entityOid, $v.entityVersion, function(editor) {
-				var setting = editor.referenceComboSetting;
+			getReferenceComboSetting($v.getComboSettingWebapiName, $v.defName, $v.viewName, $v.propName, $v.viewType, $v.entityOid, $v.entityVersion, function(setting) {
 
 				//連動コンボの設定がない場合は、連動できないので表示しない
 				if (!setting || !setting.propertyName || setting.propertyName == "") return;
@@ -2083,7 +2331,7 @@ $.fn.allInputCheck = function(){
 					func = function() { $v.val($v.oid); }
 				}
 				//親コンボ生成
-				initParent($v, $v.propName, $v.oid, setting, props, false, func);
+				initParent($v, setting, $v.propName, $v.oid, props, false, func);
 
 				if ($v.oid == "") {
 					if ($v.upperOid == "") {
@@ -2108,7 +2356,7 @@ $.fn.allInputCheck = function(){
 		}
 
 		/**
-		 * リセット処理
+		 * 検索画面のリセット処理
 		 */
 		function reset($v, options, props) {
 
@@ -2125,8 +2373,7 @@ $.fn.allInputCheck = function(){
 				$(this).children("option[value!='']").remove();
 			});
 
-			getPropertyEditor($v.getEditorWebapiName, $v.defName, $v.viewName, $v.propName, $v.viewType, $v.entityOid, $v.entityVersion, function(editor) {
-				var setting = editor.referenceComboSetting;
+			getReferenceComboSetting($v.getComboSettingWebapiName, $v.defName, $v.viewName, $v.propName, $v.viewType, $v.entityOid, $v.entityVersion, function(setting) {
 
 				//連動コンボの設定がない場合は、連動できないので表示しない
 				if (!setting || !setting.propertyName || setting.propertyName == "") return;
@@ -2138,7 +2385,7 @@ $.fn.allInputCheck = function(){
 				}
 
 				//親コンボリセット
-				initParent($v, $v.propName, $v.oid, setting, props, true, func);
+				initParent($v, setting, $v.propName, $v.oid, props, true, func);
 
 				if ($v.oid == "") {
 					/*
@@ -2157,21 +2404,36 @@ $.fn.allInputCheck = function(){
 		function setup($v) {
 			//一括設定の場合、option指定できないのでattributeから取得
 			$.extend($v, {
-				propName:$v.attr("data-propName"),
+				//EntityView定義名
 				defName:$v.attr("data-defName"),
+				//EntityView View名
 				viewName:$v.attr("data-viewName"),
-				webapiName:$v.attr("data-webapiName"),
-				getEditorWebapiName:$v.attr("data-getEditorWebapiName"),
-				searchParentWebapiName:$v.attr("data-searchParentWebapiName"),
+				//EntityView プロパティ名(NestTableの場合は階層)
+				propName:$v.attr("data-propName"),
+				//EntityView Layoutタイプ
 				viewType:$v.attr("data-viewType"),
-				oid:$v.attr("data-oid"),
-				prefix:$v.attr("data-prefix"),
-				searchType:$v.attr("data-searchType"),
-				upperName:$v.attr("data-upperName"),
-				upperOid:$v.attr("data-upperOid"),
-				customStyle:$v.attr("data-customStyle"),
+				//編集画面 ルートEntityのoid
 				entityOid:$v.attr("data-entityOid"),
-				entityVersion:$v.attr("data-entityVersion")
+				//編集画面 ルートEntityのversion
+				entityVersion:$v.attr("data-entityVersion"),
+				//参照コンボ選択リスト取得WebApi
+				webapiName:$v.attr("data-webapiName"),
+				//連動コンボ設定取得WebApi
+				getComboSettingWebapiName:$v.attr("data-getComboSettingWebapiName"),
+				//上位階層選択値取得WebApi
+				searchParentWebapiName:$v.attr("data-searchParentWebapiName"),
+				//検索画面のsc指定用
+				prefix:$v.attr("data-prefix"),
+				//検索画面の検索タイプ
+				searchType:$v.attr("data-searchType"),
+				//選択値
+				oid:$v.attr("data-oid"),
+				//選択最下層のプロパティパス
+				upperName:$v.attr("data-upperName"),
+				//選択最下層の選択値
+				upperOid:$v.attr("data-upperOid"),
+				//カスタムスタイル
+				customStyle:$v.attr("data-customStyle")
 			});
 		}
 
@@ -2189,14 +2451,22 @@ $.fn.allInputCheck = function(){
 		 *   ・・・
 		 * 6.最下層の選択データ取得(5のOIDが条件)、最下層を選択状態にする
 		 * ------------------------------------------------------------------------------------------
+		 * 
+		 * @param $v 対象RefComboインスタンス
+		 * @param setting 参照コンボ設定
+		 * @param currentPath 現在のパス
+		 * @param childOid 下層の選択値
+		 * @param props コンボデータを検索する際のパラメータ生成用KEY値(階層ごとの名前を保持)
+		 * @param reset リセットか
+		 * @param callback コンボ生成後のコールバック処理
 		 */
-		function initParent($v, name, childOid, setting, props, reset, topCallback) {
-			var parentName = name + "." + setting.propertyName;
-			props.push(parentName);
+		function initParent($v, setting, currentPath, childOid, props, reset, callback) {
+			var parentPath = currentPath + "." + setting.propertyName;
+			props.push(parentPath);
 			if (childOid == "") {
 				var parentOid = "";
 				var func = null;
-				if (parentName == $v.upperName && $v.upperOid != "") {
+				if (parentPath == $v.upperName && $v.upperOid != "") {
 					parentOid = $v.upperOid;
 					func = function($parent) {
 						$parent.val(parentOid);
@@ -2204,17 +2474,17 @@ $.fn.allInputCheck = function(){
 				}
 				if (setting.parent && setting.parent.propertyName && setting.parent.propertyName != "") {
 					//更に上位がいれば先に生成
-					initParent($v, parentName, parentOid, setting.parent, props, reset, null);
+					initParent($v, setting.parent, parentPath, parentOid, props, reset, null);
 				}
 
-				createNode($v, parentName, props, reset, func);
+				createNode($v, parentPath, props, reset, func);
 			} else {
 				//子から親を検索
-				searchParent($v.searchParentWebapiName, $v.defName, $v.viewName, $v.propName, $v.viewType, parentName, childOid, $v.entityOid, $v.entityVersion, function(parentEntity) {
+				searchParent($v.searchParentWebapiName, $v.defName, $v.viewName, $v.propName, $v.viewType, parentPath, childOid, $v.entityOid, $v.entityVersion, function(parentEntity) {
 					var parentOid = getOid(parentEntity);
 					if (setting.parent && setting.parent.propertyName && setting.parent.propertyName != "") {
 						//更に上位がいれば先に生成
-						initParent($v, parentName, parentOid, setting.parent, props, reset, null);
+						initParent($v, setting.parent, parentPath, parentOid, props, reset, null);
 					}
 
 					var func = null;
@@ -2224,13 +2494,13 @@ $.fn.allInputCheck = function(){
 							$parent.val(parentOid);
 
 							//最下層の一個上の場合は最下層を読み込んで選択状態を設定する
-							if (topCallback && $.isFunction(topCallback)) {
+							if (callback && $.isFunction(callback)) {
 								$parent.change();
-								topCallback.call(this);
+								callback.call(this);
 							}
 						}
 					}
-					createNode($v, parentName, props, reset, func);
+					createNode($v, parentPath, props, reset, func);
 				});
 			}
 		}
@@ -2248,7 +2518,7 @@ $.fn.allInputCheck = function(){
 		/*
 		 * 親階層生成
 		 */
-		function createNode($v, name, props, reset, func) {
+		function createNode($v, name, props, reset, callback) {
 			var $parent = null;
 			if (!reset) {
 				var pleaseSelectLabel = "";
@@ -2277,16 +2547,16 @@ $.fn.allInputCheck = function(){
 				$parent = $v.parent().children("select[name='" + name + "']");
 			}
 
-			if (func && $.isFunction(func)) {
+			if (callback && $.isFunction(callback)) {
 				//親が先に読み込まれてるはず、この階層のデータを読み込む
-				loadReferenceData($v, props, function(){func.call(this, $parent);});
+				loadReferenceData($v, props, function(){callback.call(this, $parent);});
 			}
 		}
 
 		/*
 		 * 参照データ読み込み
 		 */
-		function loadReferenceData($v, props, func) {
+		function loadReferenceData($v, props, callback) {
 			var params = new Array();
 			for (var i = 0; i < props.length; i++) {
 				var val = $("select[name='" + props[i] + "']", $v.parent()).val();
@@ -2313,7 +2583,99 @@ $.fn.allInputCheck = function(){
 					$select.append("<option value='" + entity.oid + "'>" + entity.name + "</option>");
 				}
 
-				if (func && $.isFunction(func)) func.call(this);
+				if (callback && $.isFunction(callback)) callback.call(this);
+			});
+		}
+	};
+
+	/**
+	 * 参照コンボ(同期)
+	 */
+	$.fn.refComboSync = function() {
+		if (!this) return false;
+
+		return this.each(function(){
+			const $this = $(this);
+			init($this);
+		});
+
+		/*
+		 * 初期化処理
+		 */
+		function init($v) {
+			setup($v);
+			
+			const combos = $v.parent().children("select");
+			const size = combos.length;
+			const comboNames = [];
+			for (let i = 0; i < size - 1; i++) {
+				$(combos[i]).on("change", function() {
+					//自分の階層以下を初期化
+					$(this).nextAll("select").each(function() {
+						$(this).val("");
+						$(this).children("option[value!='']").remove();
+					});
+					if ($(this).val()) {
+						loadReferenceData($v, comboNames, $(this).next("select"));
+					}
+				});
+
+				comboNames.push($(combos[i]).attr("name"));
+			}
+		};
+
+		/**
+		 * 設定値取得
+		 * 
+		 * @param $v 対象Selectオブジェクト
+		 */
+		function setup($v) {
+			//一括設定の場合、option指定できないのでattributeから取得
+			$.extend($v, {
+				//EntityView定義名
+				defName:$v.attr("data-defName"),
+				//EntityView View名
+				viewName:$v.attr("data-viewName"),
+				//EntityView プロパティ名(NestTableの場合は階層)
+				propName:$v.attr("data-propName"),
+				//EntityView Layoutタイプ
+				viewType:$v.attr("data-viewType"),
+				//編集画面 ルートEntityのoid
+				entityOid:$v.attr("data-entityOid"),
+				//編集画面 ルートEntityのversion
+				entityVersion:$v.attr("data-entityVersion"),
+				//参照コンボ選択リスト取得WebApi
+				webapiName:$v.attr("data-webapiName"),
+			});
+		}
+
+		/*
+		 * 参照データ読み込み
+		 * 
+		 * @param $v 対象Selectオブジェクト
+		 * @param comboNames 上位コンボ名
+		 * @param $target 変更対象Selectオブジェクト
+		 */
+		function loadReferenceData($v, comboNames, $target) {
+			const params = new Array();
+			for (let i = 0; i < comboNames.length; i++) {
+				let val = $("select[name='" + comboNames[i] + "']", $v.parent()).val();
+				if (!val) val = "";
+				params.push({key:comboNames[i], value:val});
+			}
+			if (typeof $v.entityOid !== "undefined" && typeof $v.entityVersion !== "undefined") {
+				params.push({key: "entityOid", value: $v.entityOid});
+				params.push({key: "entityVersion", value: $v.entityVersion});
+			}
+
+			refComboChange($v.webapiName, $v.defName, $v.viewName, $v.propName, params, $v.viewType, function(selName, entities) {
+				if (entities == null || entities.length == 0) return;
+
+				for (let i = 0; i < entities.length; i++) {
+					const entity = entities[i];
+					const optionData = $("<option/>").val(entity.oid).text(entity.name);
+					$target.append(optionData);
+				}
 			});
 		}
 	};
@@ -2457,6 +2819,16 @@ $.fn.allInputCheck = function(){
 								var $link = $("<a href='javascript:void(0)' />").addClass("modal-lnk").attr({"id":linkId, "data-linkId":linkId, "style":$v.customStyle}).text(nodes[i].name).on("click", function() {
 									showReference($v.viewAction, $v.refDefName, oid, version, linkId, $v.refEdit, null, $v.defName, $v.viewName, $v.propName, $v.viewType, $v.refSectionIndex, $v.entityOid, $v.entityVersion);
 								}).appendTo($li);
+								//参照モーダルのサイズ設定を、コンテナ(ul)から引き継ぐ
+								if ($container.attr("data-reference-modal") === "true") {
+									$link.attr("data-reference-modal", "true");
+									const dialogWidth = $container.attr("data-dialog-width");
+									const dialogHeight = $container.attr("data-dialog-height");
+									const dialogMaximize = $container.attr("data-dialog-maximize");
+									if (dialogWidth != null) $link.attr("data-dialog-width", dialogWidth);
+									if (dialogHeight != null) $link.attr("data-dialog-height", dialogHeight);
+									if (dialogMaximize != null) $link.attr("data-dialog-maximize", dialogMaximize);
+								}
 								if ($("body.modal-body").length != 0) {
 									$link.subModalWindow();
 								} else {
@@ -2484,11 +2856,22 @@ $.fn.allInputCheck = function(){
 						}
 
 						if ($v.updateRefAction && $v.reloadUrl) {
-							//詳細表示はリロード
-							var $form = $("#detailForm");
-							$("<input type='hidden' name='updatePropertyName' />").val($v.propName).appendTo($form);
-							$("<input type='hidden' name='reloadUrl' />").val($v.reloadUrl).appendTo($form);
-							$form.attr("action", $v.updateRefAction).submit();
+							// 詳細表示はリロード
+							/**
+							 * Entityデータ選択後のリロード処理をカスタイズする場合は、下記を引数に
+							 * document.scriptContext["customRefRecursiveTreeCallback"]に関数を設定します。
+							 * 
+							 * @param propName プロパティ名
+							 */
+							var func = document.scriptContext["customRefRecursiveTreeCallback"];
+							if (func && $.isFunction(func)) {
+								func.call(this, $v.propName);
+							} else {
+								var $form = $("#detailForm");
+								$("<input type='hidden' name='updatePropertyName' />").val($v.propName).appendTo($form);
+								$("<input type='hidden' name='reloadUrl' />").val($v.reloadUrl).appendTo($form);
+								$form.attr("action", $v.updateRefAction).submit();
+							}
 						} else {
 							$dialog.dialog("close");
 						}
@@ -2722,6 +3105,7 @@ $.fn.allInputCheck = function(){
 				viewType:$v.attr("data-viewType"),
 				viewName:$v.attr("data-viewName"),
 				propName:$v.attr("data-propName"),
+				radioTogglable:$v.attr("data-radioTogglable"),
 				linkName:$v.attr("data-linkName"),
 				prefix:$v.attr("data-prefix"),
 				getItemWebapiName:$v.attr("data-getItemWebapiName"),
@@ -2796,9 +3180,17 @@ $.fn.allInputCheck = function(){
 							value: entity.oid + "_" + entity.version ,
 							name: $v.propName
 						}).appendTo($label);
+						if ($v.radioTogglable) {
+							$radio.addClass($v.radioTogglable);
+						}
 						$("<span />").text(entity.name).appendTo($label);
 
 						$v.append($li);
+					}
+
+					//デザイン固有の処理があったら呼び出し
+					if (applyDesignRefLinkRadio) {
+						applyDesignRefLinkRadio($("input[type=radio]:not('.applied-pseudo')", $v));
 					}
 				});
 			}
@@ -2832,7 +3224,9 @@ $.fn.allInputCheck = function(){
 				viewAction:					$v.attr("data-viewAction"),
 				addAction:					$v.attr("data-addAction"),
 				selectUrlParam:				$v.attr("data-selectUrlParam"),
+				selectDynamicParamCallback:	$v.attr("data-selectDynamicParamCallback"),
 				insertUrlParam:				$v.attr("data-insertUrlParam"),
+				insertDynamicParamCallback:	$v.attr("data-insertDynamicParamCallback"),
 				refDefName:					$v.attr("data-refDefName"),
 				refViewName:				$v.attr("data-refViewName"),
 				refEdit:					$v.attr("data-refEdit") == "true",
@@ -2844,7 +3238,8 @@ $.fn.allInputCheck = function(){
 				selUniqueRefCallback:		$v.attr("data-selUniqueRefCallback"),
 				insUniqueRefCallback:		$v.attr("data-insUniqueRefCallback"),
 				entityOid:					$v.attr("data-entityOid"),
-				entityVersion:				$v.attr("data-entityVersion")
+				entityVersion:				$v.attr("data-entityVersion"),
+				customStyle:				$v.attr("data-customStyle")
 			};
 			$.extend($v, params);
 
@@ -2854,26 +3249,15 @@ $.fn.allInputCheck = function(){
 			var $link = $("a.modal-lnk", $v);
 			var $hidden = $(":hidden[name='" + $v.propName + "']", $v);
 
-			if ($("body.modal-body").length != 0) {
-				$selBtn.subModalWindow();
-			} else {
-				$selBtn.modalWindow();
-			}
-
 			for (key in params) {
 				$selBtn.attr("data-" + key, params[key]);
 			}
 			$selBtn.on("click", function() {
 				//選択コールバック
 				var selRefCallback = scriptContext[$v.selUniqueRefCallback];
-				searchUniqueReference($v.attr("id"), $v.selectAction, $v.viewAction, $v.refDefName, $v.propName, $v.selectUrlParam, $v.refEdit, selRefCallback, this, $v.refViewName, $v.permitConditionSelectAll, $v.permitVersionedSelect, $v.defName, $v.viewName, $v.viewType, $v.refSectionIndex, $v.entityOid, $v.entityVersion);
+				var selDynamicParamCallback = scriptContext[$v.selectDynamicParamCallback];
+				searchUniqueReference($v.attr("id"), $v.selectAction, $v.viewAction, $v.refDefName, $v.propName, $v.selectUrlParam, $v.refEdit, selRefCallback, this, $v.refViewName, $v.permitConditionSelectAll, $v.permitVersionedSelect, $v.defName, $v.viewName, $v.viewType, $v.refSectionIndex, $v.entityOid, $v.entityVersion, selDynamicParamCallback, $v.customStyle);
 			});
-
-			if ($("body.modal-body").length != 0) {
-				$insBtn.subModalWindow();
-			} else {
-				$insBtn.modalWindow();
-			}
 
 			for (key in params) {
 				$insBtn.attr("data-" + key, params[key]);
@@ -2881,7 +3265,8 @@ $.fn.allInputCheck = function(){
 			$insBtn.on("click", function() {
 				//新規コールバック
 				var insRefCallback = scriptContext[$v.insUniqueRefCallback];
-				insertUniqueReference($v.attr("id"), $v.addAction, $v.viewAction, $v.refDefName, $v.propName, $v.multiplicity, $v.insertUrlParam, $v.defName, $v.viewName, $v.refEdit, insRefCallback, this, $v.viewType, $v.refSectionIndex);
+				var insDynamicParamCallback = scriptContext[$v.insertDynamicParamCallback];
+				insertUniqueReference($v.attr("id"), $v.addAction, $v.viewAction, $v.refDefName, $v.propName, $v.multiplicity, $v.insertUrlParam, $v.defName, $v.viewName, $v.refEdit, insRefCallback, this, $v.viewType, $v.refSectionIndex, insDynamicParamCallback, $v.customStyle);
 			});
 
 			$hidden.on("change", function() {
@@ -2956,7 +3341,8 @@ $.fn.allInputCheck = function(){
 		var defaults = {
 			colNum:2,
 			exclude:".submit-area,.version-area",
-			deleteTarget:":has(div.deleteRow)"
+			deleteTarget:":has(div.deleteRow)",
+			cellClass:""
 		}
 		var options = $.extend(defaults, option);
 		if (!this) return false;
@@ -2966,6 +3352,9 @@ $.fn.allInputCheck = function(){
 
 			if ($this.attr("data-colNum")) {
 				options.colNum = $this.attr("data-colNum") - 0;
+			}
+			if ($this.attr("data-cell-class")) {
+				options.cellClass = $this.attr("data-cell-class");
 			}
 
 			//対象の行取得
@@ -3021,6 +3410,15 @@ $.fn.allInputCheck = function(){
 				}
 			});
 
+			// 指定列数に足りない場合は空をうめる
+			// ReferenceSectionの対応、SearchConditionSectionはBlankが設定される
+			if (colIndex !== 0) {
+				for (var i = colIndex; i < options.colNum; i++) {
+					$current.append($("<th/>").addClass(options.cellClass));
+					$current.append($("<td/>").addClass(options.cellClass));
+				}
+			}
+
 			//除外行は先頭以外をcolspanでくっつける(折り返さないように)
 			var $excludes = $(options.exclude, $this);
 			var colspan = options.colNum * 2 - 1;
@@ -3070,7 +3468,8 @@ function datepicker(selector) {
 			showErrorMessage: true,
 			validErrMsg: null,
 			onChangeActual: function(){},
-			dayLabelSelector: ".dp-weekday-label"
+			dayLabelSelector: ".dp-weekday-label",
+			pickerClearButtonText: scriptContext.gem.locale.date.pickerClearBtn,
 		}
 		var options = $.extend(defaults, option);
 		if (!this) return false;
@@ -3082,6 +3481,66 @@ function datepicker(selector) {
 			}
 			options.buttonImage = contentPath + "/images/gem/skin/" + skinName + "/icon-calender-01.png";
 		}
+
+		// クリアボタンを追加する
+		const appendClearButton = function(input) {
+			const $input = $(input);
+			const $buttonPane = $input.datepicker('widget').find('.ui-datepicker-buttonpane');
+			if ($buttonPane.length > 0) {
+				// $buttonPane が存在していたら、クリアボタンを追加する
+				$buttonPane.append(
+					$('<button type="button" class="ui-datepicker-clear ui-datepicker-current ui-state-default ui-priority-secondary ui-corner-all"></button>')
+						.text(options.pickerClearButtonText)
+						.on('click', null, $input, function(event) {
+							event.data.val('');
+						})
+				);
+			}
+		};
+
+		// フォーカスイベントでクリアボタンを追加する
+		// TODO ui 1.13 で onUpdateDatepicker を利用したイベント制御に変更した場合は、本メソッドは不要
+		const appendClearButtonWithFocusEvent = function(input) {
+			const $input = $(input);
+			const $buttonPane = $input.datepicker('widget').find('.ui-datepicker-buttonpane');
+			// focus イベントは、様々なタイミングで発生する。
+			// picker 表示状態で focus イベントが発生し、ボタンが追加されることを抑制する。
+			if ($buttonPane.length > 0 && $buttonPane.find('.ui-datepicker-clear').length === 0) {
+				// クリアボタンが追加されていなければ、クリアボタンを追加する
+				appendClearButton(input);
+			}
+		};
+
+		// ファンクション実行結果を取得する
+		const getFunctionCallResult = function(fnName, parent, input) {
+			if (!fnName) {
+				// ファンクション名の指定がない場合は終了
+				return undefined;
+			}
+			// '.' で分割する
+			const fnNameArr = fnName.split('.');
+			// ファンクションとファンクションの親オブジェクトを取得する
+			const fnArr = fnNameArr.reduce(function (pv, cv, idx, arr) {
+				const curr = pv && pv[0];
+				
+				if (!curr) {
+					return undefined;
+				}
+				// 最後の位置では以下のようになる
+				// curr[cv] = ファンクション
+				// curr     = 親オブジェクト
+				return [curr[cv], curr];
+			}, [parent, null]);
+			
+			const fn = fnArr && fnArr[0];
+			const fnParent = fnArr && fnArr[1]; 
+			if (!fn || !fnParent || 'function' !== typeof fn) {
+				// 'function' !== typeof fn の場合は、 fn が function ではない
+				return null;
+			}
+			// ファンクション実行
+			return fn.call(fnParent, $(input));
+		};
 
 		this.each(function() {
 			var $this = $(this);
@@ -3099,6 +3558,14 @@ function datepicker(selector) {
 			}
 			$this.attr("maxLength", formatLength + 2);
 
+			// .datepicker selector の data-* 属性の取得
+			const minDate = this.dataset.minDateFunction === 'true' ? getFunctionCallResult(this.dataset.minDate, window, this) : this.dataset.minDate;
+			const maxDate = this.dataset.maxDateFunction === 'true' ? getFunctionCallResult(this.dataset.maxDate, window, this) : this.dataset.maxDate;
+			const extendOptions = {
+				minDate: minDate,
+				maxDate: maxDate,
+			};
+
 			$this.datepicker({
 				showOn: 'both',
 				buttonImage: options.buttonImage,
@@ -3107,6 +3574,8 @@ function datepicker(selector) {
 				showMonthAfterYear: true,
 				showButtonPanel:$this.attr("data-showButtonPanel") == "true",//今日ボタン表示
 				dateFormat: options.dateFormat,
+				minDate: extendOptions.minDate,
+				maxDate: extendOptions.maxDate,
 				beforeShow: function() {
 					//初回時のためここでセット(beforeShow->focus)
 					$this.attr("data-prevalue", convertFromLocaleDateString($this.val()));
@@ -3138,7 +3607,22 @@ function datepicker(selector) {
 					//pickerが表示されていない場合のみセット
 					$this.attr("data-prevalue", convertFromLocaleDateString($this.val()));
 				}
+				
+				// クリアボタンを追加する
+				// TODO ui 1.13 になれば、 onUpdateDatepicker が追加されるので、そちらで追加することが正しい
+				appendClearButtonWithFocusEvent(this);
 			});
+
+			if (this.hasAttribute('readonly')) {
+				// readonly テキストフィールドの場合、削除操作のみ受け付ける
+				$this.on('keydown', function(keyboardEvent) {
+					if (/(Delete)|(Backspace)/i.test(keyboardEvent.code)) {
+						// Delete or Backspace キーであれば、入力値を空に設定する。
+						this.value = '';
+					}
+				});
+			}
+
 			if ($this.attr("data-showWeekday") === "true") {
 				$this.after($("<span  />").addClass("dp-weekday-label"));
 			}
@@ -3152,6 +3636,7 @@ function datepicker(selector) {
 
 		function fireOnChange(input) {
 			var $input = $(input);
+			var $parent = $input.closest(".property-data"); // 詳細編集、検索画面のみ対応
 
 			//検証
 			try {
@@ -3162,14 +3647,29 @@ function datepicker(selector) {
 				if ($input.attr("data-notFillTime") !== "true") {
 					fillTime(input);
 				}
-			} catch (e) {
-				//値をクリア(メッセージ表示する前にクリアする)
-				//直接入力時にフォーカスロストすると2度呼ばれる(onCloseとblur)ためalert前にクリアする
-				//(最初のイベントで値がクリアされて次のチェックでは引っかからない)
-				$input.val("");
 
-				if (options.showErrorMessage == true) {
-					alert(e);
+				$input.removeClass("validate-error");
+				if ($(".validate-error", $parent).length === 0) {
+					$(".format-error", $parent).remove();
+				}
+			} catch (e) {
+				var suppressAlert = $input.attr("data-suppress-alert")
+				if (suppressAlert) {
+					$input.addClass("validate-error");
+					//アラートの代わりにエラーメッセージ
+					if ($(".format-error", $parent).length === 0) {
+						var $p = $("<p />").addClass("error format-error").appendTo($parent);
+						$("<span />").addClass("error").text(e).appendTo($p);
+					}
+				} else {
+					//値をクリア(メッセージ表示する前にクリアする)
+					//直接入力時にフォーカスロストすると2度呼ばれる(onCloseとblur)ためalert前にクリアする
+					//(最初のイベントで値がクリアされて次のチェックでは引っかからない)
+					$input.val("");
+
+					if (options.showErrorMessage == true) {
+						alert(e);
+					}
 				}
 			}
 
@@ -3265,7 +3765,8 @@ function timepicker(selector) {
 			buttonImage: null,
 			showErrorMessage: true,
 			validErrMsg: null,
-			onChangeActual: function(){}
+			onChangeActual: function(){},
+			pickerClearButtonText: scriptContext.gem.locale.date.pickerClearBtn,
 		}
 		var options = $.extend(defaults, option);
 		if (!this) return false;
@@ -3277,6 +3778,35 @@ function timepicker(selector) {
 			}
 			options.buttonImage = contentPath + "/images/gem/skin/" + skinName + "/icon-clock.png";
 		}
+
+		// クリアボタンを追加する
+		const appendClearButton = function(input) {
+			const $input = $(input);
+			const $buttonPane = $input.datepicker('widget').find('.ui-datepicker-buttonpane');
+			if ($buttonPane.length > 0) {
+				// $buttonPane が存在していたら、クリアボタンを追加する
+				$buttonPane.append(
+					$('<button type="button" class="ui-datepicker-clear ui-datepicker-current ui-state-default ui-priority-secondary ui-corner-all"></button>')
+						.text(options.pickerClearButtonText)
+						.on('click', null, $input, function(event) {
+							event.data.val('');
+						})
+				);
+			}
+		};
+		
+		// フォーカスイベントでクリアボタンを追加する
+		// TODO ui 1.13 で onUpdateDatepicker を利用したイベント制御に変更した場合は、本メソッドは不要
+		const appendClearButtonWithFocusEvent = function(input) {
+			const $input = $(input);
+			const $buttonPane = $input.datepicker('widget').find('.ui-datepicker-buttonpane');
+			// focus イベントは、様々なタイミングで発生する。
+			// picker 表示状態で focus イベントが発生し、ボタンが追加されることを抑制する。
+			if ($buttonPane.length > 0 && $buttonPane.find('.ui-datepicker-clear').length === 0) {
+				// クリアボタンが追加されていなければ、クリアボタンを追加する
+				appendClearButton(input);
+			}
+		};
 
 		this.each(function() {
 			var $this = $(this);
@@ -3337,6 +3867,10 @@ function timepicker(selector) {
 					//pickerが表示されていない場合のみセット
 					$this.attr("data-prevalue", convertFromTimeString(this));
 				}
+
+				// クリアボタンを追加する
+				// TODO ui 1.13 になれば、 onUpdateDatepicker が追加されるので、そちらで追加することが正しい
+				appendClearButtonWithFocusEvent(this);
 			});
 		});
 
@@ -3361,6 +3895,7 @@ function timepicker(selector) {
 
 		function fireOnChange(input) {
 			var $input = $(input);
+			var $parent = $input.closest(".property-data"); // 詳細編集、検索画面のみ対応
 
 			//検証
 			try {
@@ -3369,14 +3904,29 @@ function timepicker(selector) {
 				var fixedSec = $input.attr("data-fixedSec") || options.fixedSec || "";
 				//common.js
 				validateTimePicker($input.val(), timeFormat, fixedMin, fixedSec, options.validErrMsg);
-			} catch (e) {
-				//値をクリア(メッセージ表示する前にクリアする)
-				//直接入力時にフォーカスロストすると2度呼ばれる(onCloseとblur)ためalert前にクリアする
-				//(最初のイベントで値がクリアされて次のチェックでは引っかからない)
-				$input.val("");
 
-				if (options.showErrorMessage == true) {
-					alert(e);
+				$input.removeClass("validate-error");
+				if ($(".validate-error", $parent).length === 0) {
+					$(".format-error", $parent).remove();
+				}
+			} catch (e) {
+				var suppressAlert = $input.attr("data-suppress-alert")
+				if (suppressAlert) {
+					$input.addClass("validate-error");
+					//アラートの代わりにエラーメッセージ
+					if ($(".format-error", $parent).length === 0) {
+						var $p = $("<p />").addClass("error format-error").appendTo($parent);
+						$("<span />").addClass("error").text(e).appendTo($p);
+					}
+				} else {
+					//値をクリア(メッセージ表示する前にクリアする)
+					//直接入力時にフォーカスロストすると2度呼ばれる(onCloseとblur)ためalert前にクリアする
+					//(最初のイベントで値がクリアされて次のチェックでは引っかからない)
+					$input.val("");
+
+					if (options.showErrorMessage == true) {
+						alert(e);
+					}
 				}
 			}
 
@@ -3448,7 +3998,8 @@ function datetimepicker(selector) {
 			showErrorMessage: true,
 			validErrMsg: null,
 			onChangeActual: function(){},
-			dayLabelSelector: ".dp-weekday-label"
+			dayLabelSelector: ".dp-weekday-label",
+			pickerClearButtonText: scriptContext.gem.locale.date.pickerClearBtn,
 		}
 		var options = $.extend(defaults, option);
 		if (!this) return false;
@@ -3460,6 +4011,66 @@ function datetimepicker(selector) {
 			}
 			options.buttonImage = contentPath + "/images/gem/skin/" + skinName + "/icon-calender-01.png";
 		}
+
+		// クリアボタンを追加する
+		const appendClearButton = function(input) {
+			const $input = $(input);
+			const $buttonPane = $input.datepicker('widget').find('.ui-datepicker-buttonpane');
+			if ($buttonPane.length > 0) {
+				// $buttonPane が存在していたら、クリアボタンを追加する
+				$buttonPane.append(
+					$('<button type="button" class="ui-datepicker-clear ui-datepicker-current ui-state-default ui-priority-secondary ui-corner-all"></button>')
+						.text(options.pickerClearButtonText)
+						.on('click', null, $input, function(event) {
+							event.data.val('');
+						})
+				);
+			}
+		};
+
+		// フォーカスイベントでクリアボタンを追加する
+		// TODO ui 1.13 で onUpdateDatepicker を利用したイベント制御に変更した場合は、本メソッドは不要
+		const appendClearButtonWithFocusEvent = function(input) {
+			const $input = $(input);
+			const $buttonPane = $input.datepicker('widget').find('.ui-datepicker-buttonpane');
+			// focus イベントは、様々なタイミングで発生する。
+			// picker 表示状態で focus イベントが発生し、ボタンが追加されることを抑制する。
+			if ($buttonPane.length > 0 && $buttonPane.find('.ui-datepicker-clear').length === 0) {
+				// クリアボタンが追加されていなければ、クリアボタンを追加する
+				appendClearButton(input);
+			}
+		};
+
+		// ファンクション実行結果を取得する
+		const getFunctionCallResult = function(fnName, parent, input) {
+			if (!fnName) {
+				// ファンクション名の指定がない場合は終了
+				return undefined;
+			}
+			// '.' で分割する
+			const fnNameArr = fnName.split('.');
+			// ファンクションとファンクションの親オブジェクトを取得する
+			const fnArr = fnNameArr.reduce(function (pv, cv, idx, arr) {
+				const curr = pv && pv[0];
+				
+				if (!curr) {
+					return undefined;
+				}
+				// 最後の位置では以下のようになる
+				// curr[cv] = ファンクション
+				// curr     = 親オブジェクト
+				return [curr[cv], curr];
+			}, [parent, null]);
+			
+			const fn = fnArr && fnArr[0];
+			const fnParent = fnArr && fnArr[1]; 
+			if (!fn || !fnParent || 'function' !== typeof fn) {
+				// 'function' !== typeof fn の場合は、 fn が function ではない
+				return null;
+			}
+			// ファンクション実行
+			return fn.call(fnParent, $(input));
+		};
 
 		this.each(function() {
 			var $this = $(this);
@@ -3488,6 +4099,14 @@ function datetimepicker(selector) {
 			}
 			$this.attr("maxLength", formatLength + 2);
 
+			// .datetimepicker selector の data-* 属性の取得
+			const minDate = this.dataset.minDateFunction === 'true' ? getFunctionCallResult(this.dataset.minDate, window, this) : this.dataset.minDate;
+			const maxDate = this.dataset.maxDateFunction === 'true' ? getFunctionCallResult(this.dataset.maxDate, window, this) : this.dataset.maxDate;
+			const extendOptions = {
+				minDate: minDate,
+				maxDate: maxDate,
+			};
+
 			$this.datetimepicker({
 				showOn: 'both',
 				buttonImage: options.buttonImage,
@@ -3497,6 +4116,8 @@ function datetimepicker(selector) {
 				dateFormat: options.dateFormat,
 				timeFormat : timeFormat,
 				stepMinute: Number(stepMinute),	//数値に変換
+				minDate: extendOptions.minDate,
+				maxDate: extendOptions.maxDate,
 				beforeShow: function(ip, dp, tp) {
 					//初回時のためここでセット(beforeShow->focus)
 					$this.attr("data-prevalue", convertFromLocaleDatetimeString($this.val()));
@@ -3535,7 +4156,22 @@ function datetimepicker(selector) {
 					//pickerが表示されていない場合のみセット
 					$this.attr("data-prevalue", convertFromLocaleDatetimeString($this.val()));
 				}
+
+				// クリアボタンを追加する
+				// TODO ui 1.13 になれば、 onUpdateDatepicker が追加されるので、そちらで追加することが正しい
+				appendClearButtonWithFocusEvent(this);
 			});
+
+			if (this.hasAttribute('readonly')) {
+				// readonly テキストフィールドの場合、削除操作のみ受け付ける
+				$this.on('keydown', function(keyboardEvent) {
+					if (/(Delete)|(Backspace)/i.test(keyboardEvent.code)) {
+						// Delete or Backspace キーであれば、入力値を空に設定する。
+						this.value = '';
+					}
+				});
+			}
+
 			if ($this.attr("data-showWeekday") === "true") {
 				$this.after($("<span  />").addClass("dp-weekday-label"));
 			}
@@ -3549,6 +4185,7 @@ function datetimepicker(selector) {
 
 		function fireOnChange(input) {
 			var $input = $(input);
+			var $parent = $input.closest(".property-data"); // 詳細編集、検索画面のみ対応
 
 			//検証
 			try {
@@ -3557,14 +4194,29 @@ function datetimepicker(selector) {
 				var fixedSec = $input.attr("data-fixedSec") || options.fixedSec || "";
 				//common.js
 				validateTimestampPicker($input.val(), options.inputDateFormat, timeFormat, fixedMin, fixedSec, options.validErrMsg);
-			} catch (e) {
-				//値をクリア(メッセージ表示する前にクリアする)
-				//直接入力時にフォーカスロストすると2度呼ばれる(onCloseとblur)ためalert前にクリアする
-				//(最初のイベントで値がクリアされて次のチェックでは引っかからない)
-				$input.val("");
 
-				if (options.showErrorMessage == true) {
-					alert(e);
+				$input.removeClass("validate-error");
+				if ($(".validate-error", $parent).length === 0) {
+					$(".format-error", $parent).remove();
+				}
+			} catch (e) {
+				var suppressAlert = $input.attr("data-suppress-alert")
+				if (suppressAlert) {
+					$input.addClass("validate-error");
+					//アラートの代わりにエラーメッセージ
+					if ($(".format-error", $parent).length === 0) {
+						var $p = $("<p />").addClass("error format-error").appendTo($parent);
+						$("<span />").addClass("error").text(e).appendTo($p);
+					}
+				} else {
+					//値をクリア(メッセージ表示する前にクリアする)
+					//直接入力時にフォーカスロストすると2度呼ばれる(onCloseとblur)ためalert前にクリアする
+					//(最初のイベントで値がクリアされて次のチェックでは引っかからない)
+					$input.val("");
+
+					if (options.showErrorMessage == true) {
+						alert(e);
+					}
 				}
 			}
 
@@ -3890,4 +4542,350 @@ function datetimepicker(selector) {
 			$("tr:not(:hidden):has(td)", $this).addClass("stripeRow");
 		});
 	};
+})(jQuery);
+
+(function ($) {
+  /**
+   * 参照選択フィルター
+   */
+  $.fn.refSelectFilter = function (option) {
+    const defaults = {
+		i18n: {
+			pleaseSelect: scriptContext.gem.locale.common.pleaseSelect,
+			noResult: scriptContext.gem.locale.reference.noResult,
+			more: "...",
+			moreOptionsValue: "__more__"
+		},
+    };
+    const options = $.extend({}, defaults, option);
+
+    return this.each(function () {
+		const $container = $(this);
+		setup($container);
+
+		const $txt = $container.find("input");
+		const $select = $container.find("select");
+		const isMultiple = !!$select.prop("multiple");
+		const keepSelection = $txt.data("researchPattern");
+		const keepSelectionFlag = !(keepSelection && keepSelection === "CLEAR");
+		
+		let multiplicity = $txt.data("multiplicity");
+		if (typeof multiplicity === "number" && !isNaN(multiplicity)) {
+			// do nothing, already a valid number
+		} else if (typeof multiplicity === "string" && !isNaN(Number(multiplicity))) {
+			multiplicity = Number(multiplicity);
+		}
+		const propertyName = $select.attr("name").replace(/\./g, "_");
+		const $errorMsg = $container.find("#error_" + es(propertyName));
+
+		// 状態（インスタンスごと）
+		let lastKeyword = "";
+
+		// ページング / 集合
+		let serverOffset = 0;			// サーバーに渡す offset（元の返却件数を累積）
+		let totalRawCount = 0;			// サーバーが返した総件数
+		let canLoadMoreResults = false;	// さらに検索できるか
+
+		// 選択と結果
+		let selectedMap = new Map();	// oid -> entity（挿入順を維持＝選択順／初期順）
+		let resultEntities = []; 		// 未選択の検索結果（重複除去かつ選択済みを除外）
+		let excludeOids = [];			// 新しい検索するとき、除外したいOIDのリスト
+		
+		// 初期選択を selectedMap に取り込む
+		updateSelectedMap();
+		// 初期選択の検索値を補完
+		autoUpdateInputValue();
+
+		function setup($v) {
+			var $input = $v.find("input");
+			$input.data({
+				defName: $input.attr("data-defName"),
+				viewName: $input.attr("data-viewName"),
+				propName: $input.attr("data-propName"),
+				viewType: $input.attr("data-viewType"),
+				entityOid: $input.attr("data-entityOid"),
+				entityVersion: $input.attr("data-entityVersion"),
+				webapiName: $input.attr("data-webapiName"),
+				researchPattern: $input.attr("data-researchPattern"),
+				multiplicity: $input.attr("data-multiplicity")
+			});
+		}
+
+		/**
+		 * 選択状態を同期
+		 */
+		function updateSelectedMap() {
+			// 選択肢がない場合、すべて初期値にする
+			if ($select.find("option").length === 0) {
+				selectedMap = new Map();
+				resultEntities = [];
+				$txt.val("");
+				lastKeyword = "";
+				return;
+			}
+
+			if ($select.prop("multiple")) {
+				handleMultipleSelect();
+			} else {
+				handleSingleSelect();
+			}
+		}
+
+		function handleMultipleSelect() {
+			selectedMap = new Map();
+			resultEntities = [];
+			$select.find("option").each(function () {
+				const val = $(this).val();
+				if (!val || val === options.i18n.moreOptionsValue) return;
+				const oid = String(val || "");
+				const code = $(this).attr("data-code") || "";
+				const name = $(this).text() || "";
+
+				if ($(this).is(":selected")) {
+					selectedMap.set(oid, { oid, code, name });
+				} else {
+					resultEntities.push({ oid, code, name });
+				}
+			});
+
+			// 多重度が超える場合、エラーメッセージを表示する
+			if (multiplicity > 1 && selectedMap.size > multiplicity) {
+				$errorMsg.show();
+			} else {
+				$errorMsg.hide();
+			}
+		}
+
+		function handleSingleSelect() {
+			selectedMap = new Map();
+			resultEntities = [];
+			const $opt = $select.find("option:selected").first();
+			if ($opt.length > 0) {
+				const oid = String($opt.val() || "");
+				const code = $opt.attr("data-code") || "";
+				const name = $opt.text() || "";
+				selectedMap.set(oid, { oid, code, name });
+				lastKeyword = code;
+			}
+		}
+
+		/**
+		 * 複数選択不可の場合、検索値を補完
+		 */
+		function autoUpdateInputValue() {
+			if (!$select.prop("multiple")) {
+				const $opt = $select.find("option:selected").first();
+				if ($opt.length > 0) {
+					const selectedCode = $opt.attr("data-code") || "";
+					if (selectedCode) {
+						lastKeyword = selectedCode;
+						$select.empty().append($opt.prop("selected", true))
+						$txt.val(selectedCode);
+					}
+				}
+			}
+		}
+
+		/**
+		 * エンティティオプションを追加
+		 * @param {Object} entity - エンティティ
+		 * @param {boolean} isSelected - 選択済みかどうか
+		 */
+		function appendEntityOption(entity, isSelected) {
+			const name = entity.name != null ? String(entity.name) : "";
+			const code = entity.code != null ? String(entity.code) : "";
+			const oid = entity.oid != null ? String(entity.oid) : "";
+			const $opt = $("<option/>").val(oid).text(name).attr("data-code", code);
+			if (isSelected) $opt.prop("selected", true);
+			return $opt.get(0);
+		}
+
+
+		/**
+		 * 選択済みオプションをレンダリング
+		 * @param {Array} selectedList - 選択済みエンティティのリスト
+		 * @param {boolean} isMultiple - 複数選択可能かどうか（単一選択時のみ先頭要素が選択状態になる）
+		 * @param {DocumentFragment} fragment - 追加先のフラグメント
+		 */
+		function renderSelectedOptions(selectedList, isMultiple, fragment) {
+			if (!isMultiple) {
+				// selectedList の先頭要素のみを選択状態で追加し
+				fragment.appendChild(appendEntityOption(selectedList[0], true));
+			} else {
+				// selectedList の全要素を選択状態で追加する
+				for (const e of selectedList) {
+					fragment.appendChild(appendEntityOption(e, true));
+				}
+			}
+		}
+		
+		/**
+		 * 未選択オプションをレンダリング
+		 * @param {Array} resultEntities - 未選択のエンティティ
+		 * @param {boolean} isMultiple - 複数選択可能かどうか
+		 * @param {DocumentFragment} fragment - 追加先のフラグメント
+		 */
+		function renderResultOptions(resultEntities, isMultiple, fragment) {
+			if (!isMultiple && totalRawCount > 1) {
+				fragment.appendChild($("<option/>").val("").text(options.i18n.pleaseSelect).get(0));
+			}
+
+			for (const e of resultEntities) {
+				fragment.appendChild(appendEntityOption(e, false));
+			}
+		}
+		
+		// レンダリング：'選択済み（先頭、選択順）' + '未選択結果（API順）'。
+		function renderOptions() {
+
+			const fragment = document.createDocumentFragment();
+			const selectedEntities = Array.from(selectedMap.values());
+
+			// 選択済選択肢
+			if (selectedEntities.length > 0) {
+				renderSelectedOptions(selectedEntities, isMultiple, fragment);
+			}
+			
+			// 未選択選択肢
+			if (resultEntities.length > 0) {
+				renderResultOptions(resultEntities, isMultiple, fragment);
+			}
+
+			// 「もっと」：さらに読み込み可能な場合のみ表示
+			if (canLoadMoreResults) {
+				fragment.appendChild($("<option/>").val(options.i18n.moreOptionsValue).text(options.i18n.more).get(0));
+			}
+
+			$select.empty().append(fragment);
+		}
+
+		/**
+		 * 検索前の処理
+		 * @param {boolean} isNewSearch 新しい検索かどうか
+		 */
+		function triggerSearch(isNewSearch) {
+			const keyword = $txt.val().trim();
+			if (keyword && isNewSearch && keyword === lastKeyword) {
+				return;
+			}
+
+			if (isNewSearch) {
+				serverOffset = 0;
+				resultEntities = [];
+				lastKeyword = keyword;
+				if (isMultiple && keepSelectionFlag) {
+					excludeOids = [];
+					if (selectedMap.size > 0) {
+						for (const key of selectedMap.keys()) {
+							excludeOids.push(String(key));
+						}
+					}
+				} else {
+					selectedMap = new Map();
+					excludeOids = [];
+					$errorMsg.hide();
+				}
+			}
+
+			loadReferenceData($txt);
+		}
+
+		// Enterで即時検索
+		$txt.on("keydown", function (e) {
+			if (e.key === "Enter") {
+				e.preventDefault();
+				$(this).blur();
+			}
+		});
+
+		// blurで検索をトリガー
+		$txt.on("blur", function () {
+			triggerSearch(true);
+		});
+
+		// select の変更
+		$select.on("change", function () {
+			const val = $select.val();
+			const selectedValues = Array.isArray(val) ? val : (val ? [val] : []);
+
+			// 「もっと」をトリガー
+			if (selectedValues.includes(options.i18n.moreOptionsValue)) {
+				// 「もっと」の選択状態を解除
+				$select.find("option").filter(function () {
+					return $(this).val() === String(options.i18n.moreOptionsValue);
+				}).remove();
+				// さらに読み込む（再描画を許可、選択済みは先頭のまま）
+				triggerSearch(false);
+				return;
+			}
+
+			// 選択状態を同期
+			updateSelectedMap();
+			autoUpdateInputValue();
+		});
+
+		function loadReferenceData($v) {
+			const keyword = $v.val().trim();
+			const defName = $v.data("defName");
+			const viewName = $v.data("viewName");
+			const propName = $v.data("propName");
+			const viewType = $v.data("viewType");
+			const entityOid = $v.data("entityOid");
+			const entityVersion = $v.data("entityVersion");
+			const webapiName = $v.data("webapiName");
+
+			const params = [];
+			if (entityOid && entityVersion) {
+				params.push({ key: "entityOid", value: entityOid });
+				params.push({ key: "entityVersion", value: entityVersion });
+			}
+			if (excludeOids && excludeOids.length > 0) {
+				params.push({ key: "excludeOid", value: excludeOids.join(",") }); 
+			}
+			params.push({ key: "keyword", value: keyword });
+			params.push({ key: "offset", value: serverOffset }); 
+			
+			getSelectFilterItem(webapiName, defName, viewName, propName, params, viewType, function (entities, count) {
+				const list = (entities && Array.isArray(entities)) ? entities : [];
+				// サーバーの元の戻り件数を加算して offset を進める
+				serverOffset += list.length;
+
+				// 総数
+				if (typeof count === "number" && !isNaN(count)) {
+					totalRawCount = count;
+				} else if (typeof count === "string" && !isNaN(Number(count))) {
+					totalRawCount = Number(count);
+				}
+
+				// マージ：選択済みおよび既存を除外（oidで重複除去）
+				const existOids = new Set(resultEntities.map(x => String(x.oid)));
+				const selectedOids = new Set(Array.from(selectedMap.keys()).map(String));
+
+				const filteredEntities = [];
+				for (const e of list) {
+					const oid = e && e.oid != null ? String(e.oid) : "";
+					if (!oid) continue;
+					if (isMultiple && selectedOids.has(oid)) continue; // 選択済みは未選結果に入れない
+					if (existOids.has(oid)) continue;                 // 未選結果を重複排除
+					const name = e.name != null ? String(e.name) : "";
+					const code = e.code != null ? String(e.code) : "";
+					filteredEntities.push({ oid, name, code });
+					existOids.add(oid);
+				}
+				resultEntities.push(...filteredEntities);
+
+				// 未選択結果があり、さらに読み込みが可能な場合のみ「もっと」を表示
+				canLoadMoreResults = (serverOffset < totalRawCount);
+				renderOptions();
+				autoUpdateInputValue();
+			});
+		}
+
+		// 破棄
+		$container.data("destroyRefSelectFilter", function () {
+			$txt.off("keydown blur");
+			$select.off("change");
+		});
+    });
+  };
 })(jQuery);

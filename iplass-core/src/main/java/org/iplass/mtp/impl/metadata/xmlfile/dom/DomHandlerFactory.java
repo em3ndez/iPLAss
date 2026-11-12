@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,5 +27,6 @@ import org.w3c.dom.Document;
 
 public interface DomHandlerFactory {
 	DomHandler createDomHamdler(File xml, String charset, Document doc);
+
 	void inited(MetaDataRepository service, XmlFileMetaDataStore xmlfileMetaDataStore);
 }

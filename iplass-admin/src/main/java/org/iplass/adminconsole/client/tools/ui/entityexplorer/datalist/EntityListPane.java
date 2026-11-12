@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,10 +20,10 @@
 
 package org.iplass.adminconsole.client.tools.ui.entityexplorer.datalist;
 
-
 import org.iplass.adminconsole.client.base.i18n.AdminClientMessageUtil;
 import org.iplass.adminconsole.client.base.ui.widget.GridActionImgButton;
 import org.iplass.adminconsole.client.base.ui.widget.MetaDataViewGridButton;
+import org.iplass.adminconsole.client.base.ui.widget.MtpListGrid;
 import org.iplass.adminconsole.client.base.util.SmartGWTUtil;
 import org.iplass.adminconsole.client.tools.data.entityexplorer.SimpleEntityInfoDS;
 import org.iplass.mtp.entity.definition.EntityDefinition;
@@ -84,7 +84,8 @@ public class EntityListPane extends VLayout {
 		final ToolStripButton configExportButton = new ToolStripButton();
 		configExportButton.setIcon(EXPORT_ICON);
 		configExportButton.setTitle("ConfigExport");
-		configExportButton.setTooltip(SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_tools_entityexplorer_EntityListPane_exportEntityDef")));
+		configExportButton
+				.setTooltip(SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_tools_entityexplorer_EntityListPane_exportEntityDef")));
 		configExportButton.addClickHandler(new ClickHandler() {
 
 			@Override
@@ -129,14 +130,15 @@ public class EntityListPane extends VLayout {
 		});
 		toolStrip.addButton(refreshButton);
 
-		grid = new ListGrid(){
+		grid = new MtpListGrid() {
 			@Override
 			protected Canvas createRecordComponent(final ListGridRecord record, Integer colNum) {
 				final String fieldName = this.getFieldName(colNum);
 				if ("explorerButton".equals(fieldName)) {
-					if (!record.getAttributeAsBoolean(SimpleEntityInfoDS.FIELD_NAME.IS_ERROR.name())){
+					if (!record.getAttributeAsBoolean(SimpleEntityInfoDS.FIELD_NAME.IS_ERROR.name())) {
 						MetaDataViewGridButton button = new MetaDataViewGridButton(EntityDefinition.class.getName());
-						button.setActionButtonPrompt(SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_tools_entityexplorer_EntityListPane_showMetaDataEditScreen")));
+						button.setActionButtonPrompt(SmartGWTUtil
+								.getHoverString(AdminClientMessageUtil.getString("ui_tools_entityexplorer_EntityListPane_showMetaDataEditScreen")));
 						button.setMetaDataShowClickHandler(new MetaDataViewGridButton.MetaDataShowClickHandler() {
 							@Override
 							public String targetDefinitionName() {
@@ -146,7 +148,7 @@ public class EntityListPane extends VLayout {
 						return button;
 					}
 				} else if ("error".equals(fieldName)) {
-					if (record.getAttributeAsBoolean(SimpleEntityInfoDS.FIELD_NAME.IS_ERROR.name())){
+					if (record.getAttributeAsBoolean(SimpleEntityInfoDS.FIELD_NAME.IS_ERROR.name())) {
 						record.setEnabled(false);
 						GridActionImgButton recordCanvas = new GridActionImgButton();
 						recordCanvas.setActionButtonSrc(ERROR_ICON);
@@ -160,20 +162,19 @@ public class EntityListPane extends VLayout {
 
 		grid.setWidth100();
 		grid.setHeight100();
-		//grid.setShowAllRecords(true);		//これをtrueにすると件数が多い場合に全て表示されない不具合発生
-		grid.setLeaveScrollbarGap(false);	//falseで縦スクロールバー領域が自動表示制御される
-		grid.setShowRowNumbers(true);		//行番号表示
 
-		grid.setCanFreezeFields(false);
-		grid.setShowSelectedStyle(false);
-		grid.setCanGroupBy(false);
-		grid.setCanPickFields(false);
+		//データ件数が多い場合を考慮し、false
+		grid.setShowAllRecords(false);
 
-		grid.setCanDragSelectText(true);	//セルの値をドラッグで選択可能（コピー用）にする
+		//行番号表示
+		grid.setShowRowNumbers(true);
 
 		//CheckBox選択設定
 		grid.setSelectionType(SelectionStyle.SIMPLE);
 		grid.setSelectionAppearance(SelectionAppearance.CHECKBOX);
+
+		//ソートを許可
+		grid.setCanSort(true);
 
 		//この２つを指定することでcreateRecordComponentが有効
 		grid.setShowRecordComponents(true);
@@ -190,7 +191,8 @@ public class EntityListPane extends VLayout {
 
 			@Override
 			public void onRecordDoubleClick(RecordDoubleClickEvent event) {
-				String name = event.getRecord().getAttributeAsString(SimpleEntityInfoDS.FIELD_NAME.NAME.name());
+				String name = event.getRecord()
+						.getAttributeAsString(SimpleEntityInfoDS.FIELD_NAME.NAME.name());
 				showExplorer(name);
 			}
 
@@ -228,7 +230,6 @@ public class EntityListPane extends VLayout {
 
 	}
 
-
 	private void refreshGrid() {
 		boolean isGetDataCount = showCountItem.getValueAsBoolean();
 		SimpleEntityInfoDS ds = SimpleEntityInfoDS.getInstance(isGetDataCount);
@@ -249,18 +250,10 @@ public class EntityListPane extends VLayout {
 		listenerCountField.setWidth(75);
 		ListGridField versioningField = new ListGridField(SimpleEntityInfoDS.FIELD_NAME.VERSIONING.name(), "Version Control");
 		versioningField.setWidth(75);
-		ListGridField detailViewCountField = new ListGridField(SimpleEntityInfoDS.FIELD_NAME.DETAIL_VIEW_COUNT.name(), "DetailViews");
-		detailViewCountField.setWidth(95);
-		ListGridField searchViewCountField = new ListGridField(SimpleEntityInfoDS.FIELD_NAME.SEARCH_VIEW_COUNT.name(), "SearchViews");
-		searchViewCountField.setWidth(95);
-		ListGridField bulkViewCountField = new ListGridField(SimpleEntityInfoDS.FIELD_NAME.BULK_VIEW_COUNT.name(), "BulkViews");
-		bulkViewCountField.setWidth(95);
-		ListGridField viewControlField = new ListGridField(SimpleEntityInfoDS.FIELD_NAME.VIEW_CONTROL.name(), "ViewControls");
-		viewControlField.setWidth(40);
 		ListGridField repositoryField = new ListGridField(SimpleEntityInfoDS.FIELD_NAME.REPOSITORY.name(), "Repository");
 		repositoryField.setWidth(60);
 
-		grid.setFields(explorerField, errorField, nameField, displayNameField, countField, listenerCountField, versioningField, detailViewCountField, searchViewCountField, bulkViewCountField, viewControlField, repositoryField);
+		grid.setFields(explorerField, errorField, nameField, displayNameField, countField, listenerCountField, versioningField, repositoryField);
 
 		grid.fetchData();
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -42,10 +42,11 @@ public class SelectAttribute implements PropertyAttribute {
 	@Override
 	public void applyFrom(PropertyDefinition property, EntityDefinition entity) {
 
-		SelectProperty select = (SelectProperty)property;
+		SelectProperty select = (SelectProperty) property;
 
 		setSelectValueDefinitionName(select.getSelectValueDefinitionName());
-		if (select.getSelectValueDefinitionName() == null || select.getSelectValueDefinitionName().isEmpty()) {
+		if (select.getSelectValueDefinitionName() == null || select.getSelectValueDefinitionName()
+				.isEmpty()) {
 			setSelectValueList(select.getSelectValueList());
 			setLocalizedSelectValueList(select.getLocalizedSelectValueList());
 		}
@@ -55,7 +56,7 @@ public class SelectAttribute implements PropertyAttribute {
 	@Override
 	public void applyTo(PropertyDefinition property, EntityDefinition entity) {
 
-		SelectProperty select = (SelectProperty)property;
+		SelectProperty select = (SelectProperty) property;
 
 		select.setSelectValueList(getSelectValueList());
 		select.setLocalizedSelectValueList(getLocalizedSelectValueList());

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,10 +24,12 @@ import org.iplass.mtp.entity.Entity;
 import org.iplass.mtp.entity.InsertOption;
 
 public interface EntityInsertInvocation extends EntityInvocation<String> {
-	
+
 	public Entity getEntity();
+
 	public void setEntity(Entity entity);
 
 	public InsertOption getInsertOption();
+
 	public void setInsertOption(InsertOption insertOption);
 }

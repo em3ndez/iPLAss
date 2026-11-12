@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -39,13 +39,15 @@ public class EntityDefinitionModifyResult extends DefinitionModifyResult {
 
 	protected static final long FIXED_SERIAL_VERSION = 7145015583970134749L;
 	private static final long serialVersionUID = FIXED_SERIAL_VERSION;
-	
+
 	public EntityDefinitionModifyResult() {
 		super();
 	}
+
 	public EntityDefinitionModifyResult(boolean isSuccess, String message) {
 		super(isSuccess, message);
 	}
+
 	public EntityDefinitionModifyResult(boolean isSuccess) {
 		super(isSuccess);
 	}

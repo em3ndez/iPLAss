@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,7 +27,11 @@ public class AuthTokenKeyResolver implements CacheKeyResolver {
 	public String toString(Object cacheKey) {
 		AuthTokenKey key = (AuthTokenKey) cacheKey;
 		StringBuilder sb = new StringBuilder();
-		sb.append(key.getTenantId()).append(':').append(key.getType()).append(':').append(key.getSeries());
+		sb.append(key.getTenantId())
+				.append(':')
+				.append(key.getType())
+				.append(':')
+				.append(key.getSeries());
 		return sb.toString();
 	}
 

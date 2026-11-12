@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -43,7 +43,8 @@ public class TestManagerLocator extends ManagerLocator {
 
 	public <T> void setManager(Class<T> managerInterface, T mock) {
 		if (mock != null && !managerInterface.isAssignableFrom(mock.getClass())) {
-			throw new IllegalArgumentException(mock.getClass().getName() + " can't assign to " + managerInterface.getName());
+			throw new IllegalArgumentException(mock.getClass()
+					.getName() + " can't assign to " + managerInterface.getName());
 		}
 
 		mocks.put(managerInterface, mock);
@@ -58,8 +59,9 @@ public class TestManagerLocator extends ManagerLocator {
 
 		T instance = (T) proxyCache.get(managerInterface);
 		if (instance == null) {
-			instance = (T) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),
-					new Class<?>[]{managerInterface},
+			instance = (T) Proxy.newProxyInstance(Thread.currentThread()
+					.getContextClassLoader(),
+					new Class<?>[] { managerInterface },
 					(proxy, method, args) -> {
 						try {
 							T manager = (T) mocks.get(managerInterface);
@@ -79,7 +81,7 @@ public class TestManagerLocator extends ManagerLocator {
 
 		return instance;
 	}
-	
+
 	@Override
 	public <M extends Manager> M getManager(Class<M> type) {
 		return getProxy(type, () -> impl.getManager(type));

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,7 +28,7 @@ import org.iplass.adminconsole.view.annotation.generic.FieldReferenceType;
 
 /**
  * 日付・時間型のフォーマットの多言語設定のプロパティ
- * @author ISID Shojima
+ * @author DENTSU SOKEN Shojima
  */
 public class LocalizedDateTimeFormatSetting implements Refrectable {
 
@@ -37,46 +37,46 @@ public class LocalizedDateTimeFormatSetting implements Refrectable {
 
 	/** 日付/時刻のフォーマットの多言語設定の言語ロケール */
 	@MetaFieldInfo(
-			displayName="日付/時刻の言語設定",
-			displayNameKey="generic_editor_LocalizedDateTimeFormatSetting_langageDisplaNameKey",
-			description="日付/時刻のフォーマットの言語を設定する。",
-			required=true,
-			inputType=InputType.TEXT,
-			displayOrder=100,
-			descriptionKey="generic_editor_LocalizedDateTimeFormatSetting_langageDescriptionKey"
+			displayName = "日付/時刻の言語設定",
+			displayNameKey = "generic_editor_LocalizedDateTimeFormatSetting_langageDisplaNameKey",
+			description = "日付/時刻のフォーマットの言語を設定する。",
+			required = true,
+			inputType = InputType.TEXT,
+			displayOrder = 100,
+			descriptionKey = "generic_editor_LocalizedDateTimeFormatSetting_langageDescriptionKey"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.ALL}
+			referenceTypes = { FieldReferenceType.ALL }
 	)
 	private String langage;
 
 	/** 日付/時刻のフォーマットの多言語設定のフォーマット */
 	@MetaFieldInfo(
-			displayName="日付/時刻のフォーマット設定",
-			displayNameKey="generic_editor_LocalizedDateTimeFormatSetting_dateTimeFormatDisplaNameKey",
-			description="多言語設定の日付/時刻のフォーマットを設定する。",
-			required=true,
-			inputType=InputType.TEXT,
-			displayOrder=110,
-			descriptionKey="generic_editor_LocalizedDateTimeFormatSetting_dateTimeDescriptionKey"
+			displayName = "日付/時刻のフォーマット設定",
+			displayNameKey = "generic_editor_LocalizedDateTimeFormatSetting_dateTimeFormatDisplaNameKey",
+			description = "多言語設定の日付/時刻のフォーマットを設定する。",
+			required = true,
+			inputType = InputType.TEXT,
+			displayOrder = 110,
+			descriptionKey = "generic_editor_LocalizedDateTimeFormatSetting_dateTimeDescriptionKey"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.ALL}
+			referenceTypes = { FieldReferenceType.ALL }
 	)
 	private String dateTimeFormat;
 
 	/** 日付/時刻のフォーマットの多言語設定のロケール */
 	@MetaFieldInfo(
-			displayName="日付/時刻のロケール設定",
-			displayNameKey="generic_editor_LocalizedDateTimeFormatSetting_dateTimeFormatLocaleDisplaNameKey",
-			description="多言語設定の日付/時刻のロケールを設定する。",
-			required=true,
-			inputType=InputType.TEXT,
-			displayOrder=120,
-			descriptionKey="generic_editor_LocalizedDateTimeFormatSetting_dateTimeFormatDescriptionKey"
+			displayName = "日付/時刻のロケール設定",
+			displayNameKey = "generic_editor_LocalizedDateTimeFormatSetting_dateTimeFormatLocaleDisplaNameKey",
+			description = "多言語設定の日付/時刻のロケールを設定する。",
+			required = true,
+			inputType = InputType.TEXT,
+			displayOrder = 120,
+			descriptionKey = "generic_editor_LocalizedDateTimeFormatSetting_dateTimeFormatDescriptionKey"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.ALL}
+			referenceTypes = { FieldReferenceType.ALL }
 	)
 	private String dateTimeFormatLocale;
 

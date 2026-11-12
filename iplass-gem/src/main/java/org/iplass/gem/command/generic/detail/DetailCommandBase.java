@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 import org.iplass.gem.command.Constants;
+import org.iplass.mtp.auth.AuthContext;
 import org.iplass.mtp.auth.User;
 import org.iplass.mtp.command.RequestContext;
 import org.iplass.mtp.entity.Entity;
@@ -68,7 +69,8 @@ public abstract class DetailCommandBase extends RegistrationCommandBase<DetailCo
 	}
 
 	protected void setUserInfoMap(DetailCommandContext context, Entity entity, boolean isDetail) {
-		if (!context.isUseUserPropertyEditor(isDetail)) return;
+		if (!context.isUseUserPropertyEditor(isDetail))
+			return;
 
 		List<String> userOidList = new ArrayList<>();
 		Map<String, UserRefData> datas = new HashMap<String, UserRefData>();
@@ -94,8 +96,8 @@ public abstract class DetailCommandBase extends RegistrationCommandBase<DetailCo
 						}
 						data.set(refEntity.getOid(), subPropName);
 						datas.put(defName, data);
-					// 多重プロパティの場合
-					} else if (entityTemp instanceof Entity[]){
+						// 多重プロパティの場合
+					} else if (entityTemp instanceof Entity[]) {
 						Entity[] refEntities = (Entity[]) entityTemp;
 						for (Entity refEntity : refEntities) {
 							String defName = refEntity.getDefinitionName();
@@ -111,7 +113,7 @@ public abstract class DetailCommandBase extends RegistrationCommandBase<DetailCo
 					}
 				}
 
-			// 通常プロパティの場合
+				// 通常プロパティの場合
 			} else {
 				String oid = entity.getValue(propertyName);
 				if (oid != null && !userOidList.contains(oid)) {
@@ -120,13 +122,15 @@ public abstract class DetailCommandBase extends RegistrationCommandBase<DetailCo
 			}
 		}
 
-		// 参照元分のユーザ情報を再取得
+		// 参照元分のユーザー情報を再取得
 		if (!datas.isEmpty()) {
 			for (Map.Entry<String, UserRefData> data : datas.entrySet()) {
 				UserRefData userRef = data.getValue();
-				Query q = new Query().select(userRef.getProps().toArray())
-						 .from(data.getKey())
-						 .where(new In(Entity.OID, userRef.getOids().toArray()));
+				Query q = new Query().select(userRef.getProps()
+						.toArray())
+						.from(data.getKey())
+						.where(new In(Entity.OID, userRef.getOids()
+								.toArray()));
 				em.searchEntity(q, new Predicate<Entity>() {
 
 					@Override
@@ -146,28 +150,39 @@ public abstract class DetailCommandBase extends RegistrationCommandBase<DetailCo
 			}
 		}
 
-
 		if (!userOidList.isEmpty()) {
 			//UserEntityを検索してリクエストに格納
 			final Map<String, Entity> userMap = new HashMap<String, Entity>();
 
-			Query q = new Query().select(Entity.OID, Entity.NAME)
-								 .from(User.DEFINITION_NAME)
-								 .where(new In(Entity.OID, userOidList.toArray()));
-			em.searchEntity(q, new Predicate<Entity>() {
-
-				@Override
-				public boolean test(Entity dataModel) {
-					if (!userMap.containsKey(dataModel.getOid())) {
-						userMap.put(dataModel.getOid(), dataModel);
-					}
-					return true;
-				}
-			});
+			if (context.getView()
+					.isShowUserNameWithPrivilegedValue()) {
+				AuthContext.doPrivileged(() -> {
+					searchUserMap(userMap, userOidList);
+				});
+			} else {
+				searchUserMap(userMap, userOidList);
+			}
 
 			context.setAttribute(Constants.USER_INFO_MAP, userMap);
 		}
 
+	}
+
+	private void searchUserMap(Map<String, Entity> userMap, final List<String> userOidList) {
+		Query q = new Query().select(Entity.OID, Entity.NAME)
+				.from(User.DEFINITION_NAME)
+				.where(new In(Entity.OID, userOidList.toArray()));
+
+		em.searchEntity(q, new Predicate<Entity>() {
+
+			@Override
+			public boolean test(Entity dataModel) {
+				if (!userMap.containsKey(dataModel.getOid())) {
+					userMap.put(dataModel.getOid(), dataModel);
+				}
+				return true;
+			}
+		});
 	}
 
 	private class UserRefData {
@@ -175,7 +190,7 @@ public abstract class DetailCommandBase extends RegistrationCommandBase<DetailCo
 		private List<String> props;
 		private Map<String, List<String>> mapping;
 
-		UserRefData () {
+		UserRefData() {
 			oids = new ArrayList<String>();
 			props = new ArrayList<String>();
 			props.add(Entity.OID);
@@ -191,7 +206,7 @@ public abstract class DetailCommandBase extends RegistrationCommandBase<DetailCo
 			}
 			if (mapping.containsKey(oid)) {
 				List<String> list = mapping.get(oid);
-				if(!list.contains(property)) {
+				if (!list.contains(property)) {
 					list.add(property);
 					mapping.put(oid, list);
 				}
@@ -205,9 +220,11 @@ public abstract class DetailCommandBase extends RegistrationCommandBase<DetailCo
 		List<String> getOids() {
 			return oids;
 		}
+
 		List<String> getProps() {
 			return props;
 		}
+
 		Map<String, List<String>> getMapping() {
 			return mapping;
 		}

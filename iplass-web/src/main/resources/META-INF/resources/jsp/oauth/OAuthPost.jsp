@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -20,7 +20,7 @@
 <%@page import="org.iplass.mtp.web.template.TemplateUtil"%>
 <%@page import="org.iplass.mtp.command.RequestContext"%>
 <%@page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
-<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <!DOCTYPE html>
 <html>
@@ -43,6 +43,7 @@
     <c:if test="${not empty authorizationRequest.state}">
       <input type="hidden" name="state" value="${m:esc(authorizationRequest.state)}" />
     </c:if>
+    <input type="hidden" name="iss" value="${m:esc(iss)}" />
 </form>
 </body>
 </html>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,8 +25,12 @@ import java.util.List;
 
 public interface BulkInsertContext {
 	public void setContext(String tableName, List<ColumnValue> columnValue, Connection con) throws SQLException;
+
 	public void add(List<Object> values) throws SQLException;
+
 	public void execute() throws SQLException;
+
 	public void close() throws SQLException;
+
 	public int getCurrentSize();
 }

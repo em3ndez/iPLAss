@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,6 +22,7 @@ package org.iplass.mtp.impl.auth.authorize.builtin.action;
 
 import org.iplass.mtp.impl.auth.AuthContextHolder;
 import org.iplass.mtp.impl.auth.authorize.builtin.TenantAuthorizeContext;
+import org.iplass.mtp.impl.command.RequestContextBinding;
 import org.iplass.mtp.impl.command.SessionBinding;
 import org.iplass.mtp.impl.core.ExecuteContext;
 import org.iplass.mtp.impl.script.Script;
@@ -46,7 +47,9 @@ class ActionPermissionEntry {
 		boolean localIsScriptError = false;
 		Script localParameterCondition = null;
 		if (parameterConditionExp != null) {
-			ScriptEngine se = ExecuteContext.getCurrentContext().getTenantContext().getScriptEngine();
+			ScriptEngine se = ExecuteContext.getCurrentContext()
+					.getTenantContext()
+					.getScriptEngine();
 			try {
 				localParameterCondition = se.createScript(parameterConditionExp, SCRIPT_PREFIX + "_" + oid);
 			} catch (RuntimeException e) {
@@ -76,12 +79,15 @@ class ActionPermissionEntry {
 			return true;
 		}
 
-		ScriptEngine se = ExecuteContext.getCurrentContext().getTenantContext().getScriptEngine();
+		ScriptEngine se = ExecuteContext.getCurrentContext()
+				.getTenantContext()
+				.getScriptEngine();
 		ScriptContext sc = se.newScriptContext();
 		sc.setAttribute("user", authContextHolder.newUserBinding(tenantContext));
 		sc.setAttribute("session", SessionBinding.newSessionBinding());
 		sc.setAttribute("action", actionName);
 		sc.setAttribute("parameter", new ActionParameterBinding(param));
+		sc.setAttribute("request", RequestContextBinding.newRequestContextBinding());
 		Boolean ret;
 		try {
 			ret = (Boolean) parameterCondition.eval(sc);

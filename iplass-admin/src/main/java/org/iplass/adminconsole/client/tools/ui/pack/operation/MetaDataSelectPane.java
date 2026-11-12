@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -127,7 +127,8 @@ public class MetaDataSelectPane extends VLayout implements CreateOperationPane {
 
 		final ToolStripButton refreshButton = new ToolStripButton();
 		refreshButton.setIcon(REFRESH_ICON);
-		refreshButton.setTooltip(SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_tools_pack_operation_MetaDataSelectPane_refreshList")));
+		refreshButton
+				.setTooltip(SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_tools_pack_operation_MetaDataSelectPane_refreshList")));
 		refreshButton.setHoverWrap(false);
 		refreshButton.addClickHandler(new ClickHandler() {
 

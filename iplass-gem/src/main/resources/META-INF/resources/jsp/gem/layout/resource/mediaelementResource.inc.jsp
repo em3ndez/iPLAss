@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -21,5 +21,5 @@
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true" %>
 
-<script src="${staticContentPath}/webjars/mediaelement/4.2.5/build/mediaelement-and-player.min.js?cv=${apiVersion}"></script>
-<link rel="stylesheet" href="${staticContentPath}/webjars/mediaelement/4.2.5/build/mediaelementplayer.min.css?cv=${apiVersion}" />
+<script src="${staticContentPath}/webjars/mediaelement/4.2.17/build/mediaelement-and-player.min.js?cv=${apiVersion}"></script>
+<link rel="stylesheet" href="${staticContentPath}/webjars/mediaelement/4.2.17/build/mediaelementplayer.min.css?cv=${apiVersion}" />

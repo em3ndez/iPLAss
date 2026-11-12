@@ -26,6 +26,7 @@
 		<property name="org.iplass.mtp.tenant.TenantManager" value="org.iplass.mtp.impl.tenant.TenantManagerImpl" />
 		<property name="org.iplass.mtp.transaction.TransactionManager" class="org.iplass.mtp.impl.transaction.TransactionService$TransactionManagerConstructor" />
 		<property name="org.iplass.mtp.utilityclass.definition.UtilityClassDefinitionManager" value="org.iplass.mtp.impl.script.UtilityClassDefinitionManagerImpl" />
+		<property name="org.iplass.mtp.view.filter.EntityFilterManager" value="org.iplass.mtp.impl.view.filter.EntityFilterManagerImpl"/>
 		<property name="org.iplass.mtp.webhook.WebhookManager" value="org.iplass.mtp.impl.webhook.WebhookManagerImpl" />
 		<property name="org.iplass.mtp.webhook.template.definition.WebhookTemplateDefinitionManager" value="org.iplass.mtp.impl.webhook.template.WebhookTemplateDefinitionManagerImpl" />
 		<property name="org.iplass.mtp.webhook.endpoint.definition.WebhookEndpointDefinitionManager" value="org.iplass.mtp.impl.webhook.endpoint.WebhookEndpointDefinitionManagerImpl" />
@@ -98,6 +99,7 @@
 		<property name="typeMap" value="org.iplass.mtp.impl.prefs.PreferenceService$TypeMap" />
 		<property name="typeMap" value="org.iplass.mtp.impl.auth.authenticate.builtin.policy.AuthenticationPolicyService$TypeMap" />
 		<property name="typeMap" value="org.iplass.mtp.impl.pushnotification.PushNotificationService$TypeMap" />
+		<property name="typeMap" value="org.iplass.mtp.impl.view.filter.EntityFilterService$TypeMap"/>
 		<property name="typeMap" value="org.iplass.mtp.impl.webhook.WebhookServiceImpl$TypeMap" />
 		<property name="typeMap" value="org.iplass.mtp.impl.webhook.endpoint.WebhookEndpointServiceImpl$TypeMap" />
 	</service>
@@ -111,26 +113,37 @@
 		<depend>org.iplass.mtp.impl.session.SessionService</depend>
 		<depend>org.iplass.mtp.impl.rdb.adapter.RdbAdapterService</depend>
 		<depend>org.iplass.mtp.impl.auth.log.AuthLoggerService</depend>
-		<property name="authenticationProvider" class="org.iplass.mtp.impl.auth.authenticate.builtin.BuiltinAuthenticationProvider">
- 			<property name="updatable" value="true" />
- 			<property name="providerName" value="default" />
 
- 			<!-- if load custom reference property at login, set userEntityResolver.eagerLoadReferenceProperty -->
- 			<!--
- 			<property name="userEntityResolver" class="org.iplass.mtp.impl.auth.authenticate.DefaultUserEntityResolver">
-	 			<property name="eagerLoadReferenceProperty" value="rank" />
-	 			<property name="eagerLoadReferenceProperty" value="groups" />
-	 			<property name="eagerLoadReferenceProperty" value="yourCustomReference" />
- 			</property>
- 			 -->
+		<bean name="defaultBuiltinAuthenticationProvider" class="org.iplass.mtp.impl.auth.authenticate.builtin.BuiltinAuthenticationProvider">
+				<property name="updatable" value="true" />
+				<property name="providerName" value="default" />
 
-			<property name="passwordHashSettings">
-				<property name="version" value="1" />
-				<property name="passwordHashAlgorithm" value="SHA-256" />
-				<property name="systemSalt" value="iPLAssSystemSalt" />
-				<property name="stretchCount" value="1000" />
-			</property>
-		</property>
+				<!-- if load custom reference property at login, set userEntityResolver.eagerLoadReferenceProperty -->
+				<!--
+	 			<property name="userEntityResolver" class="org.iplass.mtp.impl.auth.authenticate.DefaultUserEntityResolver">
+		 			<property name="eagerLoadReferenceProperty" value="rank" />
+		 			<property name="eagerLoadReferenceProperty" value="groups" />
+		 			<property name="eagerLoadReferenceProperty" value="yourCustomReference" />
+	 			</property>
+	 			 -->
+
+				<property name="passwordHashSettings">
+					<property name="version" value="1" />
+					<property name="passwordHashAlgorithm" value="SHA-256" />
+					<property name="systemSalt" value="iPLAssSystemSalt" />
+					<property name="stretchCount" value="1000" />
+				</property>
+				<property name="passwordHashSettings" class="org.iplass.mtp.impl.auth.authenticate.builtin.Argon2PasswordHashSetting">
+					<property name="version" value="2" />
+					<!-- TODO change salt for each environment for better security measure-->
+					<property name="systemSalt" value="iPLAss#a617d5c1-3f37-4345-a98c-b53b45aff801" />
+					<property name="parallelism" value="1" />
+					<property name="memorySizeKB" value="19456" />
+					<property name="iterations" value="2" />
+				</property>
+		</bean>
+
+		<property name="authenticationProvider" ref="defaultBuiltinAuthenticationProvider" />
 
 		<property name="authorizationProvider" class="org.iplass.mtp.impl.auth.authorize.builtin.BuiltinAuthorizationProvider">
 			<property name="grantAllPermissionsToAdmin" value="true" />
@@ -243,6 +256,16 @@
 		<!-- Content-Transfer-Encoding -->
 		<property name="mail.encoding" value="base64"/>
 
+		<!-- カスタムヘッダー -->
+		<!-- メールにヘッダー情報追加する場合、以下を有効にしてヘッダー名とヘッダー値を設定してください。 -->
+		<!-- 
+		<property name="mail.customHeaderMap">
+			<property name="headerName1" value="headerValue1"/>
+			<property name="headerName2" value="headerValue2"/>
+			<property name="headerName3" value="headerValue3"/>
+		</property>
+		 -->
+
 		<!-- ■ for develop only (additional="true) ■ -->
 		<!-- 送信メールをデバッグ出力する場合、以下を有効にしてください。 -->
 		<!--
@@ -260,29 +283,6 @@
 	<service>
 		<interface>org.iplass.mtp.impl.pushnotification.PushNotificationService</interface>
 		<class>org.iplass.mtp.impl.pushnotification.PushNotificationService</class>
-
-		<!-- example of FCMPushNotificationService  -->
-		<!--
-		<class>org.iplass.mtp.impl.pushnotification.fcm.FCMPushNotificationService</class>
-		<property name="authorizationKey" value="[your Firebase authorizationKey]" />
-		<property name="dryRun" value="false" />
-		<property name="enableRetry" value="true" />
-		<property name="exponentialBackoff" class="org.iplass.mtp.impl.http.ExponentialBackoff">
-			<property name="retryIntervalMillis" value="500" />
-			<property name="randomizationFactor" value="0.5" />
-			<property name="multiplier" value="1.5" />
-			<property name="maxIntervalMillis" value="60000" />
-			<property name="maxElapsedTimeMillis" value="300000" />
-		</property>
-		<property name="httpClientConfig" class="org.iplass.mtp.impl.http.HttpClientConfig">
-			<property name="proxyHost" value="[set proxyHost if needed]" />
-			<property name="proxyPort" value="[set proxyPort if needed]" />
-			<property name="poolingMaxTotal" value="[set poolingMaxTotal if needed]" />
-			<property name="poolingDefaultMaxPerRoute" value="[set poolingDefaultMaxPerRoute if needed]" />
-			<property name="poolingTimeToLive" value="[set poolingTimeToLive if needed]" />
-		</property>
-		<property name="registrationIdHandler" class="org.iplass.mtp.impl.pushnotification.fcm.LoggingRegistrationIdHandler" />
-		 -->
 	</service>
 
 	<!-- Webhook -->
@@ -558,6 +558,11 @@
 		<property name="separateTransaction" value="true" />
 		<property name="retryCount" value="3" />
 	</service>
+	<!-- EntityFilter -->
+	<service final="true">
+		<interface>org.iplass.mtp.impl.view.filter.EntityFilterService</interface>
+		<class>org.iplass.mtp.impl.view.filter.EntityFilterService</class>
+	</service>
 
 	<!-- Command関連 -->
 	<service>
@@ -612,25 +617,8 @@
 
 		<property name="useFulltextSearch" value="false" />
 		<property name="maxRows" value="1000" />
-		<property name="highlightPreTag" value="&lt;b style=&quot;background:aquamarine&quot;&gt;" />
-		<property name="highlightPostTag" value="&lt;/b&gt;" />
 		<property name="throwExceptionWhenOverLimit" value="true"/>
-
-		<!-- solr利用 -->
-		<!--
-		<class>org.iplass.mtp.impl.fulltextsearch.FulltextSearchSolrService</class>
-		<property name="solrUrl" value="http://ADDRESS:PORT/solr/coreName/" />
-		 -->
-
-		<!-- lucene利用 -->
-		<class>org.iplass.mtp.impl.fulltextsearch.FulltextSearchLuceneService</class>
-		<property name="directory" value="D:\tmp\lucene" />
-		<property name="defaultOperator" value="AND" />
-		<property name="analyzer" value="org.apache.lucene.analysis.ja.JapaneseAnalyzer" />
-		<property name="indexWriterRAMBufferSizeMB" value="64.0"/>
-		<property name="redundantTimeMinutes" value="10"/>
-		<property name="indexWriterCommitLimit" value="-1"/>
-
+		
 		<!-- BinaryReferenceのParse可能な最大文字数 -->
 		<property name="binaryParseLimitLength" value="100000"/>
 
@@ -646,7 +634,10 @@
 		<!-- OfficeDocument(OOXML形式)用Parser。tikaのOOXMLParserを利用して解析する -->
 		<property name="binaryParser" class="org.iplass.mtp.impl.fulltextsearch.parser.BinaryOOXMLParser" />
 		<!-- OfficeDocument(2003以前の形式)用Parser。tikaのOfficeParserを利用して解析する -->
-		<property name="binaryParser" class="org.iplass.mtp.impl.fulltextsearch.parser.BinaryOfficeParser" />
+		<property name="binaryParser" class="org.iplass.mtp.impl.fulltextsearch.parser.BinaryOfficeParser">
+			<!-- RTFファイルの解析例外は処理継続する -->
+			<property name="continuableExceptions" value="org.apache.poi.poifs.filesystem.NotOLE2FileException" />
+		</property>
 		<!-- HTML用Parser。tikaのHtmlParserを利用して解析する -->
 		<property name="binaryParser" class="org.iplass.mtp.impl.fulltextsearch.parser.BinaryHtmlParser" />
 		<!-- PlainText用Parser。tikaのTXTParserを利用して解析する -->
@@ -663,6 +654,13 @@
 		<!-- 全てのバイナリファイルを対象に、nameとtypeのみ返す -->
 		<property name="binaryParser" class="org.iplass.mtp.impl.fulltextsearch.parser.BinaryNameTypeParser" />
 
+		<!-- lucene利用 -->
+		<class>org.iplass.mtp.impl.fulltextsearch.lucene.LuceneFulltextSearchService</class>
+		<property name="defaultOperator" value="AND" />
+		<!--
+		<property name="directory" value="[/set/your/lucene/index/dir]" />
+		 -->
+		
 	</service>
 
 	<!-- Entity更新ログ定義 -->
@@ -679,7 +677,6 @@
 		<property name="logSelectValueWithLabel" value="true" />
 		<!-- log出力時、Referenceのoidとnameを出力する場合はtrue -->
 		<property name="logReferenceWithLabel" value="true" />
-
 	</service>
 
 	<service>
@@ -808,11 +805,34 @@
 				<property name="cacheKeyResolver" class="org.iplass.mtp.impl.entity.cache.QueryCacheKeyResolver" />
 				<property name="cacheIndexResolver" class="org.iplass.mtp.impl.cache.store.keyresolver.StringCacheKeyResolver" />
 				<property name="store" class="org.iplass.mtp.impl.cache.store.builtin.SimpleCacheStoreFactory">
+					<property name="fineGrainedLock" value="true" />
+					<property name="indexConfig" class="org.iplass.mtp.impl.cache.store.builtin.FineGrainedLockIndexConfig">
+						<property name="shardSize" value="16" />
+						<property name="fair" value="true" />
+					</property>
+					
 					<!-- 12時間有効 -->
 					<property name="timeToLive" value="43200000" />
 					<!-- 最大128 -->
 					<property name="size" value="128" />
 				</property>
+			</property>
+		</property>
+
+		<!-- Query(Keep, Reload)キャッシュ -->
+		<property name="query" class="org.iplass.mtp.impl.cache.store.builtin.TransactionLocalCacheStoreFactory">
+			<property name="namespacePattern" value="mtp[.]entity[.]keepQueryCache/.*" />
+			<property name="backendStore" class="org.iplass.mtp.impl.cache.store.builtin.SimpleCacheStoreFactory">
+				<property name="fineGrainedLock" value="true" />
+				<property name="indexConfig" class="org.iplass.mtp.impl.cache.store.builtin.FineGrainedLockIndexConfig">
+					<property name="shardSize" value="16" />
+					<property name="fair" value="true" />
+				</property>
+				
+				<!-- 12時間有効 -->
+				<property name="timeToLive" value="43200000" />
+				<!-- 最大128 -->
+				<property name="size" value="128" />
 			</property>
 		</property>
 
@@ -858,7 +878,7 @@
 		</property>
 		<property name="queue" class="org.iplass.mtp.impl.async.rdb.QueueConfig">
 			<property name="id" value="1" />
-			<property name="name" value="csvupload" />
+			<property name="name" value="entityupload" />
 			<property name="worker" class="org.iplass.mtp.impl.async.rdb.WorkerConfig">
 				<property name="pollingInterval" value="60000" />
 			</property>
@@ -1100,6 +1120,20 @@
 			<property name="lastNameIsFirst" value="false" />
 		</property>
 
+		<property name="genericFontFamilyList" value="serif" />
+		<property name="genericFontFamilyList" value="sans-serif" />
+		<property name="genericFontFamilyList" value="monospace" />
+		<property name="genericFontFamilyList" value="cursive" />
+		<property name="genericFontFamilyList" value="fantasy" />
+		<property name="genericFontFamilyList" value="system-ui" />
+		<property name="genericFontFamilyList" value="ui-serif" />
+		<property name="genericFontFamilyList" value="ui-sans-serif" />
+		<property name="genericFontFamilyList" value="ui-monospace" />
+		<property name="genericFontFamilyList" value="ui-rounded" />
+		<property name="genericFontFamilyList" value="math" />
+		<property name="genericFontFamilyList" value="emoji" />
+		<property name="genericFontFamilyList" value="fangsong" />
+
 		<property name="languageFonts" class="org.iplass.mtp.impl.i18n.LanguageFonts">
 			<property name="language" value="ja" />
 			<property name="fonts" value="Meiryo" />
@@ -1136,4 +1170,63 @@
 		</property>
 	</service>
 
+	<!-- ウォームアップ --> 
+	<service>
+		<interface>org.iplass.mtp.impl.warmup.WarmupService</interface>
+		<class>org.iplass.mtp.impl.warmup.WarmupService</class>
+
+		<!-- enabled が true に設定されている場合に、ウォームアップ処理が実行されます。未指定の場合は false が設定されます。 -->
+		<!--
+		<property name="enabled" value="true" />
+		-->
+		<!--
+			statusFile には、ウォームアップ状態を表すファイルパスを設定します。指定されたファイルパスによって、以下の２ファイルを作成します。
+			statusFile の設定値が "/path/to/warmup_status" の場合。
+
+			正常終了時
+				/path/to/warmup_status （ファイルには、complete が記載されている）
+				/path/to/warmup_status.complete （空ファイル）
+
+			異常終了時
+				/path/to/warmup_status （ファイルには、failed が記載されている）
+				/path/to/warmup_status.failed （空ファイル）
+		-->
+		<!--
+		<property name="statusFile" value="/path/to/warmup_status" />
+		-->
+
+		<!--
+			taskMap は Map 形式でプロパティを設定してください。
+				name = ウォームアップタスク名
+				value = org.iplass.mtp.impl.warmup.WarmupTask の実装クラス
+		-->
+		<property name="taskMap">
+			<!-- defaultMetaDataWarmupTask はメタデータウォームアップのデフォルト定義 -->
+			<property name="defaultMetaDataWarmupTask" class="org.iplass.mtp.impl.warmup.MetaDataWarmupTask">
+				<property name="metadataPathList" value="/entity/mtp/*" />
+				<property name="metadataPathList" value="/message/mtp/*" />
+				<property name="metadataPathList" value="/authNPolicy/*" />
+			</property>
+		</property>
+
+		<!--
+			applicationTask には taskMap プロパティで設定したウォームアップタスク名を指定してください。
+			カンマ区切りで複数指定可能です。
+		-->
+		<!--
+		<property name="applicationTask" value="app1Task, app2Task" />
+		-->
+
+		<!--
+			tenantTaskMap には Map 形式でプロパティを設定してください。
+				name = テナントID。"*" は全テナントIDを表す。カンマ区切りで複数指定可能。
+				value = taskMap プロパティで設定したウォームアップタスク名。カンマ区切りで複数指定可能。
+		-->
+		<!--
+		<property name="tenantTaskMap">
+			<property name="1,2" value="taskA,taskB" />
+			<property name="*" value="allTenantTask" />
+		</property>
+		-->
+	</service>
 </serviceDefinition>

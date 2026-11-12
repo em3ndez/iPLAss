@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -36,7 +36,7 @@ public class PropertyCommonAttributeControllerImpl implements PropertyCommonAttr
 		partsList.add(new CommonAttributeParts1());
 
 		notNullHandler = new CommonAttributeParts2();
-		partsList.add((PropertyCommonAttributeParts)notNullHandler);
+		partsList.add((PropertyCommonAttributeParts) notNullHandler);
 
 		partsList.add(new CommonAttributeParts3());
 	}

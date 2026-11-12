@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -118,13 +118,13 @@ public class FullTextSearchResult {
 	public static class ColModel {
 
 		/** jqGrid.colModel.name */
-		private String name;	//col + 列番号(同一Propertyを考慮)
+		private String name; //col + 列番号(同一Propertyを考慮)
 
 		/** jqGrid.colModel.label */
-		private String label;	//colNamesが未指定の場合、labelが使用される(colNamesは未指定で利用)
+		private String label; //colNamesが未指定の場合、labelが使用される(colNamesは未指定で利用)
 
 		/** jqGrid.colModel.index */
-		private String index;	//nameと同じ
+		private String index; //nameと同じ
 
 		/** jqGrid.colModel.sortable */
 		private boolean sortable = false;
@@ -136,13 +136,16 @@ public class FullTextSearchResult {
 		private boolean frozen = false;
 
 		/** jqGrid.colModel.align */
-		private String align = "left";	//left, center, right
+		private String align = "left"; //left, center, right
 
 		/** jqGrid.colModel.width */
 		private Integer width = 150;
 
 		/** jqGrid.colModel.classes */
 		private String classes;
+
+		/** cellAttrでのグループ化 */
+		private boolean grouping = false;
 
 		public ColModel(String name, String label) {
 			this.name = name;
@@ -222,5 +225,12 @@ public class FullTextSearchResult {
 			this.classes = classes;
 		}
 
+		public boolean isGrouping() {
+			return grouping;
+		}
+
+		public void setGrouping(boolean grouping) {
+			this.grouping = grouping;
+		}
 	}
 }

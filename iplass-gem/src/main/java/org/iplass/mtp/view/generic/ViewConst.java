@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,5 +25,6 @@ public class ViewConst {
 	public static final String DESIGN_TYPE = "designType";
 	public static final String DESIGN_TYPE_GEM = "gem";
 	public static final String DESIGN_TYPE_GEM_AGGREGATION = "gem_aggregation";
+	public static final String DESIGN_TYPE_GEM_SPREADSHEET = "gem_spreadsheet";
 
 }

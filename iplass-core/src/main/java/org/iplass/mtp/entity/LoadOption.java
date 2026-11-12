@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,7 +23,6 @@ package org.iplass.mtp.entity;
 import java.util.ArrayList;
 import java.util.List;
 
-
 /**
  * Entityのload時のオプションです。
  * 
@@ -37,6 +36,7 @@ public class LoadOption {
 	private List<String> loadReferences;
 	private boolean localized = false;
 	private boolean notifyListeners = true;
+	private boolean versioned;
 
 	/**
 	 * withReference = true,
@@ -45,7 +45,7 @@ public class LoadOption {
 	 */
 	public LoadOption() {
 	}
-	
+
 	/**
 	 * 指定のオプションで、LoadOptionをnewします。
 	 * 
@@ -56,7 +56,7 @@ public class LoadOption {
 		this.withReference = withReference;
 		this.withMappedByReference = withMappedByReference;
 	}
-	
+
 	/**
 	 * 指定の参照プロパティのみをロードする形で、LoadOptionをnewします。
 	 * loadReferencesが指定されている場合は、
@@ -67,7 +67,7 @@ public class LoadOption {
 	public LoadOption(List<String> loadReferences) {
 		this.loadReferences = loadReferences;
 	}
-	
+
 	/**
 	 * 
 	 * 指定の参照プロパティのみをロードする形で、LoadOptionをnewします。
@@ -80,12 +80,20 @@ public class LoadOption {
 	public LoadOption(String... loadReference) {
 		if (loadReference != null) {
 			loadReferences = new ArrayList<String>();
-			for (String lr: loadReference) {
+			for (String lr : loadReference) {
 				loadReferences.add(lr);
 			}
 		}
 	}
-	
+
+	public boolean isVersioned() {
+		return versioned;
+	}
+
+	public void setVersioned(boolean versioned) {
+		this.versioned = versioned;
+	}
+
 	public boolean isNotifyListeners() {
 		return notifyListeners;
 	}
@@ -112,7 +120,7 @@ public class LoadOption {
 	public boolean isWithReference() {
 		return withReference;
 	}
-	
+
 	/**
 	 * Load時に参照プロパティも読み込むように設定します。
 	 * 
@@ -121,11 +129,11 @@ public class LoadOption {
 	public void setWithReference(boolean withReference) {
 		this.withReference = withReference;
 	}
-	
+
 	public boolean isWithMappedByReference() {
 		return withMappedByReference;
 	}
-	
+
 	/**
 	 * Load時に被参照の参照プロパティも読み込むように設定します（withReference=trueとなっている前提の上で）。
 	 * 
@@ -167,11 +175,24 @@ public class LoadOption {
 		return this;
 	}
 
+	/**
+	 * 参照先のEntityがバージョン管理されているEntityの場合、
+	 * 参照先のEntityを保存時点のバージョンで取得します。
+	 * Load対象のEntity自体もバージョン管理されている場合は、
+	 * ロード対象Entityのversionまでを指定している場合に有効なフラグとなります。
+	 * 
+	 * @return
+	 */
+	public LoadOption versioned() {
+		this.versioned = true;
+		return this;
+	}
+
 	@Override
 	public String toString() {
-		return "LoadOption [withReference=" + withReference
-				+ ", withMappedByReference=" + withMappedByReference
-				+ ", loadReferences=" + loadReferences + ", localized="
-				+ localized + "]";
+		return "LoadOption [withReference=" + withReference + ", withMappedByReference=" + withMappedByReference
+				+ ", loadReferences=" + loadReferences + ", localized=" + localized + ", notifyListeners="
+				+ notifyListeners + ", versioned=" + versioned + "]";
 	}
+
 }

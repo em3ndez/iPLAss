@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -60,8 +60,8 @@ public class RegexReplaceAttributePane extends NormalizerAttributePane {
 	@Override
 	public void setDefinition(NormalizerDefinition definition) {
 		if (definition instanceof RegexReplace) {
-			txtRegex.setValue(((RegexReplace)definition).getRegex());
-			txtReplacement.setValue(((RegexReplace)definition).getReplacement());
+			txtRegex.setValue(((RegexReplace) definition).getRegex());
+			txtReplacement.setValue(((RegexReplace) definition).getReplacement());
 		} else {
 			form.clearValues();
 		}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,7 +31,7 @@ import org.iplass.gem.command.GemResourceBundleUtil;
 import org.iplass.mtp.definition.Definition;
 import org.iplass.mtp.definition.LocalizedStringDefinition;
 
-import com.google.gwt.user.server.rpc.XsrfProtectedServiceServlet;
+import com.google.gwt.user.server.rpc.jakarta.XsrfProtectedServiceServlet;
 
 public class I18nServiceImpl extends XsrfProtectedServiceServlet implements I18nService {
 
@@ -39,43 +39,46 @@ public class I18nServiceImpl extends XsrfProtectedServiceServlet implements I18n
 
 	@Override
 	public List<LocalizedStringDefinition> getLocalizedResourceList(int tenantId, String key) {
-		return AuthUtil.authCheckAndInvoke(getServletContext(), this.getThreadLocalRequest(), this.getThreadLocalResponse(), tenantId, new AuthUtil.Callable<List<LocalizedStringDefinition>>() {
+		return AuthUtil.authCheckAndInvoke(getServletContext(), this.getThreadLocalRequest(), this.getThreadLocalResponse(), tenantId,
+				new AuthUtil.Callable<List<LocalizedStringDefinition>>() {
 
-			@Override
-			public List<LocalizedStringDefinition> call() {
-				return GemResourceBundleUtil.resourceList(key);
-			}
-		});
+					@Override
+					public List<LocalizedStringDefinition> call() {
+						return GemResourceBundleUtil.resourceList(key);
+					}
+				});
 
 	}
 
 	@Override
 	public Map<String, List<LocalizedStringDefinition>> getMultiLangItemInfoForDisp(int tenantId, Definition definition) {
-		return AuthUtil.authCheckAndInvoke(getServletContext(), this.getThreadLocalRequest(), this.getThreadLocalResponse(), tenantId, new AuthUtil.Callable<Map<String, List<LocalizedStringDefinition>>>() {
+		return AuthUtil.authCheckAndInvoke(getServletContext(), this.getThreadLocalRequest(), this.getThreadLocalResponse(), tenantId,
+				new AuthUtil.Callable<Map<String, List<LocalizedStringDefinition>>>() {
 
-			@Override
-			public Map<String, List<LocalizedStringDefinition>> call() {
-				Map<String, List<LocalizedStringDefinition>> listGridFieldsMap = new LinkedHashMap<String, List<LocalizedStringDefinition>>();
-				LangDataLogic logic = new LangDataLogic();
-				logic.createMultiLangInfo(listGridFieldsMap, definition.getClass(), definition, null);
-				return listGridFieldsMap;
-			}
-		});
+					@Override
+					public Map<String, List<LocalizedStringDefinition>> call() {
+						Map<String, List<LocalizedStringDefinition>> listGridFieldsMap = new LinkedHashMap<String, List<LocalizedStringDefinition>>();
+						LangDataLogic logic = new LangDataLogic();
+						logic.createMultiLangInfo(listGridFieldsMap, definition.getClass(), definition, null);
+						return listGridFieldsMap;
+					}
+				});
 
 	}
 
 	@Override
 	public Definition getMultiLangItemInfoForUpdate(int tenantId, Definition definition, Map<String, MultiLangFieldInfo> updateDefinitionInfo) {
-		return AuthUtil.authCheckAndInvoke(getServletContext(), this.getThreadLocalRequest(), this.getThreadLocalResponse(), tenantId, new AuthUtil.Callable<Definition>() {
+		return AuthUtil.authCheckAndInvoke(getServletContext(), this.getThreadLocalRequest(), this.getThreadLocalResponse(), tenantId,
+				new AuthUtil.Callable<Definition>() {
 
-			@Override
-			public Definition call() {
-				Class<?> cls = definition.getClass();
-				LangDataLogic logic = new LangDataLogic();
-				logic.createDefinitionInfo(cls, definition, updateDefinitionInfo, null);
-				return definition;
-			}
-		});
+					@Override
+					public Definition call() {
+						Class<?> cls = definition.getClass();
+						LangDataLogic logic = new LangDataLogic();
+						logic.createDefinitionInfo(cls, definition, updateDefinitionInfo, null);
+						return definition;
+					}
+				});
 
 	}
 

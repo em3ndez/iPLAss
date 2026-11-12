@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,8 +31,6 @@ import org.iplass.mtp.impl.entity.EntityContext;
 import org.iplass.mtp.impl.entity.EntityHandler;
 import org.iplass.mtp.impl.entity.property.PropertyHandler;
 import org.iplass.mtp.impl.entity.property.ReferencePropertyHandler;
-import org.iplass.mtp.impl.i18n.I18nUtil;
-import org.iplass.mtp.impl.i18n.MetaLocalizedString;
 import org.iplass.mtp.impl.script.GroovyScriptEngine;
 import org.iplass.mtp.impl.script.template.GroovyTemplate;
 import org.iplass.mtp.impl.script.template.GroovyTemplateCompiler;
@@ -59,20 +57,8 @@ public class MetaMassReferenceSection extends MetaSection {
 	/** プロパティID */
 	private String propertyId;
 
-	/** タイトル */
-	private String title;
-
-	/** 多言語設定情報 */
-	private List<MetaLocalizedString> localizedTitleList = new ArrayList<>();
-
 	/** セクションの展開可否 */
 	private boolean expandable;
-
-	/** id */
-	private String id;
-
-	/** クラス名 */
-	private String style;
 
 	/** リンクを表示するか */
 	private boolean showLink;
@@ -100,6 +86,9 @@ public class MetaMassReferenceSection extends MetaSection {
 
 	/** ビュー定義名 */
 	private String viewName;
+
+	/** Entity権限における限定条件の除外設定 */
+	private List<String> withoutConditionReferenceName;
 
 	/** 編集リンクを詳細リンクに変更 */
 	private boolean changeEditLinkToViewLink;
@@ -154,7 +143,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @return プロパティID
 	 */
 	public String getPropertyId() {
-	    return propertyId;
+		return propertyId;
 	}
 
 	/**
@@ -162,23 +151,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @param propertyId プロパティID
 	 */
 	public void setPropertyId(String propertyId) {
-	    this.propertyId = propertyId;
-	}
-
-	/**
-	 * タイトルを取得します。
-	 * @return タイトル
-	 */
-	public String getTitle() {
-	    return title;
-	}
-
-	/**
-	 * タイトルを設定します。
-	 * @param title タイトル
-	 */
-	public void setTitle(String title) {
-	    this.title = title;
+		this.propertyId = propertyId;
 	}
 
 	/**
@@ -186,7 +159,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @return セクションの展開可否
 	 */
 	public boolean isExpandable() {
-	    return expandable;
+		return expandable;
 	}
 
 	/**
@@ -194,39 +167,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @param expandable セクションの展開可否
 	 */
 	public void setExpandable(boolean expandable) {
-	    this.expandable = expandable;
-	}
-
-	/**
-	 * idを取得します。
-	 * @return id
-	 */
-	public String getId() {
-	    return id;
-	}
-
-	/**
-	 * idを設定します。
-	 * @param id id
-	 */
-	public void setId(String id) {
-	    this.id = id;
-	}
-
-	/**
-	 * クラス名を取得します。
-	 * @return クラス名
-	 */
-	public String getStyle() {
-	    return style;
-	}
-
-	/**
-	 * クラス名を設定します。
-	 * @param style クラス名
-	 */
-	public void setStyle(String style) {
-	    this.style = style;
+		this.expandable = expandable;
 	}
 
 	/**
@@ -234,7 +175,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @return リンクを表示するか
 	 */
 	public boolean isShowLink() {
-	    return showLink;
+		return showLink;
 	}
 
 	/**
@@ -242,7 +183,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @param showLink リンクを表示するか
 	 */
 	public void setShowLink(boolean showLink) {
-	    this.showLink = showLink;
+		this.showLink = showLink;
 	}
 
 	/**
@@ -250,7 +191,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @return 詳細編集非表示設定
 	 */
 	public boolean isHideDetail() {
-	    return hideDetail;
+		return hideDetail;
 	}
 
 	/**
@@ -258,7 +199,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @param hideDetail 詳細編集非表示設定
 	 */
 	public void setHideDetail(boolean hideDetail) {
-	    this.hideDetail = hideDetail;
+		this.hideDetail = hideDetail;
 	}
 
 	/**
@@ -266,7 +207,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @return 詳細表示非表示設定
 	 */
 	public boolean isHideView() {
-	    return hideView;
+		return hideView;
 	}
 
 	/**
@@ -274,7 +215,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @param hideView 詳細表示非表示設定
 	 */
 	public void setHideView(boolean hideView) {
-	    this.hideView = hideView;
+		this.hideView = hideView;
 	}
 
 	/**
@@ -282,7 +223,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @return 上部のコンテンツ
 	 */
 	public String getUpperContents() {
-	    return upperContents;
+		return upperContents;
 	}
 
 	/**
@@ -290,7 +231,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @param upperContents 上部のコンテンツ
 	 */
 	public void setUpperContents(String upperContents) {
-	    this.upperContents = upperContents;
+		this.upperContents = upperContents;
 	}
 
 	/**
@@ -298,7 +239,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @return 下部のコンテンツ
 	 */
 	public String getLowerContents() {
-	    return lowerContents;
+		return lowerContents;
 	}
 
 	/**
@@ -306,7 +247,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @param lowerContents 下部のコンテンツ
 	 */
 	public void setLowerContents(String lowerContents) {
-	    this.lowerContents = lowerContents;
+		this.lowerContents = lowerContents;
 	}
 
 	/**
@@ -314,7 +255,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @return 上限値
 	 */
 	public int getLimit() {
-	    return limit;
+		return limit;
 	}
 
 	/**
@@ -322,7 +263,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @param limit 上限値
 	 */
 	public void setLimit(int limit) {
-	    this.limit = limit;
+		this.limit = limit;
 	}
 
 	/**
@@ -330,7 +271,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @return ダイアログ表示アクション名
 	 */
 	public String getViewActionName() {
-	    return viewActionName;
+		return viewActionName;
 	}
 
 	/**
@@ -338,7 +279,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @param viewActionName ダイアログ表示アクション名
 	 */
 	public void setViewActionName(String viewActionName) {
-	    this.viewActionName = viewActionName;
+		this.viewActionName = viewActionName;
 	}
 
 	/**
@@ -346,7 +287,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @return ダイアログ編集アクション名
 	 */
 	public String getDetailActionName() {
-	    return detailActionName;
+		return detailActionName;
 	}
 
 	/**
@@ -354,7 +295,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @param detailActionName ダイアログ編集アクション名
 	 */
 	public void setDetailActionName(String detailActionName) {
-	    this.detailActionName = detailActionName;
+		this.detailActionName = detailActionName;
 	}
 
 	/**
@@ -394,7 +335,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @return ビュー定義名
 	 */
 	public String getViewName() {
-	    return viewName;
+		return viewName;
 	}
 
 	/**
@@ -402,7 +343,23 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @param viewName ビュー定義名
 	 */
 	public void setViewName(String viewName) {
-	    this.viewName = viewName;
+		this.viewName = viewName;
+	}
+
+	/**
+	 * Entity権限における限定条件の除外設定を取得します。
+	 * @return Entity権限における限定条件の除外設定
+	 */
+	public List<String> getWithoutConditionReferenceName() {
+		return withoutConditionReferenceName;
+	}
+
+	/**
+	 * Entity権限における限定条件の除外設定を設定します。
+	 * @param withoutConditionReferenceName Entity権限における限定条件の除外設定
+	 */
+	public void setWithoutConditionReferenceName(List<String> withoutConditionReferenceName) {
+		this.withoutConditionReferenceName = withoutConditionReferenceName;
 	}
 
 	/**
@@ -426,7 +383,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @return 削除ボタン非表示設定
 	 */
 	public boolean isHideDeleteButton() {
-	    return hideDeleteButton;
+		return hideDeleteButton;
 	}
 
 	/**
@@ -434,7 +391,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @param hideDeleteButton 削除ボタン非表示設定
 	 */
 	public void setHideDeleteButton(boolean hideDeleteButton) {
-	    this.hideDeleteButton = hideDeleteButton;
+		this.hideDeleteButton = hideDeleteButton;
 	}
 
 	/**
@@ -442,7 +399,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @return 追加ボタン非表示設定
 	 */
 	public boolean isHideAddButton() {
-	    return hideAddButton;
+		return hideAddButton;
 	}
 
 	/**
@@ -450,7 +407,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @param hideAddButton 追加ボタン非表示設定
 	 */
 	public void setHideAddButton(boolean hideAddButton) {
-	    this.hideAddButton = hideAddButton;
+		this.hideAddButton = hideAddButton;
 	}
 
 	/**
@@ -458,7 +415,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @return ページング非表示設定
 	 */
 	public boolean isHidePaging() {
-	    return hidePaging;
+		return hidePaging;
 	}
 
 	/**
@@ -466,7 +423,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @param hidePaging ページング非表示設定
 	 */
 	public void setHidePaging(boolean hidePaging) {
-	    this.hidePaging = hidePaging;
+		this.hidePaging = hidePaging;
 	}
 
 	/**
@@ -474,7 +431,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @return 件数非表示設定
 	 */
 	public boolean isHideCount() {
-	    return hideCount;
+		return hideCount;
 	}
 
 	/**
@@ -482,7 +439,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @param hideCount 件数非表示設定
 	 */
 	public void setHideCount(boolean hideCount) {
-	    this.hideCount = hideCount;
+		this.hideCount = hideCount;
 	}
 
 	/**
@@ -490,7 +447,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @return ページジャンプ非表示設定
 	 */
 	public boolean isHidePageJump() {
-	    return hidePageJump;
+		return hidePageJump;
 	}
 
 	/**
@@ -498,7 +455,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @param hidePageJump ページジャンプ非表示設定
 	 */
 	public void setHidePageJump(boolean hidePageJump) {
-	    this.hidePageJump = hidePageJump;
+		this.hidePageJump = hidePageJump;
 	}
 
 	/**
@@ -506,7 +463,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @return ページリンク非表示設定
 	 */
 	public boolean isHidePageLink() {
-	    return hidePageLink;
+		return hidePageLink;
 	}
 
 	/**
@@ -514,7 +471,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @param hidePageLink ページリンク非表示設定
 	 */
 	public void setHidePageLink(boolean hidePageLink) {
-	    this.hidePageLink = hidePageLink;
+		this.hidePageLink = hidePageLink;
 	}
 
 	/**
@@ -538,7 +495,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @return ページング表示位置
 	 */
 	public PagingPosition getPagingPosition() {
-	    return pagingPosition;
+		return pagingPosition;
 	}
 
 	/**
@@ -546,7 +503,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @param pagingPosition ページング表示位置
 	 */
 	public void setPagingPosition(PagingPosition pagingPosition) {
-	    this.pagingPosition = pagingPosition;
+		this.pagingPosition = pagingPosition;
 	}
 
 	/**
@@ -554,7 +511,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @return 編集タイプ
 	 */
 	public MassReferenceEditType getEditType() {
-	    return editType;
+		return editType;
 	}
 
 	/**
@@ -562,7 +519,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @param editType 編集タイプ
 	 */
 	public void setEditType(MassReferenceEditType editType) {
-	    this.editType = editType;
+		this.editType = editType;
 	}
 
 	/**
@@ -570,7 +527,8 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @return 参照型の表示プロパティ
 	 */
 	public List<MetaNestProperty> getNestProperties() {
-		if (nestProperties == null) nestProperties = new ArrayList<>();
+		if (nestProperties == null)
+			nestProperties = new ArrayList<>();
 		return nestProperties;
 	}
 
@@ -583,7 +541,8 @@ public class MetaMassReferenceSection extends MetaSection {
 	}
 
 	public List<MetaSortSetting> getSortSetting() {
-		if (sortSetting == null) sortSetting = new ArrayList<>();
+		if (sortSetting == null)
+			sortSetting = new ArrayList<>();
 		return sortSetting;
 	}
 
@@ -600,7 +559,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @return 絞り込み条件設定スクリプト
 	 */
 	public String getFilterConditionScript() {
-	    return filterConditionScript;
+		return filterConditionScript;
 	}
 
 	/**
@@ -608,23 +567,7 @@ public class MetaMassReferenceSection extends MetaSection {
 	 * @param filterConditionScript 絞り込み条件設定スクリプト
 	 */
 	public void setFilterConditionScript(String filterConditionScript) {
-	    this.filterConditionScript = filterConditionScript;
-	}
-
-	/**
-	 * 多言語設定情報を取得します。
-	 * @return 多言語設定情報
-	 */
-	public List<MetaLocalizedString> getLocalizedTitleList() {
-	    return localizedTitleList;
-	}
-
-	/**
-	 * 多言語設定情報を設定します。
-	 * @param localizedTitleList 多言語設定情報
-	 */
-	public void setLocalizedTitleList(List<MetaLocalizedString> localizedTitleList) {
-	    this.localizedTitleList = localizedTitleList;
+		this.filterConditionScript = filterConditionScript;
 	}
 
 	public void addNestProperty(MetaNestProperty property) {
@@ -643,11 +586,12 @@ public class MetaMassReferenceSection extends MetaSection {
 		MassReferenceSection section = (MassReferenceSection) element;
 
 		EntityContext ctx = EntityContext.getCurrentContext();
-		EntityHandler entity = ctx.getHandlerById(definitionId);
-		if (entity == null) return;
+		EntityHandler fromEntity = ctx.getHandlerById(definitionId);
+		if (fromEntity == null)
+			return;
 
 		//被参照プロパティかチェックする
-		PropertyHandler property = entity.getProperty(section.getPropertyName(), ctx);
+		PropertyHandler property = fromEntity.getProperty(section.getPropertyName(), ctx);
 		if (!(property instanceof ReferencePropertyHandler)) {
 			throw new EntityRuntimeException(section.getPropertyName() + " is not ReferenceProperty.");
 		}
@@ -655,15 +599,13 @@ public class MetaMassReferenceSection extends MetaSection {
 
 		ReferencePropertyHandler mappedBy = rp.getMappedByPropertyHandler(ctx);
 		if (mappedBy == null) {
-			throw new EntityRuntimeException(section.getPropertyName() + " is not MappedByProperty. MassReferencePropertyEditor is supports only MappedByProperty.");
+			throw new EntityRuntimeException(
+					section.getPropertyName() + " is not MappedByProperty. MassReferencePropertyEditor is supports only MappedByProperty.");
 		}
-		EntityHandler refEntity = mappedBy.getParent();
+		EntityHandler referenceEntity = mappedBy.getParent();
 
 		propertyId = property.getId();
-		title = section.getTitle();
 		expandable = section.isExpandable();
-		id = section.getId();
-		style = section.getStyle();
 		showLink = section.isShowLink();
 		upperContents = section.getUpperContents();
 		lowerContents = section.getLowerContents();
@@ -673,6 +615,8 @@ public class MetaMassReferenceSection extends MetaSection {
 		detailActionName = section.getDetailActionName();
 		detailTabActionName = section.getDetailTabActionName();
 		viewName = section.getViewName();
+		withoutConditionReferenceName = section.getWithoutConditionReferenceName() == null ? null
+				: new ArrayList<>(section.getWithoutConditionReferenceName());
 		changeEditLinkToViewLink = section.isChangeEditLinkToViewLink();
 		hideDeleteButton = section.isHideDeleteButton();
 		hideAddButton = section.isHideAddButton();
@@ -688,20 +632,19 @@ public class MetaMassReferenceSection extends MetaSection {
 		filterConditionScript = section.getFilterConditionScript();
 		for (NestProperty np : section.getProperties()) {
 			MetaNestProperty mnp = new MetaNestProperty();
-			mnp.applyConfig(np, refEntity, entity);
-			if (mnp.getPropertyId() != null) addNestProperty(mnp);
+			mnp.applyConfig(np, referenceEntity, fromEntity, fromEntity);
+			if (mnp.getPropertyId() != null)
+				addNestProperty(mnp);
 		}
 
-		if (!section.getSortSetting().isEmpty()) {
+		if (!section.getSortSetting()
+				.isEmpty()) {
 			for (SortSetting setting : section.getSortSetting()) {
 				MetaSortSetting meta = new MetaSortSetting();
-				meta.applyConfig(setting, ctx, refEntity);
+				meta.applyConfig(setting, ctx, referenceEntity);
 				addSortSetting(meta);
 			}
 		}
-
-		// 言語毎の文字情報設定
-		localizedTitleList = I18nUtil.toMeta(section.getLocalizedTitleList());
 	}
 
 	@Override
@@ -710,31 +653,31 @@ public class MetaMassReferenceSection extends MetaSection {
 		super.fillTo(section, definitionId);
 
 		EntityContext ctx = EntityContext.getCurrentContext();
-		EntityHandler entity = ctx.getHandlerById(definitionId);
-		if (entity == null) return null;
+		EntityHandler fromEntity = ctx.getHandlerById(definitionId);
+		if (fromEntity == null)
+			return null;
 
-		PropertyHandler property = entity.getPropertyById(propertyId, ctx);
-		if (property == null || !(property instanceof ReferencePropertyHandler)) return null;
+		PropertyHandler property = fromEntity.getPropertyById(propertyId, ctx);
+		if (property == null || !(property instanceof ReferencePropertyHandler))
+			return null;
 		ReferencePropertyHandler rp = (ReferencePropertyHandler) property;
 
-		EntityHandler refEntity = null;
+		EntityHandler referenceEntity = null;
 		if (rp != null) {
 			ReferencePropertyHandler mappedBy = rp.getMappedByPropertyHandler(ctx);
 			if (mappedBy != null) {
-				refEntity = mappedBy.getParent();
+				referenceEntity = mappedBy.getParent();
 			}
 		}
-		if (refEntity == null) {
+		if (referenceEntity == null) {
 			//参照Entityが存在しない場合はnull
 			return null;
 		}
 
-		section.setDefintionName(refEntity.getMetaData().getName());
+		section.setDefintionName(referenceEntity.getMetaData()
+				.getName());
 		section.setPropertyName(rp.getName());
-		section.setTitle(title);
 		section.setExpandable(expandable);
-		section.setId(id);
-		section.setStyle(style);
 		section.setShowLink(showLink);
 		section.setUpperContents(upperContents);
 		section.setLowerContents(lowerContents);
@@ -744,6 +687,8 @@ public class MetaMassReferenceSection extends MetaSection {
 		section.setDetailActionName(detailActionName);
 		section.setDetailTabActionName(detailTabActionName);
 		section.setViewName(viewName);
+		section.setWithoutConditionReferenceName(
+				withoutConditionReferenceName == null ? null : new ArrayList<>(withoutConditionReferenceName));
 		section.setChangeEditLinkToViewLink(changeEditLinkToViewLink);
 		section.setHideDeleteButton(hideDeleteButton);
 		section.setHideAddButton(hideAddButton);
@@ -760,20 +705,21 @@ public class MetaMassReferenceSection extends MetaSection {
 		section.setContentScriptKey(contentScriptKey);
 
 		for (MetaNestProperty mnp : getNestProperties()) {
-			if (refEntity != null) {
-				NestProperty np = mnp.currentConfig(refEntity, entity);
-				if (np != null) section.addProperty(np);
+			if (referenceEntity != null) {
+				NestProperty np = mnp.currentConfig(referenceEntity, fromEntity, fromEntity);
+				if (np != null)
+					section.addProperty(np);
 			}
 		}
 
 		if (!getSortSetting().isEmpty()) {
 			for (MetaSortSetting meta : getSortSetting()) {
-				SortSetting ss = meta.currentConfig(ctx, refEntity);
-				if (ss != null) section.addSortSetting(ss);
+				SortSetting ss = meta.currentConfig(ctx, referenceEntity);
+				if (ss != null)
+					section.addSortSetting(ss);
 			}
 		}
 
-		section.setLocalizedTitleList(I18nUtil.toDef(localizedTitleList));
 		return section;
 	}
 
@@ -801,8 +747,9 @@ public class MetaMassReferenceSection extends MetaSection {
 
 			if (nestProperties != null && !nestProperties.isEmpty()) {
 				for (MetaNestProperty meta : nestProperties) {
-					if (meta.getAutocompletionSetting()  != null) {
-						entityView.addAutocompletionSetting(meta.getAutocompletionSetting().createRuntime(entityView));
+					if (meta.getAutocompletionSetting() != null) {
+						entityView.addAutocompletionSetting(meta.getAutocompletionSetting()
+								.createRuntime(entityView));
 					}
 				}
 			}
@@ -810,7 +757,8 @@ public class MetaMassReferenceSection extends MetaSection {
 			if (StringUtil.isNotEmpty(metadata.upperContents) || StringUtil.isNotEmpty(metadata.lowerContents)) {
 				if (metadata.contentScriptKey == null) {
 					//ContentsScript用のKEYを設定
-					metadata.contentScriptKey = "MassReferenceSection_content_" + GroovyTemplateCompiler.randomName().replace("-", "_");
+					metadata.contentScriptKey = "MassReferenceSection_content_" + GroovyTemplateCompiler.randomName()
+							.replace("-", "_");
 				}
 				if (StringUtil.isNotEmpty(metadata.upperContents)) {
 					//EntityViewにセット
@@ -831,7 +779,8 @@ public class MetaMassReferenceSection extends MetaSection {
 		}
 
 		private GroovyTemplate compile(String script, String key) {
-			TenantContext tenant = ExecuteContext.getCurrentContext().getTenantContext();
+			TenantContext tenant = ExecuteContext.getCurrentContext()
+					.getTenantContext();
 			return GroovyTemplateCompiler.compile(
 					script, key, (GroovyScriptEngine) tenant.getScriptEngine());
 		}

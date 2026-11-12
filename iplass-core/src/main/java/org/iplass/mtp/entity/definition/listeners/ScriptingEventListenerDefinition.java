@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,7 +25,6 @@ import java.util.List;
 
 import org.iplass.mtp.entity.definition.EventListenerDefinition;
 
-
 /**
  * <p>
  * GroovyScriptによるEventListenerの定義。
@@ -48,7 +47,7 @@ import org.iplass.mtp.entity.definition.EventListenerDefinition;
  * <li>entity : 対象のEntity</li>
  * <li>event : {@link EventType}</li>
  * <li>context : {@link org.iplass.mtp.entity.EntityEventContext}のインスタンス</li>
- * <li>user : 実行するユーザの情報</li>
+ * <li>user : 実行するユーザーの情報</li>
  * <li>date : 現在日時のjava.util.Dateのインスタンス</li>
  * </ul>
  * </p>

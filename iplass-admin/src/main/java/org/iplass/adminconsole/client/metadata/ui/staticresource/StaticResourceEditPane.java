@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,6 +27,7 @@ import java.util.Map;
 import org.iplass.adminconsole.client.base.i18n.AdminClientMessageUtil;
 import org.iplass.adminconsole.client.base.io.upload.UploadResultInfo;
 import org.iplass.adminconsole.client.base.io.upload.UploadSubmitCompleteHandler;
+import org.iplass.adminconsole.client.base.io.upload.XsrfProtectedMultipartForm;
 import org.iplass.adminconsole.client.base.rpc.AdminAsyncCallback;
 import org.iplass.adminconsole.client.base.tenant.TenantInfoHolder;
 import org.iplass.adminconsole.client.base.util.SmartGWTUtil;
@@ -51,11 +52,9 @@ import org.iplass.mtp.web.staticresource.definition.EntryPathTranslatorDefinitio
 import org.iplass.mtp.web.staticresource.definition.MimeTypeMappingDefinition;
 import org.iplass.mtp.web.staticresource.definition.StaticResourceDefinition;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FileUpload;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.Hidden;
 import com.smartgwt.client.util.BooleanCallback;
 import com.smartgwt.client.util.SC;
@@ -88,7 +87,7 @@ public class StaticResourceEditPane extends MetaDataMainEditPane {
 	private StaticResourceMultiLanguagePane multilingualPane;
 
 	/** フォーム */
-	private FormPanel form;
+	private XsrfProtectedMultipartForm form;
 	private FlowPanel paramPanel;
 
 	private AsyncCallback<AdminDefinitionModifyResult> callback;
@@ -107,7 +106,8 @@ public class StaticResourceEditPane extends MetaDataMainEditPane {
 		headerPane.setHistoryClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				MetaDataHistoryDialog metaDataHistoryDialog = new MetaDataHistoryDialog(StaticResourceDefinition.class.getName(), curDefinitionId, curVersion);
+				MetaDataHistoryDialog metaDataHistoryDialog = new MetaDataHistoryDialog(StaticResourceDefinition.class.getName(), curDefinitionId,
+						curVersion);
 				metaDataHistoryDialog.show();
 			}
 		});
@@ -123,7 +123,8 @@ public class StaticResourceEditPane extends MetaDataMainEditPane {
 				EntryPathType selectEntryPathType = attributePane.selectedEntryPathType();
 				curDefinition.setEntryPathTranslator(EntryPathType.typeOfDefinition(selectEntryPathType));
 				setDefinition(curDefinition);
-			}});
+			}
+		});
 
 		//Section設定
 		SectionStackSection staticResourceSection = createSection("StaticResource Attribute", attributePane);
@@ -137,15 +138,13 @@ public class StaticResourceEditPane extends MetaDataMainEditPane {
 		setMainSections(commonSection, staticResourceSection, multilingualSection);
 
 		// 入力部分
-		form = new FormPanel();
+		form = new XsrfProtectedMultipartForm();
 		form.setVisible(false); // formは非表示でOK
 		form.setHeight("5px");
-		form.setAction(GWT.getModuleBaseURL() + StaticResourceUploadProperty.ACTION_URL);
-		form.setMethod(FormPanel.METHOD_POST);
-		form.setEncoding(FormPanel.ENCODING_MULTIPART);
+		form.setService(StaticResourceUploadProperty.ACTION_URL);
 		form.addSubmitCompleteHandler(new StaticResourceDefinitionSubmitCompleteHandler());
 		paramPanel = new FlowPanel();
-		form.add(paramPanel);
+		form.insertAfter(paramPanel);
 
 		//全体配置
 		addMember(headerPane);
@@ -185,8 +184,10 @@ public class StaticResourceEditPane extends MetaDataMainEditPane {
 				setDefinition((StaticResourceInfo) result.getDefinition());
 
 				//登録済のバージョン情報を保持
-				curVersion = result.getDefinitionInfo().getVersion();
-				curDefinitionId = result.getDefinitionInfo().getObjDefId();
+				curVersion = result.getDefinitionInfo()
+						.getVersion();
+				curDefinitionId = result.getDefinitionInfo()
+						.getObjDefId();
 			}
 		});
 
@@ -239,12 +240,14 @@ public class StaticResourceEditPane extends MetaDataMainEditPane {
 		List<LocalizedStringDefinition> localizedDisplayNameList = definition.getLocalizedDisplayNameList();
 		if (localizedDisplayNameList != null) {
 			for (LocalizedStringDefinition localeDispNameDef : localizedDisplayNameList) {
-				addUploadParameter(StaticResourceUploadProperty.DISPLAY_NAME_LOCALE_PREFIX  + localeDispNameDef.getLocaleName(), localeDispNameDef.getStringValue());
+				addUploadParameter(StaticResourceUploadProperty.DISPLAY_NAME_LOCALE_PREFIX + localeDispNameDef.getLocaleName(),
+						localeDispNameDef.getStringValue());
 			}
 		}
 
 		if (definition.getFileType() != null) {
-			addUploadParameter(StaticResourceUploadProperty.BINARY_TYPE, definition.getFileType().toString());
+			addUploadParameter(StaticResourceUploadProperty.BINARY_TYPE, definition.getFileType()
+					.toString());
 		}
 
 		addUploadParameter(StaticResourceUploadProperty.CONTENT_TYPE, definition.getContentType());
@@ -254,7 +257,7 @@ public class StaticResourceEditPane extends MetaDataMainEditPane {
 		List<MimeTypeMappingDefinition> mimeTypeMapList = definition.getMimeTypeMapping();
 		if (mimeTypeMapList != null) {
 			for (MimeTypeMappingDefinition mimeTypeMapDef : mimeTypeMapList) {
-				addUploadParameter(StaticResourceUploadProperty.MIME_TYPE_MAPPING_PREFIX  + mimeTypeMapDef.getExtension(), mimeTypeMapDef.getMimeType());
+				addUploadParameter(StaticResourceUploadProperty.MIME_TYPE_MAPPING_PREFIX + mimeTypeMapDef.getExtension(), mimeTypeMapDef.getMimeType());
 			}
 		}
 
@@ -262,7 +265,8 @@ public class StaticResourceEditPane extends MetaDataMainEditPane {
 
 		EntryPathTranslatorDefinition entryPathDef = definition.getEntryPathTranslator();
 		if (entryPathDef != null) {
-			addUploadParameter(StaticResourceUploadProperty.ENTRY_PATH_TYPE, EntryPathType.valueOf(entryPathDef).toString());
+			addUploadParameter(StaticResourceUploadProperty.ENTRY_PATH_TYPE, EntryPathType.valueOf(entryPathDef)
+					.toString());
 			addUploadParameter(StaticResourceUploadProperty.ENTRY_PATH_CONTENT, EntryPathType.getEntryPath(entryPathDef));
 		}
 
@@ -273,7 +277,8 @@ public class StaticResourceEditPane extends MetaDataMainEditPane {
 
 		if (localeList != null && !localeList.isEmpty()) {
 			for (LocalizedStaticResourceDefinitionInfo info : localeList) {
-				String locale = info.getDefinition().getLocaleName();
+				String locale = info.getDefinition()
+						.getLocaleName();
 				String prefix = StaticResourceUploadProperty.LOCALE_PREFIX + locale + "_";
 
 				if (!SmartGWTUtil.isEmpty(info.getStoredLang())) {
@@ -283,12 +288,15 @@ public class StaticResourceEditPane extends MetaDataMainEditPane {
 				// ファイルが選択されているもののみ送る
 				// (新規でFileが選択されていないものは除外される
 				if (info.getFileItem() != null) {
-					FileUpload localeFile = info.getFileItem().getEditFileUpload();
+					FileUpload localeFile = info.getFileItem()
+							.getEditFileUpload();
 					localeFile.setName(prefix + StaticResourceUploadProperty.UPLOAD_FILE);
 					localeFile.setVisible(false);
 					paramPanel.add(localeFile);
 
-					addUploadParameter(prefix + StaticResourceUploadProperty.BINARY_TYPE, info.getDefinition().getFileType().toString());
+					addUploadParameter(prefix + StaticResourceUploadProperty.BINARY_TYPE, info.getDefinition()
+							.getFileType()
+							.toString());
 				}
 			}
 		}
@@ -308,7 +316,8 @@ public class StaticResourceEditPane extends MetaDataMainEditPane {
 				if (result.isSuccess()) {
 					super.doSuccess(result);
 				} else {
-					if (result.getMessage() != null && result.getMessage().contains("Does not match the latest version.")) {
+					if (result.getMessage() != null && result.getMessage()
+							.contains("Does not match the latest version.")) {
 						SC.ask(getRS("overwriteConfirmMsg"), new BooleanCallback() {
 							@Override
 							public void execute(Boolean value) {
@@ -436,14 +445,17 @@ public class StaticResourceEditPane extends MetaDataMainEditPane {
 		protected void onSuccess(UploadResultInfo result) {
 
 			// FlowPanelに追加しているので戻す
-			attributePane.getEditUploadFileItem().redrawFileUpload();
+			attributePane.getEditUploadFileItem()
+					.redrawFileUpload();
 
 			attributePane.resetSrcImg();
 
 			if (callback != null) {
 				String message = null;
-				if (result.getMessages() != null && result.getMessages().size() > 0) {
-					message = result.getMessages().get(0);
+				if (result.getMessages() != null && result.getMessages()
+						.size() > 0) {
+					message = result.getMessages()
+							.get(0);
 				}
 				callback.onSuccess(new AdminDefinitionModifyResult(result.isFileUploadStatusSuccess(), message));
 			}
@@ -454,7 +466,8 @@ public class StaticResourceEditPane extends MetaDataMainEditPane {
 		protected void onFailure(String message) {
 
 			// FlowPanelに追加しているので戻す
-			attributePane.getEditUploadFileItem().redrawFileUpload();
+			attributePane.getEditUploadFileItem()
+					.redrawFileUpload();
 
 			if (callback != null) {
 				callback.onFailure(new RuntimeException(message));

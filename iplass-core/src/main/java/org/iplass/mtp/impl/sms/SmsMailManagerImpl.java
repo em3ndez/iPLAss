@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,11 +35,13 @@ import org.iplass.mtp.tenant.Tenant;
  */
 public class SmsMailManagerImpl implements SmsMailManager {
 
-	SmsService smsService = ServiceRegistry.getRegistry().getService(SmsService.class);
+	SmsService smsService = ServiceRegistry.getRegistry()
+			.getService(SmsService.class);
 
 	@Override
 	public SmsMail createMail() {
-		return smsService.createMail(ExecuteContext.getCurrentContext().getCurrentTenant());
+		return smsService.createMail(ExecuteContext.getCurrentContext()
+				.getCurrentTenant());
 	}
 
 	@Override
@@ -53,7 +55,8 @@ public class SmsMailManagerImpl implements SmsMailManager {
 
 	@Override
 	public void sendMail(SmsMail smsMail) {
-		Tenant tenant = ExecuteContext.getCurrentContext().getCurrentTenant();
+		Tenant tenant = ExecuteContext.getCurrentContext()
+				.getCurrentTenant();
 		smsService.sendSmsMail(tenant, smsMail);
 	}
 }

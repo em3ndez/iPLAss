@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,6 +24,7 @@ import org.iplass.mtp.ManagerLocator;
 import org.iplass.mtp.definition.TypedDefinitionManager;
 import org.iplass.mtp.impl.definition.AbstractTypedMetaDataService;
 import org.iplass.mtp.impl.definition.DefinitionMetaDataTypeMap;
+import org.iplass.mtp.impl.definition.DefinitionNameChecker;
 import org.iplass.mtp.impl.view.calendar.MetaCalendar.CalendarHandler;
 import org.iplass.mtp.spi.Config;
 import org.iplass.mtp.spi.Service;
@@ -43,9 +44,16 @@ public class EntityCalendarService extends AbstractTypedMetaDataService<MetaCale
 		public TypeMap() {
 			super(getFixedPath(), MetaCalendar.class, EntityCalendar.class);
 		}
+
 		@Override
 		public TypedDefinitionManager<EntityCalendar> typedDefinitionManager() {
-			return ManagerLocator.getInstance().getManager(EntityCalendarManager.class);
+			return ManagerLocator.getInstance()
+					.getManager(EntityCalendarManager.class);
+		}
+
+		@Override
+		protected DefinitionNameChecker createDefinitionNameChecker() {
+			return DefinitionNameChecker.getPathSlashDefinitionNameChecker();
 		}
 	}
 

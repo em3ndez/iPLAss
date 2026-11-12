@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,12 +35,15 @@ public interface SessionContext {
 	//TODO サイズ制限を設ける
 
 	public Object getAttribute(String name);
+
 	public void setAttribute(String name, Object value);
+
 	public void removeAttribute(String name);
+
 	public Iterator<String> getAttributeNames();
 
 	/**
-	 * 当該リクエストをしたユーザが事前に同一セッションにてアップしたテンポラリLOB（まだEntityとして保存していないBinaryReference）を取得します。
+	 * 当該リクエストをしたユーザーが事前に同一セッションにてアップしたテンポラリLOB（まだEntityとして保存していないBinaryReference）を取得します。
 	 *
 	 * @param lobId テンポラリLOBとして保存時に発行されたlobId
 	 * @return

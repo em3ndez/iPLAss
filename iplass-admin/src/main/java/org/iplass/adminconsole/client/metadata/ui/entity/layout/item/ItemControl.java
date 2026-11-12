@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -209,10 +209,14 @@ public abstract class ItemControl extends AbstractWindow {
 					setValueObject(event.getValue());
 
 					//displayLabelかtitleがある場合はWindowのタイトル再設定
-					if (event.getValueMap().containsKey("displayLabel")) {
-						setTitle((String) event.getValueMap().get("displayLabel"));
-					} else if (event.getValueMap().containsKey("title")) {
-						setTitle((String) event.getValueMap().get("title"));
+					if (event.getValueMap()
+							.containsKey("displayLabel")) {
+						setTitle((String) event.getValueMap()
+								.get("displayLabel"));
+					} else if (event.getValueMap()
+							.containsKey("title")) {
+						setTitle((String) event.getValueMap()
+								.get("title"));
 					}
 
 					if (updateHandler != null) {

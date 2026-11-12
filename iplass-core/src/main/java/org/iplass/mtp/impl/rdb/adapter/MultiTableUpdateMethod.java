@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,5 +20,5 @@
 package org.iplass.mtp.impl.rdb.adapter;
 
 public enum MultiTableUpdateMethod {
-	DIRECT_JOIN,INLINE_VIEW,NO_SUPPORT
+	DIRECT_JOIN, INLINE_VIEW, NO_SUPPORT
 }

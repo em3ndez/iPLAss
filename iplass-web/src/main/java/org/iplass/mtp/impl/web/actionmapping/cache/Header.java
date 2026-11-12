@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,18 +29,18 @@ public class Header implements Serializable {
 		SET,
 		ADD
 	}
-	
+
 	public enum ValType {
 		INT,
 		DATE,
 		STRING
 	}
-	
+
 	private final String name;
 	private final Object value;
 	private final OpeType opeType;
 	private final ValType valType;
-	
+
 	public Header(String name, Object value, OpeType opeType, ValType valType) {
 		this.name = name;
 		this.value = value;
@@ -63,5 +63,5 @@ public class Header implements Serializable {
 	public ValType getValType() {
 		return valType;
 	}
-	
+
 }

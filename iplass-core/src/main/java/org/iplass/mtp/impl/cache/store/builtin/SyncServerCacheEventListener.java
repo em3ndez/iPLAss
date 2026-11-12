@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,9 +23,9 @@ package org.iplass.mtp.impl.cache.store.builtin;
 import org.iplass.mtp.impl.cache.store.CacheEntry;
 
 public interface SyncServerCacheEventListener {
-	
+
 	public void removeAll(String namespace);
-	
+
 	public void markDirty(String namespace, CacheEntry entry);
 
 }

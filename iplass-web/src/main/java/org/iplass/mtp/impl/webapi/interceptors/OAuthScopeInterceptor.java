@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -39,16 +39,21 @@ public class OAuthScopeInterceptor implements CommandInterceptor {
 	public String intercept(CommandInvocation invocation) {
 		WebApiInvocationImpl webApiInvocation = (WebApiInvocationImpl) invocation;
 		AuthContextHolder authContext = AuthContextHolder.getAuthContext();
-		if (authContext.getUserContext().getAccount() instanceof AccessTokenAccountHandle) {
+		if (authContext.getUserContext()
+				.getAccount() instanceof AccessTokenAccountHandle) {
 			//check scope
-			AccessTokenAccountHandle atah = (AccessTokenAccountHandle) authContext.getUserContext().getAccount();
-			if (!webApiInvocation.getWebApiRuntime().isSufficientOAuthScope(atah.getAccessToken().getGrantedScopes())) {
-				throw new AuthorizationRequiredException(BearerTokenAutoLoginHandler.AUTH_SCHEME_BEARER, null, AuthorizationRequiredException.CODE_INSUFFICIENT_SCOPE, null);
+			AccessTokenAccountHandle atah = (AccessTokenAccountHandle) authContext.getUserContext()
+					.getAccount();
+			if (!webApiInvocation.getWebApiRuntime()
+					.isSufficientOAuthScope(atah.getAccessToken()
+							.getGrantedScopes())) {
+				throw new AuthorizationRequiredException(BearerTokenAutoLoginHandler.AUTH_SCHEME_BEARER, null,
+						AuthorizationRequiredException.CODE_INSUFFICIENT_SCOPE, null);
 			}
 		}
-		
+
 		//実行（後続処理へ）
 		return invocation.proceedCommand();
-		
+
 	}
 }

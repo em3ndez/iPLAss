@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,24 +22,25 @@ package org.iplass.mtp.web.template.report.definition;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
 
-@XmlSeeAlso (value = {
-		PoiReportType.class,
-		JasperReportType.class,
-		JxlsReportType.class
-})
-public class ReportType implements Serializable  {
-	
+@XmlSeeAlso(
+		value = {
+				PoiReportType.class,
+				JasperReportType.class,
+				JxlsReportType.class
+		})
+public class ReportType implements Serializable {
+
 	private static final long serialVersionUID = -7878509238666614937L;
-	
+
 	private String outputFileType;
 
 	public String getOutputFileType() {
-	    return outputFileType;
+		return outputFileType;
 	}
 
 	public void setOutputFileType(String outputFileType) {
-	    this.outputFileType = outputFileType;
+		this.outputFileType = outputFileType;
 	}
 }

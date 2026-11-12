@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,19 +20,21 @@
 
 package org.iplass.mtp.impl.session.jee;
 
-import javax.servlet.http.HttpSessionEvent;
-import javax.servlet.http.HttpSessionListener;
+import jakarta.servlet.http.HttpSessionEvent;
+import jakarta.servlet.http.HttpSessionListener;
 
 public class MtpHttpSessionListener implements HttpSessionListener {
 
 	@Override
 	public void sessionCreated(HttpSessionEvent event) {
-		event.getSession().setAttribute(HttpSessionService.MUTEX_OBJECT_NAME, new HttpSessionService.MutexObject());
+		event.getSession()
+				.setAttribute(HttpSessionService.MUTEX_OBJECT_NAME, new HttpSessionService.MutexObject());
 	}
 
 	@Override
 	public void sessionDestroyed(HttpSessionEvent event) {
-		event.getSession().removeAttribute(HttpSessionService.MUTEX_OBJECT_NAME);
+		event.getSession()
+				.removeAttribute(HttpSessionService.MUTEX_OBJECT_NAME);
 	}
 
 }

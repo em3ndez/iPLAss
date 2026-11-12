@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,27 +26,30 @@ import org.iplass.mtp.command.annotation.CommandClass;
 import org.iplass.mtp.command.annotation.webapi.WebApi;
 import org.iplass.mtp.entity.DeleteOption;
 import org.iplass.mtp.entity.GenericEntity;
-import org.iplass.mtp.webapi.definition.RequestType;
 import org.iplass.mtp.webapi.definition.MethodType;
+import org.iplass.mtp.webapi.definition.RequestType;
 
-@WebApi(name="mtp/entity/DELETE",
-		accepts={RequestType.REST_FORM},
-		methods={MethodType.DELETE},
-		overwritable=false)
-@CommandClass(name="mtp/entity/DeleteEntityCommand", displayName="Entity Delete Web API", overwritable=false)
+@WebApi(
+		name = "mtp/entity/DELETE",
+		accepts = { RequestType.REST_FORM },
+		methods = { MethodType.DELETE },
+		supportBearerToken = true,
+		overwritable = false)
+@CommandClass(name = "mtp/entity/DeleteEntityCommand", displayName = "Entity Delete Web API", overwritable = false)
 public final class DeleteEntityCommand extends AbstractEntityCommand {
-	
+
 	public static final String PARAM_TIMESTAMP = "timestamp";
 	public static final String RESULT_OID = "oid";
-	
+
 	//entity/[defName]/[oid]?timestamp=[epochTime]
 	@Override
 	public String executeImpl(RequestContext request, String[] subPath) {
 		if (subPath == null || subPath.length != 2) {
 			throw new IllegalArgumentException("illegal path parameter:" + subPath);
 		}
-		checkPermission(subPath[0], def -> def.getMetaData().isDelete());
-		
+		checkPermission(subPath[0], def -> def.getMetaData()
+				.isDelete());
+
 		GenericEntity e = new GenericEntity(subPath[0]);
 		e.setOid(subPath[1]);
 		DeleteOption option = new DeleteOption();
@@ -55,7 +58,7 @@ public final class DeleteEntityCommand extends AbstractEntityCommand {
 			e.setUpdateDate(new Timestamp(Long.parseLong(tsStr)));
 			option.setCheckTimestamp(true);
 		}
-		
+
 		em.delete(e, option);
 		return CMD_EXEC_SUCCESS;
 	}

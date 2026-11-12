@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -36,18 +36,18 @@ import org.iplass.mtp.impl.auth.log.AuthLoggerService;
 import org.iplass.mtp.spi.Config;
 
 /**
- * プログラム内部処理から、とあるユーザとして認証したい場合に利用するAuthenticationProvider。
+ * プログラム内部処理から、とあるユーザーとして認証したい場合に利用するAuthenticationProvider。
  * 
  * @author K.Higuchi
  *
  */
 public class InternalAuthenticationProvider implements AuthenticationProvider {
-	
+
 	public static final String PROVIDER_NAME = "_internal";
 	private AuthLogger authLogger;
 
 	private String authLoggerName;
-	
+
 	private UserEntityResolver userEntityResolver;
 	private TrustedAuthValidator trustedAuthValidator;
 
@@ -66,18 +66,19 @@ public class InternalAuthenticationProvider implements AuthenticationProvider {
 
 	@Override
 	public String getProviderName() {
-	    return PROVIDER_NAME;
+		return PROVIDER_NAME;
 	}
 
 	@Override
 	public AuthLogger getAuthLogger() {
 		return authLogger;
 	}
-	
+
 	@Override
 	public void inited(AuthService service, Config config) {
-		authLogger = config.getDependentService(AuthLoggerService.class).getAuthLogger(authLoggerName);
-		
+		authLogger = config.getDependentService(AuthLoggerService.class)
+				.getAuthLogger(authLoggerName);
+
 		DefaultUserEntityResolver er = new DefaultUserEntityResolver();
 		er.setEagerLoadReferenceProperty(DefaultUserEntityResolver.DEFAULT_EAGER_LOAD_REFERENCE_PROPERTY);
 		er.setUnmodifiableUniqueKeyProperty(User.ACCOUNT_ID);

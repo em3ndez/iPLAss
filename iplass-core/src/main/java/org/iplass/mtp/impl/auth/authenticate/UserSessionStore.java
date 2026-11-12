@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,9 +25,11 @@ import org.iplass.mtp.impl.auth.UserContext;
 import org.iplass.mtp.spi.ServiceInitListener;
 
 public interface UserSessionStore extends ServiceInitListener<AuthService> {
-	
+
 	public UserContext getUserContext();
+
 	public void setUserContext(UserContext user, boolean withSessionInit);
+
 	public void invalidateUserSession();
 
 }

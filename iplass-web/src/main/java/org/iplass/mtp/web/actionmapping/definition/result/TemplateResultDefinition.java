@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -19,7 +19,6 @@
  */
 
 package org.iplass.mtp.web.actionmapping.definition.result;
-
 
 /**
  * 実行結果として、templateを出力するResult定義です。

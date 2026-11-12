@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,7 +30,7 @@ import org.iplass.mtp.impl.parser.SyntaxContext;
 import org.iplass.mtp.impl.query.condition.expr.OrSyntax;
 
 public class WhereSyntax implements Syntax<Where>, QueryConstants {
-	
+
 	private OrSyntax or;
 
 	public void init(SyntaxContext context) {
@@ -38,19 +38,19 @@ public class WhereSyntax implements Syntax<Where>, QueryConstants {
 	}
 
 	public Where parse(ParseContext str) throws ParseException {
-		
+
 		//WHERE
 		if (!str.equalsNextToken(WHERE, ParseContext.TOKEN_DELIMITERS)) {
 			throw new ParseException(new EvalError("WHERE expected.", this, str));
 		}
 		str.consumeChars(WHERE.length());
-		
+
 		Where where = new Where();
-		
+
 		if (!str.consumeChars(ParseContext.WHITE_SPACES)) {
 			throw new ParseException(new EvalError("space expected.", this, str));
 		}
-		
+
 		//Condition
 		Condition cond = or.parse(str);
 		where.setCondition(cond);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,11 +20,11 @@
 package org.iplass.mtp.impl.metadata.xmlfile.dom.extend.template;
 
 import org.iplass.mtp.impl.metadata.xmlfile.dom.ExternalRefPathAttribute;
-import org.iplass.mtp.impl.metadata.xmlfile.dom.MultiLangExternalRefPath;
 import org.iplass.mtp.impl.metadata.xmlfile.dom.ExternalRefPathAttribute.FileExtention;
+import org.iplass.mtp.impl.metadata.xmlfile.dom.MultiLangExternalRefPath;
 
 @ExternalRefPathAttribute(
-		path = "/metaDataEntry/metaData/localizedSourceList/stringValue", 
+		path = "/metaDataEntry/metaData/localizedSourceList/stringValue",
 		fileExtension = FileExtention.HTML)
 public class HtmlLocalizedSourcePath extends MultiLangExternalRefPath {
 }

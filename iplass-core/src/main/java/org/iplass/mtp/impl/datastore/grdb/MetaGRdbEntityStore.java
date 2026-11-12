@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,9 +20,6 @@
 
 package org.iplass.mtp.impl.datastore.grdb;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-
 import org.iplass.mtp.entity.definition.StoreDefinition;
 import org.iplass.mtp.impl.datastore.EntityStoreRuntime;
 import org.iplass.mtp.impl.datastore.MetaEntityStore;
@@ -33,6 +30,8 @@ import org.iplass.mtp.impl.entity.EntityHandler;
 import org.iplass.mtp.impl.entity.MetaEntity;
 import org.iplass.mtp.impl.util.ObjectUtil;
 
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class MetaGRdbEntityStore extends MetaEntityStore {
@@ -50,136 +49,163 @@ public class MetaGRdbEntityStore extends MetaEntityStore {
 	private ColumnPosition maxUniqueIndexedDecimal;
 	private ColumnPosition maxUniqueIndexedTimestamp;
 	private ColumnPosition maxUniqueIndexedDouble;
-	
+
 	private String tableNamePostfix;
 	private int version;
-	
+
 	public int currentMaxPage() {
 		int ret = 0;
 		if (maxVarchar != null) {
 			ret = (ret >= maxVarchar.getPageNo()) ? ret : maxVarchar.getPageNo();
-		};
+		} ;
 		if (maxDecimal != null) {
 			ret = (ret >= maxDecimal.getPageNo()) ? ret : maxDecimal.getPageNo();
-		};
+		} ;
 		if (maxTimestamp != null) {
 			ret = (ret >= maxTimestamp.getPageNo()) ? ret : maxTimestamp.getPageNo();
-		};
+		} ;
 		if (maxDouble != null) {
 			ret = (ret >= maxDouble.getPageNo()) ? ret : maxDouble.getPageNo();
-		};
+		} ;
 		if (maxIndexedVarchar != null) {
 			ret = (ret >= maxIndexedVarchar.getPageNo()) ? ret : maxIndexedVarchar.getPageNo();
-		};
+		} ;
 		if (maxIndexedDecimal != null) {
 			ret = (ret >= maxIndexedDecimal.getPageNo()) ? ret : maxIndexedDecimal.getPageNo();
-		};
+		} ;
 		if (maxIndexedTimestamp != null) {
 			ret = (ret >= maxIndexedTimestamp.getPageNo()) ? ret : maxIndexedTimestamp.getPageNo();
-		};
+		} ;
 		if (maxIndexedDouble != null) {
 			ret = (ret >= maxIndexedDouble.getPageNo()) ? ret : maxIndexedDouble.getPageNo();
-		};
+		} ;
 		if (maxUniqueIndexedVarchar != null) {
 			ret = (ret >= maxUniqueIndexedVarchar.getPageNo()) ? ret : maxUniqueIndexedVarchar.getPageNo();
-		};
+		} ;
 		if (maxUniqueIndexedDecimal != null) {
 			ret = (ret >= maxUniqueIndexedDecimal.getPageNo()) ? ret : maxUniqueIndexedDecimal.getPageNo();
-		};
+		} ;
 		if (maxUniqueIndexedTimestamp != null) {
 			ret = (ret >= maxUniqueIndexedTimestamp.getPageNo()) ? ret : maxUniqueIndexedTimestamp.getPageNo();
-		};
+		} ;
 		if (maxUniqueIndexedDouble != null) {
 			ret = (ret >= maxUniqueIndexedDouble.getPageNo()) ? ret : maxUniqueIndexedDouble.getPageNo();
-		};
+		} ;
 		return ret;
 	}
-	
+
 	public ColumnPosition getMaxVarchar() {
 		return maxVarchar;
 	}
+
 	public void setMaxVarchar(ColumnPosition maxVarchar) {
 		this.maxVarchar = maxVarchar;
 	}
+
 	public ColumnPosition getMaxDecimal() {
 		return maxDecimal;
 	}
+
 	public void setMaxDecimal(ColumnPosition maxDecimal) {
 		this.maxDecimal = maxDecimal;
 	}
+
 	public ColumnPosition getMaxTimestamp() {
 		return maxTimestamp;
 	}
+
 	public void setMaxTimestamp(ColumnPosition maxTimestamp) {
 		this.maxTimestamp = maxTimestamp;
 	}
+
 	public ColumnPosition getMaxDouble() {
 		return maxDouble;
 	}
+
 	public void setMaxDouble(ColumnPosition maxDouble) {
 		this.maxDouble = maxDouble;
 	}
+
 	public ColumnPosition getMaxIndexedVarchar() {
 		return maxIndexedVarchar;
 	}
+
 	public void setMaxIndexedVarchar(ColumnPosition maxIndexedVarchar) {
 		this.maxIndexedVarchar = maxIndexedVarchar;
 	}
+
 	public ColumnPosition getMaxIndexedDecimal() {
 		return maxIndexedDecimal;
 	}
+
 	public void setMaxIndexedDecimal(ColumnPosition maxIndexedDecimal) {
 		this.maxIndexedDecimal = maxIndexedDecimal;
 	}
+
 	public ColumnPosition getMaxIndexedTimestamp() {
 		return maxIndexedTimestamp;
 	}
+
 	public void setMaxIndexedTimestamp(ColumnPosition maxIndexedTimestamp) {
 		this.maxIndexedTimestamp = maxIndexedTimestamp;
 	}
+
 	public ColumnPosition getMaxIndexedDouble() {
 		return maxIndexedDouble;
 	}
+
 	public void setMaxIndexedDouble(ColumnPosition maxIndexedDouble) {
 		this.maxIndexedDouble = maxIndexedDouble;
 	}
+
 	public ColumnPosition getMaxUniqueIndexedVarchar() {
 		return maxUniqueIndexedVarchar;
 	}
+
 	public void setMaxUniqueIndexedVarchar(ColumnPosition maxUniqueIndexedVarchar) {
 		this.maxUniqueIndexedVarchar = maxUniqueIndexedVarchar;
 	}
+
 	public ColumnPosition getMaxUniqueIndexedDecimal() {
 		return maxUniqueIndexedDecimal;
 	}
+
 	public void setMaxUniqueIndexedDecimal(ColumnPosition maxUniqueIndexedDecimal) {
 		this.maxUniqueIndexedDecimal = maxUniqueIndexedDecimal;
 	}
+
 	public ColumnPosition getMaxUniqueIndexedTimestamp() {
 		return maxUniqueIndexedTimestamp;
 	}
+
 	public void setMaxUniqueIndexedTimestamp(ColumnPosition maxUniqueIndexedTimestamp) {
 		this.maxUniqueIndexedTimestamp = maxUniqueIndexedTimestamp;
 	}
+
 	public ColumnPosition getMaxUniqueIndexedDouble() {
 		return maxUniqueIndexedDouble;
 	}
+
 	public void setMaxUniqueIndexedDouble(ColumnPosition maxUniqueIndexedDouble) {
 		this.maxUniqueIndexedDouble = maxUniqueIndexedDouble;
 	}
+
 	public String getTableNamePostfix() {
 		return tableNamePostfix;
 	}
+
 	public void setTableNamePostfix(String tableNamePostfix) {
 		this.tableNamePostfix = tableNamePostfix;
 	}
+
 	public int getVersion() {
 		return version;
 	}
+
 	public void setVersion(int version) {
 		this.version = version;
 	}
-	
+
 	@Override
 	public MetaGRdbEntityStore copy() {
 		return ObjectUtil.deepCopy(this);
@@ -195,19 +221,22 @@ public class MetaGRdbEntityStore extends MetaEntityStore {
 				+ ((maxDouble == null) ? 0 : maxDouble.hashCode());
 		result = prime
 				* result
-				+ ((maxIndexedDecimal == null) ? 0 : maxIndexedDecimal
-						.hashCode());
+				+ ((maxIndexedDecimal == null) ? 0
+						: maxIndexedDecimal
+								.hashCode());
 		result = prime
 				* result
 				+ ((maxIndexedDouble == null) ? 0 : maxIndexedDouble.hashCode());
 		result = prime
 				* result
-				+ ((maxIndexedTimestamp == null) ? 0 : maxIndexedTimestamp
-						.hashCode());
+				+ ((maxIndexedTimestamp == null) ? 0
+						: maxIndexedTimestamp
+								.hashCode());
 		result = prime
 				* result
-				+ ((maxIndexedVarchar == null) ? 0 : maxIndexedVarchar
-						.hashCode());
+				+ ((maxIndexedVarchar == null) ? 0
+						: maxIndexedVarchar
+								.hashCode());
 		result = prime * result
 				+ ((maxTimestamp == null) ? 0 : maxTimestamp.hashCode());
 		result = prime
@@ -319,7 +348,7 @@ public class MetaGRdbEntityStore extends MetaEntityStore {
 
 	@Override
 	public GRdbEntityStoreRuntime createRuntime(EntityHandler eh) {
-		return new GRdbEntityStoreRuntime();
+		return new GRdbEntityStoreRuntime(eh);
 	}
 
 	public class GRdbEntityStoreRuntime extends EntityStoreRuntime {
@@ -328,28 +357,34 @@ public class MetaGRdbEntityStore extends MetaEntityStore {
 		private String objStoreRb = ObjStoreTable.TABLE_NAME_RB;
 		private String objRef = ObjRefTable.TABLE_NAME;
 		private String objRefRb = ObjRefTable.TABLE_NAME_RB;
-		
-		private int currentMaxPage;
 
-		GRdbEntityStoreRuntime() {
-			if (tableNamePostfix != null) {
-				objStore = objStore + "__" + tableNamePostfix;
-				objStoreRb = objStoreRb + "__" + tableNamePostfix;
-				objRef = objRef + "__" + tableNamePostfix;
-				objRefRb = objRefRb + "__" + tableNamePostfix;
+		private int currentMaxPage;
+		private String entityDefinitionName;
+		private GRdbDataStore dataStore;
+
+		GRdbEntityStoreRuntime(EntityHandler eh) {
+			dataStore = (GRdbDataStore) eh.getDataStore();
+			entityDefinitionName = eh.getMetaData()
+					.getName();
+			String tableNamePostfixRuntime = dataStore.getTableNamePostfix(entityDefinitionName, tableNamePostfix);
+
+			if (tableNamePostfixRuntime != null) {
+				objStore = objStore + "__" + tableNamePostfixRuntime;
+				objStoreRb = objStoreRb + "__" + tableNamePostfixRuntime;
+				objRef = objRef + "__" + tableNamePostfixRuntime;
+				objRefRb = objRefRb + "__" + tableNamePostfixRuntime;
 			}
 			currentMaxPage = currentMaxPage();
 		}
-		
+
 		public int getCurrentMaxPage() {
 			return currentMaxPage;
 		}
-		
+
 		@Override
 		public MetaEntityStore getMetaData() {
 			return MetaGRdbEntityStore.this;
 		}
-
 
 		public String OBJ_STORE() {
 			return objStore;
@@ -360,11 +395,13 @@ public class MetaGRdbEntityStore extends MetaEntityStore {
 		}
 
 		public String OBJ_INDEX(String colTypePostFix) {
-			return makeIndexTableName(colTypePostFix, tableNamePostfix);
+			String tableNamePostfixRuntime = dataStore.getTableNamePostfix(entityDefinitionName, tableNamePostfix);
+			return makeIndexTableName(colTypePostFix, tableNamePostfixRuntime);
 		}
 
 		public String OBJ_UNIQUE(String colTypePostFix) {
-			return makeUniqueIndexTableName(colTypePostFix, tableNamePostfix);
+			String tableNamePostfixRuntime = dataStore.getTableNamePostfix(entityDefinitionName, tableNamePostfix);
+			return makeUniqueIndexTableName(colTypePostFix, tableNamePostfixRuntime);
 		}
 
 		public String OBJ_REF() {
@@ -428,7 +465,7 @@ public class MetaGRdbEntityStore extends MetaEntityStore {
 	@Override
 	public void applyConfig(StoreDefinition storeDefinition, MetaEntity metaEntity) {
 	}
-	
+
 	@Override
 	public StoreDefinition currentConfig(MetaEntity metaEntity) {
 		return null;

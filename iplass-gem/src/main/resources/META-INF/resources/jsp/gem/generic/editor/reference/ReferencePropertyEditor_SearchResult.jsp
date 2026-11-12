@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,13 +18,14 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
 <%@page import="java.io.StringWriter"%>
 <%@page import="java.util.Map"%>
 <%@page import="org.iplass.gem.command.Constants"%>
 <%@page import="org.iplass.gem.command.ViewUtil"%>
+<%@page import="org.iplass.gem.command.generic.editor.ReferencePropertyEditorUtil" %>
 <%@page import="org.iplass.gem.command.generic.detail.DetailViewCommand"%>
 <%@page import="org.iplass.mtp.ManagerLocator"%>
 <%@page import="org.iplass.mtp.entity.Entity"%>
@@ -60,6 +61,7 @@
 %>
 <%
 	ReferencePropertyEditor editor = (ReferencePropertyEditor) request.getAttribute(Constants.EDITOR_EDITOR);
+	String referenceModalSizeAttributes = ReferencePropertyEditorUtil.getDialogSizeAttributes(editor);
 	Object value = request.getAttribute(Constants.EDITOR_PROP_VALUE);
 	PropertyDefinition pd = (PropertyDefinition) request.getAttribute(Constants.EDITOR_PROPERTY_DEFINITION);
 
@@ -114,8 +116,27 @@
 <c:out value="<%=displayPropLabel %>" />
 <%
 					} else {
+						String showReference = "showReference(" 
+							+ "'" + StringUtil.escapeJavaScript(view) + "'" 
+							+ ", '" + StringUtil.escapeJavaScript(editor.getObjectName()) + "'"
+							+ ", '" + StringUtil.escapeJavaScript(entity.getOid()) + "'"
+							+ ", '" + entity.getVersion() + "'"
+							+ ", '" + StringUtil.escapeJavaScript(linkId) + "'"
+							+ ", " + refEdit
+							+ ", null"
+							+ ", '" + StringUtil.escapeJavaScript(rootDefName) + "'"
+							+ ", '" + StringUtil.escapeJavaScript(viewName) + "'"
+							+ ", '" + StringUtil.escapeJavaScript(propName) + "'"
+							+ ", '" + StringUtil.escapeJavaScript(viewType) + "'"
+							+ ", null"
+							+ ", '" + StringUtil.escapeJavaScript(rootOid) + "'"
+							+ ", '" + StringUtil.escapeJavaScript(rootVersion) + "'"
+							+ ")";
 %>
-<a href="javascript:void(0)" class="modal-lnk" id="<c:out value="<%=linkId %>" />" data-linkId="<c:out value="<%=linkId %>" />" onclick="showReference('<%=StringUtil.escapeJavaScript(view)%>', '<%=StringUtil.escapeJavaScript(editor.getObjectName())%>', '<%=StringUtil.escapeJavaScript(entity.getOid())%>', '<%=entity.getVersion() %>', '<%=StringUtil.escapeJavaScript(linkId)%>', <%=refEdit %>, null, '<%=rootDefName%>', '<%=viewName%>', '<%=propName%>', '<%=viewType%>', null, '<%=StringUtil.escapeJavaScript(rootOid) %>', '<%=StringUtil.escapeJavaScript(rootVersion) %>')"><c:out value="<%=displayPropLabel %>" /></a>
+<a href="javascript:void(0)" class="modal-lnk" data-reference-modal="true" <%=referenceModalSizeAttributes %> id="<c:out value=" <%=linkId %>" />"
+	data-linkId="
+	<c:out value="<%=linkId %>" />"
+ onclick="<c:out value="<%=showReference %>"/>"><c:out value="<%=displayPropLabel %>" /></a>
 <%
 					}
 				}
@@ -128,7 +149,7 @@
 		EntityDefinition ed = edm.get(rp.getObjectDefinitionName());
 		for (NestProperty np : editor.getNestProperties()) {
 			String key = editor.getPropertyName() + "." + np.getPropertyName();
-			PropertyDefinition _pd = ed.getProperty(np.getPropertyName());
+			PropertyDefinition _pd = EntityViewUtil.getNestTablePropertyDefinition(np, ed);
 			if (isDispProperty(_pd, np)) {
 				PropertyEditor npEditor = np.getEditor();
 				if (!npEditor.isHide() 
@@ -146,8 +167,27 @@
 <c:out value="<%=entity.getName() %>" />
 <%
 						} else {
+							String showReference = "showReference(" 
+								+ "'" + StringUtil.escapeJavaScript(view) + "'" 
+								+ ", '" + StringUtil.escapeJavaScript(editor.getObjectName()) + "'"
+								+ ", '" + StringUtil.escapeJavaScript(entity.getOid()) + "'"
+								+ ", '" + entity.getVersion() + "'"
+								+ ", '" + StringUtil.escapeJavaScript(linkId) + "'"
+								+ ", " + refEdit
+								+ ", null"
+								+ ", '" + StringUtil.escapeJavaScript(rootDefName) + "'"
+								+ ", '" + StringUtil.escapeJavaScript(viewName) + "'"
+								+ ", '" + StringUtil.escapeJavaScript(propName) + "'"
+								+ ", '" + StringUtil.escapeJavaScript(viewType) + "'"
+								+ ", null"
+								+ ", '" + StringUtil.escapeJavaScript(rootOid) + "'"
+								+ ", '" + StringUtil.escapeJavaScript(rootVersion) + "'"
+								+ ")";
 %>
-<a href="javascript:void(0)" class="modal-lnk" id="<c:out value="<%=linkId %>" />" data-linkId="<c:out value="<%=linkId %>" />" onclick="showReference('<%=StringUtil.escapeJavaScript(view)%>', '<%=StringUtil.escapeJavaScript(editor.getObjectName())%>', '<%=StringUtil.escapeJavaScript(entity.getOid())%>', '<%=entity.getVersion() %>', '<%=StringUtil.escapeJavaScript(linkId)%>', <%=refEdit %>, null, '<%=rootDefName%>', '<%=viewName%>', '<%=propName%>', '<%=viewType%>', null, '<%=StringUtil.escapeJavaScript(rootOid) %>', '<%=StringUtil.escapeJavaScript(rootVersion) %>')"><c:out value="<%=entity.getName() %>" /></a>
+<a href="javascript:void(0)" class="modal-lnk" data-reference-modal="true" <%=referenceModalSizeAttributes %> id="<c:out value=" <%=linkId %>" />"
+	data-linkId="
+	<c:out value="<%=linkId %>" />"
+ onclick="<c:out value="<%=showReference %>"/>"><c:out value="<%=entity.getName() %>" /></a>
 <%
 						}
 					}

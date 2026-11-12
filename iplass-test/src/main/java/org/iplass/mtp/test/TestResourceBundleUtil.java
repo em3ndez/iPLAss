@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,7 +31,8 @@ public class TestResourceBundleUtil {
 	/** Test用リソースファイル名 */
 	public static final String RESOURCE_NAME = "mtp-test-messages";
 
-	private TestResourceBundleUtil(){}
+	private TestResourceBundleUtil() {
+	}
 
 	public static String resourceString(String key, Object... arguments) {
 		return resourceString(null, key, arguments);
@@ -43,7 +44,8 @@ public class TestResourceBundleUtil {
 		if (StringUtil.isNotEmpty(lang)) {
 			langLocale = Locale.forLanguageTag(lang);
 		} else {
-			langLocale = ExecuteContext.getCurrentContext().getLangLocale();
+			langLocale = ExecuteContext.getCurrentContext()
+					.getLangLocale();
 		}
 
 		return ResourceBundleUtil.resourceString(RESOURCE_NAME, langLocale, key, arguments);

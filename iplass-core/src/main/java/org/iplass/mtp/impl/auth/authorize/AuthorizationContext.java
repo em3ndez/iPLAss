@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,5 +24,6 @@ import org.iplass.mtp.impl.auth.AuthContextHolder;
 
 public interface AuthorizationContext {
 	public boolean isPermit(Permission permission, AuthContextHolder user);
+
 	public boolean isResultCacheable(Permission permission);
 }

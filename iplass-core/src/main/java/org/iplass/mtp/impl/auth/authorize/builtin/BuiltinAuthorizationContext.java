@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,13 +28,13 @@ import org.iplass.mtp.impl.auth.authorize.AuthorizationContext;
  *
  */
 public abstract class BuiltinAuthorizationContext implements AuthorizationContext {
-	
+
 	private final String contextName;
-	
+
 	public BuiltinAuthorizationContext(String contextName) {
 		this.contextName = contextName;
 	}
-	
+
 	public String getContextName() {
 		return contextName;
 	}

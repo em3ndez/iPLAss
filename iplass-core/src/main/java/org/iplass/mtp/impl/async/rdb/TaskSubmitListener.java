@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,7 +23,7 @@ package org.iplass.mtp.impl.async.rdb;
 import org.iplass.mtp.transaction.TransactionListener;
 
 public interface TaskSubmitListener extends TransactionListener {
-	
+
 	public void setContext(Task task, Queue queue);
 
 }

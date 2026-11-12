@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,10 +20,6 @@
 
 package org.iplass.mtp.impl.webapi;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlSeeAlso;
-import javax.xml.bind.annotation.XmlTransient;
-
 import org.iplass.mtp.entity.GenericEntity;
 import org.iplass.mtp.impl.webapi.jackson.WebApiParameterDeserializer;
 
@@ -31,12 +27,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
+import jakarta.xml.bind.annotation.XmlTransient;
 
-@XmlSeeAlso({GenericEntity.class, GenericEntity[].class})
-@JsonPropertyOrder({"name", "valueType", "value"})
-@JsonDeserialize(using=WebApiParameterDeserializer.class)
+@XmlSeeAlso({ GenericEntity.class, GenericEntity[].class })
+@JsonPropertyOrder({ "name", "valueType", "value" })
+@JsonDeserialize(using = WebApiParameterDeserializer.class)
 public class WebApiParameter {
-
 
 	private String name;
 
@@ -63,7 +61,6 @@ public class WebApiParameter {
 	public void setValueType(String valueType) {
 		this.valueType = valueType;
 	}
-
 
 	@XmlAttribute
 	public String getName() {

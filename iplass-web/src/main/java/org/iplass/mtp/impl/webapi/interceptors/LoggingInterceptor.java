@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -34,24 +34,24 @@ import org.iplass.mtp.impl.core.ExecuteContext;
 import org.iplass.mtp.impl.rdb.connection.ConnectionFactory;
 import org.iplass.mtp.impl.web.WebRequestStack;
 import org.iplass.mtp.impl.web.interceptors.ExceptionInterceptor;
+import org.iplass.mtp.impl.web.interceptors.LoggingInterceptor.MessagePattern;
 import org.iplass.mtp.impl.webapi.rest.RestRequestContext;
 import org.iplass.mtp.spi.Config;
 import org.iplass.mtp.spi.ServiceInitListener;
 import org.iplass.mtp.spi.ServiceRegistry;
 import org.iplass.mtp.webapi.WebApiRequestConstants;
-import org.iplass.mtp.webapi.definition.RequestType;
 import org.iplass.mtp.webapi.definition.MethodType;
+import org.iplass.mtp.webapi.definition.RequestType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-
 public class LoggingInterceptor extends org.iplass.mtp.impl.command.interceptors.LoggingInterceptor implements ServiceInitListener<InterceptorService> {
-	
+
 	private static Logger webapiLogger = LoggerFactory.getLogger("mtp.webapi");
-	
-	private static final String MDC_WEBAPI ="webapi";
-	
+
+	private static final String MDC_WEBAPI = "webapi";
+
 	private boolean webapiTrace = true;//infoで出力
 
 	private int warnLogThresholdOfSqlExecutionCount = -1;
@@ -61,10 +61,10 @@ public class LoggingInterceptor extends org.iplass.mtp.impl.command.interceptors
 
 	private List<String> noStackTrace;
 	private List<Class<?>[]> noStackTraceClass;
-	
+
 	private List<String> logParamName;
 	private List<String> logAttributeName;
-	
+
 	public List<String> getLogParamName() {
 		return logParamName;
 	}
@@ -96,7 +96,7 @@ public class LoggingInterceptor extends org.iplass.mtp.impl.command.interceptors
 	public void setNoStackTrace(List<String> noStackTrace) {
 		this.noStackTrace = noStackTrace;
 	}
-	
+
 	public int getWarnLogThresholdOfSqlExecutionCount() {
 		return warnLogThresholdOfSqlExecutionCount;
 	}
@@ -118,21 +118,23 @@ public class LoggingInterceptor extends org.iplass.mtp.impl.command.interceptors
 		if (noStackTrace != null) {
 			noStackTraceClass = ExceptionInterceptor.toClassList(noStackTrace);
 		}
-		rdbConFactory = ServiceRegistry.getRegistry().getService(ConnectionFactory.class);
+		rdbConFactory = ServiceRegistry.getRegistry()
+				.getService(ConnectionFactory.class);
 
 	}
 
 	@Override
 	public void destroyed() {
 	}
-	
+
 	@Override
 	public String intercept(CommandInvocation invocation) {
 		long start = -1;
 		if (webapiTrace) {
 			start = System.currentTimeMillis();
 		}
-		String webApiName = (String) invocation.getRequest().getAttribute(WebApiRequestConstants.API_NAME);
+		String webApiName = (String) invocation.getRequest()
+				.getAttribute(WebApiRequestConstants.API_NAME);
 		ExecuteContext ec = ExecuteContext.getCurrentContext();
 		ec.mdcPut(MDC_WEBAPI, webApiName);
 		RuntimeException exp = null;
@@ -150,7 +152,7 @@ public class LoggingInterceptor extends org.iplass.mtp.impl.command.interceptors
 			} else {
 				executionTime = System.currentTimeMillis() - start;
 			}
-			
+
 			int sqlCount;
 			if (sqlCounter == null) {
 				sqlCount = -1;
@@ -158,28 +160,20 @@ public class LoggingInterceptor extends org.iplass.mtp.impl.command.interceptors
 				sqlCount = sqlCounter.get();
 			}
 
+			MessagePattern mp = MessagePattern.getInstance(executionTime, sqlCount, exp);
 			if (exp != null && !(exp instanceof ApplicationException)) {
-				if (ExceptionInterceptor.match(noStackTraceClass, exp)) {
-					webapiLogger.error(logStr(invocation, executionTime, sqlCount, exp));
-				} else {
-					webapiLogger.error(logStr(invocation, executionTime, sqlCount, exp), exp);
-				}
+				webapiLogger.error(mp.format(),
+						mp.arguments(makeWebApiName(invocation), executionTime, sqlCount, exp, !ExceptionInterceptor.match(noStackTraceClass, exp)));
 			} else {
 				if (isWarnLog(executionTime, sqlCount)) {
-					if (exp != null && webapiLogger.isDebugEnabled()) {
-						webapiLogger.warn(logStr(invocation, executionTime, sqlCount, exp), exp);
-					} else {
-						webapiLogger.warn(logStr(invocation, executionTime, sqlCount, exp));
-					}
+					webapiLogger.warn(mp.format(),
+							mp.arguments(makeWebApiName(invocation), executionTime, sqlCount, exp, webapiLogger.isDebugEnabled()));
 				} else {
-					if (exp != null && webapiLogger.isDebugEnabled()) {
-						webapiLogger.info(logStr(invocation, executionTime, sqlCount, exp), exp);
-					} else {
-						webapiLogger.info(logStr(invocation, executionTime, sqlCount, exp));
-					}
+					webapiLogger.info(mp.format(),
+							mp.arguments(makeWebApiName(invocation), executionTime, sqlCount, exp, webapiLogger.isDebugEnabled()));
 				}
 			}
-			
+
 			MDC.remove(MDC_WEBAPI);
 		}
 	}
@@ -194,47 +188,23 @@ public class LoggingInterceptor extends org.iplass.mtp.impl.command.interceptors
 		return false;
 	}
 
-	private String logStr(CommandInvocation invocation, long executionTime, int sqlCount, Throwable exp) {
-		
-		CharSequence requestPath = makeWebApiName((RestRequestContext) invocation.getRequest());
-		
-		StringBuilder sb = new StringBuilder();
-		sb.append(requestPath);
-		if (executionTime >= 0) {
-			sb.append(',');
-			sb.append(executionTime).append("ms");
-		}
-		if (sqlCount >= 0) {
-			sb.append(',');
-			sb.append(sqlCount).append("times(sql)");
-		}
-		if (exp != null) {
-			if (exp instanceof ApplicationException) {
-				sb.append(",AppError,");
-			} else {
-				sb.append(",Error,");
-			}
-			sb.append(exp.toString());
-		}
-		
-		return sb.toString();
-	}
-	
-
 	@SuppressWarnings("rawtypes")
-	private CharSequence makeWebApiName(RestRequestContext req) {
-		String webApiName = WebRequestStack.getCurrent().getRequestPath().getTargetPath(true);
+	private CharSequence makeWebApiName(CommandInvocation invocation) {
+		RestRequestContext req = (RestRequestContext) invocation.getRequest();
+		String webApiName = WebRequestStack.getCurrent()
+				.getRequestPath()
+				.getTargetPath(true);
 
 		RequestType requestType = req.requestType();
 		MethodType methodType = req.methodType();
-		
+
 		StringBuilder sb = new StringBuilder();
 		sb.append(webApiName);
 		if (req != null) {
 			//param
 			if (getLogParamName() != null) {
 				boolean isFirst = true;
-				for (String p: getLogParamName()) {
+				for (String p : getLogParamName()) {
 					Object val = req.getParam(p);
 					if (val != null) {
 						if (isFirst) {
@@ -249,10 +219,14 @@ public class LoggingInterceptor extends org.iplass.mtp.impl.command.interceptors
 								if (i != 0) {
 									sb.append("&");
 								}
-								sb.append(p).append("=").append(valArray[i]);
+								sb.append(p)
+										.append("=")
+										.append(valArray[i]);
 							}
 						} else {
-							sb.append(p).append("=").append(val);
+							sb.append(p)
+									.append("=")
+									.append(val);
 						}
 					}
 				}
@@ -262,7 +236,7 @@ public class LoggingInterceptor extends org.iplass.mtp.impl.command.interceptors
 			if (getLogAttributeName() != null) {
 				sb.append("[");
 				boolean isFirst = true;
-				for (String p: getLogAttributeName()) {
+				for (String p : getLogAttributeName()) {
 					Object val = req.getAttribute(p);
 					if (val != null) {
 						if (isFirst) {
@@ -270,7 +244,8 @@ public class LoggingInterceptor extends org.iplass.mtp.impl.command.interceptors
 						} else {
 							sb.append(",");
 						}
-						sb.append(p).append("=");
+						sb.append(p)
+								.append("=");
 						if (val instanceof Object[]) {
 							sb.append(Arrays.toString((Object[]) val));
 						} else if (val instanceof Map) {
@@ -284,15 +259,20 @@ public class LoggingInterceptor extends org.iplass.mtp.impl.command.interceptors
 			}
 		}
 
-		sb.append("(").append(requestType).append("/").append(methodType).append(")");
+		sb.append("(")
+				.append(requestType)
+				.append("/")
+				.append(methodType)
+				.append(")");
 		return sb;
 	}
-	
+
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void appendMap(StringBuilder sb, Map map, HashSet<Map> looped) {
 		//MapのtoStirng()を参考に、配列をArrays.deepToString()するように修正したもの
-        Iterator<Entry> i = map.entrySet().iterator();
-		if (! i.hasNext()) {
+		Iterator<Entry> i = map.entrySet()
+				.iterator();
+		if (!i.hasNext()) {
 			sb.append("{}");
 			return;
 		}
@@ -305,7 +285,7 @@ public class LoggingInterceptor extends org.iplass.mtp.impl.command.interceptors
 			sb.append(key == map ? "(this Map)" : key);
 			sb.append('=');
 			if (value == map) {
-		    	sb.append("(this Map)");
+				sb.append("(this Map)");
 			} else if (value instanceof Object[]) {
 				sb.append(Arrays.deepToString((Object[]) value));
 			} else if (value instanceof Map) {
@@ -319,13 +299,14 @@ public class LoggingInterceptor extends org.iplass.mtp.impl.command.interceptors
 					appendMap(sb, (Map) value, looped);
 				}
 			} else {
-		    	sb.append(value);
+				sb.append(value);
 			}
 			if (!i.hasNext()) {
 				sb.append('}');
 				return;
 			}
-			sb.append(',').append(' ');
+			sb.append(',')
+					.append(' ');
 		}
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,23 +20,7 @@
 
 package org.iplass.mtp.tools.batch.entity;
 
-import static org.iplass.mtp.tools.batch.entity.EntityImportParameter.PROP_ENTITY_BULK_UPDATE;
-import static org.iplass.mtp.tools.batch.entity.EntityImportParameter.PROP_ENTITY_COMMIT_LIMIT;
-import static org.iplass.mtp.tools.batch.entity.EntityImportParameter.PROP_ENTITY_ERROR_SKIP;
-import static org.iplass.mtp.tools.batch.entity.EntityImportParameter.PROP_ENTITY_FORCE_UPDATE;
-import static org.iplass.mtp.tools.batch.entity.EntityImportParameter.PROP_ENTITY_IGNORE_INVALID_PROPERTY;
-import static org.iplass.mtp.tools.batch.entity.EntityImportParameter.PROP_ENTITY_INSERT_AUDIT_PROPERTY_SPECIFICATION;
-import static org.iplass.mtp.tools.batch.entity.EntityImportParameter.PROP_ENTITY_INSERT_AUDIT_PROPERTY_SPECIFICATION_EXEC_USER_ID;
-import static org.iplass.mtp.tools.batch.entity.EntityImportParameter.PROP_ENTITY_INSERT_AUDIT_PROPERTY_SPECIFICATION_EXEC_USER_PW;
-import static org.iplass.mtp.tools.batch.entity.EntityImportParameter.PROP_ENTITY_NAME;
-import static org.iplass.mtp.tools.batch.entity.EntityImportParameter.PROP_ENTITY_NOTIFY_LISTENER;
-import static org.iplass.mtp.tools.batch.entity.EntityImportParameter.PROP_ENTITY_PREFIX_OID;
-import static org.iplass.mtp.tools.batch.entity.EntityImportParameter.PROP_ENTITY_TRUNCATE;
-import static org.iplass.mtp.tools.batch.entity.EntityImportParameter.PROP_ENTITY_UPDATE_DISUPDATABLE;
-import static org.iplass.mtp.tools.batch.entity.EntityImportParameter.PROP_ENTITY_WITH_VALIDATION;
-import static org.iplass.mtp.tools.batch.entity.EntityImportParameter.PROP_IMPORT_FILE;
-import static org.iplass.mtp.tools.batch.entity.EntityImportParameter.PROP_TENANT_ID;
-import static org.iplass.mtp.tools.batch.entity.EntityImportParameter.PROP_TENANT_URL;
+import static org.iplass.mtp.tools.batch.entity.EntityImportParameter.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -47,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.Function;
@@ -73,12 +58,13 @@ import org.iplass.mtp.impl.tools.entityport.EntityPortingService;
 import org.iplass.mtp.spi.ServiceRegistry;
 import org.iplass.mtp.tenant.Tenant;
 import org.iplass.mtp.tools.batch.ExecMode;
+import org.iplass.mtp.tools.batch.MtpBatchResourceDisposer;
 import org.iplass.mtp.tools.batch.MtpCuiBase;
 import org.iplass.mtp.transaction.Transaction;
+import org.iplass.mtp.util.CollectionUtil;
 import org.iplass.mtp.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 /**
  * Entity Import Batch
@@ -105,7 +91,7 @@ public class EntityImport extends MtpCuiBase {
 	/** インポートファイル名(引数) */
 	private String importFileName;
 
-	/** ユーザID(InsertするEntityにAuditプロパティの値を指定する場合、必須) */
+	/** ユーザーID(InsertするEntityにAuditプロパティの値を指定する場合、必須) */
 	private String userId;
 
 	/** パスワード */
@@ -123,10 +109,17 @@ public class EntityImport extends MtpCuiBase {
 	/** 実行CSVファイル */
 	private File importFile;
 
-	private TenantService ts = ServiceRegistry.getRegistry().getService(TenantService.class);
-	private TenantContextService tcs = ServiceRegistry.getRegistry().getService(TenantContextService.class);
-	private EntityPortingService eps = ServiceRegistry.getRegistry().getService(EntityPortingService.class);
-	private AuthService as = ServiceRegistry.getRegistry().getService(AuthService.class);
+	/** BinaryデータをImportするか */
+	private boolean isImportBinaryData;
+
+	private TenantService ts = ServiceRegistry.getRegistry()
+			.getService(TenantService.class);
+	private TenantContextService tcs = ServiceRegistry.getRegistry()
+			.getService(TenantContextService.class);
+	private EntityPortingService eps = ServiceRegistry.getRegistry()
+			.getService(EntityPortingService.class);
+	private AuthService as = ServiceRegistry.getRegistry()
+			.getService(AuthService.class);
 	private EntityDefinitionManager edm = ManagerLocator.manager(EntityDefinitionManager.class);
 
 	/**
@@ -134,6 +127,7 @@ public class EntityImport extends MtpCuiBase {
 	 * args[1]・・・tenantId
 	 * args[2]・・・entity name
 	 * args[3]・・・import file
+	 * args[4]・・・import binary data
 	 **/
 	public static void main(String[] args) {
 
@@ -144,6 +138,8 @@ public class EntityImport extends MtpCuiBase {
 		} catch (Throwable e) {
 			e.printStackTrace();
 		} finally {
+			// リソース破棄
+			MtpBatchResourceDisposer.disposeResource();
 		}
 	}
 
@@ -152,6 +148,7 @@ public class EntityImport extends MtpCuiBase {
 	 * args[1]・・・tenantId
 	 * args[2]・・・entity name
 	 * args[3]・・・import file
+	 * args[4]・・・import binary data
 	 **/
 	public EntityImport(String... args) {
 
@@ -177,6 +174,9 @@ public class EntityImport extends MtpCuiBase {
 				if (!"empty".equals(args[3].toLowerCase())) {
 					importFileName = args[3];
 				}
+			}
+			if (args.length > 4) {
+				isImportBinaryData = Boolean.parseBoolean(args[4]);;
 			}
 		}
 	}
@@ -207,13 +207,13 @@ public class EntityImport extends MtpCuiBase {
 		}
 
 		switch (execMode) {
-		case WIZARD :
+		case WIZARD:
 			logInfo("■Start Import Wizard");
 			logInfo("");
 
 			//Wizardの実行
 			return wizard();
-		case SILENT :
+		case SILENT:
 			logInfo("■Start Import Silent");
 			logInfo("");
 
@@ -222,7 +222,7 @@ public class EntityImport extends MtpCuiBase {
 
 			//Silentの実行
 			return silent();
-		default :
+		default:
 			logError("unsupport execute mode : " + execMode);
 			return false;
 		}
@@ -248,6 +248,11 @@ public class EntityImport extends MtpCuiBase {
 		return this;
 	}
 
+	public EntityImport importBinaryData(boolean isImportBinaryData) {
+		this.isImportBinaryData = isImportBinaryData;
+		return this;
+	}
+
 	/**
 	 * Importします。
 	 *
@@ -269,7 +274,7 @@ public class EntityImport extends MtpCuiBase {
 
 				logInfo("-----------------------------------------------------------");
 				logInfo("■Execute Result Summary");
-				for(String message : messageSummary) {
+				for (String message : messageSummary) {
 					logInfo(message);
 				}
 				logInfo("-----------------------------------------------------------");
@@ -296,6 +301,7 @@ public class EntityImport extends MtpCuiBase {
 		logInfo("\ttenant name :" + param.getTenantName());
 		logInfo("\tentity name :" + param.getEntityName());
 		logInfo("\timport file :" + param.getImportFilePath());
+		logInfo("\timport binary data :" + param.isImportBinaryData());
 		logInfo("\timport file locale :" + param.getLocale());
 		logInfo("\timport file timezone :" + param.getTimezone());
 
@@ -304,7 +310,7 @@ public class EntityImport extends MtpCuiBase {
 		logInfo("\tentity data force update :" + condition.isFourceUpdate());
 		logInfo("\tentity data error skip :" + condition.isErrorSkip());
 		logInfo("\tentity ignore not exists property :" + condition.isIgnoreNotExistsProperty());
-		logInfo("\tentity execute listner :" + condition.isNotifyListeners());
+		logInfo("\tentity execute listener :" + condition.isNotifyListeners());
 		logInfo("\tentity update disupdatable property :" + condition.isUpdateDisupdatableProperty());
 		logInfo("\tentity insert audit property specification :" + condition.isInsertEnableAuditPropertySpecification());
 		logInfo("\tentity execute validation :" + condition.isWithValidation());
@@ -320,13 +326,70 @@ public class EntityImport extends MtpCuiBase {
 	}
 
 	/**
+	 * SILENT実行時にListener実行のチェックを行います。
+	 */
+	private void doCheckListenerWarnOfSilent(EntityImportParameter param, EntityDefinition ed) {
+
+		String defName = param.getEntityName();
+		EntityDataImportCondition condition = param.getEntityImportCondition();
+
+		if (!condition.isNotifyListeners()) {
+			if ("mtp.auth.User".equals(defName)) {
+				logWarn(rs("EntityImport.Silent.notExecuteUserListenerWarn"));
+				logInfo("");
+			} else if (Arrays.asList(
+					"mtp.auth.ActionPermission",
+					"mtp.auth.CubePermission",
+					"mtp.auth.EntityPermission",
+					"mtp.auth.UserTaskPermission",
+					"mtp.auth.WebApiPermission",
+					"mtp.auth.WorkflowPermission")
+					.contains(defName)) {
+				logWarn(rs("EntityImport.Silent.notExecutePermListenerWarn"));
+				logInfo("");
+			} else if (CollectionUtil.isNotEmpty(ed.getEventListenerList())) {
+				logWarn(rs("EntityImport.Silent.notExecuteListenerWarn"));
+				logInfo("");
+			}
+		}
+	}
+
+	/**
+	 * WIZARD実行時にListener実行のチェックを行います。
+	 */
+	private boolean doCheckListenerWarnOfWizard(EntityImportParameter param, EntityDataImportCondition condition, EntityDefinition ed) {
+
+		String defName = param.getEntityName();
+
+		if (!condition.isNotifyListeners()) {
+			if ("mtp.auth.User".equals(defName)) {
+				return readConsoleBoolean(rs("EntityImport.Wizard.notExecuteUserListenerWarn"), false);
+			} else if (Arrays.asList(
+					"mtp.auth.ActionPermission",
+					"mtp.auth.CubePermission",
+					"mtp.auth.EntityPermission",
+					"mtp.auth.UserTaskPermission",
+					"mtp.auth.WebApiPermission",
+					"mtp.auth.WorkflowPermission")
+					.contains(defName)) {
+				return readConsoleBoolean(rs("EntityImport.Wizard.notExecutePermListenerWarn"), false);
+			} else if (CollectionUtil.isNotEmpty(ed.getEventListenerList())) {
+				return readConsoleBoolean(rs("EntityImport.Wizard.notExecuteListenerWarn"), false);
+			}
+		}
+
+		return true;
+	}
+
+	/**
 	 * タスクを実行します。
 	 */
 	private <T> T executeTask(EntityImportParameter param, Supplier<T> task) {
 
-		TenantContext tc  = tcs.getTenantContext(param.getTenantId());
-		return ExecuteContext.executeAs(tc, ()->{
-			ExecuteContext.getCurrentContext().setLanguage(getLanguage());
+		TenantContext tc = tcs.getTenantContext(param.getTenantId());
+		return ExecuteContext.executeAs(tc, () -> {
+			ExecuteContext.getCurrentContext()
+					.setLanguage(getLanguage());
 
 			if (StringUtil.isEmpty(userId)) {
 				return task.get();
@@ -366,16 +429,21 @@ public class EntityImport extends MtpCuiBase {
 			//Entityデータの登録
 			logInfo(rs("EntityImport.startImportEntityLog"));
 
-			String entityPath =  EntityService.ENTITY_META_PATH + param.getEntityName().replace(".", "/");
-			MetaDataEntry entry = MetaDataContext.getContext().getMetaDataEntry(entityPath);
+			String entityPath = EntityService.ENTITY_META_PATH + param.getEntityName()
+					.replace(".", "/");
+			MetaDataEntry entry = MetaDataContext.getContext()
+					.getMetaDataEntry(entityPath);
 			if (entry == null) {
 				throw new SystemException(rs("EntityImport.notExistsEntityMsg", param.getEntityName()));
 			}
 			logInfo(rs("EntityImport.startImportEntityDataLog", entityPath));
 
 			EntityDataImportResult entityResult = null;
+
+			String importBinaryDataDir = param.isImportBinaryData() ? param.getImportFile()
+					.getParent() : null;
 			try (FileInputStream fis = new FileInputStream(param.getImportFile())) {
-				entityResult = eps.importEntityData(param.getImportFilePath(), fis, entry, param.getEntityImportCondition(), null);
+				entityResult = eps.importEntityData(param.getImportFilePath(), fis, entry, param.getEntityImportCondition(), null, importBinaryDataDir);
 			} catch (IOException e) {
 				throw new SystemException(e);
 			}
@@ -393,7 +461,8 @@ public class EntityImport extends MtpCuiBase {
 				messageSummary.add("[ERROR]" + logMessage);
 
 				//エラースキップしない場合は、ここで終了
-				if (!param.getEntityImportCondition().isErrorSkip()) {
+				if (!param.getEntityImportCondition()
+						.isErrorSkip()) {
 					logError(rs("Common.errorMsg", ""));
 					return false;
 				}
@@ -461,8 +530,9 @@ public class EntityImport extends MtpCuiBase {
 		EntityImportParameter param = new EntityImportParameter(tenant.getId(), tenant.getName());
 
 		TenantContext tc = tcs.getTenantContext(param.getTenantId());
-		ExecuteContext.executeAs(tc, ()->{
-			ExecuteContext.getCurrentContext().setLanguage(getLanguage());
+		return ExecuteContext.executeAs(tc, () -> {
+			ExecuteContext.getCurrentContext()
+					.setLanguage(getLanguage());
 
 			//Entity名
 			boolean validEntity = false;
@@ -476,7 +546,7 @@ public class EntityImport extends MtpCuiBase {
 					param.setEntityName(inputEntityName);
 
 					//存在チェック
-					EntityDefinition ed = edm.get(inputEntityName);
+					ed = edm.get(inputEntityName);
 					if (ed == null) {
 						logWarn(rs("EntityImport.notExistsEntityMsg", inputEntityName));
 						continue;
@@ -485,7 +555,7 @@ public class EntityImport extends MtpCuiBase {
 				} else {
 					logWarn(rs("EntityImport.Wizard.requiredEntityNameMsg"));
 				}
-			} while(validEntity == false);
+			} while (validEntity == false);
 
 			//Importファイル
 			boolean validFile = false;
@@ -511,7 +581,11 @@ public class EntityImport extends MtpCuiBase {
 					logWarn(rs("EntityImport.Wizard.requiredImportFilePathMsg"));
 				}
 
-			} while(validFile == false);
+			} while (validFile == false);
+
+			///BinaryデータをImportするか
+			boolean isImportBinaryData = readConsoleBoolean(rs("EntityImport.Wizard.confirmImportBinaryDataMsg"), param.isImportBinaryData());
+			param.setImportBinaryData(isImportBinaryData);
 
 			//オプションをコンフィグから取得
 			EntityDataImportCondition condition = loadConfigCondition();
@@ -544,27 +618,36 @@ public class EntityImport extends MtpCuiBase {
 			}
 
 			//存在しないプロパティは無視
-			boolean isIgnoreNotExistsProperty = readConsoleBoolean(rs("PackageImport.Wizard.confirmIgnoreNotExistsPropertyMsg"), condition.isIgnoreNotExistsProperty());
+			boolean isIgnoreNotExistsProperty = readConsoleBoolean(rs("PackageImport.Wizard.confirmIgnoreNotExistsPropertyMsg"),
+					condition.isIgnoreNotExistsProperty());
 			condition.setIgnoreNotExistsProperty(isIgnoreNotExistsProperty);
 
-			//Listner実行
-			if (isBulkUpdate) {
-				condition.setNotifyListeners(false);
-			} else {
-				boolean isNotifyListner = readConsoleBoolean(rs("PackageImport.Wizard.confirmNotifyListenerMsg"), condition.isNotifyListeners());
-				condition.setNotifyListeners(isNotifyListner);
-			}
+			//Listener実行
+			boolean validListener = false;
+			do {
+				if (isBulkUpdate) {
+					condition.setNotifyListeners(false);
+					validListener = true;
+				} else {
+					boolean isNotifyListener = readConsoleBoolean(rs("PackageImport.Wizard.confirmNotifyListenerMsg"), condition.isNotifyListeners());
+					condition.setNotifyListeners(isNotifyListener);
+
+					validListener = doCheckListenerWarnOfWizard(param, condition, ed);
+				}
+			} while (validListener == false);
 
 			//更新不可項目の更新
-			boolean isUpdateDisupdatableProperty = readConsoleBoolean(rs("PackageImport.Wizard.confirmUpdateDisupdatablePropertyMsg"), condition.isUpdateDisupdatableProperty());
+			boolean isUpdateDisupdatableProperty = readConsoleBoolean(rs("PackageImport.Wizard.confirmUpdateDisupdatablePropertyMsg"),
+					condition.isUpdateDisupdatableProperty());
 			condition.setUpdateDisupdatableProperty(isUpdateDisupdatableProperty);
 
 			//追加時に監査プロパティを指定した値で登録
-			boolean isInsertEnableAuditPropertySpecification = readConsoleBoolean(rs("PackageImport.Wizard.confirmInsertEnableAuditPropertySpecification"), condition.isInsertEnableAuditPropertySpecification());
+			boolean isInsertEnableAuditPropertySpecification = readConsoleBoolean(
+					rs("PackageImport.Wizard.confirmInsertEnableAuditPropertySpecification"), condition.isInsertEnableAuditPropertySpecification());
 			condition.setInsertEnableAuditPropertySpecification(isInsertEnableAuditPropertySpecification);
 
 			if (condition.isInsertEnableAuditPropertySpecification()) {
-				//ユーザ情報の入力
+				//ユーザー情報の入力
 				do {
 					String executeUserId = readConsole(rs("PackageImport.Wizard.confirmExecuteUserId"));
 					if (StringUtil.isNotEmpty(executeUserId)) {
@@ -575,7 +658,7 @@ public class EntityImport extends MtpCuiBase {
 							password = executeUserPW;
 						}
 					}
-				} while(userId == null);
+				} while (userId == null);
 			}
 
 			//Validationの実行
@@ -606,7 +689,7 @@ public class EntityImport extends MtpCuiBase {
 						logWarn(rs("PackageImport.warnOIDPrefixMsg"));
 					}
 				}
-			} while(validOidPrefix == false);
+			} while (validOidPrefix == false);
 
 			//Locale
 			String locale = readConsole(rs("PackageImport.Wizard.inputLocaleMsg")
@@ -641,17 +724,15 @@ public class EntityImport extends MtpCuiBase {
 						return wizard();
 					}
 				}
-			} while(validExecute == false);
+			} while (validExecute == false);
 
-			return null;
-		});
+			//Consoleを削除してLogに切り替え
+			switchLog(false, true);
 
-		//Consoleを削除してLogに切り替え
-		switchLog(false, true);
-
-		//Import処理実行
-		return executeTask(param, (paramA) -> {
-			return importEntity(paramA);
+			//Import処理実行
+			return executeTask(param, (paramA) -> {
+				return importEntity(paramA);
+			});
 		});
 	}
 
@@ -680,8 +761,8 @@ public class EntityImport extends MtpCuiBase {
 				logDebug("load config file from file path:" + configFileName);
 				try (InputStream is = new FileInputStream(path.toFile());
 						InputStreamReader reader = new InputStreamReader(is, "UTF-8");) {
-						prop.load(reader);
-					}
+					prop.load(reader);
+				}
 			} else {
 				logDebug("load config file from classpath:" + configFileName);
 				try (InputStream is = EntityImport.class.getResourceAsStream(configFileName)) {
@@ -745,6 +826,12 @@ public class EntityImport extends MtpCuiBase {
 				importFileName = propImportFileName;
 			}
 		}
+
+		//BinaryデータをImportするか
+		String propImportBinaryData = prop.getProperty(EntityImportParameter.PROP_IMPORT_BINARY_DATA);
+		if (StringUtil.isNotEmpty(propImportBinaryData)) {
+			isImportBinaryData = Boolean.valueOf(propImportBinaryData);
+		}
 	}
 
 	/**
@@ -800,7 +887,7 @@ public class EntityImport extends MtpCuiBase {
 			condition.setIgnoreNotExistsProperty(Boolean.valueOf(ignoreInvalidProperty));
 		}
 
-		//Listner実行
+		//Listener実行
 		if (condition.isBulkUpdate()) {
 			condition.setNotifyListeners(false);
 		} else {
@@ -822,7 +909,7 @@ public class EntityImport extends MtpCuiBase {
 			condition.setInsertEnableAuditPropertySpecification(Boolean.valueOf(insertEnableAuditPropertySpecification));
 		}
 		if (condition.isInsertEnableAuditPropertySpecification()) {
-			//実行ユーザID、PWを取得
+			//実行ユーザーID、PWを取得
 			String execUserId = prop.getProperty(PROP_ENTITY_INSERT_AUDIT_PROPERTY_SPECIFICATION_EXEC_USER_ID);
 			if (StringUtil.isNotEmpty(execUserId)) {
 				userId = execUserId;
@@ -894,8 +981,9 @@ public class EntityImport extends MtpCuiBase {
 			if (tenant != null) {
 				//テナントが確定している場合のみ存在チェック
 				TenantContext tc = tcs.getTenantContext(tenant.getId());
-				boolean entityValid = ExecuteContext.executeAs(tc, ()->{
-					ExecuteContext.getCurrentContext().setLanguage(getLanguage());
+				boolean entityValid = ExecuteContext.executeAs(tc, () -> {
+					ExecuteContext.getCurrentContext()
+							.setLanguage(getLanguage());
 
 					EntityDefinition ed = edm.get(entityName);
 					if (ed == null) {
@@ -923,7 +1011,6 @@ public class EntityImport extends MtpCuiBase {
 		return true;
 	}
 
-
 	/**
 	 * バッチ引数またはコンフィグファイル形式でImport用のパラメータを生成して、Import処理を実行します。
 	 *
@@ -940,8 +1027,9 @@ public class EntityImport extends MtpCuiBase {
 		EntityImportParameter param = new EntityImportParameter(tenant.getId(), tenant.getName());
 
 		TenantContext tc = tcs.getTenantContext(param.getTenantId());
-		return ExecuteContext.executeAs(tc, ()->{
-			ExecuteContext.getCurrentContext().setLanguage(getLanguage());
+		return ExecuteContext.executeAs(tc, () -> {
+			ExecuteContext.getCurrentContext()
+					.setLanguage(getLanguage());
 
 			//Entity
 			if (ed == null) {
@@ -958,6 +1046,8 @@ public class EntityImport extends MtpCuiBase {
 			param.setImportFilePath(importFile.getPath());
 			param.setImportFile(importFile);
 
+			param.setImportBinaryData(isImportBinaryData);
+
 			//オプションをコンフィグから取得
 			EntityDataImportCondition condition = loadConfigCondition();
 			if (condition == null) {
@@ -967,6 +1057,9 @@ public class EntityImport extends MtpCuiBase {
 
 			//実行情報出力
 			logArguments(param);
+
+			//Listener実行のチェック
+			doCheckListenerWarnOfSilent(param, ed);
 
 			//Import処理実行
 			return executeTask(param, (paramA) -> {

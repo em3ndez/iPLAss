@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,9 +26,11 @@ import org.iplass.mtp.impl.definition.TypedMetaDataService;
 import org.iplass.mtp.impl.metadata.RootMetaData;
 import org.iplass.mtp.spi.ServiceRegistry;
 
-public class OAuthAuthorizationDefinitionManagerImpl extends AbstractTypedDefinitionManager<OAuthAuthorizationDefinition> implements OAuthAuthorizationDefinitionManager {
-	
-	private OAuthAuthorizationService service = ServiceRegistry.getRegistry().getService(OAuthAuthorizationService.class);
+public class OAuthAuthorizationDefinitionManagerImpl extends AbstractTypedDefinitionManager<OAuthAuthorizationDefinition>
+		implements OAuthAuthorizationDefinitionManager {
+
+	private OAuthAuthorizationService service = ServiceRegistry.getRegistry()
+			.getService(OAuthAuthorizationService.class);
 
 	@Override
 	public Class<OAuthAuthorizationDefinition> getDefinitionType() {

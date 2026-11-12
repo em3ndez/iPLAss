@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -38,14 +38,17 @@ public class SqlServerRoundFunctionAdapter extends RoundTruncFunctionAdapter {
 		context.append(SQL_FUNCTION_NAME);
 		context.append("(");
 		if (function.getArguments() != null) {
-			for (int i = 0; i < function.getArguments().size(); i++) {
+			for (int i = 0; i < function.getArguments()
+					.size(); i++) {
 				if (i != 0) {
 					context.append(",");
 				}
-				context.appendArgument(function.getArguments().get(i));
+				context.appendArgument(function.getArguments()
+						.get(i));
 			}
 		}
-		if (function.getArguments().size() == 1) {
+		if (function.getArguments()
+				.size() == 1) {
 			context.append(",0");
 		}
 		context.append(")");

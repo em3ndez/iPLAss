@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,8 +26,9 @@ import org.iplass.mtp.impl.rdb.adapter.RdbAdapter;
 import org.iplass.mtp.impl.rdb.adapter.bulk.ColumnValue;
 
 public interface ColumnValueMapper {
-	
+
 	public void columns(List<ColumnValue> columnValues, RdbAdapter rdb);
+
 	public void values(List<Object> values, Entity target, RdbAdapter rdb);
 
 }

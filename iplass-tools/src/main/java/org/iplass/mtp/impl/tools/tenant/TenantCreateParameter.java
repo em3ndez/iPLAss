@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -34,7 +34,7 @@ public class TenantCreateParameter {
 	private String tenantUrl;
 	// テナント表示名
 	private String tenantDisplayName;
-	// 初期ユーザID
+	// 初期ユーザーID
 	private String adminUserId;
 	// パスワード
 	private String adminPassword;
@@ -151,8 +151,9 @@ public class TenantCreateParameter {
 	public String getUseLanguages() {
 		return useLanguages;
 	}
+
 	public void setUseLanguages(String useLanguages) {
-	    this.useLanguages = useLanguages;
+		this.useLanguages = useLanguages;
 	}
 
 	public String getLoggerLanguage() {

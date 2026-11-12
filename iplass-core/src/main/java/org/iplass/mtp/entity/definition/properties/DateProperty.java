@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,7 +25,6 @@ import java.sql.Date;
 import org.iplass.mtp.entity.definition.PropertyDefinition;
 import org.iplass.mtp.entity.definition.PropertyDefinitionType;
 
-
 /**
  * 日付をあらわすプロパティ定義。
  * 
@@ -41,12 +40,12 @@ public class DateProperty extends PropertyDefinition {
 	public DateProperty(String name) {
 		setName(name);
 	}
-	
+
 	@Override
 	public Class<?> getJavaType() {
 		return Date.class;
 	}
-	
+
 	@Override
 	public PropertyDefinitionType getType() {
 		return PropertyDefinitionType.DATE;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -135,7 +135,8 @@ public class NormalizerEditDialog extends MtpDialog {
 		selType.setValueMap(validationMap);
 
 		if (record.getType() != null) {
-			selType.setValue(record.getType().name());
+			selType.setValue(record.getType()
+					.name());
 		}
 	}
 
@@ -147,8 +148,7 @@ public class NormalizerEditDialog extends MtpDialog {
 		}
 
 		if (selType.getValue() != null) {
-			NormalizerType normalizerType
-					= NormalizerType.valueOf(SmartGWTUtil.getStringValue(selType));
+			NormalizerType normalizerType = NormalizerType.valueOf(SmartGWTUtil.getStringValue(selType));
 
 			typePane = normalizerType.attributePane();
 			if (typePane != null) {

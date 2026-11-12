@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -39,7 +39,7 @@ public class JavaClassValidation extends ValidationDefinition {
 
 	public JavaClassValidation() {
 	}
-	
+
 	public JavaClassValidation(String className, String errorMessage) {
 		this(className, errorMessage, null);
 	}
@@ -49,7 +49,7 @@ public class JavaClassValidation extends ValidationDefinition {
 		setErrorMessage(errorMessage);
 		setErrorCode(errorCode);
 	}
-	
+
 	public boolean isAsArray() {
 		return asArray;
 	}

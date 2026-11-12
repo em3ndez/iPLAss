@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,10 +23,6 @@ package org.iplass.mtp.view.generic.element.section;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlType;
-
 import org.iplass.adminconsole.annotation.MultiLang;
 import org.iplass.adminconsole.view.annotation.IgnoreField;
 import org.iplass.adminconsole.view.annotation.InputType;
@@ -38,19 +34,26 @@ import org.iplass.mtp.view.generic.PagingPosition;
 import org.iplass.mtp.view.generic.ViewConst;
 import org.iplass.mtp.view.generic.element.Element;
 
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlType;
+
 /**
  * 検索結果を保持するセクション
  * @author lis3wg
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @Jsps({
-	@Jsp(path="/jsp/gem/generic/element/section/SearchResultSection.jsp", key=ViewConst.DESIGN_TYPE_GEM)
+		@Jsp(path = "/jsp/gem/generic/element/section/SearchResultSection.jsp", key = ViewConst.DESIGN_TYPE_GEM)
 })
-@IgnoreField({"dispFlag", "displayScript"})
+@IgnoreField({ "dispFlag", "displayScript" })
 public class SearchResultSection extends Section {
 
+	/** シリアルバージョンUID */
+	private static final long serialVersionUID = -700624023196624864L;
+
 	/** 一括更新の排他制御起点 */
-	@XmlType(namespace="http://mtp.iplass.org/xml/definition/view/generic")
+	@XmlType(namespace = "http://mtp.iplass.org/xml/definition/view/generic")
 	public enum ExclusiveControlPoint {
 
 		/** 更新ダイアログが開く時 */
@@ -60,344 +63,361 @@ public class SearchResultSection extends Section {
 		WHEN_SEARCH
 	}
 
-	/** シリアルバージョンUID */
-	private static final long serialVersionUID = -700624023196624864L;
+	/** 検索結果TABLEの高さ自動調節 */
+	@XmlType(namespace = "http://mtp.iplass.org/xml/definition/view/generic")
+	public enum AutoHeightAdjustMode {
 
-	/** 要素 */
-	private List<Element> elements;
+		/** 検索結果の表示件数に応じて調節（既定・既存挙動） */
+		FIT_TO_ROW_COUNT,
+
+		/** 画面内にテーブル全体が表示されるよう調節 */
+		FIT_TO_VIEWPORT
+	}
 
 	/** 一括削除コミットトランザクション制御設定 */
-	@XmlType(namespace="http://mtp.iplass.org/xml/definition/view/generic")
+	@XmlType(namespace = "http://mtp.iplass.org/xml/definition/view/generic")
 	public enum DeleteAllCommandTransactionType {
 		ONCE, DIVISION
 	}
 
 	/** 一括更新コミットトランザクション制御設定 */
-	@XmlType(namespace="http://mtp.iplass.org/xml/definition/view/generic")
+	@XmlType(namespace = "http://mtp.iplass.org/xml/definition/view/generic")
 	public enum BulkUpdateAllCommandTransactionType {
 		ONCE, DIVISION
 	}
 
+	/** 要素 */
+	private List<Element> elements;
+
 	/** 検索結果の表示行数 */
 	@MetaFieldInfo(
-			displayName="検索結果の表示件数",
-			displayNameKey="generic_element_section_SearchResultSection_dispRowCountDisplaNameKey",
-			inputType=InputType.NUMBER,
-			rangeCheck=true,
-			minRange=0,
-			maxRange=200,
-			displayOrder=200,
-			description="検索結果の一覧に表示する件数を指定します。",
-			descriptionKey="generic_element_section_SearchResultSection_dispRowCountDescriptionKey"
+			displayName = "検索結果の表示件数",
+			displayNameKey = "generic_element_section_SearchResultSection_dispRowCountDisplayNameKey",
+			inputType = InputType.NUMBER,
+			rangeCheck = true,
+			minRange = 0,
+			displayOrder = 200,
+			description = "検索結果の一覧に表示する件数を指定します。",
+			descriptionKey = "generic_element_section_SearchResultSection_dispRowCountDescriptionKey"
 	)
 	private Integer dispRowCount;
 
 	@MetaFieldInfo(
-			displayName="検索結果の高さ",
-			displayNameKey="generic_element_section_SearchResultSection_dispHeightDisplaNameKey",
-			inputType=InputType.NUMBER,
-			rangeCheck=true,
-			minRange=0,
-			displayOrder=210,
-			description="検索結果の高さを指定します。<br>" +
-						"0を指定した場合、高さを自動とします。",
-			descriptionKey="generic_element_section_SearchResultSection_dispHeightDescriptionKey"
+			displayName = "検索結果TABLEの高さ",
+			displayNameKey = "generic_element_section_SearchResultSection_dispHeightDisplayNameKey",
+			inputType = InputType.NUMBER,
+			rangeCheck = true,
+			minRange = 0,
+			displayOrder = 205,
+			description = "検索結果の高さを指定します。<br>" +
+					"0を指定した場合、高さを自動とします。",
+			descriptionKey = "generic_element_section_SearchResultSection_dispHeightDescriptionKey"
 	)
 	private int dispHeight;
 
+	/** テーブル高さの自動調節モード（「検索結果TABLEの高さ」が 0 の場合のみ有効） */
+	@MetaFieldInfo(
+			displayName = "検索結果TABLEの高さ自動調節",
+			displayNameKey = "generic_element_section_SearchResultSection_autoHeightAdjustModeDisplayNameKey",
+			inputType = InputType.ENUM,
+			enumClass = AutoHeightAdjustMode.class,
+			displayOrder = 206,
+			description = "「検索結果TABLEの高さ」が 0 の場合の、テーブル高さの自動調整方法を設定します。<br>" +
+					"<b>FIT_TO_ROW_COUNT :</b> 検索結果の表示件数に応じて調節します。(既定)<br>" +
+					"<b>FIT_TO_VIEWPORT :</b> テーブル全体が画面内に表示されるよう調節します。<br>" +
+					"※「検索結果TABLEの高さ」が 0 の場合のみ設定可能です。",
+			descriptionKey = "generic_element_section_SearchResultSection_autoHeightAdjustModeDescriptionKey"
+	)
+	private AutoHeightAdjustMode autoHeightAdjustMode;
+
 	/** 検索結果をまとめる */
 	@MetaFieldInfo(
-			displayName="検索結果をまとめる設定",
-			displayNameKey="generic_element_section_SearchResultSection_groupingDataDisplaNameKey",
-			inputType=InputType.CHECKBOX,
-			displayOrder=215,
-			description="検索結果をまとめて表示します。<br>" +
+			displayName = "検索結果をまとめる設定",
+			displayNameKey = "generic_element_section_SearchResultSection_groupingDataDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 210,
+			description = "検索結果をまとめて表示します。<br>" +
 					"OIDとVersionが同じであるレコードをまとめます。",
-			descriptionKey="generic_element_section_SearchResultSection_groupingDataDescriptionKey"
+			descriptionKey = "generic_element_section_SearchResultSection_groupingDataDescriptionKey"
 	)
 	private boolean groupingData;
 
+	/** カラム固定を許可 */
+	@MetaFieldInfo(
+			displayName = "固定指定を許可",
+			displayNameKey = "generic_element_section_SearchResultSection_frozenEnabledDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 211,
+			description = "検索結果一覧でのカラム固定を許可します。<br>" +
+					"許可した場合はシステム列(選択欄・詳細リンク等)を除くすべての列にピンが表示され、ピンを押した列とその左側の列がすべて固定されます(固定の基準となるのは1列のみ)。<br>" +
+					"初期表示で固定する列は、各列の「列を固定」設定で指定します(複数指定時は最も右側の列が基準)。<br>" +
+					"許可しない場合(既定)はピンも固定も一切機能しません。",
+			descriptionKey = "generic_element_section_SearchResultSection_frozenEnabledDescriptionKey"
+	)
+	private boolean frozenEnabled;
+
 	/** 編集リンク非表示設定 */
 	@MetaFieldInfo(
-			displayName="編集リンク非表示設定",
-			displayNameKey="generic_element_section_SearchResultSection_hideDetailLinkDisplaNameKey",
-			inputType=InputType.CHECKBOX,
-			displayOrder=220,
-			description="検索結果の編集リンクを非表示にします。",
-			descriptionKey="generic_element_section_SearchResultSection_hideDetailLinkDescriptionKey"
+			displayName = "編集リンク非表示設定",
+			displayNameKey = "generic_element_section_SearchResultSection_hideDetailLinkDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 215,
+			description = "検索結果の編集リンクを非表示にします。",
+			descriptionKey = "generic_element_section_SearchResultSection_hideDetailLinkDescriptionKey"
 	)
 	private boolean hideDetailLink;
 
 	/** Entity権限の可能範囲条件で編集リンク表示を制御 */
 	@MetaFieldInfo(
-			displayName="Entity権限の可能範囲条件で編集リンク表示を制御",
-			displayNameKey="generic_element_section_SearchResultSection_checkEntityPermissionLimitConditionOfEditLinkDisplaNameKey",
-			inputType=InputType.CHECKBOX,
-			displayOrder=225,
-			description="レコード単位でEntity権限の可能範囲条件をチェックし編集リンクの表示を制御します。",
-			descriptionKey="generic_element_section_SearchResultSection_checkEntityPermissionLimitConditionOfEditLinkDescriptionKey"
+			displayName = "Entity権限の可能範囲条件で編集リンク表示を制御",
+			displayNameKey = "generic_element_section_SearchResultSection_checkEntityPermissionLimitConditionOfEditLinkDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 220,
+			description = "レコード単位でEntity権限の可能範囲条件をチェックし編集リンクの表示を制御します。",
+			descriptionKey = "generic_element_section_SearchResultSection_checkEntityPermissionLimitConditionOfEditLinkDescriptionKey"
 	)
 	private boolean checkEntityPermissionLimitConditionOfEditLink;
 
 	/** 削除ボタン非表示設定 */
 	@MetaFieldInfo(
-			displayName="削除ボタン非表示設定",
-			displayNameKey="generic_element_section_SearchResultSection_hideDeleteDisplaNameKey",
-			inputType=InputType.CHECKBOX,
-			displayOrder=230,
-			description="削除ボタンと検索結果のチェックボックスを非表示にします。",
-			descriptionKey="generic_element_section_SearchResultSection_hideDeleteDescriptionKey"
+			displayName = "削除ボタン非表示設定",
+			displayNameKey = "generic_element_section_SearchResultSection_hideDeleteDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 225,
+			description = "削除ボタンと検索結果のチェックボックスを非表示にします。",
+			descriptionKey = "generic_element_section_SearchResultSection_hideDeleteDescriptionKey"
 	)
 	private boolean hideDelete;
 
 	/** ページング非表示設定 */
 	@MetaFieldInfo(
-			displayName="ページング非表示設定",
-			displayNameKey="generic_element_section_SearchResultSection_hidePagingDisplaNameKey",
-			inputType=InputType.CHECKBOX,
-			displayOrder=240,
-			description="参照の一覧のページングを非表示にします。<br>" +
+			displayName = "ページング非表示設定",
+			displayNameKey = "generic_element_section_SearchResultSection_hidePagingDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 230,
+			description = "参照の一覧のページングを非表示にします。<br>" +
 					"非表示にした場合はページングが行えないため、対象データを全件取得します。",
-			descriptionKey="generic_element_section_SearchResultSection_hidePagingDescriptionKey"
+			descriptionKey = "generic_element_section_SearchResultSection_hidePagingDescriptionKey"
 	)
 	private boolean hidePaging;
 
 	/** 件数非表示設定 */
 	@MetaFieldInfo(
-			displayName="件数非表示設定",
-			displayNameKey="generic_element_section_SearchResultSection_hideCountDisplaNameKey",
-			inputType=InputType.CHECKBOX,
-			displayOrder=250,
-			description="検索結果のページングで件数を非表示にします。<br>" +
+			displayName = "件数非表示設定",
+			displayNameKey = "generic_element_section_SearchResultSection_hideCountDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 235,
+			description = "検索結果のページングで件数を非表示にします。<br>" +
 					"非表示にした場合、全件数はカウントされません。<br>" +
 					"また、ページジャンプ、ページリンクも非表示になります。",
-			descriptionKey="generic_element_section_SearchResultSection_hideCountDescriptionKey"
+			descriptionKey = "generic_element_section_SearchResultSection_hideCountDescriptionKey"
 	)
 	private boolean hideCount;
 
 	/** ページジャンプ非表示設定 */
 	@MetaFieldInfo(
-			displayName="ページジャンプ非表示設定",
-			displayNameKey="generic_element_section_SearchResultSection_hidePageJumpDisplaNameKey",
-			inputType=InputType.CHECKBOX,
-			displayOrder=260,
-			description="検索結果のページングでページジャンプを非表示にします。",
-			descriptionKey="generic_element_section_SearchResultSection_hidePageJumpDescriptionKey"
+			displayName = "ページジャンプ非表示設定",
+			displayNameKey = "generic_element_section_SearchResultSection_hidePageJumpDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 240,
+			description = "検索結果のページングでページジャンプを非表示にします。",
+			descriptionKey = "generic_element_section_SearchResultSection_hidePageJumpDescriptionKey"
 	)
 	private boolean hidePageJump;
 
 	/** ページリンク非表示設定 */
 	@MetaFieldInfo(
-			displayName="ページリンク非表示設定",
-			displayNameKey="generic_element_section_SearchResultSection_hidePageLinkDisplaNameKey",
-			inputType=InputType.CHECKBOX,
-			displayOrder=270,
-			description="検索結果のページングでページリンクを非表示にします。",
-			descriptionKey="generic_element_section_SearchResultSection_hidePageLinkDescriptionKey"
+			displayName = "ページリンク非表示設定",
+			displayNameKey = "generic_element_section_SearchResultSection_hidePageLinkDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 245,
+			description = "検索結果のページングでページリンクを非表示にします。",
+			descriptionKey = "generic_element_section_SearchResultSection_hidePageLinkDescriptionKey"
 	)
 	private boolean hidePageLink;
 
 	/** ページング表示位置 */
 	@MetaFieldInfo(
-			displayName="ページング表示位置",
-			displayNameKey="generic_element_section_SearchResultSection_pagingPositionDisplaNameKey",
-			inputType=InputType.ENUM,
-			enumClass=PagingPosition.class,
-			displayOrder=280,
-			description="ページングの表示位置を指定します。<br>" +
+			displayName = "ページング表示位置",
+			displayNameKey = "generic_element_section_SearchResultSection_pagingPositionDisplayNameKey",
+			inputType = InputType.ENUM,
+			enumClass = PagingPosition.class,
+			displayOrder = 250,
+			description = "ページングの表示位置を指定します。<br>" +
 					"<b>BOTH   :</b> グリッドの上下<br>" +
 					"<b>TOP    :</b> グリッドの上部<br>" +
 					"<b>BOTTOM :</b> グリッドの下部<br>",
-			descriptionKey="generic_element_section_SearchResultSection_pagingPositionDescriptionKey"
+			descriptionKey = "generic_element_section_SearchResultSection_pagingPositionDescriptionKey"
 	)
 	private PagingPosition pagingPosition;
 
 	/** 一括更新ボタン表示設定 */
 	@MetaFieldInfo(
-			displayName="一括更新ボタン表示設定",
-			displayNameKey="generic_element_section_SearchResultSection_showBulkUpdateDisplaNameKey",
-			inputType=InputType.CHECKBOX,
-			displayOrder=290,
-			description="一括更新ボタンを表示にします。",
-			descriptionKey="generic_element_section_SearchResultSection_showBulkUpdateDescriptionKey"
+			displayName = "一括更新ボタン表示設定",
+			displayNameKey = "generic_element_section_SearchResultSection_showBulkUpdateDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 255,
+			description = "一括更新ボタンを表示にします。",
+			descriptionKey = "generic_element_section_SearchResultSection_showBulkUpdateDescriptionKey"
 	)
 	private boolean showBulkUpdate;
 
 	@MetaFieldInfo(
-			displayName="Bulk Viewの定義を利用",
-			displayNameKey="generic_element_section_SearchResultSection_useBulkViewDisplaNameKey",
-			inputType=InputType.CHECKBOX,
-			displayOrder=295,
-			description="Bulk Viewの定義を利用します。",
-			descriptionKey="generic_element_section_SearchResultSection_useBulkViewDescriptionKey"
+			displayName = "Bulk Viewの定義を利用",
+			displayNameKey = "generic_element_section_SearchResultSection_useBulkViewDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 260,
+			description = "Bulk Viewの定義を利用します。",
+			descriptionKey = "generic_element_section_SearchResultSection_useBulkViewDescriptionKey"
 	)
 	private boolean useBulkView;
 
 	@MetaFieldInfo(
-			displayName="一括更新の排他制御起点",
-			displayNameKey="generic_element_section_SearchResultSection_exclusiveControlPointDisplaNameKey",
-			inputType=InputType.ENUM,
-			enumClass=ExclusiveControlPoint.class,
-			displayOrder=296,
-			description="一括更新の排他制御起点。<br>" +
+			displayName = "一括更新の排他制御起点",
+			displayNameKey = "generic_element_section_SearchResultSection_exclusiveControlPointDisplayNameKey",
+			inputType = InputType.ENUM,
+			enumClass = ExclusiveControlPoint.class,
+			displayOrder = 265,
+			description = "一括更新の排他制御起点。<br>" +
 					"<b>WHEN_DIALOG_OPEN :</b> 更新ダイアログが開く時<br>" +
 					"<b>WHEN_SEARCH      :</b> 検索実行時<br>",
-			descriptionKey="generic_element_section_SearchResultSection_exclusiveControlPointDescriptionKey"
+			descriptionKey = "generic_element_section_SearchResultSection_exclusiveControlPointDescriptionKey"
 	)
 	private ExclusiveControlPoint exclusiveControlPoint = ExclusiveControlPoint.WHEN_DIALOG_OPEN;
 
 	/** 一括更新ボタン表示ラベル */
 	@MetaFieldInfo(
-			displayName="一括更新ボタン表示ラベル",
-			displayNameKey="generic_element_section_SearchResultSection_bulkUpdateDisplayLabelDisplaNameKey",
-			description="一括更新ボタンに表示されるラベルを設定します。",
-			descriptionKey="generic_element_section_SearchResultSection_bulkUpdateDisplayLabelDescriptionKey",
-			inputType=InputType.MULTI_LANG,
+			displayName = "一括更新ボタン表示ラベル",
+			displayNameKey = "generic_element_section_SearchResultSection_bulkUpdateDisplayLabelDisplayNameKey",
+			description = "一括更新ボタンに表示されるラベルを設定します。",
+			descriptionKey = "generic_element_section_SearchResultSection_bulkUpdateDisplayLabelDescriptionKey",
+			inputType = InputType.MULTI_LANG,
 			multiLangField = "localizedBulkUpdateDisplayLabel",
-			displayOrder=300
+			displayOrder = 270
 	)
 	@MultiLang(
-			multiLangGetter="getLocalizedBulkUpdateDisplayLabel",
+			multiLangGetter = "getLocalizedBulkUpdateDisplayLabel",
 			multiLangSetter = "setLocalizedBulkUpdateDisplayLabel"
 	)
 	private String bulkUpdateDisplayLabel;
 
 	/** 多言語設定情報 */
 	@MetaFieldInfo(
-			displayName="多言語設定",
-			displayNameKey="generic_element_section_SearchResultSection_localizedBulkUpdateDisplayLabelDisplaNameKey",
-			inputType=InputType.MULTI_LANG_LIST,
-			displayOrder=310
+			displayName = "多言語設定",
+			displayNameKey = "generic_element_section_SearchResultSection_localizedBulkUpdateDisplayLabelDisplayNameKey",
+			inputType = InputType.MULTI_LANG_LIST,
+			displayOrder = 275
 	)
 	private List<LocalizedStringDefinition> localizedBulkUpdateDisplayLabel;
 
-	/** ソートアイテム */
+	/** 一括更新デフォルト選択項目 */
 	@MetaFieldInfo(
-			displayName="一括更新デフォルト選択項目",
-			displayNameKey="generic_element_section_SearchResultSection_bulkUpdateDefaultSelectionDisplaNameKey",
-			inputType=InputType.PROPERTY,
-			displayOrder=320,
-			description="<b>一括更新デフォルト選択項目</b><br>" +
+			displayName = "一括更新デフォルト選択項目",
+			displayNameKey = "generic_element_section_SearchResultSection_bulkUpdateDefaultSelectionDisplayNameKey",
+			inputType = InputType.PROPERTY,
+			displayOrder = 280,
+			description = "<b>一括更新デフォルト選択項目</b><br>" +
 					"BulkViewレイアウト定義を利用しない場合、デフォルト選択項目を指定します。",
-			descriptionKey="generic_element_section_SearchResultSection_bulkUpdateDefaultSelectionDescriptionKey"
+			descriptionKey = "generic_element_section_SearchResultSection_bulkUpdateDefaultSelectionDescriptionKey"
 	)
 	private String bulkUpdateDefaultSelection;
 
-
-
 	/** 親子関係の参照を物理削除するか */
 	@MetaFieldInfo(
-			displayName="親子関係の参照を物理削除するか",
-			displayNameKey="generic_element_section_SearchResultSection_purgeCompositionedEntityDisplaNameKey",
-			inputType=InputType.CHECKBOX,
-			displayOrder=1000,
-			description="親子関係の参照を物理削除するかを設定します",
-			descriptionKey="generic_element_section_SearchResultSection_purgeCompositionedEntityDescriptionKey"
+			displayName = "親子関係の参照を物理削除するか",
+			displayNameKey = "generic_element_section_SearchResultSection_purgeCompositionedEntityDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 1000,
+			description = "親子関係の参照を物理削除するかを設定します",
+			descriptionKey = "generic_element_section_SearchResultSection_purgeCompositionedEntityDescriptionKey"
 	)
 	private boolean purgeCompositionedEntity;
 
 	/** 更新時に強制的に更新処理を行う */
 	@MetaFieldInfo(
-			displayName="更新時に強制的に更新処理を行う",
-			displayNameKey="generic_element_section_SearchResultSection_forceUpadteDisplaNameKey",
-			inputType=InputType.CHECKBOX,
-			displayOrder=1010,
-			description="変更項目が一つもなくとも、強制的に更新処理（更新日時、更新者が更新される）を行います。",
-			descriptionKey="generic_element_section_SearchResultSection_forceUpadteDescriptionKey"
+			displayName = "更新時に強制的に更新処理を行う",
+			displayNameKey = "generic_element_section_SearchResultSection_forceUpadteDisplayNameKey",
+			inputType = InputType.CHECKBOX,
+			displayOrder = 1010,
+			description = "変更項目が一つもなくとも、強制的に更新処理（更新日時、更新者が更新される）を行います。",
+			descriptionKey = "generic_element_section_SearchResultSection_forceUpadteDescriptionKey"
 	)
 	private boolean forceUpadte;
 
-	/** カスタムスタイルキー */
-	private String scriptKey;
-
 	/** カスタム登録処理クラス名 */
 	@MetaFieldInfo(
-			displayName="カスタム登録処理クラス名",
-			displayNameKey="generic_element_section_SearchResultSection_interrupterNameDisplaNameKey",
-			displayOrder=1020,
-			description="データ登録時に行うカスタム登録処理のクラス名を指定します。<br>" +
+			displayName = "カスタム登録処理クラス名",
+			displayNameKey = "generic_element_section_SearchResultSection_interrupterNameDisplayNameKey",
+			displayOrder = 1020,
+			description = "データ登録時に行うカスタム登録処理のクラス名を指定します。<br>" +
 					"RegistrationInterrupterインターフェースを実装するクラスを指定してください。",
 
-			descriptionKey="generic_element_section_SearchResultSection_interrupterNameDescriptionKey"
+			descriptionKey = "generic_element_section_SearchResultSection_interrupterNameDescriptionKey"
 	)
 	private String interrupterName;
 
 	/** カスタムロード処理クラス名 */
 	@MetaFieldInfo(
-			displayName="カスタムロード処理クラス名",
-			displayNameKey="generic_element_section_SearchResultSection_loadEntityInterrupterNameDisplaNameKey",
-			displayOrder=1030,
-			description="Entityロード処理実行前にロード用のオプションをカスタマイズするためのクラス名を指定します。<br>" +
+			displayName = "カスタムロード処理クラス名",
+			displayNameKey = "generic_element_section_SearchResultSection_loadEntityInterrupterNameDisplayNameKey",
+			displayOrder = 1030,
+			description = "Entityロード処理実行前にロード用のオプションをカスタマイズするためのクラス名を指定します。<br>" +
 					"LoadEntityInterrupterインターフェースを実装するクラスを指定してください。",
 
-			descriptionKey="generic_element_section_SearchResultSection_loadEntityInterrupterNameDescriptionKey"
+			descriptionKey = "generic_element_section_SearchResultSection_loadEntityInterrupterNameDescriptionKey"
 	)
 	private String loadEntityInterrupterName;
 
 	/** 一括削除コミットトランザクション制御設定 */
 	@MetaFieldInfo(
-			displayName="一括削除コミットトランザクション制御設定",
-			displayNameKey="generic_element_section_SearchResultSection_deleteAllCommandTransactionTypeDisplaNameKey",
-			inputType=InputType.ENUM,
-			enumClass=DeleteAllCommandTransactionType.class,
-			displayOrder=1040,
-			description="一括削除時に、全部一斉で処理するか、設定した件数で分けて処理かを指定します。",
-			descriptionKey="generic_element_section_SearchConditionSection_deleteAllCommandTransactionTypeDescriptionKey"
+			displayName = "一括削除コミットトランザクション制御設定",
+			displayNameKey = "generic_element_section_SearchResultSection_deleteAllCommandTransactionTypeDisplayNameKey",
+			inputType = InputType.ENUM,
+			enumClass = DeleteAllCommandTransactionType.class,
+			displayOrder = 1040,
+			description = "一括削除時に、全部一斉で処理するか、設定した件数で分けて処理かを指定します。",
+			descriptionKey = "generic_element_section_SearchConditionSection_deleteAllCommandTransactionTypeDescriptionKey"
 	)
 	private DeleteAllCommandTransactionType deleteAllCommandTransactionType = DeleteAllCommandTransactionType.DIVISION;
 
 	/** カスタム削除処理クラス名 */
 	@MetaFieldInfo(
-			displayName="カスタム削除処理クラス名",
-			displayNameKey="generic_element_section_SearchResultSection_deleteInterrupterNameDisplaNameKey",
-			displayOrder=1045,
-			description="データ削除時に行うカスタム削除処理のクラス名を指定します。<br>" +
+			displayName = "カスタム削除処理クラス名",
+			displayNameKey = "generic_element_section_SearchResultSection_deleteInterrupterNameDisplayNameKey",
+			displayOrder = 1045,
+			description = "データ削除時に行うカスタム削除処理のクラス名を指定します。<br>" +
 					"BulkOperationInterrupterインターフェースを実装するクラスを指定してください。",
 
-			descriptionKey="generic_element_section_SearchResultSection_deleteInterrupterNameDescriptionKey"
+			descriptionKey = "generic_element_section_SearchResultSection_deleteInterrupterNameDescriptionKey"
 	)
 	private String deleteInterrupterName;
 
 	/** 一括更新コミットトランザクション制御設定 */
 	@MetaFieldInfo(
-			displayName="一括更新コミットトランザクション制御設定",
-			displayNameKey="generic_element_section_SearchResultSection_bulkUpdateAllCommandTransactionTypeDisplaNameKey",
-			inputType=InputType.ENUM,
-			enumClass=BulkUpdateAllCommandTransactionType.class,
-			displayOrder=1050,
-			description="一括更新時に、全部一斉で処理するか、設定した件数で分けて処理かを指定します。",
-			descriptionKey="generic_element_section_SearchConditionSection_bulkUpdateAllCommandTransactionTypeDescriptionKey"
+			displayName = "一括更新コミットトランザクション制御設定",
+			displayNameKey = "generic_element_section_SearchResultSection_bulkUpdateAllCommandTransactionTypeDisplayNameKey",
+			inputType = InputType.ENUM,
+			enumClass = BulkUpdateAllCommandTransactionType.class,
+			displayOrder = 1050,
+			description = "一括更新時に、全部一斉で処理するか、設定した件数で分けて処理かを指定します。",
+			descriptionKey = "generic_element_section_SearchConditionSection_bulkUpdateAllCommandTransactionTypeDescriptionKey"
 	)
 	private BulkUpdateAllCommandTransactionType bulkUpdateAllCommandTransactionType = BulkUpdateAllCommandTransactionType.DIVISION;
 
 	/** カスタム一括更新処理クラス名 */
 	@MetaFieldInfo(
-			displayName="カスタム一括更新処理クラス名",
-			displayNameKey="generic_element_section_SearchResultSection_bulkUpdateInterrupterNameDisplaNameKey",
-			displayOrder=1055,
-			description="データ一括更新時に行うカスタム更新処理のクラス名を指定します。<br>" +
+			displayName = "カスタム一括更新処理クラス名",
+			displayNameKey = "generic_element_section_SearchResultSection_bulkUpdateInterrupterNameDisplayNameKey",
+			displayOrder = 1055,
+			description = "データ一括更新時に行うカスタム更新処理のクラス名を指定します。<br>" +
 					"BulkOperationInterrupterインターフェースを実装するクラスを指定してください。",
 
-			descriptionKey="generic_element_section_SearchResultSection_bulkUpdateInterrupterNameDescriptionKey"
+			descriptionKey = "generic_element_section_SearchResultSection_bulkUpdateInterrupterNameDescriptionKey"
 	)
 	private String bulkUpdateInterrupterName;
 
-	public DeleteAllCommandTransactionType getDeleteAllCommandTransactionType() {
-		return deleteAllCommandTransactionType;
-	}
-
-	public void setDeleteAllCommandTransactionType(DeleteAllCommandTransactionType deleteAllCommandTransactionType) {
-		this.deleteAllCommandTransactionType = deleteAllCommandTransactionType;
-	}
-
-	public BulkUpdateAllCommandTransactionType getBulkUpdateAllCommandTransactionType() {
-		return bulkUpdateAllCommandTransactionType;
-	}
-
-	public void setBulkUpdateAllCommandTransactionType(
-			BulkUpdateAllCommandTransactionType bulkUpdateAllCommandTransactionType) {
-		this.bulkUpdateAllCommandTransactionType = bulkUpdateAllCommandTransactionType;
-	}
+	/** カスタムスタイルキー */
+	private String scriptKey;
 
 	/**
 	 * デフォルトコンストラクタ
@@ -410,7 +430,8 @@ public class SearchResultSection extends Section {
 	 * @return 要素
 	 */
 	public List<Element> getElements() {
-		if (elements == null) elements = new ArrayList<>();
+		if (elements == null)
+			elements = new ArrayList<>();
 		return elements;
 	}
 
@@ -420,6 +441,19 @@ public class SearchResultSection extends Section {
 	 */
 	public void setElements(List<Element> elements) {
 		this.elements = elements;
+	}
+
+	/**
+	 * 要素を追加します。
+	 * @param val プロパティ情報
+	 */
+	public void addElement(Element val) {
+		getElements().add(val);
+	}
+
+	@Override
+	public boolean isShowLink() {
+		return false;
 	}
 
 	/**
@@ -438,7 +472,6 @@ public class SearchResultSection extends Section {
 		this.dispRowCount = dispRowCount;
 	}
 
-
 	/**
 	 * 検索結果の高さを取得します。
 	 * @return 検索結果の高さ
@@ -453,6 +486,22 @@ public class SearchResultSection extends Section {
 	 */
 	public void setDispHeight(int dispHeight) {
 		this.dispHeight = dispHeight;
+	}
+
+	/**
+	 * テーブル高さの自動調節モードを取得します。
+	 * @return テーブル高さの自動調節モード（未設定の場合 null）
+	 */
+	public AutoHeightAdjustMode getAutoHeightAdjustMode() {
+		return autoHeightAdjustMode;
+	}
+
+	/**
+	 * テーブル高さの自動調節モードを設定します。
+	 * @param autoHeightAdjustMode 検索結果TABLEの高さ自動調節
+	 */
+	public void setAutoHeightAdjustMode(AutoHeightAdjustMode autoHeightAdjustMode) {
+		this.autoHeightAdjustMode = autoHeightAdjustMode;
 	}
 
 	/**
@@ -472,11 +521,27 @@ public class SearchResultSection extends Section {
 	}
 
 	/**
+	 * カラム固定を許可するかを取得します。
+	 * @return カラム固定を許可するか
+	 */
+	public boolean isFrozenEnabled() {
+		return frozenEnabled;
+	}
+
+	/**
+	 * カラム固定を許可するかを設定します。
+	 * @param frozenEnabled カラム固定を許可するか
+	 */
+	public void setFrozenEnabled(boolean frozenEnabled) {
+		this.frozenEnabled = frozenEnabled;
+	}
+
+	/**
 	 * 編集リンク非表示設定を取得します。
 	 * @return 編集リンク非表示設定
 	 */
 	public boolean isHideDetailLink() {
-	    return hideDetailLink;
+		return hideDetailLink;
 	}
 
 	/**
@@ -484,7 +549,7 @@ public class SearchResultSection extends Section {
 	 * @param hideDetailLink 編集リンク非表示設定
 	 */
 	public void setHideDetailLink(boolean hideDetailLink) {
-	    this.hideDetailLink = hideDetailLink;
+		this.hideDetailLink = hideDetailLink;
 	}
 
 	/**
@@ -508,7 +573,7 @@ public class SearchResultSection extends Section {
 	 * @return 削除ボタン非表示設定
 	 */
 	public boolean isHideDelete() {
-	    return hideDelete;
+		return hideDelete;
 	}
 
 	/**
@@ -516,7 +581,7 @@ public class SearchResultSection extends Section {
 	 * @param hideDelete 削除ボタン非表示設定
 	 */
 	public void setHideDelete(boolean hideDelete) {
-	    this.hideDelete = hideDelete;
+		this.hideDelete = hideDelete;
 	}
 
 	/**
@@ -524,7 +589,7 @@ public class SearchResultSection extends Section {
 	 * @return ページング非表示設定
 	 */
 	public boolean isHidePaging() {
-	    return hidePaging;
+		return hidePaging;
 	}
 
 	/**
@@ -532,7 +597,7 @@ public class SearchResultSection extends Section {
 	 * @param hidePaging ページング非表示設定
 	 */
 	public void setHidePaging(boolean hidePaging) {
-	    this.hidePaging = hidePaging;
+		this.hidePaging = hidePaging;
 	}
 
 	/**
@@ -540,7 +605,7 @@ public class SearchResultSection extends Section {
 	 * @return 件数非表示設定
 	 */
 	public boolean isHideCount() {
-	    return hideCount;
+		return hideCount;
 	}
 
 	/**
@@ -548,7 +613,7 @@ public class SearchResultSection extends Section {
 	 * @param hideCount 件数非表示設定
 	 */
 	public void setHideCount(boolean hideCount) {
-	    this.hideCount = hideCount;
+		this.hideCount = hideCount;
 	}
 
 	/**
@@ -556,7 +621,7 @@ public class SearchResultSection extends Section {
 	 * @return ページジャンプ非表示設定
 	 */
 	public boolean isHidePageJump() {
-	    return hidePageJump;
+		return hidePageJump;
 	}
 
 	/**
@@ -564,7 +629,7 @@ public class SearchResultSection extends Section {
 	 * @param hidePageJump ページジャンプ非表示設定
 	 */
 	public void setHidePageJump(boolean hidePageJump) {
-	    this.hidePageJump = hidePageJump;
+		this.hidePageJump = hidePageJump;
 	}
 
 	/**
@@ -572,7 +637,7 @@ public class SearchResultSection extends Section {
 	 * @return ページリンク非表示設定
 	 */
 	public boolean isHidePageLink() {
-	    return hidePageLink;
+		return hidePageLink;
 	}
 
 	/**
@@ -580,7 +645,7 @@ public class SearchResultSection extends Section {
 	 * @param hidePageLink ページリンク非表示設定
 	 */
 	public void setHidePageLink(boolean hidePageLink) {
-	    this.hidePageLink = hidePageLink;
+		this.hidePageLink = hidePageLink;
 	}
 
 	/**
@@ -588,7 +653,7 @@ public class SearchResultSection extends Section {
 	 * @return ページング表示位置
 	 */
 	public PagingPosition getPagingPosition() {
-	    return pagingPosition;
+		return pagingPosition;
 	}
 
 	/**
@@ -596,20 +661,7 @@ public class SearchResultSection extends Section {
 	 * @param pagingPosition ページング表示位置
 	 */
 	public void setPagingPosition(PagingPosition pagingPosition) {
-	    this.pagingPosition = pagingPosition;
-	}
-
-	/**
-	 * 要素を追加します。
-	 * @param val プロパティ情報
-	 */
-	public void addElement(Element val) {
-		getElements().add(val);
-	}
-
-	@Override
-	public boolean isShowLink() {
-		return false;
+		this.pagingPosition = pagingPosition;
 	}
 
 	/**
@@ -713,7 +765,7 @@ public class SearchResultSection extends Section {
 	 * @return 親子関係の参照を物理削除するか
 	 */
 	public boolean isPurgeCompositionedEntity() {
-	    return purgeCompositionedEntity;
+		return purgeCompositionedEntity;
 	}
 
 	/**
@@ -721,7 +773,7 @@ public class SearchResultSection extends Section {
 	 * @param purgeCompositionedEntity 親子関係の参照を物理削除するか
 	 */
 	public void setPurgeCompositionedEntity(boolean purgeCompositionedEntity) {
-	    this.purgeCompositionedEntity = purgeCompositionedEntity;
+		this.purgeCompositionedEntity = purgeCompositionedEntity;
 	}
 
 	/**
@@ -741,27 +793,11 @@ public class SearchResultSection extends Section {
 	}
 
 	/**
-	 * カスタムスタイルのキーを取得します。
-	 * @return カスタムスタイルのキー
-	 */
-	public String getScriptKey() {
-		return scriptKey;
-	}
-
-	/**
-	 * カスタムスタイルのキーを設定します。
-	 * @param scriptKey カスタムスタイルのキー
-	 */
-	public void setScriptKey(String scriptKey) {
-		this.scriptKey = scriptKey;
-	}
-
-	/**
 	 * カスタム登録処理クラス名を取得します。
 	 * @return カスタム登録処理クラス名
 	 */
 	public String getInterrupterName() {
-	    return interrupterName;
+		return interrupterName;
 	}
 
 	/**
@@ -769,7 +805,7 @@ public class SearchResultSection extends Section {
 	 * @param interrupterName カスタム登録処理クラス名
 	 */
 	public void setInterrupterName(String interrupterName) {
-	    this.interrupterName = interrupterName;
+		this.interrupterName = interrupterName;
 	}
 
 	/**
@@ -777,7 +813,7 @@ public class SearchResultSection extends Section {
 	 * @return カスタムロード処理クラス名
 	 */
 	public String getLoadEntityInterrupterName() {
-	    return loadEntityInterrupterName;
+		return loadEntityInterrupterName;
 	}
 
 	/**
@@ -785,7 +821,15 @@ public class SearchResultSection extends Section {
 	 * @param loadEntityInterrupterName カスタムロード処理クラス名
 	 */
 	public void setLoadEntityInterrupterName(String loadEntityInterrupterName) {
-	    this.loadEntityInterrupterName = loadEntityInterrupterName;
+		this.loadEntityInterrupterName = loadEntityInterrupterName;
+	}
+
+	public DeleteAllCommandTransactionType getDeleteAllCommandTransactionType() {
+		return deleteAllCommandTransactionType;
+	}
+
+	public void setDeleteAllCommandTransactionType(DeleteAllCommandTransactionType deleteAllCommandTransactionType) {
+		this.deleteAllCommandTransactionType = deleteAllCommandTransactionType;
 	}
 
 	/**
@@ -804,6 +848,15 @@ public class SearchResultSection extends Section {
 		this.deleteInterrupterName = deleteInterrupterName;
 	}
 
+	public BulkUpdateAllCommandTransactionType getBulkUpdateAllCommandTransactionType() {
+		return bulkUpdateAllCommandTransactionType;
+	}
+
+	public void setBulkUpdateAllCommandTransactionType(
+			BulkUpdateAllCommandTransactionType bulkUpdateAllCommandTransactionType) {
+		this.bulkUpdateAllCommandTransactionType = bulkUpdateAllCommandTransactionType;
+	}
+
 	/**
 	 * カスタム一括更新処理クラス名を取得します。
 	 * @return カスタム一括更新処理クラス名
@@ -819,4 +872,21 @@ public class SearchResultSection extends Section {
 	public void setBulkUpdateInterrupterName(String bulkUpdateInterrupterName) {
 		this.bulkUpdateInterrupterName = bulkUpdateInterrupterName;
 	}
+
+	/**
+	 * カスタムスタイルのキーを取得します。
+	 * @return カスタムスタイルのキー
+	 */
+	public String getScriptKey() {
+		return scriptKey;
+	}
+
+	/**
+	 * カスタムスタイルのキーを設定します。
+	 * @param scriptKey カスタムスタイルのキー
+	 */
+	public void setScriptKey(String scriptKey) {
+		this.scriptKey = scriptKey;
+	}
+
 }

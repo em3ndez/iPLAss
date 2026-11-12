@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,7 +30,8 @@ import org.iplass.mtp.spi.ServiceRegistry;
 public class PushNotificationTemplateDefinitionManagerImpl extends AbstractTypedDefinitionManager<PushNotificationTemplateDefinition> implements
 		PushNotificationTemplateDefinitionManager {
 
-	private PushNotificationService service = ServiceRegistry.getRegistry().getService(PushNotificationService.class);
+	private PushNotificationService service = ServiceRegistry.getRegistry()
+			.getService(PushNotificationService.class);
 
 	@Override
 	public Class<PushNotificationTemplateDefinition> getDefinitionType() {

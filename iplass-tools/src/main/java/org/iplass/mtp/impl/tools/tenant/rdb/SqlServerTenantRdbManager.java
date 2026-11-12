@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,6 +24,7 @@ import java.io.File;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 
 import org.iplass.mtp.impl.rdb.SqlExecuter;
@@ -47,26 +48,32 @@ public class SqlServerTenantRdbManager extends DefaultTenantRdbManager {
 	private static final String SQL_TENANT_EXISTS = "select 1 where exists (select * from t_tenant where url = ?)";
 
 	private static final String SQL_GET_DB_NAME = "SELECT DB_NAME()";
-	private static final String SQL_GET_DB_FILE_PATH = "SELECT LEFT(PHYSICAL_NAME, LEN(PHYSICAL_NAME) - CHARINDEX('\\', REVERSE(PHYSICAL_NAME) + '\\'))"
-														+ "FROM (SELECT PHYSICAL_NAME FROM SYS.DATABASE_FILES WHERE NAME = '%s') AS PHYSICAL_NAME";
+	private static final String SQL_GET_DB_FILE_PATH_TEMPLATE = "SELECT LEFT(PHYSICAL_NAME, LEN(PHYSICAL_NAME) - CHARINDEX('\\', REVERSE(PHYSICAL_NAME) + '\\'))"
+			+ "FROM (SELECT PHYSICAL_NAME FROM SYS.DATABASE_FILES WHERE NAME = '%s') AS PHYSICAL_NAME";
 	private static final String SQL_ADD_FILEGROUP = "ALTER DATABASE %s ADD FILEGROUP %s";
 	private static final String SQL_ADD_FILEGROUP_FILE = "ALTER DATABASE %s ADD FILE ("
-														+ "NAME = %s, "
-														+ "FILENAME = '%s', "
-														+ "SIZE = 5MB, "
-														+ "FILEGROWTH = 1MB) TO FILEGROUP %s";
+			+ "NAME = %s, "
+			+ "FILENAME = '%s', "
+			+ "SIZE = 5MB, "
+			+ "FILEGROWTH = 1MB) TO FILEGROUP %s";
 	private static final String SQL_MOD_PARTITION_FUNCTION = "ALTER PARTITION FUNCTION " + PARTITION_FUNCTION_NAME + "() SPLIT RANGE (%d)";
 	private static final String SQL_MOD_PARTITION_SCHEME = "ALTER PARTITION SCHEME " + PARTITION_SCHEME_NAME + " NEXT USED %s";
-	private static final String SQL_EXIST_PARTITION_FUNCTION = "SELECT 'X' FROM SYS.PARTITION_FUNCTIONS WHERE NAME='"+ PARTITION_FUNCTION_NAME + "'";
+	private static final String SQL_EXIST_PARTITION_FUNCTION = "SELECT 'X' FROM SYS.PARTITION_FUNCTIONS WHERE NAME='" + PARTITION_FUNCTION_NAME + "'";
 
-	private static final String SQLSERVER_EXIST_TABLE_SQL = "select count(*) from sys.tables where lower(name) = ?";
-	private static final String SQLSERVER_EXIST_SYNONYM_SQL = "select count(*) from sys.synonyms where lower(name) = ?";
+	private static final String SQLSERVER_EXIST_TABLE_SQL = "select count(*) from sys.tables where lower(name) = lower(?)";
+	private static final String SQLSERVER_EXIST_SYNONYM_SQL = "select count(*) from sys.synonyms where lower(name) = lower(?)";
 
 	private RdbAdapter adapter;
+	/** ファイルパスを取得するSQL。DBのOSによって区切り文字が変わる為、OSによって変更する。 */
+	private String sqlGetDbFilePath;
 
-	public SqlServerTenantRdbManager(RdbAdapter adapter) {
-		super(adapter);
+	public SqlServerTenantRdbManager(RdbAdapter adapter, TenantRdbManagerParameter parameter) {
+		super(adapter, parameter);
 		this.adapter = adapter;
+		// Windows であれば "\", それ以外は "/"
+		String pathSeparator = isDbServerOSWindows(adapter) ? "\\\\" : "/";
+		// \\ を pathSeparator に置換する
+		this.sqlGetDbFilePath = SQL_GET_DB_FILE_PATH_TEMPLATE.replaceAll("\\\\", pathSeparator);
 	}
 
 	@Override
@@ -96,10 +103,12 @@ public class SqlServerTenantRdbManager extends DefaultTenantRdbManager {
 		SqlExecuter<Boolean> exec = new SqlExecuter<Boolean>() {
 			@Override
 			public Boolean logic() throws SQLException {
-				return getPreparedStatement(SQL_EXIST_PARTITION_FUNCTION).executeQuery().next();
+				return getPreparedStatement(SQL_EXIST_PARTITION_FUNCTION).executeQuery()
+						.next();
 			}
 		};
-		return exec.execute(adapter, true).booleanValue();
+		return exec.execute(adapter, true)
+				.booleanValue();
 	}
 
 	@Override
@@ -126,14 +135,15 @@ public class SqlServerTenantRdbManager extends DefaultTenantRdbManager {
 	private boolean createPartitionInternal(final PartitionCreateParameter param, final LogHandler logHandler) {
 		try {
 			return Transaction.required(transaction -> {
-					transaction.commit();	// 後続のパーティション構成の変更でデッドロックが発生するのを防ぐため
+				transaction.commit(); // 後続のパーティション構成の変更でデッドロックが発生するのを防ぐため
 
-					doCreatePartition(param, logHandler);
+				doCreatePartition(param, logHandler);
 
-					logHandler.info(getPartitionResourceMessage(param.getLoggerLanguage(), "createdPartitionMsg", param.getTenantId()));
+				logHandler.info(getPartitionResourceMessage(param.getLoggerLanguage(), "createdPartitionMsg", param.getTenantId()));
 
-					return Boolean.TRUE;
-			}).booleanValue();
+				return Boolean.TRUE;
+			})
+					.booleanValue();
 		} catch (Throwable e) {
 			logHandler.error(getCommonResourceMessage(param.getLoggerLanguage(), "errorMsg", e.getMessage()));
 			return false;
@@ -172,7 +182,7 @@ public class SqlServerTenantRdbManager extends DefaultTenantRdbManager {
 		SqlExecuter<String> exec = new SqlExecuter<String>() {
 			@Override
 			public String logic() throws SQLException {
-				String sql = String.format(SQL_GET_DB_FILE_PATH, dbName);
+				String sql = String.format(sqlGetDbFilePath, dbName);
 				ResultSet rs = getPreparedStatement(sql).executeQuery();
 				rs.next();
 				return rs.getString(1);
@@ -212,15 +222,15 @@ public class SqlServerTenantRdbManager extends DefaultTenantRdbManager {
 
 	private void executeAlter(final String sql) {
 		Transaction.requiresNew(t -> {
-				SqlExecuter<Void> exec = new SqlExecuter<Void>() {
-					@Override
-					public Void logic() throws SQLException {
-						getPreparedStatement(sql).execute();
-						return null;
-					}
-				};
-				exec.execute(adapter, true);
-				return null;
+			SqlExecuter<Void> exec = new SqlExecuter<Void>() {
+				@Override
+				public Void logic() throws SQLException {
+					getPreparedStatement(sql).execute();
+					return null;
+				}
+			};
+			exec.execute(adapter, true);
+			return null;
 		});
 	}
 
@@ -253,7 +263,7 @@ public class SqlServerTenantRdbManager extends DefaultTenantRdbManager {
 				ResultSet rs = ps.executeQuery();
 				int count = 0;
 				try {
-					if(rs.next()) {
+					if (rs.next()) {
 						count = rs.getInt(1);
 					}
 				} finally {
@@ -273,6 +283,46 @@ public class SqlServerTenantRdbManager extends DefaultTenantRdbManager {
 
 	private String getCommonResourceMessage(String lang, String subKey, Object... args) {
 		return ToolsResourceBundleUtil.commonResourceString(lang, subKey, args);
+	}
+
+	@Override
+	protected SqlExecuter<Integer> getTenantRecordDeleteExecuter(int tenantId, String tableName, String deletionUnitColumns,
+			int deleteRows) {
+		return new SqlExecuter<Integer>() {
+			@Override
+			public Integer logic() throws SQLException {
+				String sql = "delete top(?) from " + tableName + " where tenant_id = ?";
+				PreparedStatement ps = getPreparedStatement(sql);
+				ps.setInt(1, deleteRows);
+				ps.setInt(2, tenantId);
+
+				return ps.executeUpdate();
+			}
+		};
+	}
+
+	/**
+	 * DBサーバのOSがWindowsであるか確認する
+	 *
+	 * @param adapter RdbAdapter
+	 * @return DBサーバのOSがWindowsの場合 true
+	 */
+	protected boolean isDbServerOSWindows(RdbAdapter adapter) {
+		SqlExecuter<String> executer = new SqlExecuter<String>() {
+			@Override
+			public String logic() throws SQLException {
+				String sql = "select @@VERSION";
+				Statement ps = getStatement();
+
+				try (ResultSet rs = ps.executeQuery(sql)) {
+					return rs.next() ? rs.getString(1) : "";
+				}
+			}
+		};
+		String version = executer.execute(adapter, true);
+		// @@VERSION に WINDOWS という文字パターンが見つかれば、true を返却する
+		return version.toUpperCase()
+				.indexOf("WINDOWS") > 0;
 	}
 
 }

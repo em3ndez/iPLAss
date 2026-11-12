@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,24 +20,23 @@
 
 package org.iplass.mtp.impl.datastore;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlSeeAlso;
-
 import org.iplass.mtp.impl.datastore.grdb.MetaGRdbMultiplePropertyStore;
 import org.iplass.mtp.impl.datastore.grdb.MetaGRdbPropertyStore;
 import org.iplass.mtp.impl.entity.MetaEntity;
 import org.iplass.mtp.impl.entity.property.PropertyHandler;
 import org.iplass.mtp.impl.metadata.MetaData;
 
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlSeeAlso(value={MetaGRdbPropertyStore.class, MetaGRdbMultiplePropertyStore.class})
+@XmlSeeAlso(value = { MetaGRdbPropertyStore.class, MetaGRdbMultiplePropertyStore.class })
 public abstract class MetaPropertyStore implements MetaData {
 	private static final long serialVersionUID = 6456276072021992839L;
 
 	public abstract MetaPropertyStore copy();
-	
+
 	public abstract PropertyStoreHandler createRuntime(PropertyHandler property, MetaEntity metaEntity);
-	
+
 }

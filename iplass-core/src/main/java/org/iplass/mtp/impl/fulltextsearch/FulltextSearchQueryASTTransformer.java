@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -34,6 +34,7 @@ public class FulltextSearchQueryASTTransformer extends ASTTransformerSupport {
 
 	private String defName;
 	private String searchText;
+
 	public String getSearchText() {
 		return searchText;
 	}
@@ -57,7 +58,8 @@ public class FulltextSearchQueryASTTransformer extends ASTTransformerSupport {
 
 		searchText = contains.getSearchText();
 
-		FulltextSearchService fulltextSearchService = ServiceRegistry.getRegistry().getService(FulltextSearchService.class);
+		FulltextSearchService fulltextSearchService = ServiceRegistry.getRegistry()
+				.getService(FulltextSearchService.class);
 
 		List<FulltextSearchResult> resultList = fulltextSearchService.execFulltextSearch(defName, searchText);
 
@@ -71,10 +73,10 @@ public class FulltextSearchQueryASTTransformer extends ASTTransformerSupport {
 			String oid = result.getOid();
 			highlightMap.put(oid, result.getHighlight());
 			oidArr[cnt] = oid;
-			cnt ++;
+			cnt++;
 		}
 
 		return new In("oid", oidArr);
 	}
-	
+
 }

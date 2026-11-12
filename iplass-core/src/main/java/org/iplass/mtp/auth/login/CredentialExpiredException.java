@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,7 +33,7 @@ public class CredentialExpiredException extends LoginException {
 	private static final long serialVersionUID = 5891584135962867247L;
 	private boolean isInitialLogin;
 	private String policyName;
-	
+
 	/**
 	 *
 	 */
@@ -61,11 +61,11 @@ public class CredentialExpiredException extends LoginException {
 	public CredentialExpiredException(String message, Throwable cause) {
 		super(message, cause);
 	}
-	
+
 	public boolean isInitialLogin() {
 		return isInitialLogin;
 	}
-	
+
 	public void setInitialLogin(boolean isInitialLogin) {
 		this.isInitialLogin = isInitialLogin;
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -102,7 +102,7 @@ public class MetaDataSelectItem extends MtpSelectItem implements MtpWidgetConsta
 		iconRefresh.setBaseStyle("adminButtonRounded");
 		icons.add(iconRefresh);
 
-		setIcons(icons.toArray(new FormItemIcon[]{}));
+		setIcons(icons.toArray(new FormItemIcon[] {}));
 
 		MetaDataNameDS.setDataSource(this, definition, option.toMetaDataNameDSOption());
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,7 +30,7 @@ import org.iplass.mtp.entity.SelectValue;
  *
  */
 public interface SelectValueDefinitionManager extends TypedDefinitionManager<SelectValueDefinition> {
-	
+
 	/**
 	 * 値からSelectValueを取得します。
 	 *

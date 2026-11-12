@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,6 +35,7 @@ public interface DownloadProperty {
 		MS932("MS932");
 
 		private String value;
+
 		private ENCODE(String value) {
 			this.value = value;
 		}
@@ -45,7 +46,8 @@ public interface DownloadProperty {
 
 		public static ENCODE valueOfByValue(String value) {
 			for (ENCODE encode : values()) {
-				if (encode.getValue().equals(value)) {
+				if (encode.getValue()
+						.equals(value)) {
 					return encode;
 				}
 			}

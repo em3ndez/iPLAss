@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,7 +21,6 @@
 package org.iplass.mtp.runtime;
 
 import org.iplass.mtp.SystemException;
-
 
 /**
  * <% if (doclang == "ja") {%>

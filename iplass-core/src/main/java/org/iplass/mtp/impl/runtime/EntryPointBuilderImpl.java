@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,9 +28,9 @@ import org.iplass.mtp.runtime.EntryPoint;
 import org.iplass.mtp.runtime.EntryPointBuilder;
 
 public class EntryPointBuilderImpl implements EntryPointBuilder {
-	
+
 	private Map<String, String> customProps;
-	
+
 	private Map<String, String> customProps() {
 		if (customProps == null) {
 			customProps = new HashMap<>();
@@ -65,8 +65,8 @@ public class EntryPointBuilderImpl implements EntryPointBuilder {
 				concatRoles = String.join(",", serverRole);
 			}
 		}
-		
-		customProps().put(BootstrapProps.SERVER_ID, concatRoles);
+
+		customProps().put(BootstrapProps.SERVER_ROLES, concatRoles);
 		return this;
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -85,8 +85,9 @@ public class ProcessLobValidator implements LobValidator {
 
 	@Override
 	public void stored(Lob lob, String streamWriteChecksum) {
-		//ユーザのoid
-		String user = ExecuteContext.getCurrentContext().getClientId();
+		//ユーザーのoid
+		String user = ExecuteContext.getCurrentContext()
+				.getClientId();
 
 		//FileLobStoreの場合にファイルパスを取得
 		String filePath = null;
@@ -101,7 +102,7 @@ public class ProcessLobValidator implements LobValidator {
 		ArrayList<String> cmd = new ArrayList<>();
 		cmd.addAll(command);
 
-		//[ファイルパス] [チェックサム] [ファイル名] [ユーザOID]
+		//[ファイルパス] [チェックサム] [ファイル名] [ユーザーOID]
 		cmd.add(filePath);
 		cmd.add(streamWriteChecksum);
 		cmd.add(lob.getName());
@@ -113,7 +114,9 @@ public class ProcessLobValidator implements LobValidator {
 		//投げっぱなし
 		try {
 //			Process process = new ProcessBuilder(cmd).redirectOutput(Redirect.INHERIT).redirectErrorStream(true).start();
-			new ProcessBuilder(cmd).redirectOutput(Redirect.INHERIT).redirectErrorStream(true).start();
+			new ProcessBuilder(cmd).redirectOutput(Redirect.INHERIT)
+					.redirectErrorStream(true)
+					.start();
 		} catch (IOException e) {
 			logger.error("process start fail:" + e, e);
 		}
@@ -121,7 +124,7 @@ public class ProcessLobValidator implements LobValidator {
 
 	private String toStr(ArrayList<String> command) {
 		StringBuilder sb = new StringBuilder();
-		for (String c: command) {
+		for (String c : command) {
 			sb.append(c);
 			sb.append(" ");
 		}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,6 +33,7 @@ import org.iplass.mtp.impl.auth.oauth.jwt.JwtProcessor;
 import org.iplass.mtp.impl.auth.oauth.token.OAuthAccessTokenStore;
 import org.iplass.mtp.impl.definition.AbstractTypedMetaDataService;
 import org.iplass.mtp.impl.definition.DefinitionMetaDataTypeMap;
+import org.iplass.mtp.impl.definition.DefinitionNameChecker;
 import org.iplass.mtp.impl.metadata.MetaDataContext;
 import org.iplass.mtp.spi.Config;
 import org.iplass.mtp.spi.Service;
@@ -46,27 +47,34 @@ public class OAuthAuthorizationService extends AbstractTypedMetaDataService<Meta
 		public TypeMap() {
 			super(getFixedPath(), MetaOAuthAuthorization.class, OAuthAuthorizationDefinition.class);
 		}
+
 		@Override
 		public TypedDefinitionManager<OAuthAuthorizationDefinition> typedDefinitionManager() {
-			return ManagerLocator.getInstance().getManager(OAuthAuthorizationDefinitionManager.class);
+			return ManagerLocator.getInstance()
+					.getManager(OAuthAuthorizationDefinitionManager.class);
+		}
+
+		@Override
+		protected DefinitionNameChecker createDefinitionNameChecker() {
+			return DefinitionNameChecker.getPathSlashDefinitionNameChecker();
 		}
 	}
-	
+
 	private boolean paramStateRequired = true;
 	private boolean paramNonceRequired = false;
 	private boolean forceS256ForCodeChallengeMethod = true;
 	private boolean forcePKCE = true;
 	private String defaultConsentTemplateName;
-	
+
 	private AuthorizationCodeStore authorizationCodeStore;
 	private OAuthAccessTokenStore accessTokenStore;
 	private JwtProcessor jwtProcessor;
 	private JwtKeyStore jwtKeyStore;
-	
+
 	private String subjectIdHashAlgorithm;
 	private String subjectIdHashSalt;
 	private long idTokenLifetimeSeconds = 60 * 60;//1 hour
-	
+
 	public long getIdTokenLifetimeSeconds() {
 		return idTokenLifetimeSeconds;
 	}
@@ -135,7 +143,7 @@ public class OAuthAuthorizationService extends AbstractTypedMetaDataService<Meta
 		jwtProcessor = config.getValue("jwtProcessor", JwtProcessor.class);
 		jwtKeyStore = config.getValue("jwtKeyStore", JwtKeyStore.class);
 		idTokenLifetimeSeconds = config.getValue("idTokenLifetimeSeconds", Long.TYPE, 3600L);
-		
+
 		if (subjectIdHashAlgorithm != null) {
 			try {
 				MessageDigest.getInstance(subjectIdHashAlgorithm);
@@ -153,13 +161,14 @@ public class OAuthAuthorizationService extends AbstractTypedMetaDataService<Meta
 		if (defName == null) {
 			defName = DEFAULT_NAME;
 		}
-		return MetaDataContext.getContext().getMetaDataHandler(OAuthAuthorizationRuntime.class, OAUTH_AUTHZ_PATH  + defName);
+		return MetaDataContext.getContext()
+				.getMetaDataHandler(OAuthAuthorizationRuntime.class, OAUTH_AUTHZ_PATH + defName);
 	}
-	
+
 	public OAuthAccessTokenStore getAccessTokenStore() {
 		return accessTokenStore;
 	}
-	
+
 	public AuthorizationCodeStore getAuthorizationCodeStore() {
 		return authorizationCodeStore;
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,10 +23,14 @@ package org.iplass.mtp.entity.interceptor;
 public interface EntityUnlockByUserInvocation extends EntityInvocation<Boolean> {
 
 	public String getOid();
+
 	public void setOid(String oid);
+
 	public String getUserId();
+
 	public void setUserId(String userId);
 
 	public boolean isForce();
+
 	public void setForce(boolean force);
 }

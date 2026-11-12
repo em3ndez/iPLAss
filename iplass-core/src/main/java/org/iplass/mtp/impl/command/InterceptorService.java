@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,8 +33,8 @@ public class InterceptorService implements Service {
 	//FIXME 暫定的な実装。共通のnewInstanceしたままのInterceptorのみ。要：メタデータ化、きめ細やかなコンフィグレーションの実装
 	//TODO メタデータ、アノテーションによる、Interceptorの定義
 
-	private Map<String, CommandInterceptor[]>  interceptorsMap;
-	
+	private Map<String, CommandInterceptor[]> interceptorsMap;
+
 	public CommandInterceptor[] getInterceptors(String interceptorSetName) {
 		return interceptorsMap.get(interceptorSetName);
 	}
@@ -47,8 +47,8 @@ public class InterceptorService implements Service {
 	@Override
 	public void init(Config config) {
 		interceptorsMap = new HashMap<>();
-		
-		for (String name: config.getNames()) {
+
+		for (String name : config.getNames()) {
 			@SuppressWarnings("unchecked")
 			List<Object> vals = (List<Object>) config.getBeans(name);
 			if (vals.size() > 0 && vals.get(0) instanceof CommandInterceptor) {

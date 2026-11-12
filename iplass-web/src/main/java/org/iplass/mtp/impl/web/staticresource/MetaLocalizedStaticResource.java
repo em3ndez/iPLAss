@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,15 +28,15 @@ public class MetaLocalizedStaticResource implements MetaData {
 
 	private String localeName;
 	private BinaryMetaData resource;
-	
+
 	public MetaLocalizedStaticResource() {
 	}
-	
+
 	public MetaLocalizedStaticResource(String localeName, BinaryMetaData resource) {
 		this.localeName = localeName;
 		this.resource = resource;
 	}
-	
+
 	public String getLocaleName() {
 		return localeName;
 	}
@@ -57,5 +57,5 @@ public class MetaLocalizedStaticResource implements MetaData {
 	public MetaData copy() {
 		return ObjectUtil.deepCopy(this);
 	}
-	
+
 }

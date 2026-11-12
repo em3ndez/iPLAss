@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -44,11 +44,15 @@ import org.iplass.mtp.web.actionmapping.definition.HttpMethodType;
 @Target(ElementType.TYPE)
 public @interface ActionMapping {
 	String id() default "##default";
+
 	String name();
+
 	String displayName() default "##default";
+
 	LocalizedString[] localizedDisplayName() default {};
+
 	String description() default "##default";
-	
+
 	/**
 	 * クライアントのキャッシュ種別（Cache-Controlヘッダの制御）を設定します。
 	 * デフォルトは、UNSPECIFIED（未指定）です。
@@ -66,16 +70,16 @@ public @interface ActionMapping {
 	 * @param clientCacheMaxAge
 	 */
 	long clientCacheMaxAge() default -1;
-	
+
 	/** 許可するHTTP Methodの設定です。
 	 * 未指定の場合は、すべて許可となります。
 	 * デフォルト未指定（＝すべて許可）です。
 	 */
 	HttpMethodType[] allowMethod() default {};
-	
+
 	/** 許可するリクエストボディのContentType。デフォルト未指定（＝すべて許可） */
 	String[] allowRequestContentTypes() default {};
-	
+
 	/**
 	 * リクエストボディの最大サイズ（バイト）。-1の場合は無制限を表す。
 	 * annotation上ではデフォルト値はLong.MIN_VALUEだが、これは未指定を表す。
@@ -93,7 +97,7 @@ public @interface ActionMapping {
 	 * @return
 	 */
 	long maxFileSize() default Long.MIN_VALUE;
-	
+
 	boolean needTrustedAuthenticate() default false;
 
 	/**
@@ -104,7 +108,18 @@ public @interface ActionMapping {
 	 * @return
 	 */
 	boolean parts() default false;
-	
+
+	/**
+	 * このActionMappingで処理されるCommand,Templateを特権（セキュリティ制約を受けない）にて処理するかどうかを設定します。
+	 * デフォルトはfalseです。
+	 * publicActionとの違いは、Entity権限など、すべての権限が許可された状態で実行されます。
+	 * 
+	 * @return
+	 * @deprecated {@link #privileged()} を使用してください。
+	 */
+	@Deprecated
+	boolean privilaged() default false;
+
 	/**
 	 * このActionMappingで処理されるCommand,Templateを特権（セキュリティ制約を受けない）にて処理するかどうかを設定します。
 	 * デフォルトはfalseです。
@@ -112,19 +127,20 @@ public @interface ActionMapping {
 	 * 
 	 * @return
 	 */
-	boolean privilaged() default false;
+	boolean privileged() default false;
 
 	/**
 	 * このActionの呼び出しをAction権限設定によらず呼び出し可能にする場合は、trueを設定します。
-	 * isPrivilagedとの違いは、Entityの操作などAction権限以外の権限がチェックされる状況においては、
+	 * isPrivilegedとの違いは、Entityの操作などAction権限以外の権限がチェックされる状況においては、
 	 * セキュリティ制約を受けます。
 	 * デフォルトはfalseです。
 	 * 
 	 * @return
 	 */
 	boolean publicAction() default false;
-	
+
 	boolean overwritable() default true;
+
 	boolean permissionSharable() default false;
 
 	ParamMapping[] paramMapping() default {};
@@ -137,8 +153,8 @@ public @interface ActionMapping {
 	 * 
 	 * @return
 	 */
-	CommandConfig[] command() default {@CommandConfig};
-	
+	CommandConfig[] command() default { @CommandConfig };
+
 	/**
 	 * 複合Commandを利用する場合の設定です。
 	 * @return
@@ -150,14 +166,14 @@ public @interface ActionMapping {
 	 * 
 	 * @return
 	 */
-	Result[] result() default{};
+	Result[] result() default {};
 
 	/**
 	 * <p>TokenCheck設定</p>
 	 *
 	 * デフォルトではTokenチェックは実行されません。
 	 */
-	TokenCheck tokenCheck() default @TokenCheck(executeCheck=false);
+	TokenCheck tokenCheck() default @TokenCheck(executeCheck = false);
 
 	/**
 	 * サーバサイドのキャッシュ設定です。
@@ -165,7 +181,7 @@ public @interface ActionMapping {
 	 * @return
 	 */
 	CacheCriteria cacheCriteria() default @CacheCriteria;
-	
+
 	/**
 	 * このAction処理をSessionにて同期化するか否かを設定します。
 	 * デフォルトfalseです。

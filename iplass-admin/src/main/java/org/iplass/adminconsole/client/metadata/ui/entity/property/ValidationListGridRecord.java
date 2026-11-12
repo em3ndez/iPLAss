@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,8 +35,10 @@ public class ValidationListGridRecord extends ListGridRecord {
 		LENGTH("Length (for String)"),
 		RANGE("Range (for Number)"),
 		REGEX("Regex (for String, Number)"),
-		BINARYSIZE("Binary Size (for Binary)"),
-		BINARYTYPE("Binary Type (for Binary)"),
+		BINARYSIZE(
+				"Binary Size (for Binary)"),
+		BINARYTYPE(
+				"Binary Type (for Binary)"),
 		EXISTS("Exists (for Reference)"),
 		SCRIPT("Script"),
 		JAVA_CLASS("Java Class");
@@ -79,6 +81,8 @@ public class ValidationListGridRecord extends ListGridRecord {
 	public static final String MSG_ID = "msgId";
 	public static final String MSG_DISP_INFO = "msgDispInfo";
 	public static final String DESCRIPTION = "description";
+	public static final String VALIDATION_SKIP_SCRIPT = "validationSkipScript";
+	public static final String VALIDATION_SKIP_SCRIPT_DISP_INFO = "validationSkipScriptDispInfo";
 
 	public ValidationListGridRecord() {
 		setMaxValueExcluded(false);
@@ -117,6 +121,7 @@ public class ValidationListGridRecord extends ListGridRecord {
 	public void setValType(String value) {
 		setAttribute(VALTYPE, value);
 	}
+
 	public String getGeneralPurpus() {
 		return getAttribute(GP);
 	}
@@ -235,5 +240,21 @@ public class ValidationListGridRecord extends ListGridRecord {
 
 	public void setDescription(String value) {
 		setAttribute(DESCRIPTION, value);
+	}
+
+	public String getValidationSkipScript() {
+		return getAttribute(VALIDATION_SKIP_SCRIPT);
+	}
+
+	public void setValidationSkipScript(String value) {
+		setAttribute(VALIDATION_SKIP_SCRIPT, value);
+	}
+
+	public String getValidationSkipScriptDisplayInfo() {
+		return getAttribute(VALIDATION_SKIP_SCRIPT_DISP_INFO);
+	}
+
+	public void setValidationSkipScriptDisplayInfo(String value) {
+		setAttribute(VALIDATION_SKIP_SCRIPT_DISP_INFO, value);
 	}
 }

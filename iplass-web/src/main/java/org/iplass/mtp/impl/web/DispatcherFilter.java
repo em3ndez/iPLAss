@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,16 +23,6 @@ package org.iplass.mtp.impl.web;
 import java.io.IOException;
 import java.util.Map;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.iplass.mtp.impl.core.ExecuteContext;
 import org.iplass.mtp.impl.core.TenantContext;
 import org.iplass.mtp.impl.core.TenantContextService;
@@ -47,6 +37,15 @@ import org.iplass.mtp.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class DispatcherFilter implements Filter {
 
@@ -63,16 +62,22 @@ public class DispatcherFilter implements Filter {
 	}
 
 	public void init(FilterConfig config) throws ServletException {
-		tenantContextService = ServiceRegistry.getRegistry().getService(TenantContextService.class);
+		tenantContextService = ServiceRegistry.getRegistry()
+				.getService(TenantContextService.class);
 		servletContext = config.getServletContext();
-		amService = ServiceRegistry.getRegistry().getService(ActionMappingService.class);
-		webFrontendService = ServiceRegistry.getRegistry().getService(WebFrontendService.class);
+		amService = ServiceRegistry.getRegistry()
+				.getService(ActionMappingService.class);
+		webFrontendService = ServiceRegistry.getRegistry()
+				.getService(WebFrontendService.class);
 	}
 
 	private void setMdc(HttpServletRequest req, ExecuteContext ec) {
-		if (webFrontendService.getMdc() != null && !webFrontendService.getMdc().isEmpty()) {
-			for (Map.Entry<String, MdcValueResolver> e: webFrontendService.getMdc().entrySet()) {
-				String val = e.getValue().resolve(req);
+		if (webFrontendService.getMdc() != null && !webFrontendService.getMdc()
+				.isEmpty()) {
+			for (Map.Entry<String, MdcValueResolver> e : webFrontendService.getMdc()
+					.entrySet()) {
+				String val = e.getValue()
+						.resolve(req);
 				if (val != null) {
 					ec.mdcPutWithoutLoggingContextReload(e.getKey(), val);
 				}
@@ -81,7 +86,7 @@ public class DispatcherFilter implements Filter {
 	}
 
 	/**
-	 * @see javax.servlet.Filter#doFilter(javax.servlet.ServletRequest, javax.servlet.ServletResponse, javax.servlet.FilterChain)
+	 * @see jakarta.servlet.Filter#doFilter(jakarta.servlet.ServletRequest, jakarta.servlet.ServletResponse, jakarta.servlet.FilterChain)
 	 */
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -100,7 +105,7 @@ public class DispatcherFilter implements Filter {
 		try {
 			//exclude path
 			if (path.getPathType() == PathType.UNKNOWN) {
-				if(logger.isTraceEnabled()) {
+				if (logger.isTraceEnabled()) {
 					logger.trace("excluded URL:" + req.getRequestURI());
 				}
 				chain.doFilter(req, res);
@@ -117,6 +122,7 @@ public class DispatcherFilter implements Filter {
 				if (logger.isDebugEnabled()) {
 					logger.debug("can not determine tenant.URL=" + req.getServletPath());
 				}
+				ExecuteContext.finContext();
 				res.sendError(HttpServletResponse.SC_NOT_FOUND);
 				return;
 			}
@@ -127,20 +133,22 @@ public class DispatcherFilter implements Filter {
 				setMdc(req, ec);
 
 				if (logger.isDebugEnabled()) {
-					logger.debug("do " + req.getRequestURL().toString() + " " + req.getMethod());
+					logger.debug("do " + req.getRequestURL()
+							.toString() + " " + req.getMethod());
 				}
 
 				//tenantContextPathより後を処理
 				switch (path.getPathType()) {
 				case REJECT:
-					if(logger.isDebugEnabled()) {
+					if (logger.isDebugEnabled()) {
 						logger.debug("reject URL:" + req.getRequestURI());
 					}
 					res.sendError(HttpServletResponse.SC_NOT_FOUND);
 					return;
 				case REST:
 					req.setAttribute(RequestPath.ATTR_NAME, path);
-					servletContext.getRequestDispatcher(path.getTargetPath()).forward(req, res);
+					servletContext.getRequestDispatcher(path.getTargetPath())
+							.forward(req, res);
 					break;
 				case THROUGH:
 					req.setAttribute(RequestPath.ATTR_NAME, path);
@@ -185,8 +193,10 @@ public class DispatcherFilter implements Filter {
 		String actionPath = path.getTargetPath(true);
 		if (actionPath.length() == 0) {
 
-			Tenant tenant = ExecuteContext.getCurrentContext().getCurrentTenant();
-			String menuUrl = WebUtil.getTenantWebInfo(tenant).getHomeUrl();
+			Tenant tenant = ExecuteContext.getCurrentContext()
+					.getCurrentTenant();
+			String menuUrl = WebUtil.getTenantWebInfo(tenant)
+					.getHomeUrl();
 			if (!StringUtil.isEmpty(menuUrl) && !menuUrl.equals("/")) {
 				String redirectPath;
 				if (menuUrl.startsWith("/")) {
@@ -203,27 +213,20 @@ public class DispatcherFilter implements Filter {
 		WebRequestStack requestStack = null;
 
 		try {
-			ActionMappingRuntime actionMapping = amService.getByPathHierarchy(actionPath);
-			if (actionMapping == null
-					&& webFrontendService.getWelcomeAction() != null
-					&& (actionPath.length() == 0 || actionPath.endsWith("/"))) {
-				for (String wa: webFrontendService.getWelcomeAction()) {
-					actionMapping = amService.getByPathHierarchy(actionPath + wa);
-					if (actionMapping != null) {
-						break;
-					}
-				}
-			}
+			ActionMappingRuntime actionMapping = amService.getByPathHierarchy(actionPath, webFrontendService.getWelcomeAction());
 
 			if (actionMapping != null) {
-				logger.debug("call actionMapping:" + actionMapping.getMetaData().getName());
-				
-				if (actionMapping.getRequestRestriction().maxBodySize() != -1) {
-					req = new LimitRequestBodyHttpServletRequest(req, actionMapping.getRequestRestriction().maxBodySize());
+				logger.debug("call actionMapping:" + actionMapping.getMetaData()
+						.getName());
+
+				if (actionMapping.getRequestRestriction()
+						.maxBodySize() != -1) {
+					req = new LimitRequestBodyHttpServletRequest(req, actionMapping.getRequestRestriction()
+							.maxBodySize());
 				}
-				
+
 				requestStack = new WebRequestStack(path, servletContext, req, res);
-				
+
 				try {
 					actionMapping.executeCommand(requestStack);
 				} catch (RequestBodyTooLargeException e) {
@@ -232,7 +235,7 @@ public class DispatcherFilter implements Filter {
 			} else {
 				res.sendError(HttpServletResponse.SC_NOT_FOUND);
 			}
-			
+
 		} finally {
 			//テンポラリで使用したリソースを削除。（内部でのincludeの時は削除しない）
 			if (requestStack != null) {

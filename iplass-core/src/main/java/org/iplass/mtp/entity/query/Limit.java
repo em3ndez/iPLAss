@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -34,18 +34,18 @@ public class Limit implements ASTNode {
 	//LimitはメインQueryのみ指定可能とする。
 
 	public static final int UNSPECIFIED = -1;
-	
+
 	private int limit = UNSPECIFIED;
 	private int offset = UNSPECIFIED;
 	private boolean bindable = true;
-	
+
 	public Limit() {
 	}
-	
+
 	public Limit(int limit) {
 		this.limit = limit;
 	}
-	
+
 	public Limit(int limit, int offset) {
 		this.limit = limit;
 		this.offset = offset;
@@ -59,11 +59,9 @@ public class Limit implements ASTNode {
 		this.limit = limit;
 	}
 
-
 	public int getOffset() {
 		return offset;
 	}
-
 
 	public void setOffset(int offset) {
 		this.offset = offset;
@@ -76,17 +74,16 @@ public class Limit implements ASTNode {
 	public void setBindable(boolean bindable) {
 		this.bindable = bindable;
 	}
-	
+
 	@Override
 	public ASTNode accept(ASTTransformer transformer) {
 		return transformer.visit(this);
 	}
-	
-	
+
 	public void accept(QueryVisitor visitor) {
 		visitor.visit(this);
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();

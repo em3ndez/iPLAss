@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,28 +23,34 @@ package org.iplass.mtp.definition;
 import java.io.Serializable;
 import java.sql.Timestamp;
 
-public class VersionHistory implements Serializable{
+public class VersionHistory implements Serializable {
 
 	private static final long serialVersionUID = -5797792193316764705L;
 
 	private int version;
 	private Timestamp updateDate;
 	private String updateBy;
+
 	public int getVersion() {
 		return version;
 	}
+
 	public void setVersion(int version) {
 		this.version = version;
 	}
+
 	public Timestamp getUpdateDate() {
 		return updateDate;
 	}
+
 	public void setUpdateDate(Timestamp updateDate) {
 		this.updateDate = updateDate;
 	}
+
 	public String getUpdateBy() {
 		return updateBy;
 	}
+
 	public void setUpdateBy(String updateBy) {
 		this.updateBy = updateBy;
 	}

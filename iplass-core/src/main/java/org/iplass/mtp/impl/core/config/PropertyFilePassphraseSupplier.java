@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,12 +23,13 @@ import java.util.Properties;
 
 public class PropertyFilePassphraseSupplier implements PassphraseSupplier {
 	public static final String PASSPHRASE = "passphrase";
-	
+
 	private Properties prop;
 
 	@Override
 	public char[] getPassphrase() {
-		return prop.getProperty(PASSPHRASE).toCharArray();
+		return prop.getProperty(PASSPHRASE)
+				.toCharArray();
 	}
 
 	@Override

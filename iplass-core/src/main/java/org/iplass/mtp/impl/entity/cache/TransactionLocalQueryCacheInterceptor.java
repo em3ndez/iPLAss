@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -66,13 +66,17 @@ class TransactionLocalQueryCacheInterceptor extends EntityInterceptorAdapter {
 	}
 
 	private CacheStore getCache(boolean withCreate) {
-		Transaction t = ManagerLocator.getInstance().getManager(TransactionManager.class).currentTransaction();
+		Transaction t = ManagerLocator.getInstance()
+				.getManager(TransactionManager.class)
+				.currentTransaction();
 		if (t != null && t.getStatus() == TransactionStatus.ACTIVE) {
 
 			CacheStore cache = (CacheStore) t.getAttribute(EntityCacheInterceptor.LOCAL_QUERY_CACHE_NAMESPACE);
 
 			if (withCreate && cache == null) {
-				cache = ServiceRegistry.getRegistry().getService(CacheService.class).createLocalCache(EntityCacheInterceptor.LOCAL_QUERY_CACHE_NAMESPACE);
+				cache = ServiceRegistry.getRegistry()
+						.getService(CacheService.class)
+						.createLocalCache(EntityCacheInterceptor.LOCAL_QUERY_CACHE_NAMESPACE);
 				t.setAttribute(EntityCacheInterceptor.LOCAL_QUERY_CACHE_NAMESPACE, cache);
 			}
 			return cache;
@@ -90,27 +94,32 @@ class TransactionLocalQueryCacheInterceptor extends EntityInterceptorAdapter {
 	@Override
 	public String insert(EntityInsertInvocation invocation) {
 		String ret = queryCacheInterceptor.insert(invocation);
-		notifyUpdate(invocation.getEntity().getDefinitionName());
+		notifyUpdate(invocation.getEntity()
+				.getDefinitionName());
 		return ret;
 	}
 
 	@Override
 	public void update(EntityUpdateInvocation invocation) {
 		queryCacheInterceptor.update(invocation);
-		notifyUpdate(invocation.getEntity().getDefinitionName());
+		notifyUpdate(invocation.getEntity()
+				.getDefinitionName());
 	}
 
 	@Override
 	public void delete(EntityDeleteInvocation invocation) {
 		queryCacheInterceptor.delete(invocation);
-		notifyUpdate(invocation.getEntity().getDefinitionName());
+		notifyUpdate(invocation.getEntity()
+				.getDefinitionName());
 	}
 
 	private boolean hasCacheTransactionHint(Query q) {
-		if (q.getSelect() != null && q.getSelect().getHintComment() != null) {
-			HintComment hc = q.getSelect().getHintComment();
+		if (q.getSelect() != null && q.getSelect()
+				.getHintComment() != null) {
+			HintComment hc = q.getSelect()
+					.getHintComment();
 			if (hc.getHintList() != null) {
-				for (Hint h: hc.getHintList()) {
+				for (Hint h : hc.getHintList()) {
 					if (h instanceof CacheHint) {
 						if (((CacheHint) h).getScope() == CacheScope.TRANSACTION) {
 							return true;
@@ -130,14 +139,16 @@ class TransactionLocalQueryCacheInterceptor extends EntityInterceptorAdapter {
 
 	@Override
 	public void query(EntityQueryInvocation invocation) {
-		if (invocation.getSearchOption().getResultMode() == ResultMode.STREAM) {
+		if (invocation.getSearchOption()
+				.getResultMode() == ResultMode.STREAM) {
 			queryCacheInterceptor.query(invocation);
 		} else {
 			Query q = invocation.getQuery();
 			CacheStore store = null;
 			if (hasCacheTransactionHint(q) && (store = getCache(true)) != null) {
 				Predicate<?> callback = invocation.getPredicate();
-				CacheEntry ce = store.get(q);
+				CacheEntry ce = store.get(new QueryCacheKey(q, invocation.getSearchOption()
+						.isReturnStructuredEntity(), false));
 				if (ce == null
 						|| ce.getValue() == null
 						|| !((QueryCache) ce.getValue()).canIterate(invocation.getType())) {
@@ -149,7 +160,8 @@ class TransactionLocalQueryCacheInterceptor extends EntityInterceptorAdapter {
 					queryCacheInterceptor.query(invocation);
 					QueryCache qc = new QueryCache(list.size(), list, invocation.getType());
 					q = q.copy();
-					ce = new CacheEntry(q, qc, (Object) getUsedEntityDefs(q));
+					ce = new CacheEntry(new QueryCacheKey(q, invocation.getSearchOption()
+							.isReturnStructuredEntity(), false), qc, (Object) getUsedEntityDefs(q));
 					store.put(ce, true);
 				} else {
 					if (logger.isTraceEnabled()) {
@@ -170,14 +182,14 @@ class TransactionLocalQueryCacheInterceptor extends EntityInterceptorAdapter {
 		Query q = invocation.getQuery();
 		CacheStore store = null;
 		if (hasCacheTransactionHint(q) && (store = getCache(true)) != null) {
-			CacheEntry ce = store.get(q);
+			CacheEntry ce = store.get(new QueryCacheKey(q, false, false));
 			if (ce == null
 					|| ce.getValue() == null
 					|| ((QueryCache) ce.getValue()).getCount() == null) {
 				int ret = queryCacheInterceptor.count(invocation);
 				QueryCache qc = new QueryCache(ret, null, invocation.getType());
 				q = q.copy();
-				ce = new CacheEntry(q, qc, (Object) getUsedEntityDefs(q));
+				ce = new CacheEntry(new QueryCacheKey(q, false, false), qc, (Object) getUsedEntityDefs(q));
 				store.put(ce, true);
 			} else {
 				if (logger.isTraceEnabled()) {
@@ -195,20 +207,23 @@ class TransactionLocalQueryCacheInterceptor extends EntityInterceptorAdapter {
 	@Override
 	public int updateAll(EntityUpdateAllInvocation invocation) {
 		int ret = queryCacheInterceptor.updateAll(invocation);
-		notifyUpdate(invocation.getUpdateCondition().getDefinitionName());
+		notifyUpdate(invocation.getUpdateCondition()
+				.getDefinitionName());
 		return ret;
 	}
 
 	@Override
 	public void bulkUpdate(EntityBulkUpdateInvocation invocation) {
 		queryCacheInterceptor.bulkUpdate(invocation);
-		notifyUpdate(invocation.getBulkUpdatable().getDefinitionName());
+		notifyUpdate(invocation.getBulkUpdatable()
+				.getDefinitionName());
 	}
 
 	@Override
 	public int deleteAll(EntityDeleteAllInvocation invocation) {
 		int ret = queryCacheInterceptor.deleteAll(invocation);
-		notifyUpdate(invocation.getDeleteCondition().getDefinitionName());
+		notifyUpdate(invocation.getDeleteCondition()
+				.getDefinitionName());
 		return ret;
 	}
 
@@ -220,21 +235,24 @@ class TransactionLocalQueryCacheInterceptor extends EntityInterceptorAdapter {
 	@Override
 	public Entity restore(EntityRestoreInvocation invocation) {
 		Entity ret = queryCacheInterceptor.restore(invocation);
-		notifyUpdate(invocation.getEntityDefinition().getName());
+		notifyUpdate(invocation.getEntityDefinition()
+				.getName());
 		return ret;
 	}
 
 	@Override
 	public boolean lockByUser(EntityLockByUserInvocation invocation) {
 		boolean ret = queryCacheInterceptor.lockByUser(invocation);
-		notifyUpdate(invocation.getEntityDefinition().getName());
+		notifyUpdate(invocation.getEntityDefinition()
+				.getName());
 		return ret;
 	}
 
 	@Override
 	public boolean unlockByUser(EntityUnlockByUserInvocation invocation) {
 		boolean ret = queryCacheInterceptor.unlockByUser(invocation);
-		notifyUpdate(invocation.getEntityDefinition().getName());
+		notifyUpdate(invocation.getEntityDefinition()
+				.getName());
 		return ret;
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -34,7 +34,8 @@ import org.iplass.mtp.spi.ServiceRegistry;
 
 public class PreferenceManagerImpl extends AbstractTypedDefinitionManager<Preference> implements PreferenceManager {
 
-	private PreferenceService service = ServiceRegistry.getRegistry().getService(PreferenceService.class);
+	private PreferenceService service = ServiceRegistry.getRegistry()
+			.getService(PreferenceService.class);
 
 	@Override
 	public Preference get(String name) {
@@ -55,7 +56,7 @@ public class PreferenceManagerImpl extends AbstractTypedDefinitionManager<Prefer
 
 	@Override
 	public Map<String, Object> getAsMap(String name) {
-		PreferenceRuntime runtime =  service.getRuntimeByName(name);
+		PreferenceRuntime runtime = service.getRuntimeByName(name);
 		if (runtime == null) {
 			return Collections.emptyMap();
 		}
@@ -64,7 +65,7 @@ public class PreferenceManagerImpl extends AbstractTypedDefinitionManager<Prefer
 
 	@Override
 	public Object getRuntime(String name) {
-		PreferenceRuntime runtime =  service.getRuntimeByName(name);
+		PreferenceRuntime runtime = service.getRuntimeByName(name);
 		if (runtime == null) {
 			return null;
 		}

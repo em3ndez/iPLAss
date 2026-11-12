@@ -1,19 +1,19 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
- * 
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
+ *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
@@ -21,6 +21,7 @@
 package org.iplass.mtp.impl.web.fileupload;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,20 +29,21 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.commons.fileupload.FileItemIterator;
-import org.apache.commons.fileupload.FileItemStream;
-import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.fileupload.util.Streams;
+import org.apache.commons.fileupload2.core.FileItemInput;
+import org.apache.commons.fileupload2.core.FileItemInputIterator;
+import org.apache.commons.fileupload2.jakarta.servlet6.JakartaServletFileUpload;
+import org.apache.commons.io.IOUtils;
 import org.iplass.mtp.command.UploadFileHandle;
 import org.iplass.mtp.impl.web.ParameterValueMap;
+import org.iplass.mtp.impl.web.RequestParameterCountLimitException;
+import org.iplass.mtp.impl.web.WebFrontendService;
 import org.iplass.mtp.impl.web.WebProcessRuntimeException;
+import org.iplass.mtp.spi.ServiceRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class MultiPartParameterValueMap implements ParameterValueMap {
 
@@ -52,17 +54,28 @@ public class MultiPartParameterValueMap implements ParameterValueMap {
 	private List<UploadFileHandleImpl> tempFiles;
 	//Webからのリクエストパラメータ
 	protected Map<String, Object> valueMap;
-	
+
 	private boolean init;
 	private ServletContext servletContext;
 	private HttpServletRequest req;
 	private long maxFileSize = -1;
+	/**
+	 * リクエストパラメータ最大数
+	 * @see WebFrontendService#getMaxMultipartParameterCount()
+	 */
+	// NOTE 変更要素があれば getter / setter を用意し使用する。現状は固定の設定とする。
+	private long maxParameterCount;
 
 	public MultiPartParameterValueMap(ServletContext servletContext, HttpServletRequest req) {
 		this.servletContext = servletContext;
 		this.req = req;
+		// マルチパートリクエストのリクエストパラメータ数最大数を設定する
+		maxParameterCount = ServiceRegistry.getRegistry()
+				.getService(WebFrontendService.class)
+				.getMaxMultipartParameterCount();
+
 	}
-	
+
 	public long getMaxFileSize() {
 		return maxFileSize;
 	}
@@ -75,9 +88,9 @@ public class MultiPartParameterValueMap implements ParameterValueMap {
 		if (init) {
 			return;
 		}
-		
+
 		init = true;
-		
+
 		long start = 0L;
 		if (logger.isDebugEnabled()) {
 			start = System.currentTimeMillis();
@@ -86,18 +99,27 @@ public class MultiPartParameterValueMap implements ParameterValueMap {
 
 		tempFiles = new ArrayList<UploadFileHandleImpl>();
 
-		ServletFileUpload upload = new ServletFileUpload();
+		JakartaServletFileUpload<?, ?> upload = new JakartaServletFileUpload<>();
 		// Parse the request
 		try {
-			FileItemIterator iter = upload.getItemIterator(req);
+			FileItemInputIterator iter = upload.getItemIterator(req);
+			long parameterCount = 0L;
 			while (iter.hasNext()) {
-				FileItemStream item = iter.next();
+				if (parameterCount == maxParameterCount) {
+					// パラメータ数が上限を超過する場合、例外をスローする
+					throw new RequestParameterCountLimitException(
+							"Multipart request parameters exceeds the limit. limit: " + maxParameterCount);
+				}
+
+				FileItemInput item = iter.next();
 				String name = item.getFieldName();
 				if (item.isFormField()) {
-					String value = Streams.asString(item.openStream());
+					// TODO charset
+					String value = IOUtils.toString(item.getInputStream(), StandardCharsets.UTF_8);
+
 					Object oldValue = valueMap.get(name);
 					if (oldValue == null) {
-						valueMap.put(name, new String[]{value});
+						valueMap.put(name, new String[] { value });
 					} else if (oldValue instanceof String[]) {
 						String[] newValue = new String[((String[]) oldValue).length + 1];
 						System.arraycopy(oldValue, 0, newValue, 0, newValue.length - 1);
@@ -108,12 +130,13 @@ public class MultiPartParameterValueMap implements ParameterValueMap {
 						throw new WebProcessRuntimeException(name + " is alerady used as file upload field name.");
 					}
 				} else {
-					UploadFileHandleImpl value = UploadFileHandleImpl.toUploadFileHandle(item.openStream(), item.getName(), item.getContentType(), servletContext, maxFileSize);
+					UploadFileHandleImpl value = UploadFileHandleImpl.toUploadFileHandle(item.getInputStream(), item.getName(), item.getContentType(),
+							servletContext, maxFileSize);
 					if (value != null) {
 						tempFiles.add(value);
 						Object oldValue = valueMap.get(name);
 						if (oldValue == null) {
-							valueMap.put(name, new UploadFileHandle[]{value});
+							valueMap.put(name, new UploadFileHandle[] { value });
 						} else if (oldValue instanceof UploadFileHandle[]) {
 							UploadFileHandle[] newValue = new UploadFileHandle[((UploadFileHandle[]) oldValue).length + 1];
 							System.arraycopy(oldValue, 0, newValue, 0, newValue.length - 1);
@@ -124,9 +147,11 @@ public class MultiPartParameterValueMap implements ParameterValueMap {
 							throw new WebProcessRuntimeException(name + " is alerady used as form field name.");
 						}
 					}
-			    }
+				}
+				// パラメータ数インクリメント
+				parameterCount += 1L;
 			}
-		} catch (FileUploadException | IOException e) {
+		} catch (IOException e) {
 			cleanTempResource();
 			throw new WebProcessRuntimeException(e);
 		} catch (RuntimeException | Error e) {
@@ -136,7 +161,7 @@ public class MultiPartParameterValueMap implements ParameterValueMap {
 
 		//変更禁止
 		valueMap = Collections.unmodifiableMap(valueMap);
-		
+
 		if (logger.isDebugEnabled()) {
 			logger.debug("MultiPartRequest parsed. time:" + (System.currentTimeMillis() - start));
 		}
@@ -145,12 +170,13 @@ public class MultiPartParameterValueMap implements ParameterValueMap {
 	@Override
 	public void cleanTempResource() {
 		if (tempFiles != null) {
-			for (UploadFileHandleImpl f: tempFiles) {
+			for (UploadFileHandleImpl f : tempFiles) {
 				f.deleteTempFile();
 			}
 		}
 	}
 
+	@Override
 	public Map<String, Object> getParamMap() {
 		init();
 		return valueMap;
@@ -159,7 +185,8 @@ public class MultiPartParameterValueMap implements ParameterValueMap {
 	@Override
 	public Iterator<String> getParamNames() {
 		init();
-		return valueMap.keySet().iterator();
+		return valueMap.keySet()
+				.iterator();
 	}
 
 	@Override
@@ -177,10 +204,10 @@ public class MultiPartParameterValueMap implements ParameterValueMap {
 		init();
 		Object val = valueMap.get(name);
 		if (val instanceof String) {
-			return new String[]{(String) val};
+			return new String[] { (String) val };
 		}
 		if (val instanceof UploadFileHandle) {
-			return new UploadFileHandle[]{(UploadFileHandle) val};
+			return new UploadFileHandle[] { (UploadFileHandle) val };
 		}
 		return (Object[]) val;
 	}

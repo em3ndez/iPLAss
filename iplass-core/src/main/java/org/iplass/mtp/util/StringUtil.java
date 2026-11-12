@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -44,7 +44,9 @@ import org.iplass.mtp.spi.ServiceRegistry;
 public class StringUtil {
 
 	private static class RandomHolder {
-		static final SecureRandomGenerator random = ServiceRegistry.getRegistry().getService(SecureRandomService.class).createGenerator();
+		static final SecureRandomGenerator random = ServiceRegistry.getRegistry()
+				.getService(SecureRandomService.class)
+				.createGenerator();
 	}
 
 	private static final Map<CharSequence, CharSequence> APOS_ESCAPE;
@@ -54,13 +56,11 @@ public class StringUtil {
 		APOS_ESCAPE = Collections.unmodifiableMap(initMap);
 	}
 
-	private static final CharSequenceTranslator ESCAPE_HTML4_SP =
-			new AggregateTranslator(
-				new LookupTranslator(EntityArrays.BASIC_ESCAPE),
-				new LookupTranslator(APOS_ESCAPE),
-				new LookupTranslator(EntityArrays.ISO8859_1_ESCAPE),
-				new LookupTranslator(EntityArrays.HTML40_EXTENDED_ESCAPE)
-			);
+	private static final CharSequenceTranslator ESCAPE_HTML4_SP = new AggregateTranslator(
+			new LookupTranslator(EntityArrays.BASIC_ESCAPE),
+			new LookupTranslator(APOS_ESCAPE),
+			new LookupTranslator(EntityArrays.ISO8859_1_ESCAPE),
+			new LookupTranslator(EntityArrays.HTML40_EXTENDED_ESCAPE));
 
 	/**
 	 * 文字列中に、'があった場合、''とエスケープする。
@@ -93,9 +93,9 @@ public class StringUtil {
 		char current = 0;
 		for (int i = 0; i < str.length(); i++) {
 			current = str.charAt(i);
-		
+
 			switch (current) {
-		//	case '\'':
+			//	case '\'':
 			case '%':
 			case '_':
 			case '\\':
@@ -104,18 +104,18 @@ public class StringUtil {
 			default:
 				break;
 			}
-		
+
 			if (needSanitaizing) {
 				break;
 			}
 		}
-		
+
 		if (!needSanitaizing) {
 			return str;
 		}
-		
+
 		StringBuilder buff = new StringBuilder();
-		
+
 		for (int i = 0; i < str.length(); i++) {
 			current = str.charAt(i);
 			switch (current) {
@@ -130,10 +130,10 @@ public class StringUtil {
 			default:
 				break;
 			}
-			
+
 			buff.append(current);
 		}
-		
+
 		return buff.toString();
 	}
 
@@ -147,7 +147,7 @@ public class StringUtil {
 		return StringEscapeUtils.escapeXml10(str);
 	}
 
-    /**
+	/**
 	 * XML1.0仕様に基づくエスケープ処理をする。
 	 *
 	 * @param str
@@ -160,6 +160,7 @@ public class StringUtil {
 		}
 		return StringEscapeUtils.escapeXml10(str);
 	}
+
 	/**
 	 * XML1.1仕様に基づくエスケープ処理をする。
 	 *
@@ -170,7 +171,7 @@ public class StringUtil {
 		return StringEscapeUtils.escapeXml11(str);
 	}
 
-    /**
+	/**
 	 * XML1.1仕様に基づくエスケープ処理をする。
 	 *
 	 * @param str
@@ -183,24 +184,27 @@ public class StringUtil {
 		}
 		return StringEscapeUtils.escapeXml11(str);
 	}
+
 	public static String unescapeXml(String str) {
 		return StringEscapeUtils.unescapeXml(str);
 	}
-    /**
-     * HTML4.0レベルで定義されるエンティティ、および'を&#039;に変換するエスケープ処理をする。
-     *
-     * @param str
+
+	/**
+	 * HTML4.0レベルで定義されるエンティティ、および'を&#039;に変換するエスケープ処理をする。
+	 *
+	 * @param str
 	 * @return エスケープされた文字列。strがnullの場合はnullが返却
-     */
+	 */
 	public static String escapeHtml(String str) {
 		return ESCAPE_HTML4_SP.translate(str);
 	}
+
 	/**
-     * HTML4.0レベルで定義されるエンティティ、および'を&#039;に変換するエスケープ処理をする。
+	 * HTML4.0レベルで定義されるエンティティ、および'を&#039;に変換するエスケープ処理をする。
 	 *
 	 * @param str
-     * @param emptyIfNull strがnullの場合、空文字で返却するか否か
-     * @return エスケープされた文字列
+	 * @param emptyIfNull strがnullの場合、空文字で返却するか否か
+	 * @return エスケープされた文字列
 	 */
 	public static String escapeHtml(String str, boolean emptyIfNull) {
 		if (emptyIfNull && str == null) {
@@ -208,15 +212,35 @@ public class StringUtil {
 		}
 		return ESCAPE_HTML4_SP.translate(str);
 	}
+
 	public static String unescapeHtml(String str) {
 		return StringEscapeUtils.unescapeHtml4(str);
+	}
+
+	/**
+	 * JSON仕様（RFC4627）に基づくエスケープ処理をする。
+	 * 
+	 * @param str
+	 * @param emptyIfNull strがnullの場合、空文字で返却するか否か
+	 * @return エスケープされた文字列
+	 */
+	public static String escapeJson(String str, boolean emptyIfNull) {
+		if (emptyIfNull && str == null) {
+			return "";
+		}
+
+		return StringEscapeUtils.escapeJson(str);
+	}
+
+	public static String unescapeJson(String str) {
+		return StringEscapeUtils.unescapeJson(str);
 	}
 
 	/**
 	 * ランダムな文字列を生成します。
 	 * 長期間にわたり保存するトークンとして利用する場合、
 	 * 当メソッドが返却する文字列では十分に安全ではない可能性があります。
-	 * 
+	 *
 	 * @return
 	 */
 	public static String randomToken() {
@@ -226,15 +250,19 @@ public class StringUtil {
 	public static boolean isEmpty(String str) {
 		return StringUtils.isEmpty(str);
 	}
+
 	public static boolean isNotEmpty(String str) {
 		return StringUtils.isNotEmpty(str);
 	}
+
 	public static boolean isBlank(String str) {
 		return StringUtils.isBlank(str);
 	}
+
 	public static boolean isNotBlank(String str) {
 		return StringUtils.isNotBlank(str);
 	}
+
 	public static String deleteWhitespace(String str) {
 		return StringUtils.deleteWhitespace(str);
 	}
@@ -251,7 +279,8 @@ public class StringUtil {
 		if (StringUtils.isEmpty(str)) {
 			return str;
 		} else {
-			return str.replace("\n", "").replace("\r", "");
+			return str.replace("\n", "")
+					.replace("\r", "");
 		}
 	}
 
@@ -337,14 +366,16 @@ public class StringUtil {
 				if (buf.length() != 0) {
 					buf.append('_');
 				}
-				buf.append(s.substring(pos, i).toUpperCase());
+				buf.append(s.substring(pos, i)
+						.toUpperCase());
 				pos = i;
 			}
 		}
 		if (buf.length() != 0) {
 			buf.append('_');
 		}
-		buf.append(s.substring(pos, s.length()).toUpperCase());
+		buf.append(s.substring(pos, s.length())
+				.toUpperCase());
 		return buf.toString();
 	}
 
@@ -386,6 +417,10 @@ public class StringUtil {
 
 	public static boolean equalsIgnoreCase(String str1, String str2) {
 		return StringUtils.equalsIgnoreCase(str1, str2);
+	}
+
+	public static boolean equals(String cs1, String cs2) {
+		return StringUtils.equals(cs1, cs2);
 	}
 
 	public static boolean endsWithIgnoreCase(String str, String suffix) {

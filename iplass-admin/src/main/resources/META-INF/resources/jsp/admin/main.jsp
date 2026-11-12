@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -38,8 +38,8 @@
 
 	AdminConsoleService service = ServiceRegistry.getRegistry().getService(AdminConsoleService.class);
 
-	String getResourcePath() {
-		return TemplateUtil.getStaticContentPath() + service.getResourcePrefixPath() + "/mtpadmin/";
+	String getResourcePath(String contextPath) {
+		return contextPath + service.getResourcePrefixPath() + "/mtpadmin/";
 	}
 
 	boolean isBlank(String str) {
@@ -86,16 +86,18 @@
 %>
 
 <%
-	String scVersion = "12.1p_2020-09-01.js";				//SmartGWT変更時に設定
+	// SmartGWT変更時バージョン設定（ com.smartgwt.client.Version.getSCVersionNumber() を参照 ）
+	String scVersion = "14.1p_2026-06-24.js";
 
-	String scVersionParam = toHexString(scVersion.getBytes());
+	String scVersionParam = toHexString(scVersion.getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
 	//テナント
 	Tenant tenant = TemplateUtil.getTenant();
 
 	//リソースパス
-	String rsPath = getResourcePath();
-
+	String rsPath = getResourcePath(request.getContextPath());
+	request.setAttribute("rsPath", StringUtil.escapeHtml(rsPath));
+	
 	//アイコン
 	String iconUrl = ViewUtil.getTenantGemInfo(tenant).getIconUrl();
 	if (StringUtil.isNotEmpty(iconUrl)) {
@@ -130,34 +132,34 @@ var _language="<%=SafeHtmlUtils.fromString(argLang).asString()%>";
 <%-- SuperDevモードでSkinがロードできない対応
 http://forums.smartclient.com/forum/smart-gwt-technical-q-a/32571-gwt-2-7-smartgwt-5-does-not-load-skins
 --%>
-window.isomorphicDir = '<%=rsPath%>sc/';
+window.isomorphicDir = '${rsPath}sc/';
 <%-- imageパスとしてテナント名を除外 --%>
-window.imgDir = '<%=rsPath%>images/';
+window.imgDir = '${rsPath}images/';
 //-->
 </script>
 
 <%-- include the SC Core API --%>
-<script src="<%=rsPath%>sc/modules/ISC_Core.js?isc_version=<%=scVersionParam%>"></script>
+<script src="${rsPath}sc/modules/ISC_Core.js?isc_version=<%=scVersionParam%>"></script>
 
 <%-- include SmartClient --%>
-<script src="<%=rsPath%>sc/modules/ISC_Foundation.js?isc_version=<%=scVersionParam%>"></script>
-<script src="<%=rsPath%>sc/modules/ISC_Containers.js?isc_version=<%=scVersionParam%>"></script>
-<script src="<%=rsPath%>sc/modules/ISC_Grids.js?isc_version=<%=scVersionParam%>"></script>
-<script src="<%=rsPath%>sc/modules/ISC_Forms.js?isc_version=<%=scVersionParam%>"></script>
-<script src="<%=rsPath%>sc/modules/ISC_RichTextEditor.js?isc_version=<%=scVersionParam%>"></script>
-<script src="<%=rsPath%>sc/modules/ISC_DataBinding.js?isc_version=<%=scVersionParam%>"></script>
-<script src="<%=rsPath%>sc/modules/ISC_Calendar.js?isc_version=<%=scVersionParam%>"></script>
-<script src="<%=rsPath%>sc/modules/ISC_Drawing.js?isc_version=<%=scVersionParam%>"></script>
+<script src="${rsPath}sc/modules/ISC_Foundation.js?isc_version=<%=scVersionParam%>"></script>
+<script src="${rsPath}sc/modules/ISC_Containers.js?isc_version=<%=scVersionParam%>"></script>
+<script src="${rsPath}sc/modules/ISC_Grids.js?isc_version=<%=scVersionParam%>"></script>
+<script src="${rsPath}sc/modules/ISC_Forms.js?isc_version=<%=scVersionParam%>"></script>
+<script src="${rsPath}sc/modules/ISC_RichTextEditor.js?isc_version=<%=scVersionParam%>"></script>
+<script src="${rsPath}sc/modules/ISC_DataBinding.js?isc_version=<%=scVersionParam%>"></script>
+<script src="${rsPath}sc/modules/ISC_Calendar.js?isc_version=<%=scVersionParam%>"></script>
+<script src="${rsPath}sc/modules/ISC_Drawing.js?isc_version=<%=scVersionParam%>"></script>
 
-<script src="<%=rsPath%>locale/locale_<%=adminLang%>.js?cv=<%=TemplateUtil.getAPIVersion()%>"></script>
+<script src="${rsPath}locale/locale_<%=adminLang%>.js?cv=<%=TemplateUtil.getAPIVersion()%>"></script>
 
 <%-- load skin --%>
-<script src="<%=rsPath%>sc/skins/Enterprise/load_skin.js?isc_version=<%=scVersionParam%>"></script>
+<script src="${rsPath}sc/skins/Enterprise/load_skin.js?isc_version=<%=scVersionParam%>"></script>
 
-<script src="<%=rsPath%>mtpadmin.nocache.js?cv=<%=TemplateUtil.getAPIVersion()%>"></script>
+<script src="${rsPath}mtpadmin.nocache.js?cv=<%=TemplateUtil.getAPIVersion()%>"></script>
 
 <%
-	String aceVersion = "1.4.11";
+	String aceVersion = "1.35.3";
 
 	//switch ace source mode, [src-min-noconflict, src-noconflict, src-min, src]
 	//String aceSrcMode = "src-min-noconflict";
@@ -186,10 +188,14 @@ window.imgDir = '<%=rsPath%>images/';
 <script src="${acePath}mode-html.js" charset="utf-8"></script>
 <script src="${acePath}mode-java.js" charset="utf-8"></script>
 <script src="${acePath}mode-javascript.js" charset="utf-8"></script>
+<script src="${acePath}mode-json.js" charset="utf-8"></script>
 <script src="${acePath}mode-jsp.js" charset="utf-8"></script>
 <script src="${acePath}mode-sql.js" charset="utf-8"></script>
 <script src="${acePath}mode-text.js" charset="utf-8"></script>
+<script src="${acePath}mode-typescript.js" charset="utf-8"></script>
+<script src="${acePath}mode-vue.js" charset="utf-8"></script>
 <script src="${acePath}mode-xml.js" charset="utf-8"></script>
+<script src="${acePath}mode-yaml.js" charset="utf-8"></script>
 
 <%-- Ace snippets files --%>
 <script src="${acePath}ext-language_tools.js" charset="utf-8"></script>
@@ -198,10 +204,14 @@ window.imgDir = '<%=rsPath%>images/';
 <script src="${acePath}snippets/html.js" charset="utf-8"></script>
 <script src="${acePath}snippets/java.js" charset="utf-8"></script>
 <script src="${acePath}snippets/javascript.js" charset="utf-8"></script>
+<script src="${acePath}snippets/json.js" charset="utf-8"></script>
 <script src="${acePath}snippets/jsp.js" charset="utf-8"></script>
 <script src="${acePath}snippets/sql.js" charset="utf-8"></script>
 <script src="${acePath}snippets/text.js" charset="utf-8"></script>
+<script src="${acePath}snippets/typescript.js" charset="utf-8"></script>
+<script src="${acePath}snippets/vue.js" charset="utf-8"></script>
 <script src="${acePath}snippets/xml.js" charset="utf-8"></script>
+<script src="${acePath}snippets/yaml.js" charset="utf-8"></script>
 </head>
 <body>
 	<iframe src="javascript:''" id="__gwt_historyFrame" style="position:absolute;width:0;height:0;border:0"></iframe>

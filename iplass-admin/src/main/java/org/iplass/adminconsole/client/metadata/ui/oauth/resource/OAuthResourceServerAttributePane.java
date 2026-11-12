@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -66,7 +66,7 @@ public class OAuthResourceServerAttributePane extends VLayout implements Editabl
 		//入力部分
 		form = new DynamicForm();
 		form.setWidth100();
-		form.setNumCols(5);	//間延びしないように最後に１つ余分に作成
+		form.setNumCols(5); //間延びしないように最後に１つ余分に作成
 		form.setColWidths(100, 300, 100, 300, "*");
 		form.setMargin(5);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,8 +24,8 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS)
-public class LocalizedStringDefinition implements Serializable {
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
+public class LocalizedStringDefinition implements Serializable, Cloneable {
 
 	private static final long serialVersionUID = -9001390920406240051L;
 
@@ -35,12 +35,15 @@ public class LocalizedStringDefinition implements Serializable {
 	public String getLocaleName() {
 		return localeName;
 	}
+
 	public void setLocaleName(String localeName) {
 		this.localeName = localeName;
 	}
+
 	public String getStringValue() {
 		return stringValue;
 	}
+
 	public void setStringValue(String stringValue) {
 		this.stringValue = stringValue;
 	}

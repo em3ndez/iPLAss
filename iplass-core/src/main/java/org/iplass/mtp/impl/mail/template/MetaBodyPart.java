@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,11 +20,11 @@
 
 package org.iplass.mtp.impl.mail.template;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
-
 import org.iplass.mtp.impl.metadata.MetaData;
 
-@XmlSeeAlso({MetaHtmlBodyPart.class, MetaPlainTextBodyPart.class})
+import jakarta.xml.bind.annotation.XmlSeeAlso;
+
+@XmlSeeAlso({ MetaHtmlBodyPart.class, MetaPlainTextBodyPart.class })
 public abstract class MetaBodyPart implements MetaData {
 	private static final long serialVersionUID = -5023654734590319836L;
 

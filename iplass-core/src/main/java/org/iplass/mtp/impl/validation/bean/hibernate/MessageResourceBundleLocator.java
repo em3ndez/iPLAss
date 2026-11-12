@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,11 +30,11 @@ import org.slf4j.LoggerFactory;
 
 public class MessageResourceBundleLocator implements ResourceBundleLocator {
 	public static final String DEFAULT_BUNDLE_NAME = "ValidationMessages";
-	
+
 	private static Logger logger = LoggerFactory.getLogger(MessageResourceBundleLocator.class);
-	
+
 	private String bundleName = DEFAULT_BUNDLE_NAME;
-	
+
 	public String getBundleName() {
 		return bundleName;
 	}

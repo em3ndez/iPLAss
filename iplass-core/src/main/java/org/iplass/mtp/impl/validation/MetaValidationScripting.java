@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -125,21 +125,24 @@ public class MetaValidationScripting extends MetaValidation {
 		private ScriptEngine scriptEngine;
 
 		ValidationHandlerScripting(MetaEntity entity, MetaProperty property) {
-			super(MetaValidationScripting.this);
+			super(MetaValidationScripting.this, entity, property);
 
 			//TODO tenantIDの決定は、このメソッドを呼び出した際のスレッドに紐付いているテナントIDとなる。これでセキュリティ的、動作的に大丈夫か？
-			TenantContext tc = ExecuteContext.getCurrentContext().getTenantContext();
+			TenantContext tc = ExecuteContext.getCurrentContext()
+					.getTenantContext();
 			scriptEngine = tc.getScriptEngine();
 
-
 			String scriptName = null;
-			for (int i = 0; i < property.getValidations().size(); i++) {
-				if (MetaValidationScripting.this == property.getValidations().get(i)) {
+			for (int i = 0; i < property.getValidations()
+					.size(); i++) {
+				if (MetaValidationScripting.this == property.getValidations()
+						.get(i)) {
 					scriptName = SCRIPT_PREFIX + "_" + entity.getId() + "_" + property.getId() + "_" + i;
 					break;
 				}
 			}
 			compiledScript = scriptEngine.createScript(script, scriptName);
+
 		}
 
 		@Override
@@ -156,9 +159,12 @@ public class MetaValidationScripting extends MetaValidation {
 			}
 			return msg;
 		}
-		
+
 		@Override
 		public boolean validate(Object value, ValidationContext context) {
+			if (validateSkipCheck(value, context)) {
+				return true;
+			}
 			ScriptContext sc = scriptEngine.newScriptContext();
 			sc.setAttribute(ENTITY_BINDING_NAME, context.getEntity());
 			sc.setAttribute(PROPERTY_NAME_BINDING_NAME, context.getPropertyName());
@@ -180,12 +186,11 @@ public class MetaValidationScripting extends MetaValidation {
 			}
 		}
 
-//		@Override
-//		public MetaData getMetaData() {
-//			return MetaValidationScripting.this;
-//		}
+		//		@Override
+		//		public MetaData getMetaData() {
+		//			return MetaValidationScripting.this;
+		//		}
 
 	}
-
 
 }

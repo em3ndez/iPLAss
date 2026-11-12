@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,7 +27,7 @@ public class MetaMimeTypeMapping implements MetaData {
 
 	private String extension;
 	private String mimeType;
-	
+
 	public MetaMimeTypeMapping() {
 	}
 
@@ -35,7 +35,7 @@ public class MetaMimeTypeMapping implements MetaData {
 		this.extension = extension;
 		this.mimeType = mimeType;
 	}
-	
+
 	public String getExtension() {
 		return extension;
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -19,13 +19,13 @@
  */
 package org.iplass.mtp.impl.metadata.xmlfile;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.iplass.mtp.impl.metadata.MetaDataEntryThinWrapper;
 import org.iplass.mtp.impl.metadata.RootMetaData;
+
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "metaDataEntry")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -37,16 +37,16 @@ public class XmlFileMetaDataEntryThinWrapper extends MetaDataEntryThinWrapper {
 	public XmlFileMetaDataEntryThinWrapper() {
 		super();
 	}
-	
-	public XmlFileMetaDataEntryThinWrapper(RootMetaData metaData) {	
+
+	public XmlFileMetaDataEntryThinWrapper(RootMetaData metaData) {
 		super(metaData);
 	}
-	
+
 	public Integer getVersion() {
 		return version;
 	}
 
 	public void setVersion(Integer version) {
 		this.version = version;
-	}	
+	}
 }

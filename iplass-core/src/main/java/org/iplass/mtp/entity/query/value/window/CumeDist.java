@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -36,7 +36,7 @@ public class CumeDist extends WindowRankFunction {
 	public ASTNode accept(ASTTransformer transformer) {
 		return transformer.visit(this);
 	}
-	
+
 	@Override
 	public void accept(ValueExpressionVisitor visitor) {
 		if (visitor.visit(this)) {
@@ -48,7 +48,7 @@ public class CumeDist extends WindowRankFunction {
 			}
 		}
 	}
-	
+
 	@Override
 	public CumeDist partitionBy(Object... partitionField) {
 		super.partitionBy(partitionField);

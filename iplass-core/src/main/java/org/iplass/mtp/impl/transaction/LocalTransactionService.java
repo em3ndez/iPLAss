@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,11 +23,10 @@ package org.iplass.mtp.impl.transaction;
 import org.iplass.mtp.spi.Config;
 import org.iplass.mtp.transaction.TransactionManager;
 
-
 public class LocalTransactionService extends TransactionService {
-	
+
 	private LocalTransactionManager manager = new LocalTransactionManager();
-	
+
 	@Override
 	public TransactionManager getTransacitonManager() {
 		return manager;
@@ -35,12 +34,12 @@ public class LocalTransactionService extends TransactionService {
 
 	public void destroy() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	public void init(Config config) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 }

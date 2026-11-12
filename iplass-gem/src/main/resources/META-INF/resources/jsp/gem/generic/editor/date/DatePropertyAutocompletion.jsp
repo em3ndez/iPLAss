@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,12 +18,13 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
 <%@ page import="org.iplass.mtp.util.StringUtil"%>
 <%@ page import="org.iplass.mtp.view.generic.editor.DatePropertyEditor" %>
 <%@ page import="org.iplass.gem.command.Constants"%>
+<%@ page import="org.iplass.mtp.view.generic.editor.DateTimePropertyEditor.DateTimeDisplayType"%>
 
 <%
 DatePropertyEditor editor = (DatePropertyEditor) request.getAttribute(Constants.AUTOCOMPLETION_EDITOR);
@@ -32,29 +33,27 @@ Integer multiplicity = (Integer) request.getAttribute(Constants.AUTOCOMPLETION_M
 if (multiplicity == null) multiplicity = 1;
 //呼び出し元は/common/Autocompletion.jsp、以降はWebApiの結果を反映する部分のJavascript、結果の変数はvalue
 if (Constants.VIEW_TYPE_DETAIL.equals(viewType)) {
-	// 詳細画面
+	//編集画面
 %>
-var multiplicity = <%=multiplicity%>;
-if (multiplicity == 1) {
-	if (value instanceof Array) {
-		value = value.length > 0 ? value[0] : "";
-	}
-} else {
-	if (value instanceof Array) {
-		if (value.length > multiplicity) {
-			value = value.slice(0, multiplicity);
-		}
-	} else {
-		value = [value];
-	}
-}
+const multiplicity = <%=multiplicity%>;
+const inputLength = $("[name='" + propName + "']").length;
+value = normalizedDetailAutoCompletionValue(value, multiplicity, inputLength, "");
 <%
-	if (multiplicity == 1) {
+	if (editor.getDisplayType() == DateTimeDisplayType.LABEL) {
+%>
+renderDetailAutoCompletionLabelTypeLabelFormat(value, multiplicity, propName);
+<%
+	} else if(editor.getDisplayType() == DateTimeDisplayType.HIDDEN) {
+%>
+renderDetailAutoCompletionHiddenType(value, multiplicity, propName);
+<%
+	} else {
+		if (multiplicity == 1) {
 %>
 $("#d_" + propName).val(convertToLocaleDateString(value)).trigger("blur");
 $("#i_" + propName).val(value);
 <%
-	} else  {
+		} else  {
 		//フィールドあるか、戻り値のサイズ、クリックして追加
 %>
 for (var i = 0; i < value.length; i++) {
@@ -65,6 +64,7 @@ for (var i = 0; i < value.length; i++) {
 	$("#i_" + propName + i).val(value[i]);
 }
 <%
+		}
 	}
 } else {
 	//検索画面
@@ -75,6 +75,10 @@ if (value instanceof Array) {
 	}
 } else {
 	value = [value];
+}
+
+for (var i = 0; i < value.length; i++) {
+	if (value[i] == null) value[i] = "";
 }
 <%
 	boolean hideFrom = editor.isSingleDayCondition() ? false : editor.isHideSearchConditionFrom();

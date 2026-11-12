@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -36,7 +36,7 @@ public class OAuthResourceServerDefinition implements Definition {
 	private String displayName;
 	private String description;
 	private List<CustomTokenIntrospectorDefinition> customTokenIntrospectors;
-	
+
 	public List<CustomTokenIntrospectorDefinition> getCustomTokenIntrospectors() {
 		return customTokenIntrospectors;
 	}
@@ -44,7 +44,7 @@ public class OAuthResourceServerDefinition implements Definition {
 	public void setCustomTokenIntrospectors(List<CustomTokenIntrospectorDefinition> customTokenIntrospectors) {
 		this.customTokenIntrospectors = customTokenIntrospectors;
 	}
-	
+
 	@Override
 	public String getName() {
 		return name;

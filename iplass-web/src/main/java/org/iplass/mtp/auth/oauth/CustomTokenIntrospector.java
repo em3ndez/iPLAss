@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,7 +32,7 @@ import org.iplass.mtp.command.RequestContext;
  *
  */
 public interface CustomTokenIntrospector {
-	
+
 	/**
 	 * introspectionリクエストのレスポンスをカスタマイズするよう実装します。
 	 * 

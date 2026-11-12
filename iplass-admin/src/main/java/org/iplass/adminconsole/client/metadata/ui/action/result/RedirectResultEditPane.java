@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -70,7 +70,7 @@ public class RedirectResultEditPane extends ResultTypeEditPane {
 	 */
 	@Override
 	public void setDefinition(ResultDefinition definition) {
-		RedirectResultDefinition redirect = (RedirectResultDefinition)definition;
+		RedirectResultDefinition redirect = (RedirectResultDefinition) definition;
 		redirectPathField.setValue(redirect.getRedirectPath());
 		allowExternalLocationField.setValue(redirect.isAllowExternalLocation());
 	}
@@ -82,7 +82,7 @@ public class RedirectResultEditPane extends ResultTypeEditPane {
 	 */
 	@Override
 	public ResultDefinition getEditDefinition(ResultDefinition definition) {
-		RedirectResultDefinition redirect = (RedirectResultDefinition)definition;
+		RedirectResultDefinition redirect = (RedirectResultDefinition) definition;
 		redirect.setRedirectPath(SmartGWTUtil.getStringValue(redirectPathField));
 		redirect.setAllowExternalLocation(SmartGWTUtil.getBooleanValue(allowExternalLocationField));
 		return redirect;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -43,7 +43,7 @@ public class RequestContextWebApiParameter implements WebApiParameter {
 		this.request = request;
 		this.additionalParams = additionalParams;
 	}
-	
+
 	@Override
 	public Object getValue(String name) {
 		if (additionalParams != null) {
@@ -52,7 +52,7 @@ public class RequestContextWebApiParameter implements WebApiParameter {
 				return val;
 			}
 		}
-		
+
 		return request.getParam(name);
 	}
 

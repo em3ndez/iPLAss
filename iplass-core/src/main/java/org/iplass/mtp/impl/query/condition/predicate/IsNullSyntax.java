@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -39,7 +39,7 @@ public class IsNullSyntax implements Syntax<IsNull>, QueryConstants {
 		}
 		str.consumeChars(IS.length());
 		str.consumeChars(ParseContext.WHITE_SPACES);
-		
+
 		if (!str.equalsNextToken(NULL, ParseContext.TOKEN_DELIMITERS)) {
 			throw new ParseException(new EvalError("null expected.", this, str));
 		}

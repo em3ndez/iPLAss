@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -44,7 +44,8 @@ class WebApiAuthContextCacheLogic extends AuthorizationContextCacheLogic {
 	public static final String WEB_API_CONDITION = "conditionExpression";
 	public static final String WEB_API_ROLE = "role";
 
-	private EntityManager em = ManagerLocator.getInstance().getManager(EntityManager.class);
+	private EntityManager em = ManagerLocator.getInstance()
+			.getManager(EntityManager.class);
 
 	WebApiAuthContextCacheLogic(TenantAuthorizeContext authorizeContext) {
 		super(authorizeContext);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,10 +23,11 @@ package org.iplass.mtp.impl.xml.jaxb;
 import java.sql.Date;
 import java.util.GregorianCalendar;
 
-import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.XmlValue;
 import javax.xml.datatype.DatatypeConstants;
 import javax.xml.datatype.XMLGregorianCalendar;
+
+import jakarta.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.XmlValue;
 
 /**
  *
@@ -36,7 +37,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  * @author K.Higuchi
  *
  */
-@XmlType(name="date", namespace="http://www.w3.org/2001/XMLSchema")
+@XmlType(name = "date", namespace = "http://www.w3.org/2001/XMLSchema")
 public class XmlDate {
 
 	public XmlDate() {
@@ -71,7 +72,7 @@ public class XmlDate {
 		GregorianCalendar cal = xmlCal.toGregorianCalendar();
 		return new Date(cal.getTimeInMillis());
 	}
-	
+
 	public String toXmlString() {
 		return value;
 	}

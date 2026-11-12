@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,7 +27,7 @@ package org.iplass.mtp.entity.definition.properties;
  *
  */
 public enum VersionControlReferenceType {
-	
+
 	/** 参照元Entityを保存したバージョン（もしくは日付）で参照先を検索 */
 	RECORD_BASE,
 	/** 現時点の最新の状態（有効なバージョン、もしくは現在日付）で参照先を検索 */

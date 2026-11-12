@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,18 +29,19 @@ public class AuthLoggerService implements Service {
 
 	private AuthLogger[] loggers;
 	private AuthLogger defaultLogger;
-	
+
 	public AuthLogger[] getLoggers() {
 		return loggers;
 	}
-	
+
 	public AuthLogger getAuthLogger(String name) {
 		if (name == null) {
 			return defaultLogger;
 		}
 		if (loggers != null) {
-			for (AuthLogger al: loggers) {
-				if (al.getLoggerName().equals(name)) {
+			for (AuthLogger al : loggers) {
+				if (al.getLoggerName()
+						.equals(name)) {
 					return al;
 				}
 			}
@@ -55,7 +56,7 @@ public class AuthLoggerService implements Service {
 			loggers = loggerList.toArray(new AuthLogger[loggerList.size()]);
 		}
 		if (loggers != null) {
-			for (AuthLogger al: loggers) {
+			for (AuthLogger al : loggers) {
 				if ("default".equals(al.getLoggerName())) {
 					defaultLogger = al;
 					break;
@@ -64,7 +65,7 @@ public class AuthLoggerService implements Service {
 		}
 		if (defaultLogger == null) {
 			defaultLogger = new Slf4jAuthLogger();
-			defaultLogger.inited(this, config);
+			config.addServiceInitListener(defaultLogger);
 		}
 	}
 

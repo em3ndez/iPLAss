@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,7 +31,7 @@ import org.iplass.mtp.impl.auth.authenticate.AccountHandle;
 
 /**
  * LDAP使用時のアカウントハンドラ<br>
- * LDAPで保持しているユーザ情報を保持する。
+ * LDAPで保持しているユーザー情報を保持する。
  *
  * @author 藤田　義弘
  *
@@ -47,7 +47,7 @@ public class LdapAccountHandle implements AccountHandle {
 	private boolean isInitialLogin;
 	private Map<String, Object> attributeMap;
 	private int authenticationProviderIndex;
-	
+
 	//LoginContextはSerializeできない。。。
 	@Deprecated
 	private transient LoginContext loginContext;
@@ -61,7 +61,7 @@ public class LdapAccountHandle implements AccountHandle {
 		this.uniqueKey = id;
 		this.loginContext = loginContext;
 	}
-	
+
 	public LdapAccountHandle(String id) {
 		this.id = id;
 		this.uniqueKey = id;
@@ -70,7 +70,7 @@ public class LdapAccountHandle implements AccountHandle {
 	public LoginContext getLoginContext() {
 		return loginContext;
 	}
-	
+
 	@Override
 	public boolean isAccountLocked() {
 		return isAccountLocked;
@@ -100,7 +100,7 @@ public class LdapAccountHandle implements AccountHandle {
 
 	@Override
 	public Map<String, Object> getAttributeMap() {
-		if(attributeMap == null){
+		if (attributeMap == null) {
 			attributeMap = new HashMap<String, Object>();
 		}
 		return attributeMap;
@@ -124,7 +124,7 @@ public class LdapAccountHandle implements AccountHandle {
 	public String getUnmodifiableUniqueKey() {
 		return uniqueKey;
 	}
-	
+
 	public void setUnmodifiableUniqueKey(String uniqueKey) {
 		this.uniqueKey = uniqueKey;
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -49,18 +49,23 @@ public class PartitionInfo implements Serializable {
 	public String getTableName() {
 		return tableName;
 	}
+
 	public void setTableName(String tableName) {
 		this.tableName = tableName;
 	}
+
 	public String getPostfix() {
 		return postfix;
 	}
+
 	public void setPostfix(String postfix) {
 		this.postfix = postfix;
 	}
+
 	public Integer getMaxTenantId() {
 		return maxTenantId;
 	}
+
 	public void setMaxTenantId(Integer maxTenantId) {
 		this.maxTenantId = maxTenantId;
 	}

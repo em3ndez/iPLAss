@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,10 +22,11 @@ package org.iplass.mtp.view.generic.parser;
 
 import java.io.IOException;
 
-import javax.servlet.ServletException;
-import javax.servlet.jsp.PageContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.jsp.PageContext;
 
 public interface Token {
 	void printOut(PageContext page) throws ServletException, IOException;
+
 	String getKey();
 }

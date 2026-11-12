@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -110,7 +110,6 @@ public class MetaCommonHeaderPane extends HLayout {
 		SmartGWTUtil.addHoverToCanvas(save, hover);
 	}
 
-
 	/**
 	 * キャンセルボタンクリックイベントを設定します。
 	 *
@@ -146,7 +145,6 @@ public class MetaCommonHeaderPane extends HLayout {
 	public void setCancelHover(String hover) {
 		SmartGWTUtil.addHoverToCanvas(cancel, hover);
 	}
-
 
 	/**
 	 * 履歴ボタンクリックイベントを設定します。

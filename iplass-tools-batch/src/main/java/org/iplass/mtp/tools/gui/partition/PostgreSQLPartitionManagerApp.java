@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -43,7 +43,7 @@ public class PostgreSQLPartitionManagerApp {
 			public void run() {
 				try {
 					PartitionManagerApp frame = new PartitionManagerApp(new PostgreSQLPartitionBatch(TenantBatchExecMode.GUI.name()));
-					frame.setLocationRelativeTo(null);	// 中央表示
+					frame.setLocationRelativeTo(null); // 中央表示
 					frame.setTitle("PostgreSQL Partition Manager");
 					frame.setVisible(true);
 				} catch (Exception e) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,13 +22,28 @@ package org.iplass.mtp.impl.tools.tenant.log;
 
 public interface LogHandler {
 
-	default void debug(String message) {};
-	default void debug(String message, Throwable e) {};
-	default void info(String message) {};
-	default void info(String message, Throwable e) {};
-	default void warn(String message) {};
-	default void warn(String message, Throwable e) {};
-	default void error(String message) {};
-	default void error(String message, Throwable e) {};
+	default void debug(String message) {
+	};
+
+	default void debug(String message, Throwable e) {
+	};
+
+	default void info(String message) {
+	};
+
+	default void info(String message, Throwable e) {
+	};
+
+	default void warn(String message) {
+	};
+
+	default void warn(String message, Throwable e) {
+	};
+
+	default void error(String message) {
+	};
+
+	default void error(String message, Throwable e) {
+	};
 
 }

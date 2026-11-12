@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 <%@ page import="java.sql.Timestamp" %>
 <%@ page import="java.text.*" %>
@@ -115,7 +115,7 @@
 		if (isMultiple) {
 			//複数
 %>
-<ul class="data-label" style="<c:out value="<%=customStyle %>"/>">
+<ul name="data-label-<c:out value="<%=propName %>"/>" class="data-label" style="<c:out value="<%=customStyle %>"/>">
 <%
 			Timestamp[] array = propValue instanceof Timestamp[] ? (Timestamp[]) propValue : null;
 			if (array != null) {
@@ -143,7 +143,7 @@
 			//単一
 			Timestamp t = propValue instanceof Timestamp ? (Timestamp) propValue : null;
 %>
-<span class="data-label" style="<c:out value="<%=customStyle %>"/>" data-time-range="<c:out value="<%=editor.getDispRange() %>"/>" data-show-weekday="<c:out value="<%=editor.isShowWeekday() %>"/>">
+<span name="data-label-<c:out value="<%=propName %>"/>" class="data-label" style="<c:out value="<%=customStyle %>"/>" data-time-range="<c:out value="<%=editor.getDispRange() %>"/>" data-show-weekday="<c:out value="<%=editor.isShowWeekday() %>"/>">
 <c:out value="<%=displayFormat(t, editor.getDispRange(), formatInfo.getDatetimeFormat(), formatInfo.getDatetimeLocale(), editor.isShowWeekday()) %>"/>
 <%
 			if (outputHidden) {
@@ -162,16 +162,24 @@
 
 		if (isMultiple) {
 			//複数
+%>
+<ul name="data-hidden-<c:out value="<%=propName %>"/>">
+<%
 			Timestamp[] array = propValue instanceof Timestamp[] ? (Timestamp[]) propValue : null;
 			if (array != null) {
 				for (int i = 0; i < array.length; i++) {
 					Timestamp t = array[i];
 					String strHidden = format(t);
 %>
+<li>
 <input type="hidden" name="<c:out value="<%=propName %>"/>" value="<c:out value="<%=strHidden %>"/>" />
+</li>
 <%
 				}
 			}
+%>
+</ul>
+<%
 		} else {
 			//単一
 			Timestamp t = propValue instanceof Timestamp ? (Timestamp) propValue : null;

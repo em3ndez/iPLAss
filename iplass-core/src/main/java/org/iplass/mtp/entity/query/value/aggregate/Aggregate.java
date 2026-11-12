@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -41,12 +41,11 @@ public abstract class Aggregate extends PrimaryValue {
 	public void setValue(ValueExpression value) {
 		this.value = value;
 	}
-	
+
 	@Override
 	public String toString() {
 		return getFuncName() + "(" + getValue() + ")";
 	}
-	
 
 	@Override
 	public int hashCode() {
@@ -81,6 +80,5 @@ public abstract class Aggregate extends PrimaryValue {
 	}
 
 	protected abstract String getFuncName();
-
 
 }

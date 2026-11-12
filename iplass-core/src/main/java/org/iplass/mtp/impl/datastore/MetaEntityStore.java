@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,22 +20,21 @@
 
 package org.iplass.mtp.impl.datastore;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlSeeAlso;
-
 import org.iplass.mtp.entity.definition.StoreDefinition;
 import org.iplass.mtp.impl.datastore.grdb.MetaGRdbEntityStore;
 import org.iplass.mtp.impl.entity.EntityHandler;
 import org.iplass.mtp.impl.entity.MetaEntity;
 import org.iplass.mtp.impl.metadata.MetaData;
 
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlSeeAlso(value={MetaGRdbEntityStore.class})
+@XmlSeeAlso(value = { MetaGRdbEntityStore.class })
 public abstract class MetaEntityStore implements MetaData {
 	private static final long serialVersionUID = -7869335212218718713L;
-	
+
 //	private Map<String, EntityStorePropertyDefinition> propMap;
 
 	public MetaEntityStore() {
@@ -43,7 +42,7 @@ public abstract class MetaEntityStore implements MetaData {
 	}
 
 	public abstract MetaEntityStore copy();
-	
+
 	public abstract EntityStoreRuntime createRuntime(EntityHandler eh);
 
 	@Deprecated
@@ -51,7 +50,7 @@ public abstract class MetaEntityStore implements MetaData {
 
 	@Deprecated
 	public abstract StoreDefinition currentConfig(MetaEntity metaEntity);
-	
+
 //	public EntityStorePropertyDefinition getPropertyDefinitionBy(String name) {
 //		return propMap.get(name);
 //	}

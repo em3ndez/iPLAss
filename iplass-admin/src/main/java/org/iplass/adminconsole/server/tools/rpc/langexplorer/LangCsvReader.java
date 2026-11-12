@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -61,7 +61,14 @@ public class LangCsvReader implements Iterable<Map<String, Object>>, Closeable {
 		//BOM対応
 		InputStream is = inputStream;
 		if (!(inputStream instanceof BOMInputStream)) {
-			is = new BOMInputStream(inputStream, false);
+			try {
+				is = BOMInputStream.builder()
+						.setInputStream(inputStream)
+						.setInclude(false)
+						.get();
+			} catch (IOException e) {
+				throw new EntityDataPortingRuntimeException(e);
+			}
 		}
 
 		//CsvMapReaderの生成
@@ -71,7 +78,8 @@ public class LangCsvReader implements Iterable<Map<String, Object>>, Closeable {
 		} catch (UnsupportedEncodingException e) {
 			throw new EntityDataPortingRuntimeException(e);
 		}
-		csvMapReader = new CsvMapReader(isReader, new CsvPreference.Builder(CsvPreference.EXCEL_PREFERENCE).surroundingSpacesNeedQuotes(true).build());
+		csvMapReader = new CsvMapReader(isReader, new CsvPreference.Builder(CsvPreference.EXCEL_PREFERENCE).surroundingSpacesNeedQuotes(true)
+				.build());
 
 		//ヘッダ読み込み
 		readCsvHeader();
@@ -156,13 +164,12 @@ public class LangCsvReader implements Iterable<Map<String, Object>>, Closeable {
 	private void createCellProcessor() {
 		processors = new CellProcessor[header.length];
 		for (int i = 0; i < header.length; i++) {
-			processors[i] = new ConvertNullTo(null,new Optional());
+			processors[i] = new ConvertNullTo(null, new Optional());
 		}
 	}
 
 	private static String rs(String key, Object... arguments) {
 		return AdminResourceBundleUtil.resourceString(key, arguments);
 	}
-
 
 }

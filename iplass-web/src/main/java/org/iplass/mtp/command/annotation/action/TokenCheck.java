@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -54,7 +54,7 @@ public @interface TokenCheck {
 	 * デフォルト(true)の場合、ロールバック(現在のTokenを再設定)します。
 	 */
 	boolean exceptionRollback() default true;
-	
+
 	/**
 	 * <p>固定値のTokenの利用可否の設定</p>
 	 * 

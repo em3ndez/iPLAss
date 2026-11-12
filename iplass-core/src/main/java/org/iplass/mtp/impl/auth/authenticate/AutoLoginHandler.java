@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,16 +21,21 @@ package org.iplass.mtp.impl.auth.authenticate;
 
 import org.iplass.mtp.ApplicationException;
 import org.iplass.mtp.command.RequestContext;
+import org.iplass.mtp.impl.auth.AuthService;
 import org.iplass.mtp.impl.auth.UserContext;
 
 public interface AutoLoginHandler {
-	
+
 	public AutoLoginInstruction handle(RequestContext req, boolean isLogined, UserContext user);
-	
-	public default Exception handleException(AutoLoginInstruction ali, ApplicationException e, RequestContext req, boolean isLogined, UserContext user) {
+
+	public default Exception handleException(AutoLoginInstruction ali, ApplicationException e, RequestContext req, boolean isLogined,
+			UserContext user) {
 		return null;
 	}
-	
+
 	public default void handleSuccess(AutoLoginInstruction ali, RequestContext req, UserContext user) {
+	}
+
+	public default void inited(AuthService service, AuthenticationProvider provider) {
 	}
 }

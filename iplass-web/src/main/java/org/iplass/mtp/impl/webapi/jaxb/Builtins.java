@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -19,14 +19,14 @@
  */
 package org.iplass.mtp.impl.webapi.jaxb;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
-
 import org.iplass.mtp.impl.webapi.WebApiParameterMap;
 import org.iplass.mtp.impl.webapi.WebApiResponse;
 
+import jakarta.xml.bind.annotation.XmlSeeAlso;
+
 @XmlSeeAlso({
-	WebApiResponse.class,
-	WebApiParameterMap.class
+		WebApiResponse.class,
+		WebApiParameterMap.class
 })
 public class Builtins {
 

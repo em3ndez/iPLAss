@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,6 +26,7 @@ import org.iplass.mtp.definition.TypedDefinitionManager;
 import org.iplass.mtp.impl.auth.oauth.MetaOAuthResourceServer.OAuthResourceServerRuntime;
 import org.iplass.mtp.impl.definition.AbstractTypedMetaDataService;
 import org.iplass.mtp.impl.definition.DefinitionMetaDataTypeMap;
+import org.iplass.mtp.impl.definition.DefinitionNameChecker;
 import org.iplass.mtp.spi.Config;
 import org.iplass.mtp.spi.Service;
 
@@ -36,9 +37,16 @@ public class OAuthResourceServerService extends AbstractTypedMetaDataService<Met
 		public TypeMap() {
 			super(getFixedPath(), MetaOAuthResourceServer.class, OAuthResourceServerDefinition.class);
 		}
+
 		@Override
 		public TypedDefinitionManager<OAuthResourceServerDefinition> typedDefinitionManager() {
-			return ManagerLocator.getInstance().getManager(OAuthResourceServerDefinitionManager.class);
+			return ManagerLocator.getInstance()
+					.getManager(OAuthResourceServerDefinitionManager.class);
+		}
+
+		@Override
+		protected DefinitionNameChecker createDefinitionNameChecker() {
+			return DefinitionNameChecker.getPathSlashDefinitionNameChecker();
 		}
 	}
 
@@ -63,5 +71,5 @@ public class OAuthResourceServerService extends AbstractTypedMetaDataService<Met
 	@Override
 	public void destroy() {
 	}
-	
+
 }

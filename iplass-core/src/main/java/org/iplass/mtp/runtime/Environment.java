@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,7 +33,7 @@ import org.iplass.mtp.ManagerLocator;
  *
  */
 public interface Environment extends Manager {
-	
+
 	/**
 	 * <% if (doclang == "ja") {%>
 	 * Environmentのインスタンスを取得します。
@@ -46,7 +46,7 @@ public interface Environment extends Manager {
 	public static Environment getInstance() {
 		return ManagerLocator.manager(Environment.class);
 	}
-	
+
 	/**
 	 * <% if (doclang == "ja") {%>
 	 * 現在実行中のサーバが指定の役割を保持しているか否かを返却します。
@@ -64,7 +64,7 @@ public interface Environment extends Manager {
 	 * @return
 	 */
 	public boolean serverInRole(String serverRole);
-	
+
 	/**
 	 * <% if (doclang == "ja") {%>
 	 * 現在実行中のサーバのインスタンスを特定するIDを返却します。
@@ -79,7 +79,7 @@ public interface Environment extends Manager {
 	 * @return
 	 */
 	public String getServerId();
-	
+
 	/**
 	 * <% if (doclang == "ja") {%>
 	 * 実行環境のiPLAssのバージョン情報を取得します。

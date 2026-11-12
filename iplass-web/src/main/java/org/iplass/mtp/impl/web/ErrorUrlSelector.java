@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,7 +23,7 @@ package org.iplass.mtp.impl.web;
 import org.iplass.mtp.command.RequestContext;
 
 public interface ErrorUrlSelector {
-	
+
 	public String getErrorTemplateName(Throwable exception, RequestContext request, String path);
 
 }

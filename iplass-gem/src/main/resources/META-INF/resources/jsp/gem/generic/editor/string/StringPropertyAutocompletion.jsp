@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
 <%@ page import="org.iplass.mtp.util.StringUtil"%>
@@ -33,22 +33,11 @@ Integer multiplicity = (Integer) request.getAttribute(Constants.AUTOCOMPLETION_M
 if (multiplicity == null) multiplicity = 1;
 //呼び出し元は/common/Autocompletion.jsp、以降はWebApiの結果を反映する部分のJavascript、結果の変数はvalue
 if (Constants.VIEW_TYPE_DETAIL.equals(viewType)) {
-	// 詳細画面
+	//編集画面
 %>
-var multiplicity = <%=multiplicity%>;
-if (multiplicity == 1) {
-	if (value instanceof Array) {
-		value = value.length > 0 ? value[0] : "";
-	}
-} else {
-	if (value instanceof Array) {
-		if (value.length > multiplicity) {
-			value = value.slice(0, multiplicity);
-		}
-	} else {
-		value = [value];
-	}
-}
+const multiplicity = <%=multiplicity%>;
+const inputLength = $("[name='" + propName + "']").length;
+value = normalizedDetailAutoCompletionValue(value, multiplicity, inputLength, "");
 <%
 	if (editor.getDisplayType() == StringDisplayType.TEXT
 		|| editor.getDisplayType() == StringDisplayType.TEXTAREA
@@ -57,7 +46,7 @@ if (multiplicity == 1) {
 %>
 $("[name='" + propName + "']").val(value);
 <%
-		} else  {
+		} else {
 			//フィールドあるか、戻り値のサイズ、クリックして追加
 %>
 for (var i = 0; i < value.length; i++) {
@@ -68,27 +57,37 @@ for (var i = 0; i < value.length; i++) {
 }
 <%
 		}
+	} else if (editor.getDisplayType() == StringDisplayType.LABEL) {
+%>
+renderDetailAutoCompletionLabelType(value, multiplicity, propName,
+	function(value) {
+		if (!value) {
+			return ""
+		}
+		return value.replaceAll("\r\n", "<br>").replaceAll("\n", "<br>").replaceAll("\r", "<br>").replaceAll(" ", "&nbsp;");
+	},
+	function(value) {
+		if (!value) {
+			return "";
+		}
+		return value;
+	}
+);
+<%
 	} else if (editor.getDisplayType() == StringDisplayType.SELECT) {
 %>
 $("[name='" + propName + "']").val(value);
 <%
 	} else if (editor.getDisplayType() == StringDisplayType.RICHTEXT) {
-		if (multiplicity == 1) {
+		request.setAttribute(Constants.EDITOR_RICHTEXT_LIBRARY, editor.getRichTextLibrary());
 %>
-CKEDITOR.instances[propName].setData(value);
+<jsp:include page="richtext/RichtextEditor_Autocompletion.jsp" />
 <%
-		} else  {
-			//フィールドあるか、戻り値のサイズ、クリックして追加
+		request.removeAttribute(Constants.EDITOR_RICHTEXT_LIBRARY);
+	} else if (editor.getDisplayType() == StringDisplayType.HIDDEN) {
 %>
-for (var i = 0; i < value.length; i++) {
-	if ($("[name='" + propName + "']:eq(" + i + ")").length == 0) {
-		$("#id_addBtn_" + propName).click();
-	}
-	var id = $("[name='" + propName + "']:eq(" + i + ")").attr("id");
-	CKEDITOR.instances[id].setData(value[i]);
-}
+renderDetailAutoCompletionHiddenType(value, multiplicity, propName);
 <%
-		}
 	}
 } else {
 	// 検索画面

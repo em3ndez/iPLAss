@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,7 +20,6 @@
 
 package org.iplass.mtp.entity.query.value.window;
 
-
 /**
  * Windowランク関数を表す抽象クラス。
  * 
@@ -32,7 +31,8 @@ public abstract class WindowRankFunction extends WindowFunction {
 
 	@Override
 	protected void writeWindowFunctionType(StringBuilder sb) {
-		sb.append(getFuncName()).append("()");
+		sb.append(getFuncName())
+				.append("()");
 	}
 
 	@Override

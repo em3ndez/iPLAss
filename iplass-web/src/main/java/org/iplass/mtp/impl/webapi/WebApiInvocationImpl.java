@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,7 +25,7 @@ import org.iplass.mtp.impl.command.InvocationImpl;
 import org.iplass.mtp.impl.webapi.MetaWebApi.WebApiRuntime;
 
 public class WebApiInvocationImpl extends InvocationImpl {
-	
+
 	private WebApiRuntime webApiRuntime;
 
 	public WebApiInvocationImpl(CommandInterceptor[] commandInterceptors, WebApiRuntime webApiRuntime,
@@ -33,7 +33,7 @@ public class WebApiInvocationImpl extends InvocationImpl {
 		super(commandInterceptors, webApiRuntime.getCommandRuntime(), request);
 		this.webApiRuntime = webApiRuntime;
 	}
-	
+
 	public WebApiRuntime getWebApiRuntime() {
 		return webApiRuntime;
 	}

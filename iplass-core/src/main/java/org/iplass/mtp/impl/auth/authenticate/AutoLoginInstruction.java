@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,26 +22,26 @@ package org.iplass.mtp.impl.auth.authenticate;
 import org.iplass.mtp.auth.login.Credential;
 
 public class AutoLoginInstruction {
-	
+
 	public static AutoLoginInstruction THROUGH = new AutoLoginInstruction(Instruction.THROUGH, null);
 	public static AutoLoginInstruction ERROR = new AutoLoginInstruction(Instruction.ERROR, null);
 	public static AutoLoginInstruction LOGOUT = new AutoLoginInstruction(Instruction.LOGOUT, null);
-	
+
 	public enum Instruction {
 		DO_AUTH,
 		THROUGH,
 		LOGOUT,
 		ERROR
 	}
-	
+
 	private final Instruction instruction;
 	private final Credential credential;
-	
+
 	public AutoLoginInstruction(Credential credential) {
 		this.instruction = Instruction.DO_AUTH;
 		this.credential = credential;
 	}
-	
+
 	public AutoLoginInstruction(Instruction instruction, Credential credential) {
 		this.instruction = instruction;
 		this.credential = credential;

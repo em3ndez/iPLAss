@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -46,13 +46,12 @@ import org.iplass.mtp.view.top.parts.EntityListParts;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.smartgwt.client.types.HeaderControls;
 import com.smartgwt.client.util.SC;
-import com.smartgwt.client.widgets.HeaderControl;
 import com.smartgwt.client.widgets.IButton;
 import com.smartgwt.client.widgets.events.ClickEvent;
 import com.smartgwt.client.widgets.events.ClickHandler;
 import com.smartgwt.client.widgets.form.DynamicForm;
+import com.smartgwt.client.widgets.form.fields.CheckboxItem;
 import com.smartgwt.client.widgets.form.fields.ComboBoxItem;
 import com.smartgwt.client.widgets.form.fields.IntegerItem;
 import com.smartgwt.client.widgets.form.fields.SelectItem;
@@ -78,27 +77,24 @@ public class SearchResultListItem extends PartsItem {
 		this.service = MetaDataServiceFactory.get();
 		setTitle("SearchResult List(" + parts.getDefName() + ")");
 		setBackgroundColor("#DDDDFF");
-
-		setHeaderControls(HeaderControls.HEADER_LABEL, new HeaderControl(HeaderControl.SETTINGS, new ClickHandler() {
-
-			@Override
-			public void onClick(ClickEvent event) {
-				EntityListItemSettingDialog dialog = new EntityListItemSettingDialog();
-				dialog.addDataChangedHandler(new DataChangedHandler() {
-
-					@Override
-					public void onDataChanged(DataChangedEvent event) {
-						setTitle("SearchResult List(" + parts.getDefName() + ")");
-					}
-				});
-				dialog.show();
-			}
-		}), HeaderControls.CLOSE_BUTTON);
 	}
 
 	@Override
 	public EntityListParts getParts() {
 		return parts;
+	}
+
+	@Override
+	protected void onOpen() {
+		EntityListItemSettingDialog dialog = new EntityListItemSettingDialog();
+		dialog.addDataChangedHandler(new DataChangedHandler() {
+
+			@Override
+			public void onDataChanged(DataChangedEvent event) {
+				setTitle("SearchResult List(" + parts.getDefName() + ")");
+			}
+		});
+		dialog.show();
 	}
 
 	@Override
@@ -124,6 +120,8 @@ public class SearchResultListItem extends PartsItem {
 		private ComboBoxItem viewForDetailField;
 		private SelectItem filterField;
 		private IntegerItem heightField;
+		private IntegerItem maxHeightField;
+		private CheckboxItem searchAsync;
 
 		private List<DataChangedHandler> handlers = new ArrayList<>();
 
@@ -166,7 +164,8 @@ public class SearchResultListItem extends PartsItem {
 
 				@Override
 				public void onChanged(ChangedEvent event) {
-					if (event.getValue() == null || event.getValue().equals("")) {
+					if (event.getValue() == null || event.getValue()
+							.equals("")) {
 						viewField.setValue("");
 						viewField.setDisabled(true);
 						viewForLinkField.setValue("");
@@ -194,16 +193,29 @@ public class SearchResultListItem extends PartsItem {
 			iconTagField = new MtpTextItem("iconTag", "Icon Tag");
 			iconTagField.setValue(parts.getIconTag());
 			SmartGWTUtil.addHoverToFormItem(iconTagField, AdminClientMessageUtil.getString("ui_metadata_top_item_EntityListItem_iconTagComment"));
-			
+
 			styleField = new MtpTextItem("style", "Class");
 			styleField.setValue(parts.getStyle());
-			SmartGWTUtil.addHoverToFormItem(styleField, AdminClientMessageUtil.getString("ui_metadata_top_item_TopViewContentParts_styleDescriptionKey"));
+			SmartGWTUtil.addHoverToFormItem(styleField,
+					AdminClientMessageUtil.getString("ui_metadata_top_item_TopViewContentParts_styleDescriptionKey"));
 
-			heightField = new IntegerItem("height", "Height");
+			heightField = new IntegerItem("height", "Table Height");
 			heightField.setWidth("100%");
 			heightField.setValue(parts.getHeight());
 
-			form.setItems(entityField, viewField, viewForLinkField, viewForDetailField, filterField, titleField, iconTagField, styleField, heightField);
+			maxHeightField = new IntegerItem("maxHeight", "Max Height");
+			maxHeightField.setWidth("100%");
+			if (parts.getMaxHeight() != null && parts.getMaxHeight() > 0) {
+				maxHeightField.setValue(parts.getMaxHeight());
+			}
+			SmartGWTUtil.addHoverToFormItem(maxHeightField,
+					AdminClientMessageUtil.getString("ui_metadata_top_item_TopViewContentParts_maxHeightDescriptionKey"));
+
+			searchAsync = new CheckboxItem("searchAsync", "Search asynchronously");
+			searchAsync.setValue(parts.isSearchAsync());
+
+			form.setItems(entityField, viewField, viewForLinkField, viewForDetailField, filterField, titleField, iconTagField, styleField, heightField,
+					maxHeightField, searchAsync);
 
 			container.addMember(form);
 
@@ -211,7 +223,7 @@ public class SearchResultListItem extends PartsItem {
 			save.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent event) {
-					if (form.validate()){
+					if (form.validate()) {
 						//入力情報をパーツに
 						parts.setDefName(SmartGWTUtil.getStringValue(entityField));
 						parts.setViewName(SmartGWTUtil.getStringValue(viewField));
@@ -222,6 +234,8 @@ public class SearchResultListItem extends PartsItem {
 						parts.setIconTag(SmartGWTUtil.getStringValue(iconTagField));
 						parts.setStyle(SmartGWTUtil.getStringValue(styleField));
 						parts.setHeight(heightField.getValueAsInteger());
+						parts.setMaxHeight(maxHeightField.getValueAsInteger());
+						parts.setSearchAsync(searchAsync.getValueAsBoolean());
 						parts.setLocalizedTitleList(titleField.getLocalizedList());
 						fireDataChanged();
 						destroy();
@@ -249,36 +263,37 @@ public class SearchResultListItem extends PartsItem {
 				service.getDefinition(TenantInfoHolder.getId(), EntityView.class.getName(), defName,
 						new AsyncCallback<EntityView>() {
 
-					@Override
-					public void onSuccess(EntityView result) {
-						viewField.setDisabled(false);
-						viewForLinkField.setDisabled(false);
-						viewForDetailField.setDisabled(false);
+							@Override
+							public void onSuccess(EntityView result) {
+								viewField.setDisabled(false);
+								viewForLinkField.setDisabled(false);
+								viewForDetailField.setDisabled(false);
 
-						LinkedHashMap<String, String> valueMap = new LinkedHashMap<>();
-						valueMap.put("", "default");
+								LinkedHashMap<String, String> valueMap = new LinkedHashMap<>();
+								valueMap.put("", "default");
 
-						if (result != null && result.getSearchFormViewNames().length > 0) {
-							for (String viewName : result.getSearchFormViewNames()) {
-								if (!valueMap.containsKey(viewName)) {
-									valueMap.put(viewName, viewName);
+								if (result != null && result.getSearchFormViewNames().length > 0) {
+									for (String viewName : result.getSearchFormViewNames()) {
+										if (!valueMap.containsKey(viewName)) {
+											valueMap.put(viewName, viewName);
+										}
+									}
 								}
+
+								viewField.setValueMap(valueMap);
+								viewForLinkField.setValueMap(valueMap);
+								viewForDetailField.setValueMap(valueMap);
 							}
-						}
 
-						viewField.setValueMap(valueMap);
-						viewForLinkField.setValueMap(valueMap);
-						viewForDetailField.setValueMap(valueMap);
-					}
+							@Override
+							public void onFailure(Throwable caught) {
+								SC.say(AdminClientMessageUtil.getString("ui_metadata_top_item_EntityListItem_failed"),
+										AdminClientMessageUtil.getString("ui_metadata_top_item_EntityListItem_failedGetScreenInfo")
+												+ caught.getMessage());
 
-					@Override
-					public void onFailure(Throwable caught) {
-						SC.say(AdminClientMessageUtil.getString("ui_metadata_top_item_EntityListItem_failed"),
-								AdminClientMessageUtil.getString("ui_metadata_top_item_EntityListItem_failedGetScreenInfo") + caught.getMessage());
-
-						GWT.log(caught.toString(), caught);
-					}
-				});
+								GWT.log(caught.toString(), caught);
+							}
+						});
 			}
 		}
 
@@ -290,29 +305,31 @@ public class SearchResultListItem extends PartsItem {
 				service.getDefinition(TenantInfoHolder.getId(), EntityFilter.class.getName(), defName,
 						new AsyncCallback<EntityFilter>() {
 
-					@Override
-					public void onSuccess(EntityFilter result) {
-						if (result != null && !result.getItems().isEmpty()) {
-							valueMap.put("", "");//初期選択用
-							filterField.setDisabled(false);
-							for (EntityFilterItem item : result.getItems()) {
-								valueMap.put(item.getName(), item.getDisplayName());
+							@Override
+							public void onSuccess(EntityFilter result) {
+								if (result != null && !result.getItems()
+										.isEmpty()) {
+									valueMap.put("", "");//初期選択用
+									filterField.setDisabled(false);
+									for (EntityFilterItem item : result.getItems()) {
+										valueMap.put(item.getName(), item.getDisplayName());
+									}
+
+									filterField.setValueMap(valueMap);
+								} else {
+									filterField.setDisabled(true);
+								}
 							}
 
-							filterField.setValueMap(valueMap);
-						} else {
-							filterField.setDisabled(true);
-						}
-					}
+							@Override
+							public void onFailure(Throwable caught) {
+								SC.say(AdminClientMessageUtil.getString("ui_metadata_top_item_EntityListItem_failed"),
+										AdminClientMessageUtil.getString("ui_metadata_top_item_EntityListItem_failedGetFileterInfo")
+												+ caught.getMessage());
 
-					@Override
-					public void onFailure(Throwable caught) {
-						SC.say(AdminClientMessageUtil.getString("ui_metadata_top_item_EntityListItem_failed"),
-								AdminClientMessageUtil.getString("ui_metadata_top_item_EntityListItem_failedGetFileterInfo") + caught.getMessage());
-
-						GWT.log(caught.toString(), caught);
-					}
-				});
+								GWT.log(caught.toString(), caught);
+							}
+						});
 			}
 		}
 

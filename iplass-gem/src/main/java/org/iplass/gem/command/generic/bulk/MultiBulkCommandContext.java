@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,6 +45,7 @@ import org.iplass.gem.command.generic.detail.RegistrationPropertyBaseHandler;
 import org.iplass.mtp.ApplicationException;
 import org.iplass.mtp.command.RequestContext;
 import org.iplass.mtp.entity.Entity;
+import org.iplass.mtp.entity.EntityKey;
 import org.iplass.mtp.entity.EntityManager;
 import org.iplass.mtp.entity.LoadOption;
 import org.iplass.mtp.entity.ValidateError;
@@ -53,6 +55,7 @@ import org.iplass.mtp.entity.definition.PropertyDefinition;
 import org.iplass.mtp.entity.definition.properties.ReferenceProperty;
 import org.iplass.mtp.impl.util.ConvertUtil;
 import org.iplass.mtp.spi.ServiceRegistry;
+import org.iplass.mtp.util.CollectionUtil;
 import org.iplass.mtp.util.StringUtil;
 import org.iplass.mtp.view.generic.BulkFormView;
 import org.iplass.mtp.view.generic.BulkOperationInterrupter;
@@ -115,7 +118,8 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 	public MultiBulkCommandContext(RequestContext request, EntityManager entityLoader, EntityDefinitionManager definitionLoader) {
 		super(request, entityLoader, definitionLoader);
 
-		gemConfig = ServiceRegistry.getRegistry().getService(GemConfigService.class);
+		gemConfig = ServiceRegistry.getRegistry()
+				.getService(GemConfigService.class);
 		init();
 	}
 
@@ -177,13 +181,14 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 		}
 		String targetRow = rowParam.substring(0, rowParam.indexOf("_"));
 		String targetParam = rowParam.substring(rowParam.indexOf("_") + 1);
-		String[] params = new String[] { targetRow, targetParam };
+		String[] params = { targetRow, targetParam };
 		return params;
 	}
 
 	private BulkCommandParams getBulkCommandParams(Integer row) {
 		List<BulkCommandParams> paramsList = bulkCommandParams.stream()
-				.filter(p -> p.getRow().equals(row))
+				.filter(p -> p.getRow()
+						.equals(row))
 				.collect(Collectors.toList());
 		if (paramsList.size() == 0) {
 			return null;
@@ -197,16 +202,21 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 	private boolean hasDifferentPropertyValue(String propName) {
 		Set<String> oids = getOids();
 		for (String oid : oids) {
-			for (Long version: getVersions(oid)) {
+			for (Long version : getVersions(oid)) {
 				List<Object> propValues = bulkCommandParams.stream()
-						.filter(p -> p.getOid().equals(oid) && p.getVersion().equals(version))
+						.filter(p -> p.getOid()
+								.equals(oid)
+								&& p.getVersion()
+										.equals(version))
 						.map(p -> p.getValue(propName))
 						.collect(Collectors.toList());
 				Object first = propValues.get(0);
 				if (first == null) {
-					return propValues.stream().anyMatch(v -> v != null);
+					return propValues.stream()
+							.anyMatch(v -> v != null);
 				} else {
-					return propValues.stream().anyMatch(v -> !first.equals(v));
+					return propValues.stream()
+							.anyMatch(v -> !first.equals(v));
 				}
 			}
 		}
@@ -229,31 +239,31 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 		//→件数取れないため通常の参照扱いで処理が終わる
 		Long count = getLongValue(prefix + p.getName() + "_count");
 		if (p.getMultiplicity() == 1) {
-			Entity entity = null;
+			List<Entity> list = null;
 			if (count == null) {
 				String key = getParam(prefix + p.getName());
-				entity = getRefEntity(rp.getObjectDefinitionName(), key);
+				list = getRefEntities(rp.getObjectDefinitionName(), new String[] { key });
 			} else {
-				List<Entity> list = getRefTableValues(rp, defName, count, prefix);
-				if (list.size() > 0) entity = list.get(0);
+				list = getRefTableValues(rp, defName, count, prefix);
 			}
-			return entity;
+			if (CollectionUtil.isNotEmpty(list)) {
+				return list.get(0);
+			} else {
+				return null;
+			}
 		} else {
 			List<Entity> list = null;
 			if (count == null) {
 				String[] params = getParams(prefix + p.getName());
 				if (params != null) {
-					list = Arrays.stream(params)
-							.map(key -> getRefEntity(rp.getObjectDefinitionName(), key))
-							.filter(value -> value != null)
-							.collect(Collectors.toList());
+					list = getRefEntities(rp.getObjectDefinitionName(), params);
 				}
 			} else {
 				//参照型で参照先のデータを作成・編集するケース
 				list = getRefTableValues(rp, defName, count, prefix);
 			}
 
-			if (list != null && !list.isEmpty()) {
+			if (CollectionUtil.isNotEmpty(list)) {
 				//マッピングクラスの配列を生成する
 				EntityDefinition ed = getEntityDefinition();
 				setEntityDefinition(definitionManager.get(defName));
@@ -269,38 +279,64 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 		}
 	}
 
-	private Entity getRefEntity(String definitionName, String key) {
-		Entity entity = null;
-		String oid = null;
-		Long version = null;
-		if (key != null) {
-			int lastIndex = key.lastIndexOf("_");
+	/**
+	 * NestTable以外の参照先編集データを返します。
+	 *
+	 * @param definitionName 参照先Entity定義名
+	 * @param keyParameters oidとversionのパラメータ情報
+	 * @return 編集データ
+	 */
+	private List<Entity> getRefEntities(String definitionName, String[] keyParameters) {
 
-			if (lastIndex < 0) {
-				oid = key;
+		List<EntityKey> keys = Arrays.stream(keyParameters)
+				.filter(key -> StringUtil.isNotEmpty(key))
+				.map(key -> {
+					int lastIndex = key.lastIndexOf("_");
+					String oid = null;
+					Long version = null;
+					if (lastIndex < 0) {
+						oid = key;
+					} else {
+						oid = key.substring(0, lastIndex);
+						version = CommandUtil.getLong(key.substring(lastIndex + 1));
+					}
+					return new EntityKey(oid, version);
+				})
+				.collect(Collectors.toList());
+
+		List<Entity> entities = null;
+		if (!keys.isEmpty()) {
+			if (gemConfig.isMustLoadWithReference()) {
+				// 参照Entityをロードし直す
+				if (gemConfig.isLoadWithReference()) {
+					entities = entityManager.batchLoad(keys, definitionName);
+				} else {
+					entities = entityManager.batchLoad(keys, definitionName, new LoadOption(false, false));
+				}
 			} else {
-				oid = key.substring(0, lastIndex);
-				version = CommandUtil.getLong(key.substring(lastIndex + 1));
+				// 参照Entityをロードし直さない
+				final EntityDefinition referenceEntityDefinition = definitionManager.get(definitionName);
+				entities = keys.stream()
+						.map(key -> {
+							Entity entity = newEntity(referenceEntityDefinition);
+							entity.setOid(key.getOid());
+							entity.setVersion(key.getVersion());
+							return entity;
+						})
+						.collect(Collectors.toList());
 			}
 		}
-		if (StringUtil.isNotBlank(oid)) {
-			//バリデーションエラー時に消えないようにデータ読み込み
-			//gemの設定により、参照を合わせて読み込むか切り替える
-			if (gemConfig.isLoadWithReference()) {
-				entity = entityManager.load(oid, version, definitionName);
-			} else {
-				entity = entityManager.load(oid, version, definitionName, new LoadOption(false, false));
-			}
-		}
-		return entity;
+		return entities;
 	}
 
 	/**
-	 * リクエストパラメータからテーブルの参照型データの値を取得します。
-	 * @param p プロパティ定義
-	 * @param defName 参照型のEntity定義名
-	 * @param count 参照データの最大件数
-	 * @return 参照データのリスト
+	 * NestTableの編集データを返します。
+	 *
+	 * @param p 対象ReferenceProperty定義
+	 * @param defName 参照先Entity定義名
+	 * @param count 件数
+	 * @param prefix 参照型のプロパティのリクエストパラメータに設定されているプレフィックス
+	 * @return NestTableの編集データ
 	 */
 	private List<Entity> getRefTableValues(ReferenceProperty p, String defName, Long count, String prefix) {
 		final List<Entity> list = new ArrayList<>();
@@ -317,15 +353,18 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 			entity.setValue(Constants.REF_RELOAD, Boolean.FALSE);
 
 			//Validationエラーが出るとhiddenに"null"が入るのでクリアする
-			if (entity.getOid() != null && entity.getOid().equals("null")) {
+			if (entity.getOid() != null && entity.getOid()
+					.equals("null")) {
 				entity.setOid(null);
 			}
 
 			//Entity生成時にエラーが発生していないかチェック
 			String checkPrefix = (errorPrefix != null ? errorPrefix : paramPrefix);
 			boolean hasError = getErrors().stream()
-					.filter(error -> error.getPropertyName().startsWith(checkPrefix))
-					.findFirst().isPresent();
+					.filter(error -> error.getPropertyName()
+							.startsWith(checkPrefix))
+					.findFirst()
+					.isPresent();
 
 			//エラーがなくて、何もデータが入ってないものは破棄する
 			if (hasError || !isEmpty(entity)) {
@@ -343,7 +382,10 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 		setEntityDefinition(ed);//元の定義に詰め替える
 
 		// ネストテーブル用の登録処理を追加
-		Optional<PropertyItem> ret = getProperty().stream().filter(pc -> pc.getPropertyName().equals(p.getName())).findFirst();
+		Optional<PropertyItem> ret = getProperty().stream()
+				.filter(pc -> pc.getPropertyName()
+						.equals(p.getName()))
+				.findFirst();
 		if (ret.isPresent() && !list.isEmpty()) {
 			addNestTableRegistHandler(p, list, red, ret.get());
 		}
@@ -353,14 +395,17 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 
 	private void addNestTableRegistHandler(ReferenceProperty p, List<Entity> list, EntityDefinition red, PropertyItem property) {
 		// ネストテーブルはプロパティ単位で登録可否決定
-		if (!NestTableReferenceRegistHandler.canRegist(property, getRegistrationPropertyBaseHandler())) return;
+		if (!NestTableReferenceRegistHandler.canRegist(property, getRegistrationPropertyBaseHandler())) {
+			return;
+		}
 
 		// カスタム登録処理によるNestTableの更新制御
 		ReferenceRegistOption option = getRegistrationInterrupterHandler().getNestTableRegistOption(red, p.getName());
 		// isSpecifyAllPropertiesがtrue、且つReference項目が除外、且つNestされたEntityの個々プロパティも全て指定なしの場合
 		// 参照先EntityにおけるEntityのデータ追加不可
 		if (option.isSpecifyAllProperties() && !option.isSpecifiedAsReference()
-				&& option.getSpecifiedUpdateNestProperties().isEmpty()) {
+				&& option.getSpecifiedUpdateNestProperties()
+						.isEmpty()) {
 			return;
 		}
 
@@ -372,13 +417,15 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 			PropertyDefinition pd = red.getProperty(editor.getTableOrderPropertyName());
 			target = EntityViewUtil.sortByOrderProperty(list, Constants.REF_TABLE_ORDER_INDEX);
 			for (int i = 0; i < target.size(); i++) {
-				target.get(i).setValue(editor.getTableOrderPropertyName(), ConvertUtil.convert(pd.getJavaType(), i));
+				target.get(i)
+						.setValue(editor.getTableOrderPropertyName(), ConvertUtil.convert(pd.getJavaType(), i));
 			}
 		} else {
 			target = list;
 		}
 
-		ReferenceRegistHandler handler = NestTableReferenceRegistHandler.get(this, list, red, p, property, editor.getNestProperties(), getRegistrationPropertyBaseHandler(), option);
+		ReferenceRegistHandler handler = NestTableReferenceRegistHandler.get(this, list, red, p, property, editor.getNestProperties(),
+				getRegistrationPropertyBaseHandler(), option);
 		if (handler != null) {
 			handler.setForceUpdate(editor.isForceUpadte());
 			getReferenceRegistHandlers().add(handler);
@@ -394,9 +441,13 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 		for (PropertyDefinition pd : getPropertyList()) {
 			if (pd.getMultiplicity() != 1) {
 				Object[] obj = entity.getValue(pd.getName());
-				if (obj != null && obj.length > 0) return false;
+				if (obj != null && obj.length > 0) {
+					return false;
+				}
 			} else {
-				if (entity.getValue(pd.getName()) != null) return false;
+				if (entity.getValue(pd.getName()) != null) {
+					return false;
+				}
 			}
 		}
 		return true;
@@ -428,8 +479,10 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 		};
 	}
 
-	public Set<String> getOids() {
-		return bulkCommandParams.stream().map(p -> p.getOid()).collect(Collectors.toSet());
+	public LinkedHashSet<String> getOids() {
+		return bulkCommandParams.stream()
+				.map(p -> p.getOid())
+				.collect(Collectors.toCollection(LinkedHashSet::new));
 	}
 
 	/**
@@ -453,7 +506,8 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 	public ExclusiveControlPoint getExclusiveControlPoint() {
 		String viewName = getViewName();
 		SearchFormView view = FormViewUtil.getSearchFormView(entityDefinition, entityView, viewName);
-		return view.getResultSection().getExclusiveControlPoint();
+		return view.getResultSection()
+				.getExclusiveControlPoint();
 	}
 
 	/**
@@ -464,12 +518,13 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 		this.view = view;
 	}
 
-	/**
-	 * 新しいバージョンとして更新を行うかを取得します。
-	 * @return 新しいバージョンとして更新を行うか
-	 */
 	@Override
 	public boolean isNewVersion() {
+		return false;
+	}
+
+	@Override
+	public boolean isLoadVersioned() {
 		return false;
 	}
 
@@ -499,7 +554,9 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 			PropertyDefinition pd = getProperty(property.getPropertyName());
 			if (pd instanceof ReferenceProperty) {
 				String mappedBy = ((ReferenceProperty) pd).getMappedBy();
-				if (StringUtil.isBlank(mappedBy)) continue;
+				if (StringUtil.isBlank(mappedBy)) {
+					continue;
+				}
 
 				if (property.getEditor() instanceof ReferencePropertyEditor) {
 					ReferencePropertyEditor editor = (ReferencePropertyEditor) property.getEditor();
@@ -525,7 +582,10 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 		// バージョン管理されているエンティティでマルチリファレンスのプロパティ定義がある場合、同じOIDとバージョンで行番号が異なるデータが存在するので、
 		// 一括更新する際に、一行目だけ更新します。
 		Optional<Integer> rw = bulkCommandParams.stream()
-				.filter(p -> p.getOid().equals(oid) && p.getVersion().equals(version))
+				.filter(p -> p.getOid()
+						.equals(oid)
+						&& p.getVersion()
+								.equals(version))
 				.map(p -> p.getRow())
 				.findFirst();
 		if (rw.isPresent()) {
@@ -538,7 +598,8 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 		// バージョン管理の場合、同じOIDで異なるバージョンが存在するので、
 		// バージョンセットを取得する。
 		return bulkCommandParams.stream()
-				.filter(p -> p.getOid().equals(oid))
+				.filter(p -> p.getOid()
+						.equals(oid))
 				.map(p -> p.getVersion())
 				.collect(Collectors.toSet());
 	}
@@ -548,7 +609,10 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 		// バージョン管理されているエンティティでマルチリファレンスのプロパティ定義がある場合、同じOIDとバージョンで行番号が異なるデータが存在するので、
 		// 一括更新する際に、一行目だけ更新します。
 		Optional<Long> updateDate = bulkCommandParams.stream()
-				.filter(p -> p.getOid().equals(oid) && p.getVersion().equals(version))
+				.filter(p -> p.getOid()
+						.equals(oid)
+						&& p.getVersion()
+								.equals(version))
 				.map(p -> p.getUpdateDate())
 				.findFirst();
 		if (updateDate.isPresent() && updateDate.get() != null) {
@@ -577,14 +641,14 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 	 * @return 空のプロパティは更新しないので、更新するプロパティが1件もない場合、nullを返します。
 	 */
 	public Entity createEntity(String oid, Long version, Timestamp updateDate) {
-		Entity entity = createEntityInternal("" , null);
+		Entity entity = createEntityInternal("", null);
 		entity.setOid(oid);
 		entity.setUpdateDate(updateDate);
-//		if (isVersioned()) {
+		//		if (isVersioned()) {
 		// バージョン管理にかかわらず、セットする問題ないかな..
 		entity.setVersion(version);
-//		}
-//		setVirtualPropertyValue(entity);
+		//		}
+		//		setVirtualPropertyValue(entity);
 		getRegistrationInterrupterHandler().dataMapping(entity);
 		validate(entity);
 
@@ -603,7 +667,9 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 	private Entity createEntityInternal(String paramPrefix, String errorPrefix) {
 		Entity entity = newEntity();
 		for (PropertyDefinition p : getPropertyList()) {
-			if (skipProps.contains(p.getName())) continue;
+			if (skipProps.contains(p.getName())) {
+				continue;
+			}
 			Object value = getPropValue(p, paramPrefix);
 			entity.setValue(p.getName(), value);
 			if (errorPrefix != null) {
@@ -611,8 +677,9 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 				// Entity生成時にエラーが発生していないかチェックして置き換え
 				String errorName = errorPrefix + p.getName();
 				getErrors().stream()
-					.filter(error -> error.getPropertyName().equals(name))
-					.forEach(error -> error.setPropertyName(errorName));
+						.filter(error -> error.getPropertyName()
+								.equals(name))
+						.forEach(error -> error.setPropertyName(errorName));
 			}
 		}
 		return entity;
@@ -640,7 +707,7 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 				Entity[] ary = null;
 				if (val != null) {
 					if (val instanceof Entity) {
-						ary = new Entity[] {(Entity) val};
+						ary = new Entity[] { (Entity) val };
 					} else if (val instanceof Entity[]) {
 						ary = (Entity[]) val;
 					}
@@ -648,7 +715,8 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 
 				if (editor.getDisplayType() == ReferenceDisplayType.NESTTABLE
 						&& ary != null && ary.length > 0
-						&& editor.getNestProperties() != null && !editor.getNestProperties().isEmpty()) {
+						&& editor.getNestProperties() != null && !editor.getNestProperties()
+								.isEmpty()) {
 					//NestTable、参照セクション
 					for (int i = 0; i < ary.length; i++) {
 						String errorPrefix = property.getPropertyName() + "[" + i + "].";
@@ -768,7 +836,7 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 	 */
 	private void setValidateErrorMessage(RangePropertyEditor editor, String fromName, String errorPrefix, String resourceStringKey) {
 		String errorMessage = TemplateUtil.getMultilingualString(editor.getErrorMessage(), editor.getLocalizedErrorMessageList());
-		if (StringUtil.isBlank(errorMessage )) {
+		if (StringUtil.isBlank(errorMessage)) {
 			errorMessage = resourceString(resourceStringKey);
 		}
 		ValidateError e = new ValidateError();
@@ -776,7 +844,6 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 		e.addErrorMessage(errorMessage);
 		getErrors().add(e);
 	}
-
 
 	/**
 	 * ブランクの項目は未入力と見なし、更新しないので、一括更新可能なプロパティリストから外す。
@@ -791,8 +858,9 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 	 * @param entity
 	 */
 	private List<PropertyItem> createBlankPropList(Entity entity) {
-			return (getProperty().stream().filter(pi -> entity.getValue(pi.getPropertyName()) == null)
-					.collect(Collectors.toList()));
+		return (getProperty().stream()
+				.filter(pi -> entity.getValue(pi.getPropertyName()) == null)
+				.collect(Collectors.toList()));
 	}
 
 	/**
@@ -956,7 +1024,8 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 		String viewName = getViewName();
 		//FIXME SearchResult定義からカスタム一括更新クラスを取得します。
 		SearchFormView view = FormViewUtil.getSearchFormView(entityDefinition, entityView, viewName);
-		return view.getResultSection().getBulkUpdateInterrupterName();
+		return view.getResultSection()
+				.getBulkUpdateInterrupterName();
 	}
 
 	protected BulkOperationInterrupter createBulkInterrupter(String className) {
@@ -973,7 +1042,8 @@ public class MultiBulkCommandContext extends RegistrationCommandContext {
 		if (interrupter == null) {
 			// 何もしないデフォルトInterrupter生成
 			getLogger().debug("set default bulk operation interrupter.");
-			interrupter = new BulkOperationInterrupter() { };
+			interrupter = new BulkOperationInterrupter() {
+			};
 		}
 		return interrupter;
 	}

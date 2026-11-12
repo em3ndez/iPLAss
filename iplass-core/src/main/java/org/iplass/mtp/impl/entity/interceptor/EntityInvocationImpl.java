@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,7 +30,6 @@ import org.iplass.mtp.entity.interceptor.EntityInterceptor;
 import org.iplass.mtp.entity.interceptor.EntityInvocation;
 import org.iplass.mtp.impl.entity.EntityContext;
 import org.iplass.mtp.impl.entity.EntityHandler;
-
 
 public abstract class EntityInvocationImpl<R> implements EntityInvocation<R> {
 
@@ -70,7 +69,8 @@ public abstract class EntityInvocationImpl<R> implements EntityInvocation<R> {
 
 	@Override
 	public EntityDefinition getEntityDefinition() {
-		return entityHandler.getMetaData().currentConfig(EntityContext.getCurrentContext());
+		return entityHandler.getMetaData()
+				.currentConfig(EntityContext.getCurrentContext());
 	}
 
 	public EntityHandler getEntityHandler() {
@@ -90,13 +90,14 @@ public abstract class EntityInvocationImpl<R> implements EntityInvocation<R> {
 		}
 		return invocationContextAttributes.get(name);
 	}
+
 	public Iterator<String> getAttributeNames() {
 		if (invocationContextAttributes == null) {
 			List<String> l = Collections.emptyList();
 			return l.iterator();
 		}
-		return invocationContextAttributes.keySet().iterator();
+		return invocationContextAttributes.keySet()
+				.iterator();
 	}
-
 
 }

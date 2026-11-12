@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,15 +22,15 @@ package org.iplass.mtp.view.top;
 
 import java.util.List;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.PageContext;
-
 import org.iplass.mtp.definition.TypedDefinitionManager;
 import org.iplass.mtp.impl.view.top.TopViewHandler;
 import org.iplass.mtp.impl.view.top.parts.TopViewPartsHandler;
 import org.iplass.mtp.view.top.parts.TopViewParts;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.jsp.PageContext;
 
 /**
  * TOP画面定義を管理するクラスのインターフェース
@@ -76,13 +76,28 @@ public interface TopViewDefinitionManager extends TypedDefinitionManager<TopView
 
 	/**
 	 * ロール対象となるTopViewParts定義を返します。
+	 *
+	 * @param type 対象TopViewPartsクラス
+	 * @return 対象TopViewParts
+	 */
+	public <T extends TopViewParts> T getRequestTopViewParts(Class<T> type);
+
+	/**
+	 * ロール対象となるTopViewParts定義を返します。
 	 * 対象が存在しない場合は、空のリストを返します。
 	 *
 	 * @param type 対象TopViewPartsクラス
 	 * @return 対象TopViewParts
 	 */
-	public <T extends TopViewParts> List<T> getRequestTopViewParts(Class<T> type);
+	public <T extends TopViewParts> List<T> getRequestTopViewPartsList(Class<T> type);
 
+	/**
+	 * ロール対象となるTopViewPartsのHandlerを返します。
+	 *
+	 * @param type 対象TopViewPartsHandlerクラス
+	 * @return 対象TopViewPartsHandler
+	 */
+	public <T extends TopViewPartsHandler> T getRequestTopViewPartsHandler(Class<T> type);
 
 	/**
 	 * ロール対象となるTopViewPartsのHandlerを返します。
@@ -91,7 +106,7 @@ public interface TopViewDefinitionManager extends TypedDefinitionManager<TopView
 	 * @param type 対象TopViewPartsHandlerクラス
 	 * @return 対象TopViewPartsHandler
 	 */
-	public <T extends TopViewPartsHandler> List<T> getRequestTopViewPartsHandler(Class<T> type);
+	public <T extends TopViewPartsHandler> List<T> getRequestTopViewPartsHandlerList(Class<T> type);
 
 	/**
 	 * 指定された型のTopViewParts定義を返します。

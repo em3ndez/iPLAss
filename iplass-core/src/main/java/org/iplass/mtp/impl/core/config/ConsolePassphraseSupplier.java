@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,7 +32,8 @@ public class ConsolePassphraseSupplier implements PassphraseSupplier {
 		System.out.println("enter passphrase:");
 		BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
 		try {
-			return console.readLine().toCharArray();
+			return console.readLine()
+					.toCharArray();
 		} catch (IOException e) {
 			throw new ServiceConfigrationException(e);
 		}

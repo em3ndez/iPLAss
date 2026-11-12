@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,12 +33,12 @@ public class DetailFormViewAdapter implements DetailFormViewHandler {
 
 	@Override
 	final public void onShowDetailView(FormViewEvent event) {
-		onShowDetailView((ShowDetailLayoutViewEvent)event);
+		onShowDetailView((ShowDetailLayoutViewEvent) event);
 	}
 
 	@Override
 	final public void onShowEditView(FormViewEvent event) {
-		onShowEditView((ShowDetailLayoutViewEvent)event);
+		onShowEditView((ShowDetailLayoutViewEvent) event);
 	}
 
 	/**

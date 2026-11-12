@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,7 +32,6 @@ import org.iplass.mtp.impl.entity.MetaEntity;
 import org.iplass.mtp.impl.entity.property.MetaProperty;
 import org.iplass.mtp.impl.util.ObjectUtil;
 
-
 public class MetaValidationBinaryType extends MetaValidation {
 	private static final long serialVersionUID = 4585473131357405434L;
 
@@ -41,9 +40,11 @@ public class MetaValidationBinaryType extends MetaValidation {
 	public String getAcceptMimeTypesPattern() {
 		return acceptMimeTypesPattern;
 	}
+
 	public void setAcceptMimeTypesPattern(String acceptMimeTypesPattern) {
 		this.acceptMimeTypesPattern = acceptMimeTypesPattern;
 	}
+
 	@Override
 	public MetaValidationBinaryType copy() {
 		return ObjectUtil.deepCopy(this);
@@ -51,7 +52,7 @@ public class MetaValidationBinaryType extends MetaValidation {
 
 	@Override
 	public ValidationHandler createRuntime(MetaEntity entity, MetaProperty property) {
-		return new ValidationHandler(this) {
+		return new ValidationHandler(this, entity, property) {
 			private Pattern compiledPattern;
 
 			@Override
@@ -61,12 +62,16 @@ public class MetaValidationBinaryType extends MetaValidation {
 
 			@Override
 			public boolean validate(Object value, ValidationContext context) {
+				if (validateSkipCheck(value, context)) {
+					return true;
+				}
 				if (value == null) {
 					return true;
 				}
 				if (value instanceof BinaryReference) {
 					BinaryReference checkVal = (BinaryReference) value;
-					return compiledPattern.matcher(checkVal.getType()).matches();
+					return compiledPattern.matcher(checkVal.getType())
+							.matches();
 				}
 
 				throw new EntityRuntimeException("not support type:" + value.getClass());
@@ -99,6 +104,7 @@ public class MetaValidationBinaryType extends MetaValidation {
 						: acceptMimeTypesPattern.hashCode());
 		return result;
 	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)

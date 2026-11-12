@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -59,10 +59,10 @@ public class MultiInsertContext {
 			throw new SQLException("no sql added");
 		}
 		if (sqls.size() == 1) {
-			return new int[]{stmt.executeUpdate(sqls.get(0))};
+			return new int[] { stmt.executeUpdate(sqls.get(0)) };
 		}
 
-		for (String s: sqls) {
+		for (String s : sqls) {
 			stmt.addBatch(s);
 		}
 		return stmt.executeBatch();
@@ -72,7 +72,5 @@ public class MultiInsertContext {
 		sqls.add(sql);
 //		stmt.addBatch(sql);
 	}
-
-
 
 }

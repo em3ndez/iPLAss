@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -58,6 +58,9 @@ public class I18nService implements Service {
 
 	private List<LanguageFonts> languageFonts;
 
+	/** 総称フォントリスト */
+	private List<String> genericFontFamilyList;
+
 	public Locale selectLangLocale(Locale tenantLocale) {
 		String langTag = tenantLocale.toLanguageTag();
 		langTag = toValidLanguageTag(langTag);
@@ -85,48 +88,71 @@ public class I18nService implements Service {
 	public Map<String, String> getEnableLanguagesMap() {
 		return enableLanguagesMap;
 	}
+
 	public void setEnableLanguagesMap(Map<String, String> enableLanguagesMap) {
 		this.enableLanguagesMap = enableLanguagesMap;
 	}
+
 	public List<EnableLanguages> getEnableLanguages() {
 		return enableLanguages;
 	}
+
 	public void setEnableLanguages(List<EnableLanguages> enableLanguages) {
 		this.enableLanguages = enableLanguages;
 	}
+
+	public List<String> getGenericFontFamilyList() {
+		return genericFontFamilyList;
+	}
+
+	public void setGenericFontFamilyList(List<String> genericFontFamilyList) {
+		this.genericFontFamilyList = genericFontFamilyList;
+	}
+
 	public Locale getLocale() {
 		return locale;
 	}
+
 	public void setLocale(Locale locale) {
 		this.locale = locale;
 	}
+
 	public TimeZone getTimezone() {
 		return timezone;
 	}
+
 	public void setTimezone(TimeZone timezone) {
 		this.timezone = timezone;
 	}
+
 	public List<LocaleFormat> getLocaleFormat() {
 		return localeFormat;
 	}
+
 	public void setLocaleFormat(List<LocaleFormat> localeFormat) {
 		this.localeFormat = localeFormat;
 	}
+
 	public Map<String, LocaleFormat> getLocaleFormatMap() {
 		return localeFormatMap;
 	}
+
 	public void setLocaleFormatMap(Map<String, LocaleFormat> localeFormatMap) {
 		this.localeFormatMap = localeFormatMap;
 	}
+
 	public LocaleFormat getDefaultLocaleFormat() {
 		return defaultLocaleFormat;
 	}
+
 	public void setDefaultLocaleFormat(LocaleFormat defaultLocaleFormat) {
 		this.defaultLocaleFormat = defaultLocaleFormat;
 	}
+
 	public List<LanguageFonts> getLanguageFonts() {
 		return languageFonts;
 	}
+
 	public void setLanguageFonts(List<LanguageFonts> languageFonts) {
 		this.languageFonts = languageFonts;
 	}
@@ -169,9 +195,10 @@ public class I18nService implements Service {
 			otherLanguagesMap = new HashMap<String, String>();
 			for (EnableLanguages e : enableLanguages) {
 				enableLanguagesMap.put(e.getLanguageKey(), e.getLanguageName());
-				otherLanguagesMap.put(e.getLanguageKey().toLowerCase(), e.getLanguageKey());
+				otherLanguagesMap.put(e.getLanguageKey()
+						.toLowerCase(), e.getLanguageKey());
 				if (e.getOtherLanguageKey() != null) {
-					for (String ol: e.getOtherLanguageKey()) {
+					for (String ol : e.getOtherLanguageKey()) {
 						otherLanguagesMap.put(ol.toLowerCase(), e.getLanguageKey());
 					}
 				}
@@ -188,13 +215,15 @@ public class I18nService implements Service {
 			localeFormatMap = new LinkedHashMap<String, LocaleFormat>();
 			for (LocaleFormat lf : localeFormat) {
 				List<String> localeList = lf.getLocale();
-				for (String l: localeList) {
+				for (String l : localeList) {
 					localeFormatMap.put(l, lf);
 				}
 			}
 		}
 
 		languageFonts = (List<LanguageFonts>) config.getBeans("languageFonts");
+
+		genericFontFamilyList = config.getValues("genericFontFamilyList");
 	}
 
 	@Override

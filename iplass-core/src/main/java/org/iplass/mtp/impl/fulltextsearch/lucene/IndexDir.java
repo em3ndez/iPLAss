@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,8 +27,12 @@ import org.apache.lucene.store.FSDirectory;
 
 interface IndexDir {
 	public String getDefId();
+
 	public FSDirectory getDirectory();
+
 	public SearcherManager getSearcherManager() throws IOException;
+
 	public void refresh() throws IOException;
+
 	public void close() throws IOException;
 }

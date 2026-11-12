@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -60,7 +60,7 @@ public class NewLineNormalizerAttributePane extends NormalizerAttributePane {
 	@Override
 	public void setDefinition(NormalizerDefinition definition) {
 		if (definition instanceof NewlineNormalizer) {
-			NewlineType newLineType = ((NewlineNormalizer)definition).getType();
+			NewlineType newLineType = ((NewlineNormalizer) definition).getType();
 			if (newLineType != null) {
 				selNewLineType.setValue(newLineType.name());
 			} else {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,14 +27,13 @@ import org.iplass.mtp.entity.query.Query;
 import org.iplass.mtp.entity.query.condition.Condition;
 import org.iplass.mtp.entity.query.value.ValueExpression;
 import org.iplass.mtp.impl.core.ExecuteContext;
-import org.iplass.mtp.impl.query.prepared.PreparedQueryBinding;
 import org.iplass.mtp.impl.script.GroovyScriptEngine;
 import org.iplass.mtp.impl.script.ScriptEngine;
 import org.iplass.mtp.impl.script.template.GroovyTemplate;
 import org.iplass.mtp.impl.script.template.GroovyTemplateCompiler;
+import org.iplass.mtp.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 /**
  * PreparedQueryの実装本体。
@@ -43,25 +42,27 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class PreparedQueryTemplate {
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(PreparedQueryTemplate.class);
-	
+
 	private String queryString;
 
 	private GroovyTemplate compiledQuery;
-	
+
 	public PreparedQueryTemplate(String queryString) {
 		this.queryString = queryString;
-		
-		ScriptEngine se = ExecuteContext.getCurrentContext().getTenantContext().getScriptEngine();
+
+		ScriptEngine se = ExecuteContext.getCurrentContext()
+				.getTenantContext()
+				.getScriptEngine();
 		compiledQuery = GroovyTemplateCompiler.compile(
 				queryString, "Query_" + GroovyTemplateCompiler.randomName(), (GroovyScriptEngine) se);
 	}
-	
+
 	public String getQueryString() {
 		return queryString;
 	}
-	
+
 	public String doBind(PreparedQueryBinding binding) {
 		StringWriter w = new StringWriter();
 		binding.setVariable("out", w);
@@ -71,14 +72,14 @@ public class PreparedQueryTemplate {
 			//発生しえない
 			throw new RuntimeException(e);
 		}
-		
+
 		if (logger.isDebugEnabled()) {
 			logger.debug("binding to expression: org:\"" + queryString + "\": binded:\"" + w.toString() + "\"");
 		}
-		
+
 		return w.toString();
 	}
-	
+
 	/**
 	 * queryExpressionをQueryとして取得する。
 	 * 
@@ -88,7 +89,7 @@ public class PreparedQueryTemplate {
 	public Query query(PreparedQueryBinding binding) {
 		return Query.newQuery(doBind(binding));
 	}
-	
+
 	/**
 	 * queryExpressionをConditionとして取得する。
 	 * 
@@ -96,9 +97,13 @@ public class PreparedQueryTemplate {
 	 * @return
 	 */
 	public Condition condition(PreparedQueryBinding binding) {
-		return Condition.newCondition(doBind(binding));
+		String templateResult = doBind(binding);
+		if (StringUtil.isBlank(templateResult)) {
+			return null;
+		}
+		return Condition.newCondition(templateResult);
 	}
-	
+
 	/**
 	 * queryExpressionをValueExpressionとして取得する。
 	 * 

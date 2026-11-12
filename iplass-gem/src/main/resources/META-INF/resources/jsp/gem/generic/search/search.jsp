@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -35,7 +35,7 @@
 <%@ page import="org.iplass.mtp.web.template.TemplateUtil"%>
 <%@ page import="org.iplass.gem.command.generic.detail.DetailViewCommand"%>
 <%@ page import="org.iplass.gem.command.generic.search.SearchFormViewData"%>
-<%@ page import="org.iplass.gem.command.generic.upload.CsvUploadIndexCommand"%>
+<%@ page import="org.iplass.gem.command.generic.upload.EntityFileUploadIndexCommand"%>
 <%@ page import="org.iplass.gem.command.Constants"%>
 <%@ page import="org.iplass.gem.command.ViewUtil"%>
 <%
@@ -67,7 +67,7 @@
 	if (StringUtil.isNotBlank(view.getViewUploadActionName())) {
 		csvUpload = view.getViewUploadActionName() + urlPath;
 	} else {
-		csvUpload = CsvUploadIndexCommand.ACTION_NAME + urlPath;
+		csvUpload = EntityFileUploadIndexCommand.ACTION_NAME + urlPath;
 	}
 
 	//表示名
@@ -84,6 +84,9 @@
 	}
 
 	String iconTag = ViewUtil.getIconTag(view);
+
+	//数値のカンマ区切りのセパレータ
+	String separator = ViewUtil.getGroupingSeparator();
 
 	AuthContext auth = AuthContext.getCurrentContext();
 	request.setAttribute(Constants.ENTITY_DEFINITION, ed);
@@ -145,6 +148,7 @@
 %>
 <input class="gr-btn gr-size-02 mb10" type="button" value="${m:rs('mtp-gem-messages', 'generic.search.search.csvUpBtn')}" onclick="csvupload()" />
 <script type="text/javascript">
+separator = "<%= separator %>";
 function csvupload(){
 	var csvUpload = contextPath + "/<%=StringUtil.escapeJavaScript(csvUpload)%>";
 	submitCsvupload(csvUpload);

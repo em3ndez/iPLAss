@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -116,11 +116,10 @@ public class MetaLocalizedReport implements MetaData {
 		definition.setLocaleName(getLocaleName());
 		definition.setFileName(getFileName());
 		definition.setBinary(getBinary());
-		if(reportType != null){
+		if (reportType != null) {
 			definition.setReportType(reportType.currentConfig());
 		}
 		return definition;
 	}
-
 
 }

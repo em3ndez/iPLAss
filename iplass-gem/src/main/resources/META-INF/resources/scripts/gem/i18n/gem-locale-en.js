@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,6 +24,12 @@ scriptContext.gem.locale.common.name = "Name";
 scriptContext.gem.locale.common.numcheckMsg = "Please enter a number.";
 scriptContext.gem.locale.common.pleaseSelect = "Please Select";
 scriptContext.gem.locale.common.requiredMsg = "Please enter {0}.";
+scriptContext.gem.locale.common.numFormatErrorMsg = "Please enter a number {0}.";
+scriptContext.gem.locale.common.stringFormatErrorMsg = "Please enter A matching string {0}.";
+scriptContext.gem.locale.common.dateFormatErrorMsg = "Please enter the date {0} correctly. ({1})";
+scriptContext.gem.locale.common.timeFormatErrorMsg = "Please enter the time {0} correctly. ({1})";
+scriptContext.gem.locale.common.timestampFormatErrorMsg = "Please enter the date or time {0} correctly. ({1})";
+scriptContext.gem.locale.common.maxOfDetailSearchItemsWarningMsg = "The maximum number of search conditions has been reached, so no more can be added.";
 
 scriptContext.gem.locale.apendCategory("binary");
 scriptContext.gem.locale.binary.deleteLink = "Delete";
@@ -34,6 +40,7 @@ scriptContext.gem.locale.binary.notVewFlash = "You can not view Flash.";
 scriptContext.gem.locale.apendCategory("date");
 scriptContext.gem.locale.date.datepickerBtn = "Input from the calendar";
 scriptContext.gem.locale.date.timepickerBtn = "Input from the slider";
+scriptContext.gem.locale.date.pickerClearBtn = "Clear";
 scriptContext.gem.locale.date.validateDateErrMsg = "Please enter the date correctly. ({0})";
 scriptContext.gem.locale.date.validateTimeErrMsg = "Please enter the time correctly. ({0})";
 scriptContext.gem.locale.date.validateTimestampErrMsg = "Please enter the correct date or time. ({0})";
@@ -43,6 +50,7 @@ scriptContext.gem.locale.reference.deleteBtn = "Delete";
 scriptContext.gem.locale.reference.deleteLabel = "Delete";
 scriptContext.gem.locale.reference.detail = "Detail";
 scriptContext.gem.locale.reference.duplicateData = "Duplicate data.";
+scriptContext.gem.locale.reference.notSelectedData = "Target data has not been selected.";
 scriptContext.gem.locale.reference.edit = "Edit";
 scriptContext.gem.locale.reference.noResult = "Data not found.";
 scriptContext.gem.locale.reference.pleaseSelectAny = "Please Select {0}";

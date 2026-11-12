@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -39,6 +39,7 @@
 <%@ page import="org.iplass.gem.command.Constants"%>
 
 <%
+String styleAttr = request.getParameter("styleAttr");
 
 Boolean isTop = (Boolean) request.getAttribute("isTop");
 if (isTop == null) isTop = false;
@@ -98,9 +99,10 @@ for (int i = 0; i <  calendarItems.size(); i++) {
 		EntityDefinition ed = edm.get(defName);
 		String dispName = TemplateUtil.getMultilingualString(ed.getDisplayName(), ed.getLocalizedDisplayNameList());
 		String addAction = item.getAddAction() != null ? item.getAddAction() : AddCalendarCommand.ACTION_NANE;
+		String allowNewRecordRegistration = item.getAllowNewRecordRegistration() != null ? String.valueOf(item.getAllowNewRecordRegistration()) : "true";
 		String viewName = item.getViewName() != null ? item.getViewName() : "";
 %>
-		calDefs[<%=i%>] = {"defName":"<%=defName %>", "dispName":"<%=dispName%>", "addAction":"<%=addAction %>", "viewName":"<%=viewName %>"};
+		calDefs[<%=i%>] = {"defName":"<%=defName %>", "dispName":"<%=dispName%>", "addAction":"<%=addAction %>", "allowNewRecordRegistration":"<%=allowNewRecordRegistration %>", "viewName":"<%=viewName %>"};
 <%
 	}
 }
@@ -134,4 +136,4 @@ if (!isTop) {
 <%
 }
 %>
-<div id ="<%=calendarName%>" class="flat-block-top"></div>
+<div id ="<%=calendarName%>" class="flat-block-top" style="<%= styleAttr %>"></div>

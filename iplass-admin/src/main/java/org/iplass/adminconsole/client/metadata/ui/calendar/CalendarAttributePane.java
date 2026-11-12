@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -80,7 +80,8 @@ public class CalendarAttributePane extends HLayout {
 	 */
 	public void setCalendar(EntityCalendar calendar) {
 		if (calendar.getType() != null) {
-			typeField.setValue(calendar.getType().name());
+			typeField.setValue(calendar.getType()
+					.name());
 		} else {
 			typeField.setValue(CalendarType.MONTH.name());
 		}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,7 +26,7 @@ import org.apache.commons.codec.binary.Hex;
 
 public class MessageDigestChecksum implements Checksum {
 	private MessageDigest md;
-	
+
 	public MessageDigestChecksum(MessageDigest md) {
 		this.md = md;
 	}
@@ -45,7 +45,6 @@ public class MessageDigestChecksum implements Checksum {
 	public String getValue() {
 		return Hex.encodeHexString(md.digest());
 	}
-	
 
 	@Override
 	public void reset() {

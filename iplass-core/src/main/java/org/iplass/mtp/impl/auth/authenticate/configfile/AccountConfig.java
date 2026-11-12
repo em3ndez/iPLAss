@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,28 +26,35 @@ public class AccountConfig {
 	private String password;
 	private boolean admin;
 	private Map<String, Object> attributeMap;
-	
+
 	public String getId() {
 		return id;
 	}
+
 	public void setId(String id) {
 		this.id = id;
 	}
+
 	public String getPassword() {
 		return password;
 	}
+
 	public void setPassword(String password) {
 		this.password = password;
 	}
+
 	public boolean isAdmin() {
 		return admin;
 	}
+
 	public void setAdmin(boolean admin) {
 		this.admin = admin;
 	}
+
 	public Map<String, Object> getAttributeMap() {
 		return attributeMap;
 	}
+
 	public void setAttributeMap(Map<String, Object> attributeMap) {
 		this.attributeMap = attributeMap;
 	}

@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -62,8 +62,9 @@
 	if (viewType == null) viewType = "";
 
 	String refSectionIndex = request.getParameter(Constants.REF_SECTION_INDEX);
-	refSectionIndex = StringUtil.escapeHtml(refSectionIndex);
-	if (refSectionIndex == null) refSectionIndex = "";
+	if (StringUtil.isEmpty(refSectionIndex)) {
+		refSectionIndex = "";
+	}
 
 	//コマンドから
 	DetailFormViewData data = (DetailFormViewData) request.getAttribute(Constants.DATA);
@@ -149,6 +150,9 @@ function onclick_save(action, target) {
 	if ($("#confirmEditSave").val() == "true" && !confirm("${m:rs('mtp-gem-messages', 'generic.detail.ref.detail.saveMsg')}")) {
 		return;
 	}
+
+	if (!validation()) return;
+
 	button_onclick(action);
 	if (target) $(target).prop("disabled", true);
 }
@@ -156,6 +160,9 @@ function onclick_insert(action, target) {
 	if ($("#confirmEditSave").val() == "true" && !confirm("${m:rs('mtp-gem-messages', 'generic.detail.ref.detail.saveMsg')}")) {
 		return;
 	}
+
+	if (!validation()) return;
+
 	button_onclick(action);
 	if (target) $(target).prop("disabled", true);
 }
@@ -177,6 +184,16 @@ function onDialogClose() {
 	consumeToken("<%=ConsumeTokenCommand.WEBAPI_NAME%>", $("[name='_t']").val());
 	return true;
 }
+function validation() {
+	<%-- common.js --%>
+	var ret = editValidate();
+	var message = !ret ? "${m:rs('mtp-gem-messages', 'command.generic.detail.DetailCommandBase.inputErr')}" : "";
+	$(".detail_edit > .page-error").text(message);
+	return ret;
+}
+$(function(){
+	$('.disabled-btn').removeAttr('disabled');
+});
 </script>
 <%
 	if (form.isValidJavascriptDetailPage() && StringUtil.isNotBlank(form.getJavaScript())) {
@@ -189,41 +206,40 @@ function onDialogClose() {
 	}
 %>
 <h3 class="hgroup-02 hgroup-02-01"><%= GemResourceBundleUtil.resourceString("generic.detail.ref.detail.edit", displayName) %></h3>
+<span class="error page-error">
 <%
 	if (StringUtil.isNotBlank(message)) {
 %>
-<span class="error">
 <c:out value="<%= message %>"/>
-</span>
 <%
 	}
 %>
+</span>
 <form id="detailForm" method="post" action="">
-${m:outputToken('FORM_XHTML', true)}
-<input type="hidden" name="defName" value="<c:out value="<%=defName%>"/>" />
-<input type="hidden" name="modalTarget" value="<c:out value="<%=modalTarget%>"/>" />
-<input type="hidden" name="execType" value="<c:out value="<%=execType%>"/>" />
-<input type="hidden" name="parentDefName" value="<c:out value="<%=parentDefName%>" />" />
-<input type="hidden" name="parentViewName" value="<c:out value="<%=parentViewName%>" />" />
-<input type="hidden" name="parentPropName" value="<c:out value="<%=parentPropName%>" />" />
-<input type="hidden" name="entityOid" value="<c:out value="<%=entityOid%>" />" />
-<input type="hidden" name="entityVersion" value="<c:out value="<%=entityVersion%>" />" />
-<input type="hidden" name="viewType" value="<c:out value="<%=viewType%>" />" />
-<input type="hidden" name="referenceSectionIndex" value="<c:out value="<%=refSectionIndex%>" />" />
+<input type="hidden" name="<%=Constants.DEF_NAME%>" value="<c:out value="<%=defName%>"/>" />
+<input type="hidden" name="<%=Constants.MODAL_TARGET%>" value="<c:out value="<%=modalTarget%>"/>" />
+<input type="hidden" name="<%=Constants.EXEC_TYPE%>" value="<c:out value="<%=execType%>"/>" />
+<input type="hidden" name="<%=Constants.PARENT_DEFNAME%>" value="<c:out value="<%=parentDefName%>" />" />
+<input type="hidden" name="<%=Constants.PARENT_VIEWNAME%>" value="<c:out value="<%=parentViewName%>" />" />
+<input type="hidden" name="<%=Constants.PARENT_PROPNAME%>" value="<c:out value="<%=parentPropName%>" />" />
+<input type="hidden" name="<%=Constants.DISPLAY_SCRIPT_ENTITY_OID%>" value="<c:out value="<%=entityOid%>" />" />
+<input type="hidden" name="<%=Constants.DISPLAY_SCRIPT_ENTITY_VERSION%>" value="<c:out value="<%=entityVersion%>" />" />
+<input type="hidden" name="<%=Constants.VIEW_TYPE%>" value="<c:out value="<%=viewType%>" />" />
+<input type="hidden" name="<%=Constants.REF_SECTION_INDEX%>" value="<c:out value="<%=refSectionIndex%>" />" />
 <%
 	if (oid != null) {
 %>
-<input type="hidden" name="oid" value="<c:out value="<%=oid%>"/>" />
+<input type="hidden" name="<%=Constants.OID%>" value="<c:out value="<%=oid%>"/>" />
 <%
 	}
 	if (updateDate != null) {
 %>
-<input type="hidden" name="timestamp" value="<c:out value="<%=updateDate%>"/>" />
+<input type="hidden" name="<%=Constants.TIMESTAMP%>" value="<c:out value="<%=updateDate%>"/>" />
 <%
 	}
 	if (version != null) {
 %>
-<input type="hidden" name="version" value="<c:out value="<%=version%>"/>" />
+<input type="hidden" name="<%=Constants.VERSION%>" value="<c:out value="<%=version%>"/>" />
 <%
 	}
 %>
@@ -263,5 +279,6 @@ ${m:outputToken('FORM_XHTML', true)}
 <div class="operation-bar operation-bar_bottom">
 <jsp:include page="editButton.inc.jsp" />
 </div><!--operation-bar-->
+${m:outputToken('FORM_XHTML', true)}
 </form>
 </div>

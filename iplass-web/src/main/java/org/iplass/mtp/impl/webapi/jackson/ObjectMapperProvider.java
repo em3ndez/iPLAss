@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,11 +20,10 @@
 
 package org.iplass.mtp.impl.webapi.jackson;
 
-import javax.ws.rs.ext.ContextResolver;
-
 import org.iplass.mtp.spi.ServiceRegistry;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.ws.rs.ext.ContextResolver;
 
 /**
  * jacksonのObjectMapperのプロバイダ。
@@ -35,7 +34,9 @@ public class ObjectMapperProvider implements ContextResolver<ObjectMapper> {
 
 	@Override
 	public ObjectMapper getContext(Class<?> type) {
-		ObjectMapper mapper = ServiceRegistry.getRegistry().getService(WebApiObjectMapperService.class).getObjectMapper();
+		ObjectMapper mapper = ServiceRegistry.getRegistry()
+				.getService(WebApiObjectMapperService.class)
+				.getObjectMapper();
 		return mapper;
 	}
 

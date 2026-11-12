@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,15 +20,21 @@
 
 package org.iplass.gem.command.generic.search;
 
+import org.iplass.mtp.command.RequestContext;
 import org.iplass.mtp.command.annotation.CommandClass;
 
-@CommandClass(name=FixedSearchCommand.CMD_NAME, displayName="定型検索")
+@CommandClass(name = FixedSearchCommand.CMD_NAME, displayName = "定型検索")
 public final class FixedSearchCommand extends SearchCommandBase {
 
 	public static final String CMD_NAME = "gem/generic/search/FixedSearchCommand";
 
 	@Override
-	protected Class<? extends SearchContext> getContextClass() {
-		return FixedSearchContext.class;
+	public SearchContext getContext(RequestContext request) {
+		SearchContext context = new FixedSearchContext();
+		context.setRequest(request);
+		context.setEntityDefinition(edm.get(context.getDefName()));
+		context.setEntityView(evm.get(context.getDefName()));
+
+		return context;
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,6 +27,7 @@ import org.iplass.adminconsole.shared.metadata.dto.MetaTreeNode;
 import org.iplass.adminconsole.shared.tools.dto.metaexplorer.DeleteResultInfo;
 import org.iplass.adminconsole.shared.tools.dto.metaexplorer.ImportFileInfo;
 import org.iplass.adminconsole.shared.tools.dto.metaexplorer.ImportMetaDataStatus;
+import org.iplass.adminconsole.shared.tools.dto.metaexplorer.MetaDataCheckResultInfo;
 import org.iplass.adminconsole.shared.tools.dto.metaexplorer.MetaDataImportResultInfo;
 import org.iplass.mtp.entity.Entity;
 import org.iplass.mtp.tenant.Tenant;
@@ -38,8 +39,7 @@ import com.google.gwt.user.client.rpc.XsrfProtectedService;
  * MetaDataExplorer用Service
  */
 @RemoteServiceRelativePath("service/metaexplorer")
-public interface MetaDataExplorerService extends XsrfProtectedService , EntityDataTransferService {
-
+public interface MetaDataExplorerService extends XsrfProtectedService, EntityDataTransferService {
 
 	public MetaTreeNode getMetaTree(final int tenantId);
 
@@ -61,5 +61,6 @@ public interface MetaDataExplorerService extends XsrfProtectedService , EntityDa
 
 	public DeleteResultInfo deleteMetaData(final int tenantId, final List<String> pathList);
 
+	public MetaDataCheckResultInfo checkMetaData(final int tenantId, final String tagOid, final List<String> pathList);
 
 }

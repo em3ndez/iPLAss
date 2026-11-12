@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -41,6 +41,7 @@ import org.iplass.adminconsole.view.annotation.Refrectable;
 import org.iplass.adminconsole.view.annotation.generic.FieldReferenceType;
 import org.iplass.mtp.entity.definition.PropertyDefinition;
 import org.iplass.mtp.entity.definition.properties.ReferenceProperty;
+import org.iplass.mtp.view.generic.element.section.SearchResultSection;
 
 import com.smartgwt.client.widgets.form.DynamicForm;
 import com.smartgwt.client.widgets.form.fields.FormItem;
@@ -138,18 +139,46 @@ public class EntityViewFieldSettingPane extends MetaFieldSettingPane {
 		for (Entry<EntityPropertyComboBoxItem, String> entry : triggerdPropertyList.entrySet()) {
 			String triggerProperty = entry.getValue();
 			if (form.getItem(triggerProperty) != null) {
-				form.getItem(triggerProperty).addChangedHandler(new ChangedHandler() {
+				form.getItem(triggerProperty)
+						.addChangedHandler(new ChangedHandler() {
+
+							@Override
+							public void onChanged(ChangedEvent event) {
+								String _defName = refDefName != null ? refDefName : defName;
+								String refPropDefName = SmartGWTUtil.getStringValue(form.getItem(triggerProperty));
+								entry.getKey()
+										.resetDataSource(_defName, refPropDefName);
+							}
+						});
+			}
+		}
+		//SearchResultSectionのテーブル高さ自動調節モードは「検索結果TABLEの高さ」が0の場合のみ変更可能
+		if (getOwner().getValue() instanceof SearchResultSection) {
+			FormItem dispHeightItem = form.getItem("dispHeight");
+			FormItem modeItem = form.getItem("autoHeightAdjustMode");
+			if (dispHeightItem != null && modeItem != null) {
+				updateAutoHeightAdjustModeEnabled(dispHeightItem, modeItem);
+				dispHeightItem.addChangedHandler(new ChangedHandler() {
 
 					@Override
 					public void onChanged(ChangedEvent event) {
-						String _defName = refDefName != null ? refDefName : defName;
-						String refPropDefName = SmartGWTUtil.getStringValue(form.getItem(triggerProperty));
-						entry.getKey().resetDataSource(_defName, refPropDefName);
+						updateAutoHeightAdjustModeEnabled(dispHeightItem, modeItem);
 					}
 				});
 			}
 		}
 		triggerdPropertyList.clear();
+	}
+
+	/**
+	 * 「検索結果TABLEの高さ」が0より大きい場合、テーブル高さ自動調節モードを変更不可とする。
+	 * 0の場合はフィールド値がnull(未設定)でも選択可能とし、保存時にnullが維持される前提
+	 * (ServiceConfig既定値の活かしが「保存即固化」で壊れないようにするため、値の強制設定は行わない)。
+	 */
+	private void updateAutoHeightAdjustModeEnabled(FormItem dispHeightItem, FormItem modeItem) {
+		Integer dispHeight = SmartGWTUtil.getIntegerValue(dispHeightItem);
+		boolean fixedHeight = dispHeight != null && dispHeight.intValue() > 0;
+		modeItem.setDisabled(fixedHeight);
 	}
 
 	@Override
@@ -176,7 +205,7 @@ public class EntityViewFieldSettingPane extends MetaFieldSettingPane {
 
 	@Override
 	protected EntityViewFieldSettingDialog getOwner() {
-		return (EntityViewFieldSettingDialog)super.getOwner();
+		return (EntityViewFieldSettingDialog) super.getOwner();
 	}
 
 	@Override
@@ -228,7 +257,17 @@ public class EntityViewFieldSettingPane extends MetaFieldSettingPane {
 
 		if (SmartGWTUtil.isNotEmpty(info.getFixedEntityName())) {
 			//Entityが固定されている場合
-			item = new EntityPropertyComboBoxItem(info.getFixedEntityName());
+			//Entity が固定されている場合 + 除外タイプが指定されている場合は除外付コンストラクタを使用
+			if (info.getInputType() == InputType.PROPERTY
+					&& info.getExcludePropertyType() != null
+					&& info.getExcludePropertyType().length > 0) {
+				item = new EntityPropertyComboBoxItem(
+						info.getFixedEntityName(),
+						info.getExcludePropertyType());
+			} else {
+				//Entity が固定されている場合 + 除外タイプが指定されてい場合
+				item = new EntityPropertyComboBoxItem(info.getFixedEntityName());
+			}
 		} else if (SmartGWTUtil.isNotEmpty(info.getSourceEntityNameField())) {
 			//Entityが他のプロパティで設定される場合
 			String _defName = refDefName != null ? refDefName : defName;
@@ -241,8 +280,14 @@ public class EntityViewFieldSettingPane extends MetaFieldSettingPane {
 			//RootのEntityが指定されている場合
 			item = new EntityPropertyComboBoxItem(defName);
 		} else if (refDefName != null) {
-			//参照先としてEntityが指定されている場合
-			item = new EntityPropertyComboBoxItem(refDefName);
+			if (info.getInputType() == InputType.PROPERTY
+					&& info.getExcludePropertyType() != null && info.getExcludePropertyType().length > 0) {
+				// 除外タイプが指定されている場合
+				item = new EntityPropertyComboBoxItem(refDefName, info.getExcludePropertyType());
+			} else {
+				//参照先としてEntityが指定されている場合
+				item = new EntityPropertyComboBoxItem(refDefName);
+			}
 		} else {
 			item = new EntityPropertyComboBoxItem(defName);
 		}
@@ -289,6 +334,6 @@ public class EntityViewFieldSettingPane extends MetaFieldSettingPane {
 						childRefPropertyName = pd.getName();
 						childRefPropertyDisplayName = pd.getDisplayName();
 					}
-		});
+				});
 	}
 }

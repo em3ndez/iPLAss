@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -19,8 +19,8 @@
  */
 package org.iplass.mtp.impl.metadata.refs.web;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
-
+import org.iplass.mtp.impl.auth.authenticate.oidc.MetaOpenIdConnect;
+import org.iplass.mtp.impl.auth.authenticate.webauthn.MetaWebAuthn;
 import org.iplass.mtp.impl.auth.oauth.MetaOAuthAuthorization;
 import org.iplass.mtp.impl.auth.oauth.MetaOAuthClient;
 import org.iplass.mtp.impl.auth.oauth.MetaOAuthResourceServer;
@@ -31,16 +31,11 @@ import org.iplass.mtp.impl.web.template.MetaTemplate;
 import org.iplass.mtp.impl.webapi.MetaEntityWebApi;
 import org.iplass.mtp.impl.webapi.MetaWebApi;
 
+import jakarta.xml.bind.annotation.XmlSeeAlso;
+
 @XmlSeeAlso({
-	MetaActionMapping.class
-	,MetaTemplate.class
-	,MetaEntityWebApi.class
-	,MetaWebApi.class
-	,MetaStaticResource.class
-	,MetaTenantWebInfo.class
-	,MetaOAuthAuthorization.class
-	,MetaOAuthClient.class
-	,MetaOAuthResourceServer.class
+		MetaActionMapping.class, MetaTemplate.class, MetaEntityWebApi.class, MetaWebApi.class, MetaStaticResource.class, MetaTenantWebInfo.class,
+		MetaOAuthAuthorization.class, MetaOAuthClient.class, MetaOAuthResourceServer.class, MetaOpenIdConnect.class, MetaWebAuthn.class
 })
 class WebRootMetaDatas {
 	//Web系のMetaDataへのXmlSeeAlsoを管理するためだけのクラス

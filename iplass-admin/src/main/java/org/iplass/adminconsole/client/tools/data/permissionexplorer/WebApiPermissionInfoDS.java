@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -53,7 +53,7 @@ public class WebApiPermissionInfoDS extends PermissionTreeGridDS {
 
 		Criteria criteria = request.getCriteria();
 		if (criteria != null && criteria.getAttributeAsObject(EDIT_DATA_KEY) != null) {
-			final PermissionSearchResult editingResult = (PermissionSearchResult)criteria.getAttributeAsObject(EDIT_DATA_KEY);
+			final PermissionSearchResult editingResult = (PermissionSearchResult) criteria.getAttributeAsObject(EDIT_DATA_KEY);
 
 			//FIXME そのままResponseを返すとTreeの展開のための情報がうまく制御できないのでサーバに接続
 			//(onDataArrivedイベントが走らない、ds.fetchDataのDSCallbackのタイミングだとまだTreeのNodeが生成されていない)

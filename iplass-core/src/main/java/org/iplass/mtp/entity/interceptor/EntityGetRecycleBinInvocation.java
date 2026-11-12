@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,9 +27,11 @@ import org.iplass.mtp.entity.Entity;
 public interface EntityGetRecycleBinInvocation extends EntityInvocation<Void> {
 
 	public Long getRecycleBinId();
+
 	public void setRecycleBinId(Long recycleBinId);
 
 	public Predicate<Entity> getCallback();
+
 	public void setCallback(Predicate<Entity> callback);
-	
+
 }

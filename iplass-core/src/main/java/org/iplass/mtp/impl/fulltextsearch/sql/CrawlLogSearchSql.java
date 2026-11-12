@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,10 +23,9 @@ package org.iplass.mtp.impl.fulltextsearch.sql;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.iplass.mtp.impl.fulltextsearch.AbstractFulltextSeachService.CrawlTimestampDto;
+import org.iplass.mtp.impl.fulltextsearch.AbstractFulltextSearchService.CrawlTimestampDto;
 import org.iplass.mtp.impl.rdb.adapter.QuerySqlHandler;
 import org.iplass.mtp.impl.rdb.adapter.RdbAdapter;
-
 
 public class CrawlLogSearchSql extends QuerySqlHandler {
 

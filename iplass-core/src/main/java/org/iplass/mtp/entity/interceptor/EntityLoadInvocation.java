@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,16 +24,19 @@ import org.iplass.mtp.entity.Entity;
 import org.iplass.mtp.entity.LoadOption;
 
 public interface EntityLoadInvocation extends EntityInvocation<Entity> {
-	
+
 	public String getOid();
+
 	public void setOid(String oid);
-	
+
 	public Long getVersion();
+
 	public void setVersion(Long version);
-	
+
 	public boolean withLock();
-	
+
 	public LoadOption getLoadOption();
+
 	public void setLoadOption(LoadOption loadOption);
-	
+
 }

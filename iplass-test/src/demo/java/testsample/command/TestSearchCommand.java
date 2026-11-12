@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -34,26 +34,28 @@ import org.iplass.mtp.entity.query.condition.predicate.Equals;
 
 @CommandClass
 public class TestSearchCommand implements Command {
-	
-	private EntityManager em = ManagerLocator.getInstance().getManager(EntityManager.class);
-	
+
+	private EntityManager em = ManagerLocator.getInstance()
+			.getManager(EntityManager.class);
+
 	@Override
 	public String execute(RequestContext request) {
-		
+
 		String accountId = request.getParam("accountId");
-		
+
 		UploadFileHandle upFile = request.getParamAsFile("upFile");
 		if (upFile != null) {
 			//process upload file
 			System.out.println("file uploaded:name=" + upFile.getFileName() + ", size=" + upFile.getSize());
 		}
-		
+
 		SearchResult<Entity> res = em.searchEntity(
-				new Query().select(User.ACCOUNT_ID).from(User.DEFINITION_NAME)
-				.where(new Equals(User.ACCOUNT_ID, accountId)));
-		
+				new Query().select(User.ACCOUNT_ID)
+						.from(User.DEFINITION_NAME)
+						.where(new Equals(User.ACCOUNT_ID, accountId)));
+
 		request.setAttribute("res", res);
-		
+
 		return "OK";
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,7 +26,7 @@ public enum RawColIndexType {
 	NONE,
 	INDEX,
 	UNIQUE_INDEX;
-	
+
 	public static RawColIndexType typeOf(IndexType it) {
 		if (it == null) {
 			return NONE;
@@ -42,6 +42,6 @@ public enum RawColIndexType {
 		default:
 			return null;
 		}
-		
+
 	}
 }

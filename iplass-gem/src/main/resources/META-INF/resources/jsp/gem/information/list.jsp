@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -36,6 +36,7 @@
 <%@ page import="org.iplass.gem.command.Constants"%>
 <%@ page import="org.iplass.gem.command.GemResourceBundleUtil"%>
 <%@ page import="org.iplass.gem.command.auth.UpdatePasswordCommand"%>
+<%@page import="org.iplass.gem.command.ViewUtil"%>
 
 <%!
 	String displayFormat(Timestamp time, DateFormat format) {
@@ -50,6 +51,9 @@
 <%
 	//設定情報取得
 	InformationParts parts = (InformationParts) request.getAttribute(Constants.INFO_SETTING);
+
+	//パーツの高さスタイル属性
+	String styleAttr = ViewUtil.buildHeightStyleAttr(parts.getMaxHeight());
 
 	//お知らせデータ取得
 	@SuppressWarnings("unchecked") List<Entity> data = (List<Entity>) request.getAttribute(Constants.DATA);
@@ -135,7 +139,7 @@ function changePassword() {
 <%
 	}
 %>
-<div class="info-block mb20">
+<div class="info-block mb20" style="<%=styleAttr%>">
 <table class="tbl-information-list flat-block-top">
 <%
 	if (data != null && !data.isEmpty()) {

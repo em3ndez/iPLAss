@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,8 +24,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
-
 import org.iplass.adminconsole.annotation.MultiLang;
 import org.iplass.mtp.definition.LocalizedStringDefinition;
 import org.iplass.mtp.entity.definition.validations.BinarySizeValidation;
@@ -39,7 +37,7 @@ import org.iplass.mtp.entity.definition.validations.RegexValidation;
 import org.iplass.mtp.entity.definition.validations.ScriptingValidation;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
+import jakarta.xml.bind.annotation.XmlSeeAlso;
 
 /**
  * 検証ロジックの定義。
@@ -47,22 +45,28 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * @author K.Higuchi
  *
  */
-@XmlSeeAlso(value = {
-		NotNullValidation.class,
-		RangeValidation.class,
-		RegexValidation.class,
-		LengthValidation.class,
-		ScriptingValidation.class,
-		JavaClassValidation.class,
-		BinarySizeValidation.class,
-		BinaryTypeValidation.class,
-		ExistsValidation.class
+@XmlSeeAlso(
+		value = {
+				NotNullValidation.class,
+				RangeValidation.class,
+				RegexValidation.class,
+				LengthValidation.class,
+				ScriptingValidation.class,
+				JavaClassValidation.class,
+				BinarySizeValidation.class,
+				BinaryTypeValidation.class,
+				ExistsValidation.class
 		})
-@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 public abstract class ValidationDefinition implements Serializable {
 	private static final long serialVersionUID = 2424889426106372753L;
 
-	@MultiLang(itemKey = "errorMessage", itemGetter = "getErrorMessage", itemSetter = "setErrorMessage", multiLangGetter = "getLocalizedErrorMessageList", multiLangSetter = "setLocalizedErrorMessageList")
+	@MultiLang(
+			itemKey = "errorMessage",
+			itemGetter = "getErrorMessage",
+			itemSetter = "setErrorMessage",
+			multiLangGetter = "getLocalizedErrorMessageList",
+			multiLangSetter = "setLocalizedErrorMessageList")
 	private String errorMessage;
 	private String errorCode;
 
@@ -70,6 +74,8 @@ public abstract class ValidationDefinition implements Serializable {
 	private String messageId;
 
 	private List<LocalizedStringDefinition> localizedErrorMessageList;
+
+	private String validationSkipScript;
 
 	public String getMessageCategory() {
 		return messageCategory;
@@ -85,7 +91,6 @@ public abstract class ValidationDefinition implements Serializable {
 	public void setMessageCategory(String messageCategory) {
 		this.messageCategory = messageCategory;
 	}
-
 
 	public String getMessageId() {
 		return messageId;
@@ -169,5 +174,23 @@ public abstract class ValidationDefinition implements Serializable {
 	 */
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	/**
+	 * 検証の実行をスキップするためのスクリプトを取得します。
+	 * 
+	 * @return スクリプト
+	 */
+	public String getValidationSkipScript() {
+		return validationSkipScript;
+	}
+
+	/**
+	 * 検証の実行をスキップするスクリプトを設定します。
+	 * 
+	 * @param validationSkipScript スクリプト
+	 */
+	public void setValidationSkipScript(String validationSkipScript) {
+		this.validationSkipScript = validationSkipScript;
 	}
 }

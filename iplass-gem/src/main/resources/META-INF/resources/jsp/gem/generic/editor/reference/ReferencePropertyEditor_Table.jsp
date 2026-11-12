@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 <%@ page import="java.math.BigDecimal" %>
@@ -42,11 +42,12 @@
 <%@ page import="org.iplass.mtp.view.generic.editor.ReferencePropertyEditor.EditPage"%>
 <%@ page import="org.iplass.mtp.view.generic.editor.ReferencePropertyEditor.InsertType" %>
 <%@ page import="org.iplass.mtp.view.generic.editor.ReferencePropertyEditor.UrlParameterActionType"%>
+<%@ page import="org.iplass.mtp.view.generic.element.Element"%>
 <%@ page import="org.iplass.mtp.view.generic.LoadEntityInterrupter.LoadType"%>
 <%@ page import="org.iplass.mtp.web.template.TemplateUtil"%>
 <%@ page import="org.iplass.mtp.ApplicationException"%>
 <%@ page import="org.iplass.mtp.ManagerLocator" %>
-<%@ page import="org.iplass.gem.command.generic.detail.DetailCommandContext"%>
+<%@ page import="org.iplass.gem.command.generic.detail.NestTableCommandContext"%>
 <%@ page import="org.iplass.gem.command.generic.detail.DetailViewCommand"%>
 <%@ page import="org.iplass.gem.command.generic.detail.LoadEntityInterrupterHandler"%>
 <%@ page import="org.iplass.gem.command.generic.detail.UpdateReferencePropertyCommand"%>
@@ -55,6 +56,7 @@
 <%@ page import="org.iplass.gem.command.Constants" %>
 <%@ page import="org.iplass.gem.command.GemResourceBundleUtil"%>
 <%@ page import="org.iplass.gem.command.ViewUtil"%>
+<%@ page import="org.iplass.gem.command.generic.editor.ReferencePropertyEditorUtil" %>
 <%!
 	boolean isDispProperty(PropertyDefinition pd, String mappedBy, NestProperty property, OutputType type) {
 		if (pd == null) return false;
@@ -100,7 +102,7 @@
 		return viewAction;
 	}
 	LoadEntityInterrupterHandler getLoadEntityInterrupterHandler(EntityManager em, EntityDefinitionManager edm, EntityViewManager evm) {
-		DetailCommandContext context = new DetailCommandContext(TemplateUtil.getRequestContext(), em, edm);//ここでこれを作るのはちょっと微妙だが・・・
+		NestTableCommandContext context = new NestTableCommandContext(TemplateUtil.getRequestContext(), em, edm);//ここでこれを作るのはちょっと微妙だが・・・
 		context.setEntityDefinition(edm.get(context.getDefinitionName()));
 		context.setEntityView(evm.get(context.getDefinitionName()));
 		return context.getLoadEntityInterrupterHandler();
@@ -115,8 +117,7 @@
 		}
 		return new LoadOption(propList);
 	}
-%>
-<%!
+
 	Integer toInteger(Object val) {
 		if (val == null) return null;
 		if (val instanceof Integer) {
@@ -132,6 +133,16 @@
 		}
 		return -1; // 数値以外
 	}
+
+	boolean checkActionType(List<UrlParameterActionType> actions, UrlParameterActionType actionType) {
+		if (actions == null) {
+			//未指定の場合は、SELECTとADDはOK
+			return actionType == UrlParameterActionType.SELECT || actionType == UrlParameterActionType.ADD;
+		} else {
+			//指定されている場合は、対象かどうかをチェック
+			return actions.contains(actionType);
+		}
+	}
 %>
 <%
 	//既にネストされたプロパティからの再ネストは禁止
@@ -144,6 +155,7 @@
 
 	//Request情報取得
 	ReferencePropertyEditor editor = (ReferencePropertyEditor) request.getAttribute(Constants.EDITOR_EDITOR);
+	String referenceModalSizeAttributes = ReferencePropertyEditorUtil.getDialogSizeAttributes(editor);
 	Object value = request.getAttribute(Constants.EDITOR_PROP_VALUE);
 	ReferenceProperty pd = (ReferenceProperty) request.getAttribute(Constants.EDITOR_PROPERTY_DEFINITION);
 	String execType = (String) request.getAttribute(Constants.EXEC_TYPE);
@@ -155,6 +167,7 @@
 	if (mappedBy == null) mappedBy = "";
 	request.removeAttribute(Constants.EDITOR_REF_MAPPEDBY);
 	String reloadUrl = (String) request.getAttribute(Constants.EDITOR_REF_RELOAD_URL);
+	Element element = (Element) request.getAttribute(Constants.ELEMENT);
 
 	//本体のEntity
 	Entity parentEntity = (Entity) request.getAttribute(Constants.EDITOR_PARENT_ENTITY);
@@ -329,7 +342,7 @@
 		//-------------------------
 
 		String countId = "id_" + propName + "_count";
-		String dummyRowId = "id_tr_" + propName + "Dummy";
+		String dummyRowId = "id_tr_" + propName + Constants.EDITOR_REF_NEST_DUMMY_ROW_INDEX;
 		//追加ボタン
 		if (showInsertBtn && (editor.getInsertType() != null && editor.getInsertType() == InsertType.TOP)) {
 			String _rootDefName = StringUtil.escapeJavaScript(rootDefName);
@@ -378,7 +391,7 @@ $(function() {
 
 		int colNum = 0;
 		for (NestProperty nProp : editor.getNestProperties()) {
-			PropertyDefinition refPd = refEd.getProperty(nProp.getPropertyName());
+			PropertyDefinition refPd = EntityViewUtil.getNestTablePropertyDefinition(nProp, refEd);
 			if (refPd.getMultiplicity() != 1) {
 				throw new ApplicationException(GemResourceBundleUtil.resourceString("generic.editor.reference.ReferencePropertyEditor_Table.exceptionMessage")
 						+ ":propertyName=[" + refPd.getName() + "]");
@@ -422,7 +435,7 @@ $(function() {
 %>
 <th nowrap="nowrap" class="<c:out value="<%=cls%>"/>" style="<c:out value="<%=style%>"/>">
 <%-- XSS対応-メタの設定のため対応なし(title) --%>
-<%=title%>
+<span class="property-label"><%=title%></span>
 <%
 				if (required) {
 %>
@@ -506,7 +519,6 @@ $(function() {
 %>
 <jsp:include page="<%=autocompletionPath %>"/>
 <%
-					request.removeAttribute(Constants.EDITOR_REF_NEST_PROP_NAME);
 					request.removeAttribute(Constants.AUTOCOMPLETION_SETTING);
 					request.removeAttribute(Constants.AUTOCOMPLETION_DEF_NAME);
 					request.removeAttribute(Constants.AUTOCOMPLETION_VIEW_NAME);
@@ -563,10 +575,13 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 <tr id="<c:out value="<%=dummyRowId%>"/>" style="display: none;">
 <%
 		colNum = 0;
+		String idxPropName = propName + "[" + Constants.EDITOR_REF_NEST_DUMMY_ROW_INDEX + "]";
+
 		//新規追加のために一時的に書き換える
 		request.setAttribute(Constants.EXEC_TYPE, Constants.EXEC_TYPE_INSERT);
+
 		for (NestProperty nProp : editor.getNestProperties()) {
-			PropertyDefinition refPd = refEd.getProperty(nProp.getPropertyName());
+			PropertyDefinition refPd = EntityViewUtil.getNestTablePropertyDefinition(nProp, refEd);
 			if (refPd.getMultiplicity() != 1) {
 				throw new ApplicationException(GemResourceBundleUtil.resourceString("generic.editor.reference.ReferencePropertyEditor_Table.exceptionMessage")
 						+ ":propertyName=[" + refPd.getName() + "]");
@@ -576,11 +591,20 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 				if (StringUtil.isNotBlank(nProp.getDescription())) {
 					description = TemplateUtil.getMultilingualString(nProp.getDescription(), nProp.getLocalizedDescriptionList());
 				}
-				nProp.getEditor().setPropertyName(propName + "[Dummy]." + refPd.getName());
+
+				String editorUniqueID = StringUtil.isNotEmpty(element.getElementRuntimeId()) ? element.getElementRuntimeId() : "";
+				editorUniqueID += "_" + propName + "_" + refPd.getName();
+
+				nProp.getEditor().setPropertyName(idxPropName + "." + refPd.getName());
+
 				request.setAttribute(Constants.EDITOR_EDITOR, nProp.getEditor());
 				request.setAttribute(Constants.EDITOR_PROP_VALUE, null);
 				request.setAttribute(Constants.EDITOR_PROPERTY_DEFINITION, refPd);
-				request.setAttribute(Constants.EDITOR_REF_NEST, true);//2重ネスト防止用フラグ
+				//2重ネスト防止用フラグ
+				request.setAttribute(Constants.EDITOR_REF_NEST, true);
+				request.setAttribute(Constants.EDITOR_REF_NEST_PROP_NAME, propName);
+				request.setAttribute(Constants.EDITOR_REF_NEST_DATA_INDEX, -1);
+				request.setAttribute(Constants.EDITOR_UNIQUE_ID, editorUniqueID);
 				String path = EntityViewUtil.getJspPath(nProp.getEditor(), ViewConst.DESIGN_TYPE_GEM);
 				if (refPd instanceof ReferenceProperty
 						&& nProp.getEditor() instanceof ReferencePropertyEditor) {
@@ -588,7 +612,7 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 					((ReferencePropertyEditor) nProp.getEditor())
 						.setObjectName(((ReferenceProperty) refPd).getObjectDefinitionName());
 				}
-				String cls = "col" + colNum;
+				String cls = "property-data col" + colNum;
 				String style = "";
 				if (nProp.getWidth() > 0) {
 					style = "width:" + nProp.getWidth() + "px; ";
@@ -597,7 +621,8 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 					style += "display:none; ";
 				}
 %>
-<td class="<c:out value="<%=cls%>"/>" data-propName="<c:out value="<%=refPd.getName()%>"/>" style="<c:out value="<%=style%>"/>">
+<td class="<c:out value="<%=cls%>"/>" data-propName="<c:out value="<%=refPd.getName()%>"/>" style="<c:out value="<%=style%>"/>"
+  data-editor-id="<c:out value="<%=editorUniqueID%>"/>">
 <%
 				if (path != null) {
 %>
@@ -605,6 +630,8 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 <%
 				}
 				request.removeAttribute(Constants.EDITOR_REF_NEST);
+				request.removeAttribute(Constants.EDITOR_REF_NEST_PROP_NAME);
+				request.removeAttribute(Constants.EDITOR_REF_NEST_DATA_INDEX);
 
 				if (StringUtil.isNotBlank(description)) {
 %>
@@ -623,7 +650,6 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 
 		//編集リンク
 		if (refEdit) {
-			String idxPropName = propName + "[Dummy]";
 			//追加できるということは新規で編集できるので、更新権限がなくても編集側のActionを呼び出す
 %>
 <td nowrap="nowrap" class="colLink center">
@@ -640,7 +666,7 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 		if (showUpDownBtn) {
 %>
 <td class="orderCol">
-<input type="hidden" name="tableOrderIndex[Dummy]" >
+<input type="hidden" name="tableOrderIndex.<c:out value="<%=propName%>"/>[<%=Constants.EDITOR_REF_NEST_DUMMY_ROW_INDEX%>]" >
 <span class="order-icon up-icon"><i class="fas fa-caret-up"></i></span>
 <span class="order-icon down-icon"><i class="fas fa-caret-down"></i></span>
 </td>
@@ -662,7 +688,6 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 </tr>
 <%
 		//データ出力
-
 		for (int i = 0; i < entities.size(); i++) {
 			final Entity tmp = entities.get(i);
 			String trId = "id_tr_" + propName + i;
@@ -672,7 +697,7 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 			if (tmp.getOid() != null) {
 				if (reload == null || reload) {
 					LoadOption loadOption = getOption(refEd, editor, mappedBy, outputType);
-					final LoadEntityContext leContext = handler.beforeLoadReference(tmp.getDefinitionName(), loadOption, pd, LoadType.VIEW);
+					final LoadEntityContext leContext = handler.beforeLoadReference(tmp.getDefinitionName(), loadOption, pd, element, LoadType.VIEW);
 					if (leContext.isDoPrivileged()) {
 						entity = AuthContext.doPrivileged(new Supplier<Entity>() {
 
@@ -684,7 +709,7 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 					} else {
 						entity = em.load(tmp.getOid(), tmp.getVersion(), tmp.getDefinitionName(), leContext.getLoadOption());
 					}
-					handler.afterLoadReference(entity, loadOption, pd, LoadType.VIEW);
+					handler.afterLoadReference(entity, loadOption, pd, element, LoadType.VIEW);
 				}
 			} else {
 				insertRow = true;
@@ -697,9 +722,9 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 <tr id="<c:out value="<%=trId%>"/>">
 <%
 			colNum = 0;
-			String idxPropName = propName + "[" + i + "]";
+			idxPropName = propName + "[" + i + "]";
 			for (NestProperty nProp : editor.getNestProperties()) {
-				PropertyDefinition refPd = refEd.getProperty(nProp.getPropertyName());
+				PropertyDefinition refPd = EntityViewUtil.getNestTablePropertyDefinition(nProp, refEd);
 				if (refPd.getMultiplicity() != 1) {
 					throw new ApplicationException(GemResourceBundleUtil.resourceString("generic.editor.reference.ReferencePropertyEditor_Table.exceptionMessage")
 							+ ":propertyName=[" + refPd.getName() + "]");
@@ -709,14 +734,28 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 					if (StringUtil.isNotBlank(nProp.getDescription())) {
 						description = TemplateUtil.getMultilingualString(nProp.getDescription(), nProp.getLocalizedDescriptionList());
 					}
+
+					String editorUniqueID = StringUtil.isNotEmpty(element.getElementRuntimeId()) ? element.getElementRuntimeId() : "";
+					editorUniqueID += "_" + propName + "_" + refPd.getName();
+
+					String title = TemplateUtil.getMultilingualString(
+							nProp.getDisplayLabel(), nProp.getLocalizedDisplayLabelList(),
+							refPd.getDisplayName(), refPd.getLocalizedDisplayNameList());
+
 					nProp.getEditor().setPropertyName(idxPropName + "." + refPd.getName());
+
 					request.setAttribute(Constants.EDITOR_EDITOR, nProp.getEditor());
+					request.setAttribute(Constants.EDITOR_DISPLAY_LABEL, title);
 					request.setAttribute(Constants.EDITOR_PROP_VALUE, entity.getValue(refPd.getName()));
 					request.setAttribute(Constants.EDITOR_PROPERTY_DEFINITION, refPd);
-					request.setAttribute(Constants.EDITOR_REF_NEST, true);//2重ネスト防止用フラグ
+					//2重ネスト防止用フラグ
+					request.setAttribute(Constants.EDITOR_REF_NEST, true);
+					request.setAttribute(Constants.EDITOR_REF_NEST_PROP_NAME, propName);
+					request.setAttribute(Constants.EDITOR_REF_NEST_DATA_INDEX, i);
+					request.setAttribute(Constants.EDITOR_UNIQUE_ID, editorUniqueID);
 					String path = EntityViewUtil.getJspPath(nProp.getEditor(), ViewConst.DESIGN_TYPE_GEM);
 
-					String cls = "col" + colNum;
+					String cls = "property-data col" + colNum;
 					String style = "";
 					if (nProp.getWidth() > 0) {
 						style = "width:" + nProp.getWidth() + "px; ";
@@ -725,7 +764,8 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 						style += "display:none; ";
 					}
 %>
-<td class="<c:out value="<%=cls%>"/>" data-propName="<c:out value="<%=refPd.getName()%>"/>" style="<c:out value="<%=style%>"/>">
+<td class="<c:out value="<%=cls%>"/>" data-propName="<c:out value="<%=refPd.getName()%>"/>" style="<c:out value="<%=style%>"/>"
+  data-editor-id="<c:out value="<%=editorUniqueID%>"/>">
 <%
 					if (isFirstCol) {
 						isFirstCol = false;
@@ -736,14 +776,22 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 <%
 						}
 					}
-					if (insertRow) request.setAttribute(Constants.EXEC_TYPE, Constants.EXEC_TYPE_INSERT);
+					if (insertRow) {
+						request.setAttribute(Constants.EXEC_TYPE, Constants.EXEC_TYPE_INSERT);
+					}
 					if (path != null) {
 %>
 <jsp:include page="<%=path%>" />
 <%
 					}
-					if (insertRow) request.setAttribute(Constants.EXEC_TYPE, execType);
+					if (insertRow) {
+						request.setAttribute(Constants.EXEC_TYPE, execType);
+					}
+
 					request.removeAttribute(Constants.EDITOR_REF_NEST);
+					request.removeAttribute(Constants.EDITOR_REF_NEST_PROP_NAME);
+					request.removeAttribute(Constants.EDITOR_REF_NEST_DATA_INDEX);
+
 					if (StringUtil.isNotBlank(description)) {
 %>
 <br />
@@ -773,10 +821,23 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 				String _viewName = StringUtil.escapeJavaScript(viewName);
 				if (showRefEditLink) {
 					//編集リンク
+
+					String editReference = "editReference(" 
+						+ "'" + _detailAction + "'" 
+						+ ", '" + _refDefName + "'"
+						+ ", '" + _entityOid + "'"
+						+ ", '" + _trId + "'"
+						+ ", '" + _idxPropName + "'"
+						+ ", " + i
+						+ ", '" + _viewAction + "'"
+						+ ", '" + _rootDefName + "'"
+						+ ", '" + _viewName + "'"
+						+ ", '" + _propName + "'"
+						+ ")";
 %>
 <td nowrap="nowrap" class="colLink center">
-<a href="javascript:void(0);" class="modal-lnk"
- onclick="editReference('<%=_detailAction%>', '<%=_refDefName%>', '<%=_entityOid%>', '<%=_trId%>', '<%=_idxPropName%>', <%=i%>, '<%=_viewAction%>', '<%=_rootDefName%>', '<%=_viewName%>', '<%=_propName%>')">
+<a href="javascript:void(0);" class="modal-lnk" data-reference-modal="true" <%=referenceModalSizeAttributes %>
+ onclick="<c:out value="<%=editReference %>"/>">
  ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Table.edit")}</a>
 </td>
 <%
@@ -784,10 +845,34 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 					//詳細リンク
 					String _viewUrlParam = StringUtil.escapeJavaScript(
 							evm.getUrlParameter(rootDefName, editor, parentEntity, UrlParameterActionType.VIEW));
+					String _dynamicParamCallback = "viewDynamicParamCallback_" + StringUtil.escapeJavaScript(propName);
+
+					String viewEditableReference = "viewEditableReference(" 
+						+ "'" + _viewAction + "'" 
+						+ ", '" + _refDefName + "'"
+						+ ", '" + _entityOid + "'"
+						+ ", '" + _reloadUrl + "'"
+						+ ", true"
+						+ ", '" + _viewUrlParam + "'"
+						+ ", '" + _dynamicParamCallback + "'"
+						+ ")";
 %>
 <td nowrap="nowrap" class="colLink center">
-<a href="javascript:void(0);" class="modal-lnk"
- onclick="viewEditableReference('<%=_viewAction%>', '<%=_refDefName%>', '<%=_entityOid%>', '<%=_reloadUrl%>', true, '<%=_viewUrlParam%>')">
+<script>
+$(function() {
+	var dynamicParamCallback = function(urlParam) {
+		<%if (checkActionType(editor.getDynamicUrlParameterAction(), UrlParameterActionType.VIEW) && StringUtil.isNotBlank(editor.getDynamicUrlParameter())) {%>
+		<%=editor.getDynamicUrlParameter()%>
+		<%} else {%>
+		return urlParam;
+		<%}%>
+	};
+	var dynamicParamCallbackKey = "<%=_dynamicParamCallback%>";
+	scriptContext[dynamicParamCallbackKey] = dynamicParamCallback;
+});
+</script>
+<a href="javascript:void(0);" class="modal-lnk" data-reference-modal="true" <%=referenceModalSizeAttributes %>
+ onclick="<c:out value="<%=viewEditableReference %>"/>">
  ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Table.detail")}</a>
 </td>
 <%
@@ -796,21 +881,33 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 
 			//表示順
 			if (showUpDownBtn) {
+				String shiftUp = "shiftUp(" 
+					+ "'" + StringUtil.escapeJavaScript(trId) + "'" 
+					+ ")";
+				String shiftDown = "shiftDown(" 
+					+ "'" + StringUtil.escapeJavaScript(trId) + "'" 
+					+ ")";
 %>
 <td class="orderCol">
-<input type="hidden" name="tableOrderIndex[<%=i%>]" value="<%=i%>">
-<span class="order-icon up-icon"><i class="fas fa-caret-up" onclick="shiftUp('<%=StringUtil.escapeJavaScript(trId)%>')"></i></span>
-<span class="order-icon down-icon"><i class="fas fa-caret-down" onclick="shiftDown('<%=StringUtil.escapeJavaScript(trId)%>')"></i></span>
+<input type="hidden" name="tableOrderIndex.<c:out value="<%=propName%>"/>[<%=i%>]" value="<%=i%>">
+<span class="order-icon up-icon"><i class="fas fa-caret-up"
+ onclick="<c:out value="<%=shiftUp %>"/>"></i></span>
+<span class="order-icon down-icon"><i class="fas fa-caret-down"
+ onclick="<c:out value="<%=shiftDown %>"/>"></i></span>
 </td>
 <%
 			}
 
 			//削除ボタン
 			if (showDeleteBtn) {
+				String deleteRefTableRow = "deleteRefTableRow(" 
+					+ "'" + StringUtil.escapeJavaScript(trId) + "'" 
+					+ ", toggleAddBtn_" + StringUtil.escapeJavaScript(propName)
+					+ ")";
 %>
 <td nowrap="nowrap">
 <input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Table.delete')}" class="gr-btn-02 del-btn"
-		onclick="deleteRefTableRow('<%=StringUtil.escapeJavaScript(trId)%>', toggleAddBtn_<%=StringUtil.escapeJavaScript(propName)%>)" />
+ onclick="<c:out value="<%=deleteRefTableRow %>"/>" />
 </td>
 <%
 			}
@@ -878,7 +975,7 @@ $(function() {
 <%
 		int colNum = 0;
 		for (NestProperty nProp : editor.getNestProperties()) {
-			PropertyDefinition refPd = refEd.getProperty(nProp.getPropertyName());
+			PropertyDefinition refPd = EntityViewUtil.getNestTablePropertyDefinition(nProp, refEd);
 			if (refPd.getMultiplicity() != 1) {
 				throw new ApplicationException(GemResourceBundleUtil.resourceString("generic.editor.reference.ReferencePropertyEditor_Table.exceptionMessage")
 						+ ":propertyName=[" + refPd.getName() + "]");
@@ -904,7 +1001,7 @@ $(function() {
 %>
 <th nowrap="nowrap" class="<c:out value="<%=cls%>"/>" style="<c:out value="<%=style%>"/>">
 <%-- XSS対応-メタの設定のため対応なし(title) --%>
-<%=title%>
+<span class="property-label"><%=title%></span>
 </th>
 <%
 				colNum++;
@@ -946,7 +1043,7 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 			String trId = "id_tr_" + propName + i;
 			Entity entity = null;
 			final LoadOption loadOption = getOption(refEd, editor, mappedBy, outputType);
-			LoadEntityContext leContext = handler.beforeLoadReference(tmp.getDefinitionName(), loadOption, pd, LoadType.VIEW);
+			LoadEntityContext leContext = handler.beforeLoadReference(tmp.getDefinitionName(), loadOption, pd, element, LoadType.VIEW);
 			if (leContext.isDoPrivileged()) {
 				entity = AuthContext.doPrivileged(new Supplier<Entity>() {
 
@@ -959,7 +1056,7 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 				entity = em.load(tmp.getOid(), tmp.getVersion(), tmp.getDefinitionName(), loadOption);
 			}
 			if (entity == null) entity = tmp;//取れなかったら元データで
-			handler.afterLoadReference(entity, loadOption, pd, LoadType.VIEW);
+			handler.afterLoadReference(entity, loadOption, pd, element, LoadType.VIEW);
 			request.setAttribute(Constants.EDITOR_REF_NEST_VALUE, entity);//JoinProperty用
 			request.setAttribute(Constants.EDITOR_PARENT_ENTITY, entity);//参照の新規登録時のパラメータ用
 %>
@@ -973,7 +1070,7 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 <%
 			colNum = 0;
 			for (NestProperty nProp : editor.getNestProperties()) {
-				PropertyDefinition refPd = refEd.getProperty(nProp.getPropertyName());
+				PropertyDefinition refPd = EntityViewUtil.getNestTablePropertyDefinition(nProp, refEd);
 				if (refPd.getMultiplicity() != 1) {
 					throw new ApplicationException(GemResourceBundleUtil.resourceString("generic.editor.reference.ReferencePropertyEditor_Table.exceptionMessage")
 							+ ":propertyName=[" + refPd.getName() + "]");
@@ -1033,11 +1130,34 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 				String _reloadUrl = StringUtil.escapeJavaScript(reloadUrl);
 				String _viewUrlParam = StringUtil.escapeJavaScript(
 						evm.getUrlParameter(rootDefName, editor, parentEntity, UrlParameterActionType.VIEW));
+				String _dynamicParamCallback = "viewDynamicParamCallback_" + StringUtil.escapeJavaScript(propName);
+
+				String viewEditableReference = "viewEditableReference(" 
+					+ "'" + _viewAction + "'" 
+					+ ", '" + _refDefName + "'"
+					+ ", '" + _entityOid + "'"
+					+ ", '" + _reloadUrl + "'"
+					+ ", " + refEditParam
+					+ ", '" + _viewUrlParam + "'"
+					+ ", '" + _dynamicParamCallback + "'"
+					+ ")";
 %>
 <td nowrap="nowrap" class="colLink center">
-<a href="javascript:void(0);" class="modal-lnk"
- onclick="viewEditableReference('<%=_viewAction%>', '<%=_refDefName%>', '<%=_entityOid%>', '<%=_reloadUrl%>', <%=refEditParam%>, '<%=_viewUrlParam%>')">
- <%= GemResourceBundleUtil.resourceString(strKey) %></a>
+<script>
+$(function() {
+	var dynamicParamCallback = function(urlParam) {
+		<%if (checkActionType(editor.getDynamicUrlParameterAction(), UrlParameterActionType.VIEW) && StringUtil.isNotBlank(editor.getDynamicUrlParameter())) {%>
+		<%=editor.getDynamicUrlParameter()%>
+		<%} else {%>
+		return urlParam;
+		<%}%>
+	};
+	var dynamicParamCallbackKey = "<%=_dynamicParamCallback%>";
+	scriptContext[dynamicParamCallbackKey] = dynamicParamCallback;
+});
+</script>
+<a href="javascript:void(0);" class="modal-lnk" data-reference-modal="true" <%=referenceModalSizeAttributes %>
+ onclick="<c:out value="<%=viewEditableReference %>"/>"><%= GemResourceBundleUtil.resourceString(strKey) %></a>
 </td>
 <%
 			}
@@ -1051,14 +1171,37 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 				String _reloadUrl = StringUtil.escapeJavaScript(reloadUrl);
 				String _rootDefName = StringUtil.escapeJavaScript(rootDefName);
 				String _viewName = StringUtil.escapeJavaScript(viewName);
+
+				String shiftUpOrder = "shiftOrder(" 
+					+ "'" + UpdateTableOrderCommand.WEBAPI_NAME + "'" 
+					+ ", '" + _trId + "'"
+					+ ", '" + _orderPropName + "'"
+					+ ", '" + _propName + "'"
+					+ ", '" + _refDefName + "'"
+					+ ", true"
+					+ ", '" + _reloadUrl + "'"
+					+ ", '" + _rootDefName + "'"
+					+ ", '" + _viewName + "'"
+					+ ")";
+				String shiftDownOrder = "shiftOrder(" 
+					+ "'" + UpdateTableOrderCommand.WEBAPI_NAME + "'" 
+					+ ", '" + _trId + "'"
+					+ ", '" + _orderPropName + "'"
+					+ ", '" + _propName + "'"
+					+ ", '" + _refDefName + "'"
+					+ ", false"
+					+ ", '" + _reloadUrl + "'"
+					+ ", '" + _rootDefName + "'"
+					+ ", '" + _viewName + "'"
+					+ ")";
 %>
 <td class="orderCol">
-<span class="order-icon up-icon"><i class="fas fa-caret-up"
- onclick="shiftOrder('<%=UpdateTableOrderCommand.WEBAPI_NAME%>', '<%=_trId%>', '<%=_orderPropName%>', '<%=_propName%>', '<%=_refDefName%>', true, '<%=_reloadUrl%>', '<%=_rootDefName%>', '<%=_viewName%>')">
-</i></span>
-<span class="order-icon down-icon"><i class="fas fa-caret-down"
- onclick="shiftOrder('<%=UpdateTableOrderCommand.WEBAPI_NAME%>', '<%=_trId%>', '<%=_orderPropName%>', '<%=_propName%>', '<%=_refDefName%>', false, '<%=_reloadUrl%>', '<%=_rootDefName%>', '<%=_viewName%>')">
-</i></span>
+<span class="order-icon up-icon">
+<i class="fas fa-caret-up" onclick="<c:out value="<%=shiftUpOrder %>"/>"></i>
+</span>
+<span class="order-icon down-icon">
+<i class="fas fa-caret-down" onclick="<c:out value="<%=shiftDownOrder %>"/>"></i>
+</span>
 </td>
 <%
 			}
@@ -1068,7 +1211,8 @@ ${m:rs("mtp-gem-messages", "generic.editor.reference.ReferencePropertyEditor_Tab
 				String deleteId = "del_" + propName + i;
 %>
 <td nowrap="nowrap">
-<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Table.delete')}" class="gr-btn-02 del-btn" id="<c:out value="<%=deleteId %>"/>" />
+<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Table.delete')}" class="gr-btn-02 del-btn nesttable-view-delete"
+ id="<c:out value="<%=deleteId %>"/>" data-propertyName="<%=StringUtil.escapeJavaScript(propName)%>" />
 <script type="text/javascript">
 $(function() {
 	$(":button[id='<%=StringUtil.escapeJavaScript(deleteId)%>']").click(function() {
@@ -1120,12 +1264,23 @@ $(function() {
 
 				String selBtnUrlParam = evm.getUrlParameter(rootDefName, editor, parentEntity, UrlParameterActionType.SELECT);
 %>
-<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Table.select')}" class="gr-btn-02 modal-btn mt05" id="<c:out value="<%=selBtnId %>"/>" data-specVersionKey="<c:out value="<%=specVersionKey%>" />" />
+<input type="button"
+	value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Table.select')}"
+	class="gr-btn-02 modal-btn mt05" data-reference-modal="true"<%=referenceModalSizeAttributes %> id="<c:out value="<%=selBtnId %>"/>"
+data-specVersionKey="
+<c:out value="<%=specVersionKey%>" />" />
 <script type="text/javascript">
 $(function() {
+	var dynamicParamCallback = function(urlParam) {
+		<%if (checkActionType(editor.getDynamicUrlParameterAction(), UrlParameterActionType.SELECT) && StringUtil.isNotBlank(editor.getDynamicUrlParameter())) {%>
+		<%=editor.getDynamicUrlParameter()%>
+		<%} else {%>
+		return urlParam;
+		<%}%>
+	};
 	$(":button[id='<%=StringUtil.escapeJavaScript(selBtnId)%>']").click(function() {
 		searchReferenceFromView("<%=StringUtil.escapeJavaScript(selectAction)%>", "<%=StringUtil.escapeJavaScript(updateRefAction)%>", "<%=StringUtil.escapeJavaScript(refDefName) %>", "<%=StringUtil.escapeJavaScript(tableId) %>", "<%=StringUtil.escapeJavaScript(propName)%>",
-				<%=pd.getMultiplicity() %>, <%=isMultiple %>, "<%=StringUtil.escapeJavaScript(selBtnUrlParam) %>", "<%=StringUtil.escapeJavaScript(reloadUrl)%>", this, <%=editor.isPermitConditionSelectAll()%>, <%=editor.isPermitVersionedSelect()%>);
+				<%=pd.getMultiplicity() %>, <%=isMultiple %>, "<%=StringUtil.escapeJavaScript(selBtnUrlParam) %>", "<%=StringUtil.escapeJavaScript(reloadUrl)%>", this, <%=editor.isPermitConditionSelectAll()%>, <%=editor.isPermitVersionedSelect()%>, dynamicParamCallback);
 	});
 });
 </script>
@@ -1154,15 +1309,23 @@ $(function() {
 					}
 				}
 %>
-<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Table.new')}" class="gr-btn-02 modal-btn mt05" id="<c:out value="<%=insBtnId %>"/>" />
+<input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.reference.ReferencePropertyEditor_Table.new')}"
+	class="gr-btn-02 modal-btn mt05" data-reference-modal="true"<%=referenceModalSizeAttributes %> id="<c:out value="<%=insBtnId %>"/>" />
 <script type="text/javascript">
 $(function() {
+	var dynamicParamCallback = function(urlParam) {
+		<%if (checkActionType(editor.getDynamicUrlParameterAction(), UrlParameterActionType.ADD) && StringUtil.isNotBlank(editor.getDynamicUrlParameter())) {%>
+		<%=editor.getDynamicUrlParameter()%>
+		<%} else {%>
+		return urlParam;
+		<%}%>
+	};
 	$(":button[id='<%=StringUtil.escapeJavaScript(insBtnId)%>']").click(function() {
 		insertReferenceFromView("<%=StringUtil.escapeJavaScript(addAction) %>", "<%=StringUtil.escapeJavaScript(refDefName) %>", "<%=StringUtil.escapeJavaScript(tableId) %>", <%=pd.getMultiplicity() %>,
 				"<%=StringUtil.escapeJavaScript(insBtnUrlParam)%>", "<%=StringUtil.escapeJavaScript(parentOid)%>", "<%=StringUtil.escapeJavaScript(parentVersion)%>", "<%=StringUtil.escapeJavaScript(defName)%>",
 				"<%=StringUtil.escapeJavaScript(mappedBy) %>", $(":hidden[name='oid']").val(), "<%=StringUtil.escapeJavaScript(updateRefAction)%>",
 				"<%=StringUtil.escapeJavaScript(propName) %>", "<%=StringUtil.escapeJavaScript(reloadUrl)%>", "<%=StringUtil.escapeJavaScript(rootOid)%>",
-				"<%=StringUtil.escapeJavaScript(rootVersion)%>", "<%=UpdateTableOrderCommand.WEBAPI_NAME%>", "<%=orderPropName%>", <%=orderPropValue%>, <%=editor.getInsertType() == InsertType.TOP%>);
+				"<%=StringUtil.escapeJavaScript(rootVersion)%>", "<%=UpdateTableOrderCommand.WEBAPI_NAME%>", "<%=orderPropName%>", <%=orderPropValue%>, <%=editor.getInsertType() == InsertType.TOP%>, dynamicParamCallback);
 	});
 });
 </script>

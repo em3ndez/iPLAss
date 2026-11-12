@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -43,15 +43,15 @@ public class RangeAttributePane extends ValidationAttributePane {
 
 		minItem = new MtpTextItem("minValue");
 		minItem.setTitle("Min");
-		minItem.setKeyPressFilter("[0-9]");
+		minItem.setKeyPressFilter("[0-9.-]");
 
 		minExcludeItem = new CheckboxItem();
-		minExcludeItem.setTitle("grater than min value");
+		minExcludeItem.setTitle("greater than min value");
 		SmartGWTUtil.addHoverToFormItem(minExcludeItem, rs("ui_metadata_entity_PropertyListGrid_minExclude"));
 
 		maxItem = new MtpTextItem("maxValue");
 		maxItem.setTitle("Max");
-		maxItem.setKeyPressFilter("[0-9]");
+		maxItem.setKeyPressFilter("[0-9.-]");
 
 		maxExcludeItem = new CheckboxItem();
 		maxExcludeItem.setTitle("less than max value");

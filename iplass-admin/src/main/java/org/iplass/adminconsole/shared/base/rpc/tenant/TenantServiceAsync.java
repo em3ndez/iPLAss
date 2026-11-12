@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -48,7 +48,9 @@ public interface TenantServiceAsync {
 	 * @param callback  Callbackクラス
 	 */
 	void updateTenant(int tenantId, final Tenant tenant, final int currentVersion, final boolean checkVersion, AsyncCallback<Boolean> callback);
-	void updateTenant(int tenantId, final Tenant tenant, final int currentVersion, final boolean checkVersion, final boolean forceUpdate, AsyncCallback<Boolean> callback);
+
+	void updateTenant(int tenantId, final Tenant tenant, final int currentVersion, final boolean checkVersion, final boolean forceUpdate,
+			AsyncCallback<Boolean> callback);
 
 	void getPlatformInformation(int tenantId, AsyncCallback<AdminPlatformInfo> callback);
 

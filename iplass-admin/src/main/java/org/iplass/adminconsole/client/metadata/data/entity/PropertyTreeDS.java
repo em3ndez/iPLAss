@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -79,7 +79,6 @@ public class PropertyTreeDS extends AbstractAdminDataSource {
 		return id.replace(".", "_");
 	}
 
-
 	@Override
 	protected void executeFetch(final String requestId, DSRequest request, final DSResponse response) {
 
@@ -122,13 +121,15 @@ public class PropertyTreeDS extends AbstractAdminDataSource {
 			}
 
 			private TreeNode[] getNodeList(EntityDefinition result) {
-				int size = result.getPropertyList().size();
+				int size = result.getPropertyList()
+						.size();
 
 				// Create list for return - it is just requested records
 				TreeNode[] list = new TreeNode[size];
 				if (size > 0) {
 					for (int i = 0; i < size; i++) {
-						PropertyDefinition pd = result.getPropertyList().get(i);
+						PropertyDefinition pd = result.getPropertyList()
+								.get(i);
 
 						TreeNode record = new TreeNode();
 						copyValues(pd, record);

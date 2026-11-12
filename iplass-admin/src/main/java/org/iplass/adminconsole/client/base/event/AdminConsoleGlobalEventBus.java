@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,7 +35,8 @@ public class AdminConsoleGlobalEventBus {
 	/** 全体で管理するイベントハンドラの実装クラス */
 	private static EventBus EVENT_BUS = GWT.create(SimpleEventBus.class);
 
-	private AdminConsoleGlobalEventBus() {}
+	private AdminConsoleGlobalEventBus() {
+	}
 
 	public static <H extends EventHandler> HandlerRegistration addHandler(GwtEvent.Type<H> type, H handler) {
 		return EVENT_BUS.addHandler(type, handler);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,12 +22,6 @@ package org.iplass.mtp.web.template.tags;
 import java.io.IOException;
 import java.util.List;
 
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.JspWriter;
-import javax.servlet.jsp.PageContext;
-import javax.servlet.jsp.tagext.BodyTagSupport;
-import javax.servlet.jsp.tagext.TryCatchFinally;
-
 import org.iplass.mtp.ApplicationException;
 import org.iplass.mtp.command.beanmapper.MappingError;
 import org.iplass.mtp.command.beanmapper.MappingException;
@@ -37,6 +31,12 @@ import org.iplass.mtp.util.StringUtil;
 import org.iplass.mtp.web.WebRequestConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspWriter;
+import jakarta.servlet.jsp.PageContext;
+import jakarta.servlet.jsp.tagext.BodyTagSupport;
+import jakarta.servlet.jsp.tagext.TryCatchFinally;
 
 /**
  * <p>
@@ -350,7 +350,7 @@ public class ErrorsTag extends BodyTagSupport implements TryCatchFinally {
 		if (errors instanceof String) {
 			writeMessage((String) errors, out);
 		} else if (errors instanceof List) {
-			for (Object e: (List) errors) {
+			for (Object e : (List) errors) {
 				writeError(e, out);
 			}
 		} else if (errors instanceof Object[]) {
@@ -359,11 +359,11 @@ public class ErrorsTag extends BodyTagSupport implements TryCatchFinally {
 				writeError(array[i], out);
 			}
 		} else if (errors instanceof MappingError) {
-			for (String m: ((MappingError) errors).getErrorMessages()) {
+			for (String m : ((MappingError) errors).getErrorMessages()) {
 				writeError(m, out);
 			}
 		} else if (errors instanceof MappingResult) {
-			for (MappingError me: ((MappingResult) errors).getErrors()) {
+			for (MappingError me : ((MappingResult) errors).getErrors()) {
 				writeError(me, out);
 			}
 		} else if (errors instanceof MappingException) {

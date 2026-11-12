@@ -1,7 +1,3 @@
-plugins {
-  id "org.wisepersist.gwt" version "1.1.6"
-}
-
 apply from: 'libs.gradle'
 dependencies {
 	implementation project(':iplass-core')
@@ -10,8 +6,12 @@ dependencies {
 	implementation project(':iplass-tools')
 }
 
-apply plugin: 'gwt-compiler'
-apply plugin: 'eclipse'
+// 'iplass-' から始まる依存関係はプロジェクト参照。プロジェクト参照の sourceSets.main.output を gwtCompileOnly に追加する
+configurations.implementation.dependencies.each {
+	if (it.name.startsWith('iplass-')) {
+		dependencies.add('gwtCompileOnly', project(":${it.name}").sourceSets.main.output)
+	}
+}
 
 sourceSets {
 	main {
@@ -26,8 +26,7 @@ compileJava {
 	source = fileTree('src/main/java') {
 		exclude 'org/iplass/adminconsole/client/**'
 		exclude 'org/iplass/adminconsole/trans/**'
-		exclude 'edu/ycp/cs/dh/acegwt/client/**'
-		exclude 'gwtupload/client/**'
+		exclude 'org/iplass/gwt/ace/client/**'
 //		exclude 'com/google/gwt/user/client/**'  //これはサーバでも必要
 	}
 }
@@ -37,35 +36,72 @@ processResources {
 	from 'src/main/resources'
 	exclude 'org/iplass/adminconsole/**/*.gwt.xml'
 	exclude 'org/iplass/adminconsole/public/**'
-	exclude 'edu/ycp/cs/dh/acegwt/**/*.gwt.xml'
-	exclude 'edu/ycp/cs/dh/acegwt/public/**'
+	exclude 'org/iplass/gwt/ace/**/*.gwt.xml'
+	exclude 'org/iplass/gwt/ace/public/**'
+
+	// 重複ファイル設定（コピーされたファイルを正とする）
+	duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
-gwt {
-	src = files("${buildDir}/src/gwt")
-	gwtVersion = this.gwtVersion
-	modules 'org.iplass.adminconsole.AdminConsole'
-	minHeapSize = '512M'
-	maxHeapSize = '2048M'
-	logLevel = 'INFO'
-	sourceLevel = 'auto'
-	compiler {
-		strict = true;
+def buildSrcGwt = layout.buildDirectory.dir('src/gwt')
+def buildSrcGwtTrans = layout.buildDirectory.dir('src/gwt-trans')
+def buildGwtDir = layout.buildDirectory.dir('gwt').get()
+
+// 最小のGWTコンパイルワーカー数の指定の下限。この値以下のワーカー数を設定するとエラーが発生することがある。
+final def MIN_GWT_WORKERS = 6
+def availableProcessors = Runtime.runtime.availableProcessors()
+def gwtCompileWorkers = availableProcessors > MIN_GWT_WORKERS ? availableProcessors - 1 : 1
+
+def gwtCompileTask = tasks.register('gwtCompile', JavaExec) {
+	group = 'build'
+	description = 'Compile GWT modules'
+	dependsOn tasks.named('processGwtResources')
+
+	inputs.files(files(buildSrcGwt))
+	outputs.dir(buildGwtDir.dir('out'))
+
+	// jvm arguments
+	minHeapSize = "512m"
+	maxHeapSize = "2g"
+	jvmArgs = [
+		"-Dgwt.persistentunitcachedir=${buildGwtDir.dir('cache').asFile}"
+	]
+	mainClass.set('com.google.gwt.dev.Compiler')
+	classpath += files(buildSrcGwt)
+	classpath += configurations.gwtCompileOnly
+
+	args = [
+		'-sourceLevel', 'auto',
+		'-logLevel', 'INFO',
+		'-war', buildGwtDir.dir('out').asFile,
+		'-workDir', buildGwtDir.dir('work').asFile,
+	]
+
+	if (gwtCompileWorkers >= MIN_GWT_WORKERS) {
+		// worker 設定可能数が MIN_GWT_WORKERS 以上の場合は、-localWorkers オプションを追加する
+		args += ['-localWorkers', gwtCompileWorkers]
 	}
-	// The following is only needed if you don't use the Google Plugin for Eclipse.
-	eclipse {
-		addGwtContainer = false // Default set to true
+
+	args += [
+		'-strict',
+		'org.iplass.adminconsole.AdminConsole',
+	]
+
+	doFirst {
+		// gwt args を出力する
+		logger.lifecycle("GWT Compile Args: ${args.join(' ')}")
 	}
 }
 
 jar {
-	dependsOn('compileGwt')
+	dependsOn gwtCompileTask
 
 	includeEmptyDirs = false;
 
 	// META-INF配下にgwtコンパイル結果をコピー
-	into('META-INF/resources/admin/mtpadmin') { from("${buildDir}/gwt/out/mtpadmin") }
-
+	into('META-INF/resources/admin/mtpadmin') { 
+		from buildGwtDir.dir('out/mtpadmin')
+	}
 }
 
 task processGwtResources(type: Sync) {
@@ -78,12 +114,10 @@ task processGwtResources(type: Sync) {
 	}
 	from ('src/main/resources') {
 		exclude 'META-INF/**'
-		exclude 'gwtupload/server/**'
 	}
-	from ("${buildDir}/src/gwt-trans")
-	into "${buildDir}/src/gwt"
+	from buildSrcGwtTrans
+	into buildSrcGwt
 }
-tasks.compileGwt.dependsOn processGwtResources
 
 task copyGwtTransSrc(type: Sync) {
 
@@ -143,6 +177,7 @@ task copyGwtTransSrc(type: Sync) {
 		//include 'mtp/entity/GenericEntity.java'
 		include 'mtp/entity/SearchResult.java'
 		include 'mtp/entity/SelectValue.java'
+		include 'mtp/entity/TargetVersion.java'
 
 		include 'mtp/entity/csv/MultipleFormat.java'
 
@@ -169,6 +204,8 @@ task copyGwtTransSrc(type: Sync) {
 		include 'mtp/entity/definition/listeners/SendNotificationEventListenerDefinition.java'
 		include 'mtp/entity/definition/listeners/SendNotificationType.java'
 
+		include 'mtp/entity/definition/normalizers/HtmlSanitizer.java'
+		include 'mtp/entity/definition/normalizers/SafelistType.java'
 		include 'mtp/entity/definition/normalizers/ICUTransliterator.java'
 		include 'mtp/entity/definition/normalizers/JavaClassNormalizer.java'
 		include 'mtp/entity/definition/normalizers/NewlineNormalizer.java'
@@ -217,6 +254,9 @@ task copyGwtTransSrc(type: Sync) {
 		include 'mtp/mail/template/definition/MailTemplateDefinitionModifyResult.java'
 		include 'mtp/mail/template/definition/PlainTextBodyPart.java'
 
+		include 'mtp/view/filter/EntityFilter.java'
+		include 'mtp/view/filter/EntityFilterItem.java'
+
 		include 'mtp/webhook/template/definition/WebhookSubscriber.java'
 		include 'mtp/webhook/template/definition/WebhookTemplateDefinition.java'
 		include 'mtp/webhook/template/definition/WebhookHeaderDefinition.java'
@@ -247,6 +287,14 @@ task copyGwtTransSrc(type: Sync) {
 		include 'mtp/utilityclass/definition/UtilityClassDefinition.java'
 
 	}
+	
+	from ('../iplass-tools/src/main/java/org/iplass') {
+		include 'mtp/impl/tools/entity/EntityDataDeleteResultInfo.java'
+		include 'mtp/impl/tools/entity/EntityUpdateAllResultInfo.java'
+		include 'mtp/impl/tools/entity/EntityUpdateAllCondition.java'
+		include 'mtp/impl/tools/entity/UpdateAllValue.java'
+		include 'mtp/impl/tools/metaport/ResultStatus.java'
+	}
 
 	from ('../iplass-web/src/main/java/org/iplass') {
 
@@ -269,6 +317,16 @@ task copyGwtTransSrc(type: Sync) {
 		include 'mtp/auth/oauth/definition/consents/AlwaysConsentTypeDefinition.java'
 		include 'mtp/auth/oauth/definition/consents/OnceConsentTypeDefinition.java'
 		include 'mtp/auth/oauth/definition/consents/ScriptingConsentTypeDefinition.java'
+
+		include 'mtp/auth/oidc/definition/OpenIdConnectDefinition.java'
+		include 'mtp/auth/oidc/definition/ResponseMode.java'
+		include 'mtp/auth/oidc/definition/ClientAuthenticationType.java'
+
+		include 'mtp/auth/webauthn/definition/WebAuthnDefinition.java'
+		include 'mtp/auth/webauthn/definition/UserVerificationRequirement.java'
+		include 'mtp/auth/webauthn/definition/ResidentKeyRequirement.java'
+		include 'mtp/auth/webauthn/definition/AuthenticatorAttachment.java'
+		include 'mtp/auth/webauthn/definition/AttestationConveyancePreference.java'
 
 		include 'mtp/web/actionmapping/definition/ActionMappingDefinition.java'
 		include 'mtp/web/actionmapping/definition/ActionMappingDefinitionModifyResult.java'
@@ -331,7 +389,12 @@ task copyGwtTransSrc(type: Sync) {
 		include 'mtp/webapi/definition/WebApiDefinition.java'
 		include 'mtp/webapi/definition/WebApiDefinitionModifyResult.java'
 		include 'mtp/webapi/definition/WebApiParamMapDefinition.java'
+		include 'mtp/webapi/definition/WebApiResultAttribute.java'
+		include 'mtp/webapi/definition/WebApiStubContent.java'
 		include 'mtp/webapi/definition/WebApiTokenCheck.java'
+
+		include 'mtp/webapi/definition/openapi/OpenApiFileType.java'
+		include 'mtp/webapi/definition/openapi/OpenApiVersion.java'
 
 		include 'mtp/tenant/web/TenantWebInfo.java'
 	}
@@ -352,9 +415,6 @@ task copyGwtTransSrc(type: Sync) {
 
 		include 'mtp/view/calendar/EntityCalendar.java'
 		include 'mtp/view/calendar/EntityCalendarItem.java'
-
-		include 'mtp/view/filter/EntityFilter.java'
-		include 'mtp/view/filter/EntityFilterItem.java'
 
 		include 'mtp/view/generic/DetailFormView.java'
 		include 'mtp/view/generic/EntityView.java'
@@ -385,6 +445,7 @@ task copyGwtTransSrc(type: Sync) {
 		include 'mtp/view/generic/editor/EditorValue.java'
 		include 'mtp/view/generic/editor/ExpressionPropertyEditor.java'
 		include 'mtp/view/generic/editor/FloatPropertyEditor.java'
+		include 'mtp/view/generic/editor/HtmlValidationMessage.java'
 		include 'mtp/view/generic/editor/IntegerPropertyEditor.java'
 		include 'mtp/view/generic/editor/JoinPropertyEditor.java'
 		include 'mtp/view/generic/editor/LabelablePropertyEditor.java'
@@ -400,6 +461,7 @@ task copyGwtTransSrc(type: Sync) {
 		include 'mtp/view/generic/editor/ReferenceComboSetting.java'
 		include 'mtp/view/generic/editor/ReferencePropertyEditor.java'
 		include 'mtp/view/generic/editor/ReferenceRecursiveTreeSetting.java'
+		include 'mtp/view/generic/editor/ReferenceSelectFilterSetting.java'
 		include 'mtp/view/generic/editor/SelectPropertyEditor.java'
 		include 'mtp/view/generic/editor/StringPropertyEditor.java'
 		include 'mtp/view/generic/editor/TemplatePropertyEditor.java'
@@ -409,11 +471,12 @@ task copyGwtTransSrc(type: Sync) {
 
 		include 'mtp/view/generic/element/BlankSpace.java'
 		include 'mtp/view/generic/element/Button.java'
-		include 'mtp/view/generic/element/CsvItem.java'
 		include 'mtp/view/generic/element/DisplayType.java'
 		include 'mtp/view/generic/element/Element.java'
+		include 'mtp/view/generic/element/FileItem.java'
 		include 'mtp/view/generic/element/Link.java'
 		include 'mtp/view/generic/element/ScriptingElement.java'
+		include 'mtp/view/generic/element/SortItem.java'
 		include 'mtp/view/generic/element/TemplateElement.java'
 		include 'mtp/view/generic/element/VirtualPropertyItem.java'
 
@@ -455,6 +518,7 @@ task copyGwtTransSrc(type: Sync) {
 		include 'mtp/view/top/parts/CsvDownloadSettingsParts.java'
 		include 'mtp/view/top/parts/EntityListParts.java'
 		include 'mtp/view/top/parts/FulltextSearchViewParts.java'
+		include 'mtp/view/top/parts/HasNestParts.java'
 		include 'mtp/view/top/parts/InformationParts.java'
 		include 'mtp/view/top/parts/LastLoginParts.java'
 		include 'mtp/view/top/parts/PreviewDateParts.java'
@@ -474,30 +538,30 @@ task copyGwtTransSrc(type: Sync) {
 		include 'mtp/view/treeview/TreeViewItem.java'
 	}
 
-	into "${buildDir}/src/gwt-trans/org/iplass/adminconsole/trans/org/iplass"
+	into "${file(buildSrcGwtTrans)}/org/iplass/adminconsole/trans/org/iplass"
 }
 
 task copyStaticResources(type: Sync) {
 	dependsOn('processResources')
 
 	//静的リソースをコピー
-	from 'build/resources/main/'
+	from layout.buildDirectory.dir('resources/main')
 	//jar内のwebjarsフォルダ配下をコピー
 	from (configurations.wjRuntime.collect {it.isDirectory() ? it : zipTree(it)}) {
 		exclude 'META-INF/maven/'
 		exclude 'META-INF/MANIFEST.MF'
 	}
-	into 'build/tmp/staticresources'
+	into layout.buildDirectory.dir('tmp/staticresources')
 	includeEmptyDirs = false
 }
 
 task archiveStaticResources(type: Zip) {
 	dependsOn('copyStaticResources')
 
-	archiveName = "${project.name}-staticresources-${version}.zip"
+	archiveAppendix = 'staticresources'
 
 	//META-INF/resourcesをZIP圧縮
-	from ('build/tmp/staticresources/META-INF/resources') {
+	from (layout.buildDirectory.dir('tmp/staticresources/META-INF/resources')) {
 		exclude 'jsp'
 	}
 }

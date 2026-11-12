@@ -1,19 +1,19 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
- * 
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
+ *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
@@ -34,12 +34,11 @@ import org.iplass.mtp.impl.core.config.ServiceDefinitionParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * Serviceのレジストリです。
  * iPLAssが管理するServiceのインスタンスを取得可能です。
  * Serviceは設定ファイルにてコンフィグレーション可能です。
- * 
+ *
  * @author K.Higuchi
  *
  */
@@ -56,7 +55,7 @@ public class ServiceRegistry {
 
 	/**
 	 * SingletonなServiceRegistryを取得します。
-	 * 
+	 *
 	 * @return
 	 */
 	public static ServiceRegistry getRegistry() {
@@ -68,11 +67,11 @@ public class ServiceRegistry {
 		parser = new ServiceDefinitionParser();
 		serviceDefinition = parser.read(configFileName());
 	}
-	
+
 	private String configFileName() {
-		return BootstrapProps.getInstance().getProperty(BootstrapProps.CONFIG_FILE_NAME, BootstrapProps.DEFAULT_CONFIG_FILE_NAME);
+		return BootstrapProps.getInstance()
+				.getProperty(BootstrapProps.CONFIG_FILE_NAME, BootstrapProps.DEFAULT_CONFIG_FILE_NAME);
 	}
-	
 
 	private ServiceEntry createService(String serviceName, List<String> dependStack) {
 
@@ -92,7 +91,7 @@ public class ServiceRegistry {
 				logger.debug("Service: " + serviceName + " create");
 				start = System.currentTimeMillis();
 			}
-			
+
 			if (dependStack.contains(serviceName)) {
 				throw new ServiceConfigrationException("depend loop occured." + dependStack + " " + serviceName);
 			}
@@ -106,7 +105,7 @@ public class ServiceRegistry {
 			ConfigImpl config = new ConfigImpl(serviceName, sc.getProperty(), sc.getBean());
 
 			if (sc.getDepend() != null) {
-				for (String depend: sc.getDepend()) {
+				for (String depend : sc.getDepend()) {
 					ServiceEntry dependService = services.get(depend);
 					if (dependService == null) {
 						dependService = createService(depend, dependStack);
@@ -115,7 +114,7 @@ public class ServiceRegistry {
 				}
 			}
 			try {
-				
+
 				Class<?> interfaceType = Class.forName(sc.getInterfaceName());
 				if (!Service.class.isAssignableFrom(interfaceType)) {
 					logger.error("Can not regist Service." + sc.getInterfaceName() + "must implements Service interface.");
@@ -129,7 +128,8 @@ public class ServiceRegistry {
 				Class<?> implClassType = Class.forName(className);
 				if (!interfaceType.isAssignableFrom(implClassType)) {
 					logger.error("Can not regist Service." + sc.getClassName() + "must implements " + sc.getInterfaceName() + " interface.");
-					throw new ServiceConfigrationException("Can not regist Service." + sc.getClassName() + " must implements " + sc.getInterfaceName() + " interface.");
+					throw new ServiceConfigrationException(
+							"Can not regist Service." + sc.getClassName() + " must implements " + sc.getInterfaceName() + " interface.");
 				}
 
 				Service s = (Service) implClassType.newInstance();
@@ -156,29 +156,65 @@ public class ServiceRegistry {
 
 	/**
 	 * 指定のクラス・インタフェースを実装するServiceのインスタンスを取得します。
-	 * 
-	 * @param serviceClass
-	 * @return
+	 *
+	 * @param serviceClass サービスクラス
+	 * @return サービスインスタンス
 	 */
 	public <T extends Service> T getService(Class<T> serviceClass) {
-		return this.<T> getService(serviceClass.getName());
+		return this.<T> getService(serviceClass.getName(), true);
 	}
 
 	/**
 	 * 指定の名前で登録されるServiceのインスタンスを取得します。
-	 * 
-	 * @param serviceName
-	 * @return
+	 *
+	 * @param serviceName サービス名
+	 * @return サービスインスタンス
+	 */
+	public <T extends Service> T getService(String serviceName) {
+		return this.<T> getService(serviceName, true);
+	}
+
+	/**
+	 * 指定のクラス・インタフェースを実装するServiceのインスタンスを取得します。
+	 *
+	 * <p>
+	 * createIfNone に false を設定した場合、null が返却される可能性があります。
+	 * </p>
+	 *
+	 * @param serviceClass サービスクラス
+	 * @param createIfNone true が指定された場合、サービスが存在しない場合にインスタンスを作成します。
+	 * @return サービスインスタンス
+	 */
+	public <T extends Service> T getService(Class<T> serviceClass, boolean createIfNone) {
+		return this.<T> getService(serviceClass.getName(), createIfNone);
+	}
+
+	/**
+	 * 指定の名前で登録されるServiceのインスタンスを取得します。
+	 *
+	 * <p>
+	 * createIfNone に false を設定した場合、null が返却される可能性があります。
+	 * </p>
+	 *
+	 * @param serviceName サービス名
+	 * @param createIfNone true が指定された場合、サービスが存在しない場合にインスタンスを作成します。
+	 * @return サービスインスタンス
 	 */
 	@SuppressWarnings("unchecked")
-	public <T extends Service> T getService(String serviceName) {
+	public <T extends Service> T getService(String serviceName, boolean createIfNone) {
 		ServiceEntry se = services.get(serviceName);
 		if (se == null) {
+
+			if (!createIfNone) {
+				logger.debug("Service: {} not created. Because the parameter 'createIfNone' is false.", serviceName);
+				return null;
+			}
+
 			try {
 				se = createService(serviceName, new ArrayList<String>());
-			} catch(ServiceConfigrationException e) {
+			} catch (ServiceConfigrationException e) {
 				throw e;
-			} catch(RuntimeException e) {
+			} catch (RuntimeException e) {
 				throw new ServiceConfigrationException("can not initialize service:" + serviceName, e);
 			}
 		}
@@ -186,8 +222,8 @@ public class ServiceRegistry {
 	}
 
 	/**
-	 * 指定ののクラス・インタフェースを実装するServiceが登録されているかを返します。
-	 * 
+	 * 指定のクラス・インタフェースを実装するServiceが登録されているかを返します。
+	 *
 	 * @param serviceClass
 	 * @return
 	 */
@@ -197,7 +233,7 @@ public class ServiceRegistry {
 
 	/**
 	 * 指定の名前で登録されるServiceが登録されているかを返します。
-	 * 
+	 *
 	 * @param serviceName
 	 * @return
 	 */
@@ -207,7 +243,7 @@ public class ServiceRegistry {
 
 	/**
 	 * プログラムから明示的にサービスを登録します。
-	 * 
+	 *
 	 * @param serviceName サービスの名前
 	 * @param service Serviceを実装するインスタンス
 	 */
@@ -226,28 +262,30 @@ public class ServiceRegistry {
 	/**
 	 * プログラムから明示的にサービスを登録します。
 	 * serviceの実装クラス名がサービス名として登録されます。
-	 * 
+	 *
 	 * @param service
 	 */
 	public void setService(Service service) {
-		setService(service.getClass().getName(), service);
+		setService(service.getClass()
+				.getName(), service);
 	}
 
 	/**
 	 * すべてのサービスを破棄します。
-	 * 
+	 *
 	 */
 	public void destroyAllService() {
 		destroyed = true;
-		for (Map.Entry<String, ServiceEntry> e: services.entrySet()) {
-			e.getValue().destroy();
+		for (Map.Entry<String, ServiceEntry> e : services.entrySet()) {
+			e.getValue()
+					.destroy();
 		}
 		services.clear();
 	}
 
 	/**
 	 * Serviceを再初期化します。
-	 * 
+	 *
 	 */
 	public void reInit() {
 		synchronized (this) {
@@ -256,7 +294,7 @@ public class ServiceRegistry {
 			}
 
 			List<ServiceEntry> forDest = new ArrayList<>(services.size());
-			for (Map.Entry<String, ServiceEntry> e: services.entrySet()) {
+			for (Map.Entry<String, ServiceEntry> e : services.entrySet()) {
 				forDest.add(e.getValue());
 			}
 
@@ -264,7 +302,7 @@ public class ServiceRegistry {
 			services.clear();
 			serviceDefinition = parser.read(configFileName());
 
-			for (ServiceEntry se: forDest) {
+			for (ServiceEntry se : forDest) {
 				se.destroy();
 			}
 
@@ -294,6 +332,5 @@ public class ServiceRegistry {
 			}
 		}
 	}
-
 
 }

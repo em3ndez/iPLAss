@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright 2013 DENTSU SOKEN INC. All Rights Reserved.
  */
 
 package org.iplass.mtp.tools.batch.cleaner;
@@ -14,6 +14,7 @@ import org.iplass.mtp.impl.metadata.MetaDataEntryInfo;
 import org.iplass.mtp.impl.metadata.MetaDataRepository;
 import org.iplass.mtp.impl.tools.tenant.TenantInfo;
 import org.iplass.mtp.spi.ServiceRegistry;
+import org.iplass.mtp.tools.batch.MtpBatchResourceDisposer;
 import org.iplass.mtp.tools.batch.MtpSilentBatch;
 import org.iplass.mtp.transaction.Transaction;
 import org.iplass.mtp.util.StringUtil;
@@ -28,9 +29,12 @@ public class InvalidMetaDataCleaner extends MtpSilentBatch {
 
 	private static Logger logger = LoggerFactory.getLogger(InvalidMetaDataCleaner.class);
 
-	private static TenantContextService tenantContextService = ServiceRegistry.getRegistry().getService(TenantContextService.class);
-	private static MetaDataRepository repository = ServiceRegistry.getRegistry().getService(MetaDataRepository.class);
-	private static EntityService ehService = ServiceRegistry.getRegistry().getService(EntityService.class);
+	private static TenantContextService tenantContextService = ServiceRegistry.getRegistry()
+			.getService(TenantContextService.class);
+	private static MetaDataRepository repository = ServiceRegistry.getRegistry()
+			.getService(MetaDataRepository.class);
+	private static EntityService ehService = ServiceRegistry.getRegistry()
+			.getService(EntityService.class);
 
 	private int tenantId;
 
@@ -49,16 +53,22 @@ public class InvalidMetaDataCleaner extends MtpSilentBatch {
 		if (args != null && args.length > 0 && StringUtil.isNotEmpty(args[0])) {
 			tenantId = Integer.parseInt(args[0]);
 		}
-		if (tenantId >= 0) {
-			(new InvalidMetaDataCleaner(tenantId)).clean();
-		} else {
-			//全テナントを対象
-			List<TenantInfo> tenants = getValidTenantInfoList();
-			if (tenants != null) {
-				for (TenantInfo t: tenants) {
-					(new InvalidMetaDataCleaner(t.getId())).clean();
+
+		try {
+			if (tenantId >= 0) {
+				(new InvalidMetaDataCleaner(tenantId)).clean();
+			} else {
+				//全テナントを対象
+				List<TenantInfo> tenants = getValidTenantInfoList();
+				if (tenants != null) {
+					for (TenantInfo t : tenants) {
+						(new InvalidMetaDataCleaner(t.getId())).clean();
+					}
 				}
 			}
+		} finally {
+			// リソース破棄
+			MtpBatchResourceDisposer.disposeResource();
 		}
 	}
 
@@ -90,7 +100,8 @@ public class InvalidMetaDataCleaner extends MtpSilentBatch {
 				logArguments();
 
 				Transaction.required(t -> {
-					List<MetaDataEntryInfo> invalidEntries = MetaDataContext.getContext().invalidDefinitionList("/");
+					List<MetaDataEntryInfo> invalidEntries = MetaDataContext.getContext()
+							.invalidDefinitionList("/");
 					if (invalidEntries.size() > 0) {
 						logInfo("purge " + invalidEntries.size() + " invalid metadata.");
 					} else {
@@ -99,7 +110,8 @@ public class InvalidMetaDataCleaner extends MtpSilentBatch {
 
 					invalidEntries.forEach(entry -> {
 
-						if (entry.getPath() != null && entry.getPath().startsWith(EntityService.ENTITY_META_PATH)) {
+						if (entry.getPath() != null && entry.getPath()
+								.startsWith(EntityService.ENTITY_META_PATH)) {
 							//Entityの判断はPathの先頭一致で行う
 							//(当初OBJ_DATAの件数チェックで行おうとしたが件数が多い場合のレスポンスを考慮)
 							ehService.purgeById(entry.getId());
@@ -128,13 +140,12 @@ public class InvalidMetaDataCleaner extends MtpSilentBatch {
 		logInfo("");
 	}
 
-
 	/**
 	 * tenantIdを取得します。
 	 * @return tenantId
 	 */
 	public int getTenantId() {
-	    return tenantId;
+		return tenantId;
 	}
 
 	/**
@@ -142,7 +153,7 @@ public class InvalidMetaDataCleaner extends MtpSilentBatch {
 	 * @param tenantId tenantId
 	 */
 	public void setTenantId(int tenantId) {
-	    this.tenantId = tenantId;
+		this.tenantId = tenantId;
 	}
 
 	@Override

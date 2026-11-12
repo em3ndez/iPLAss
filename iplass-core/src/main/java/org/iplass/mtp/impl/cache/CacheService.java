@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,12 +20,19 @@
 
 package org.iplass.mtp.impl.cache;
 
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import org.iplass.mtp.impl.cache.store.CacheHandler;
@@ -40,6 +47,7 @@ import org.slf4j.LoggerFactory;
 public class CacheService implements Service {
 	private static Logger logger = LoggerFactory.getLogger(CacheService.class);
 
+	private static final String RELOAD_THREAD_POOL_SIZE_NAME = "reloadThreadPoolSize";
 	private static final String CACHE_STORE_FACTORY_DEFAULT_NAME = "defaultFactory";
 
 	private HashMap<String, CacheStoreFactory> namespaceMap;
@@ -49,6 +57,24 @@ public class CacheService implements Service {
 	private List<CacheStoreFactory> factories;
 
 	private ConcurrentHashMap<Object, Object> cacheStore;
+
+	private int reloadThreadPoolSize = 4;
+	private ScheduledExecutorService executor;
+	private final AtomicInteger threadNumber = new AtomicInteger(1);
+
+	public int getReloadThreadPoolSize() {
+		return reloadThreadPoolSize;
+	}
+
+	public ScheduledFuture<?> schedule(long delayMillis, Runnable command) {
+		if (executor == null) {
+			throw new IllegalStateException("CacheService's ScheduledExecutorService is not initialized.");
+		}
+		if (logger.isDebugEnabled()) {
+			logger.debug("schedule:" + command + ", delay:" + delayMillis + "ms");
+		}
+		return executor.schedule(command, delayMillis, TimeUnit.MILLISECONDS);
+	}
 
 	/**
 	 * 指定のnamespaceで、共有のCacheStoreを取得（作成）する。
@@ -112,11 +138,13 @@ public class CacheService implements Service {
 			logger.debug("create CacheStore:" + namespace + " by specific namespace");
 			return f.createCacheStore(namespace);
 		} else {
-			for (NamespacePattern p: namespacePattern) {
-				if (p.pattern.matcher(namespace).matches()) {
+			for (NamespacePattern p : namespacePattern) {
+				if (p.pattern.matcher(namespace)
+						.matches()) {
 					if (isLocalUse) {
 						if (!p.factory.canUseForLocalCache()) {
-							throw new ServiceConfigrationException(p.factory.getClass() + " can not use for localCache. at CacheStore:" + namespace + " by namespacePattern:" + p.factory.getNamespacePattern() + " Factory");
+							throw new ServiceConfigrationException(p.factory.getClass() + " can not use for localCache. at CacheStore:" + namespace
+									+ " by namespacePattern:" + p.factory.getNamespacePattern() + " Factory");
 						}
 					}
 					logger.debug("create CacheStore:" + namespace + " by namespacePattern:" + p.factory.getNamespacePattern() + " Factory");
@@ -128,7 +156,8 @@ public class CacheService implements Service {
 			if (defaultFactory != null) {
 				if (isLocalUse) {
 					if (!defaultFactory.canUseForLocalCache()) {
-						throw new ServiceConfigrationException(defaultFactory.getClass() + " can not use for localCache. at CacheStore:" + namespace + " by defaultFactory");
+						throw new ServiceConfigrationException(
+								defaultFactory.getClass() + " can not use for localCache. at CacheStore:" + namespace + " by defaultFactory");
 					}
 				}
 				return defaultFactory.createCacheStore(namespace);
@@ -136,7 +165,6 @@ public class CacheService implements Service {
 		}
 		throw new ServiceConfigrationException("no CacheStore configration matches for " + namespace);
 	}
-
 
 	/**
 	 * 指定のnamespaceの共有のCacheStoreを無効化する。
@@ -159,11 +187,25 @@ public class CacheService implements Service {
 	}
 
 	public void destroy() {
+		if (executor != null) {
+			if (!executor.isShutdown()) {
+				executor.shutdown();
+				boolean terminated = false;
+				try {
+					terminated = executor.awaitTermination(10, TimeUnit.SECONDS);
+				} catch (InterruptedException e) {
+					logger.error("exception when shutdown QueryCacheReloader", e);
+				}
+				if (!terminated) {
+					logger.warn("QueryCacheReloader did not terminate in 10 seconds.");
+				}
+			}
+		}
 
 		ConcurrentHashMap<Object, Object> refCacheStore = cacheStore;
 		cacheStore = null;
 		if (refCacheStore != null) {
-			for (Map.Entry<Object, Object> e: refCacheStore.entrySet()) {
+			for (Map.Entry<Object, Object> e : refCacheStore.entrySet()) {
 				CacheStore c = (CacheStore) e.getValue();
 				if (c != null) {
 					logger.debug("destroy CacheStore:" + e.getKey());
@@ -181,8 +223,11 @@ public class CacheService implements Service {
 		cacheStore = new ConcurrentHashMap<Object, Object>();
 		factories = new ArrayList<>();
 
-		Set<String> names = config.getNames();
-		for (String n: names) {
+		reloadThreadPoolSize = config.getValue(RELOAD_THREAD_POOL_SIZE_NAME, Integer.TYPE, reloadThreadPoolSize);
+
+		Set<String> names = new HashSet<String>(config.getNames());
+		names.remove(RELOAD_THREAD_POOL_SIZE_NAME);
+		for (String n : names) {
 			if (n.equals(CACHE_STORE_FACTORY_DEFAULT_NAME)) {
 				defaultFactory = (CacheStoreFactory) config.getBean(n);
 				factories.add(defaultFactory);
@@ -190,7 +235,7 @@ public class CacheService implements Service {
 				List<CacheStoreFactory> cacheStoreFactory = (List<CacheStoreFactory>) config.getBeans(n);
 
 				if (cacheStoreFactory != null) {
-					for (CacheStoreFactory f: cacheStoreFactory) {
+					for (CacheStoreFactory f : cacheStoreFactory) {
 						factories.add(f);
 
 						if (f.getNamespace() != null) {
@@ -202,12 +247,31 @@ public class CacheService implements Service {
 				}
 			}
 		}
+
+		if (reloadThreadPoolSize > 0) {
+			SecurityManager s = System.getSecurityManager();
+			final ThreadGroup group = (s != null) ? s.getThreadGroup()
+					: Thread.currentThread()
+							.getThreadGroup();
+			executor = Executors.newScheduledThreadPool(reloadThreadPoolSize, r -> {
+				Thread t = new Thread(group, r, "CacheReloader-thread-" + threadNumber.getAndIncrement(), 0);
+				t.setDaemon(true);
+				t.setUncaughtExceptionHandler((thread, e) -> {
+					UncaughtExceptionHandler uh = Thread.getDefaultUncaughtExceptionHandler();
+					if (uh != null) {
+						uh.uncaughtException(thread, e);
+					} else {
+						logger.error("Exception in CacheReloader " + e, e);
+					}
+				});
+				return t;
+			});
+		}
 	}
 
 	public List<CacheStoreFactory> getFactories() {
 		return factories;
 	}
-
 
 	private class NamespacePattern {
 		Pattern pattern;

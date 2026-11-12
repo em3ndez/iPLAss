@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,12 +24,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.PageContext;
-
 import org.iplass.mtp.impl.i18n.I18nUtil;
 import org.iplass.mtp.impl.i18n.MetaLocalizedString;
 import org.iplass.mtp.impl.metadata.MetaData;
@@ -37,6 +31,12 @@ import org.iplass.mtp.impl.util.ObjectUtil;
 import org.iplass.mtp.impl.view.top.TopViewHandler;
 import org.iplass.mtp.view.top.parts.PreviewDateParts;
 import org.iplass.mtp.view.top.parts.TopViewParts;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.jsp.PageContext;
 
 public class MetaPreviewDateParts extends MetaTopViewParts {
 
@@ -65,7 +65,7 @@ public class MetaPreviewDateParts extends MetaTopViewParts {
 	 * @return タイトル
 	 */
 	public String getTitle() {
-	    return title;
+		return title;
 	}
 
 	/**
@@ -73,7 +73,7 @@ public class MetaPreviewDateParts extends MetaTopViewParts {
 	 * @param title タイトル
 	 */
 	public void setTitle(String title) {
-	    this.title = title;
+		this.title = title;
 	}
 
 	/**

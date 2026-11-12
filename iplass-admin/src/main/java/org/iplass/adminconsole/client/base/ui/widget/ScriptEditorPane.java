@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,7 +30,7 @@ import com.smartgwt.client.widgets.events.ResizedHandler;
 
 public class ScriptEditorPane extends Canvas {
 
-	private static final String DEFAULT_EDITOR_WIDTH  = "100%";
+	private static final String DEFAULT_EDITOR_WIDTH = "100%";
 	private static final String DEFAULT_EDITOR_HEIGHT = "300px";
 
 	private GwtAce editor;
@@ -38,11 +38,11 @@ public class ScriptEditorPane extends Canvas {
 	public ScriptEditorPane() {
 		setWidth100();
 		setHeight100();
-		setBorder("1px solid lightgray");	//枠がほしいので
+		setBorder("1px solid lightgray"); //枠がほしいので
 
 		editor = new GwtAce();
-		editor.setWidth(DEFAULT_EDITOR_WIDTH);		//Widthは100%でOK
-		editor.setHeight(DEFAULT_EDITOR_HEIGHT);	//Heightは100%はNG。・・・・
+		editor.setWidth(DEFAULT_EDITOR_WIDTH); //Widthは100%でOK
+		editor.setHeight(DEFAULT_EDITOR_HEIGHT); //Heightは100%はNG。・・・・
 
 		setMode(org.iplass.gwt.ace.client.EditorMode.JSP);
 		setTheme(org.iplass.gwt.ace.client.EditorTheme.ECLIPSE);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,6 +32,7 @@ import org.iplass.mtp.impl.auth.authenticate.token.AuthTokenService;
 import org.iplass.mtp.impl.auth.oauth.MetaCustomTokenIntrospector.CustomTokenIntrospectorRuntime;
 import org.iplass.mtp.impl.auth.oauth.MetaOAuthAuthorization.OAuthAuthorizationRuntime;
 import org.iplass.mtp.impl.auth.oauth.token.AccessToken;
+import org.iplass.mtp.impl.auth.oauth.util.OAuthConstants;
 import org.iplass.mtp.impl.definition.DefinableMetaData;
 import org.iplass.mtp.impl.metadata.BaseMetaDataRuntime;
 import org.iplass.mtp.impl.metadata.BaseRootMetaData;
@@ -43,7 +44,7 @@ import org.slf4j.LoggerFactory;
 
 public class MetaOAuthResourceServer extends BaseRootMetaData implements DefinableMetaData<OAuthResourceServerDefinition> {
 	private static final long serialVersionUID = 1339189788049685788L;
-	
+
 	private static Logger logger = LoggerFactory.getLogger(MetaOAuthResourceServer.class);
 
 	private List<MetaCustomTokenIntrospector> customTokenIntrospectors;
@@ -63,7 +64,7 @@ public class MetaOAuthResourceServer extends BaseRootMetaData implements Definab
 		displayName = def.getDisplayName();
 		if (def.getCustomTokenIntrospectors() != null) {
 			customTokenIntrospectors = new ArrayList<>();
-			for (CustomTokenIntrospectorDefinition d: def.getCustomTokenIntrospectors()) {
+			for (CustomTokenIntrospectorDefinition d : def.getCustomTokenIntrospectors()) {
 				MetaCustomTokenIntrospector m = MetaCustomTokenIntrospector.createInstance(d);
 				m.applyConfig(d);
 				customTokenIntrospectors.add(m);
@@ -81,8 +82,9 @@ public class MetaOAuthResourceServer extends BaseRootMetaData implements Definab
 		def.setDisplayName(displayName);
 		if (customTokenIntrospectors != null) {
 			def.setCustomTokenIntrospectors(new ArrayList<>());
-			for (MetaCustomTokenIntrospector m: customTokenIntrospectors) {
-				def.getCustomTokenIntrospectors().add(m.currentConfig());
+			for (MetaCustomTokenIntrospector m : customTokenIntrospectors) {
+				def.getCustomTokenIntrospectors()
+						.add(m.currentConfig());
 			}
 		}
 		return def;
@@ -99,16 +101,18 @@ public class MetaOAuthResourceServer extends BaseRootMetaData implements Definab
 	}
 
 	public class OAuthResourceServerRuntime extends BaseMetaDataRuntime {
-		private OAuthClientCredentialHandler ch = (OAuthClientCredentialHandler) ServiceRegistry.getRegistry().getService(AuthTokenService.class).getHandler(OAuthClientCredentialHandler.TYPE_RESOURCE_SERVER);
+		private OAuthClientCredentialHandler ch = (OAuthClientCredentialHandler) ServiceRegistry.getRegistry()
+				.getService(AuthTokenService.class)
+				.getHandler(OAuthClientCredentialHandler.TYPE_RESOURCE_SERVER);
 		private List<CustomTokenIntrospectorRuntime> customTokenIntrospectorRuntimes;
-
 
 		private OAuthResourceServerRuntime() {
 			try {
 				if (customTokenIntrospectors != null) {
 					customTokenIntrospectorRuntimes = new ArrayList<>();
 					for (int i = 0; i < customTokenIntrospectors.size(); i++) {
-						customTokenIntrospectorRuntimes.add(customTokenIntrospectors.get(i).createRuntime(getId(), i));
+						customTokenIntrospectorRuntimes.add(customTokenIntrospectors.get(i)
+								.createRuntime(getId(), i));
 					}
 				}
 			} catch (RuntimeException e) {
@@ -140,8 +144,10 @@ public class MetaOAuthResourceServer extends BaseRootMetaData implements Definab
 				res.put("scope", String.join(" ", accessToken.getGrantedScopes()));
 			}
 			res.put("client_id", accessToken.getClientId());
-			res.put("username", accessToken.getUser().getName());
-			res.put("sub", accessToken.getUser().getOid());
+			res.put("username", accessToken.getUser()
+					.getName());
+			res.put("sub", accessToken.getUser()
+					.getOid());
 			res.put("exp", accessToken.getExpirationTime());
 			res.put("iat", accessToken.getIssuedAt());
 			res.put("nbf", accessToken.getNotBefore());
@@ -154,7 +160,7 @@ public class MetaOAuthResourceServer extends BaseRootMetaData implements Definab
 			// [RFC7519].
 
 			if (customTokenIntrospectors != null) {
-				for (CustomTokenIntrospectorRuntime ctir: customTokenIntrospectorRuntimes) {
+				for (CustomTokenIntrospectorRuntime ctir : customTokenIntrospectorRuntimes) {
 					if (!ctir.handle(res, request, accessToken)) {
 						if (logger.isDebugEnabled()) {
 							logger.debug("ResourceServer:" + getName() + "'s " + ctir.getMetaData() + " handle fail. accessToken:" + res);

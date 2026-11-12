@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -59,6 +59,7 @@
 <%@page import="org.iplass.mtp.view.generic.element.Element" %>
 <%@page import="org.iplass.mtp.view.generic.element.section.ReferenceSection" %>
 <%@page import="org.iplass.mtp.web.template.TemplateUtil"%>
+<%@ page import="org.iplass.gem.command.ViewUtil"%>
 <%!
 	LoadEntityInterrupterHandler getLoadEntityInterrupterHandler(EntityManager em, EntityDefinitionManager edm, EntityViewManager evm) {
 		DetailCommandContext context = new DetailCommandContext(TemplateUtil.getRequestContext(), em, edm);//ここでこれを作るのはちょっと微妙だが・・・
@@ -77,6 +78,11 @@
 		return new LoadOption(propList);
 	}
 	int getOrderPropertValue(ReferenceSection section, Entity entity, EntityManager em) {
+		int order = toInteger(entity.getValue(section.getOrderPropName()));
+		if (order != -1 || entity.getOid() == null) {
+			return order;
+		}
+
 		Query query = new Query().select(section.getOrderPropName())
 				.from(entity.getDefinitionName())
 				.where(new And(
@@ -168,7 +174,7 @@
 			final Entity tmp = entity;
 			LoadOption loadOption = getOption(edm.get(section.getDefintionName()), section);
 
-			final LoadEntityContext leContext = handler.beforeLoadReference(entity.getDefinitionName(), loadOption, rp, LoadType.VIEW);
+			final LoadEntityContext leContext = handler.beforeLoadReference(entity.getDefinitionName(), loadOption, rp, element, LoadType.VIEW);
 			if (leContext.isDoPrivileged()) {
 				entity = AuthContext.doPrivileged(new Supplier<Entity>() {
 
@@ -180,7 +186,7 @@
 			} else {
 				entity = em.load(tmp.getOid(), tmp.getVersion(), tmp.getDefinitionName(), leContext.getLoadOption());
 			}
-			handler.afterLoadReference(entity, loadOption, rp, LoadType.VIEW);
+			handler.afterLoadReference(entity, loadOption, rp, element, LoadType.VIEW);
 		}
 	}
 
@@ -194,7 +200,7 @@
 
 	String id = "";
 	if (StringUtil.isNotBlank(section.getId())) {
-		id = section.getId();
+		id = "id=\"" + StringUtil.escapeHtml(section.getId()) + "\"";
 	}
 
 	String style = "";
@@ -202,6 +208,8 @@
 		style = section.getStyle();
 	}
 
+	String styleAttr = ViewUtil.buildHeightStyleAttr(section.getSectionHeight());
+	
 	String disclosure = "";
 	String disclosureStyle = "";
 	if (!section.isExpandable()) {
@@ -214,7 +222,7 @@
 	//定義名を参照型のものに置き換える、後でdefNameに戻す
 	String defName = (String) request.getAttribute(Constants.DEF_NAME);
 	request.setAttribute(Constants.DEF_NAME, section.getDefintionName());
-	
+
 	//出力対象の選定
 	//ReferenceSectionのNestは複数列の場合にblankなどでレイアウト調整できないので、
 	//表示対象でないものは除外して、列を詰めていく
@@ -227,7 +235,7 @@
 			//出力対象
 
 			String propName = property.getPropertyName();
-			PropertyDefinition pd = red.getProperty(propName);
+			PropertyDefinition pd = EntityViewUtil.getNestTablePropertyDefinition(property, red);
 			if (pd.getMultiplicity() != 1) {
 				//参照セクションには多重度1しかおかせない
 				continue;
@@ -241,15 +249,22 @@
 			}
 		}
 	}
- 
+
 %>
 
-<div id="<c:out value="<%=id %>"/>" class="<c:out value="<%=style %>"/>">
+<div <%=id %> class="reference-section <c:out value="<%=style %>"/>" >
 <div class="hgroup-03 sechead<c:out value="<%=disclosure %>"/>">
 <h3><span><c:out value="<%=title %>"/></span></h3>
 </div>
-<div style="<c:out value="<%=disclosureStyle %>"/>">
+<div style="<%= disclosureStyle %><%= styleAttr %>">
 <%
+	if (OutputType.EDIT == type && dataIndex == 0) {
+%>
+<jsp:include page="/jsp/gem/generic/editor/ErrorMessage.jsp">
+	<jsp:param value="<%=section.getPropertyName() %>" name="propName" />
+</jsp:include>
+<%
+	}
 	if (StringUtil.isNotBlank(section.getUpperContents())) {
 		String rootDefName = (String)request.getAttribute(Constants.ROOT_DEF_NAME);
 		evm.executeTemplate(rootDefName, section.getContentScriptKey() + "_UpperContent", request, response, application, pageContext);
@@ -266,15 +281,14 @@
 <%
 	}
 %>
-<table class="tbl-section multi-col" data-colNum=<%=section.getColNum() %>>
+<table class="tbl-section multi-col" data-colNum=<%=section.getColNum() %> data-cell-class="<c:out value="<%=cellStyle %>"/>">
 <%
 	for (NestProperty property : nestList) {
 %>
 <tr class="col">
 <%
 		String propName = property.getPropertyName();
-		PropertyDefinition pd = red.getProperty(propName);
-
+		PropertyDefinition pd = EntityViewUtil.getNestTablePropertyDefinition(property, red);
 		property.getEditor().setPropertyName(section.getPropertyName() + "[" + dataIndex + "]." + propName);
 
 		String description = "";
@@ -286,6 +300,8 @@
 		String nestDisplayName = TemplateUtil.getMultilingualString(property.getDisplayLabel(), property.getLocalizedDisplayLabelList());
 		String displayName = TemplateUtil.getMultilingualString(pd.getDisplayName(), pd.getLocalizedDisplayNameList());
 		String displayLabel = nestDisplayName != null ? nestDisplayName : displayName;
+		String editorUniqueID = StringUtil.isNotEmpty(element.getElementRuntimeId()) ? element.getElementRuntimeId() : "";
+		editorUniqueID += "_" + section.getPropertyName() + "[" + dataIndex + "]_" + propName;
 %>
 <th id="id_th_<c:out value="<%=propName %>"/>" class="<c:out value="<%=cellStyle %>"/>">
 <%-- XSS対応-メタの設定のため対応なし(displayLabel) --%>
@@ -324,7 +340,7 @@
 		}
 %>
 </th>
-<td id="id_td_<c:out value="<%=propName %>"/>" class="<c:out value="<%=cellStyle %>"/>">
+<td id="id_td_<c:out value="<%=propName %>"/>" class="<c:out value="<%=cellStyle %>"/> property-data" data-editor-id="<c:out value="<%=editorUniqueID%>"/>">
 <%
 		if (showDesc) {
 %>
@@ -336,20 +352,24 @@
 			Object propValue = entity != null ? entity.getValue(propName) : null;
 			request.setAttribute(Constants.EDITOR_EDITOR, property.getEditor());
 			request.setAttribute(Constants.EDITOR_PROP_VALUE, propValue);
+			request.setAttribute(Constants.EDITOR_DISPLAY_LABEL, displayLabel);
 			request.setAttribute(Constants.EDITOR_PROPERTY_DEFINITION, pd);
 			request.setAttribute(Constants.EDITOR_REF_NEST, true);
 			request.setAttribute(Constants.EDITOR_REF_NEST_VALUE, entity);//JoinProperty用
 			request.setAttribute(Constants.AUTOCOMPLETION_SETTING, property.getAutocompletionSetting());
 			request.setAttribute(Constants.REF_SECTION_INDEX, new Integer(dataIndex));
+			request.setAttribute(Constants.EDITOR_UNIQUE_ID, editorUniqueID);
 %>
 <jsp:include page="<%=path %>" />
 <%
 			request.removeAttribute(Constants.EDITOR_EDITOR);
 			request.removeAttribute(Constants.EDITOR_PROP_VALUE);
+			request.removeAttribute(Constants.EDITOR_DISPLAY_LABEL);
 			request.removeAttribute(Constants.EDITOR_PROPERTY_DEFINITION);
 			request.removeAttribute(Constants.EDITOR_REF_NEST);
 			request.removeAttribute(Constants.EDITOR_REF_NEST_VALUE);
 			request.removeAttribute(Constants.REF_SECTION_INDEX);
+			request.removeAttribute(Constants.EDITOR_UNIQUE_ID);
 		}
 		if (showDesc) {
 %>
@@ -393,7 +413,7 @@
 <%
 	for (NestProperty property : hiddenList) {
 		String propName = property.getPropertyName();
-		PropertyDefinition pd = red.getProperty(propName);
+		PropertyDefinition pd = EntityViewUtil.getNestTablePropertyDefinition(property, red);
 		property.getEditor().setPropertyName(section.getPropertyName() + "[" + dataIndex + "]." + propName);
 
 		String path =  EntityViewUtil.getJspPath(property.getEditor(), ViewConst.DESIGN_TYPE_GEM);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,7 +26,7 @@ import org.iplass.mtp.auth.policy.definition.NotificationType;
 public class LoginNotification extends AccountNotification {
 	private Credential credential;
 	private LoginFailedException exception;
-	
+
 	public LoginNotification(NotificationType type, String userOid, Credential credential, LoginFailedException exception) {
 		super(type, userOid);
 		this.credential = credential;

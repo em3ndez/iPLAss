@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -42,7 +42,6 @@ import org.iplass.mtp.impl.query.QueryServiceHolder;
 import org.iplass.mtp.impl.query.QuerySyntax;
 import org.iplass.mtp.impl.query.WhereSyntax;
 import org.iplass.mtp.util.StringUtil;
-
 
 /**
  * <p>
@@ -128,13 +127,14 @@ import org.iplass.mtp.util.StringUtil;
  * &lt;minus sign&gt; ::= - &lt;paren value&gt;<br>
  * &lt;paren value&gt; ::= &lt;primary value&gt; | (&lt;value expression&gt;)<br>
  * &lt;primary value&gt; := &lt;aggregate&gt; | &lt;array value&gt; | &lt;case&gt; | &lt;entity field&gt; | &lt;function&gt; | &lt;cast&gt; | &lt;literal&gt; | &lt;scalar subquery&gt; | &lt;window function&gt;<br>
- * &lt;aggregate&gt; ::= {AVG | MAX | MEDIAN | MIN | MODE | SUM | STDDEV_POP | STDDEV_SAMP | VAR_POP | VAR_SAMP}(&lt;value expression&gt;) | COUNT([DISTINCT] [&lt;value expression&gt;])<br>
+ * &lt;aggregate&gt; ::= {AVG | MAX | MEDIAN | MIN | MODE | SUM | STDDEV_POP | STDDEV_SAMP | VAR_POP | VAR_SAMP}(&lt;value expression&gt;) | COUNT([DISTINCT] [&lt;value expression&gt;]) | LISTAGG([DISTINCT] &lt;value expression&gt;[,&lt;string literal&gt;]) [WITHIN GROUP(ORDER BY &lt;sort spec&gt; {,&lt;sort spec&gt;}*)]<br>
  * &lt;array value&gt; ::= "ARRAY[" &lt;value expression&gt; {,&lt;value expression&gt;}* "]"<br>
  * &lt;case&gt; ::= CASE WHEN &lt;condition&gt; THEN &lt;value expression&gt; {WHEN &lt;condition&gt; THEN &lt;value expression&gt;}* [ELSE &lt;value expression&gt;] END<br>
- * &lt;entity field&gt; ::= &lt;property name&gt; | &lt;reference&gt;.&lt;property name&gt; | &lt;correlated entity field&gt;<br>
+ * &lt;entity field&gt; ::= &lt;property name&gt; [&lt;array index&gt;] | &lt;reference&gt;.&lt;property name&gt; [&lt;array index&gt;] | &lt;correlated entity field&gt;<br>
+ * &lt;array index&gt; ::= "[" 添え字 "]"<br>
  * &lt;reference&gt; ::= &lt;reference name&gt;{.&lt;reference name&gt;}*<br>
  * &lt;function&gt; ::= &lt;function name&gt;() | &lt;function name&gt;(&lt;value expression&gt;{,&lt;value expression&gt;}*)<br>
- * &lt;function name&gt; ::= REPLACE | UPPER | LOWER | CONCAT | SUBSTR | INSTR | CHAR_LENGTH | MOD | SQRT | POWER | ABS | CEIL | FLOOR | ROUND | TRUNCATE | YEAR | MONTH | DAY | HOUR | MINUTE | SECOND | DATE_ADD | DATE_DIFF | CURRENT_DATE | CURRENT_TIME | CURRENT_DATETIME | LOCALTIME<br>
+ * &lt;function name&gt; ::= REPLACE | UPPER | LOWER | CONCAT | SUBSTR | INSTR | CHAR_LENGTH | MOD | SQRT | POWER | ABS | CEIL | FLOOR | ROUND | TRUNCATE | SIN | COS | TAN | ASIN | ACOS | ATAN | ATAN2 | YEAR | MONTH | DAY | HOUR | MINUTE | SECOND | DATE_ADD | DATE_DIFF | CURRENT_DATE | CURRENT_TIME | CURRENT_DATETIME | LOCALTIME<br>
  * &lt;cast&gt; ::= CAST(&lt;value expression&gt; AS &lt;data type&gt;)<br>
  * &lt;data type&gt; ::= STRING | INTEGER | FLOAT | DECIMAL | BOOLEAN | SELECT | DATE | TIME | DATETIME<br>
  * &lt;scalar subquery&gt; ::= &lt;subquery&gt;<br>
@@ -179,7 +179,9 @@ public class Query implements ASTNode {
 	 */
 	public static Query newQuery(String query) {
 		try {
-			return QueryServiceHolder.getInstance().getQueryParser().parse(query, QuerySyntax.class);
+			return QueryServiceHolder.getInstance()
+					.getQueryParser()
+					.parse(query, QuerySyntax.class);
 		} catch (ParseException e) {
 			throw new QueryException(e.getMessage(), e);
 		}
@@ -204,17 +206,18 @@ public class Query implements ASTNode {
 	private OrderBy orderBy;
 	private Limit limit;
 
-	private boolean versiond = false;
+	private boolean versioned = false;
 	private boolean localized = false;
 
 	public Query() {
 	}
+
 	public Query(Select select, From from, Where where) {
 		this.select = select;
 		this.from = from;
 		this.where = where;
 	}
-	
+
 	/**
 	 * EQL文字列を指定してQueryインスタンスを生成します。
 	 * 
@@ -231,10 +234,10 @@ public class Query implements ASTNode {
 		this.orderBy = q.orderBy;
 		this.refer = q.refer;
 		this.select = q.select;
-		this.versiond = q.versiond;
+		this.versioned = q.versioned;
 		this.where = q.where;
 	}
-	
+
 	@Override
 	public Query copy() {
 		return (Query) ASTNode.super.copy();
@@ -252,7 +255,7 @@ public class Query implements ASTNode {
 		result = prime * result + ((orderBy == null) ? 0 : orderBy.hashCode());
 		result = prime * result + ((refer == null) ? 0 : refer.hashCode());
 		result = prime * result + ((select == null) ? 0 : select.hashCode());
-		result = prime * result + (versiond ? 1231 : 1237);
+		result = prime * result + (versioned ? 1231 : 1237);
 		result = prime * result + ((where == null) ? 0 : where.hashCode());
 		return result;
 	}
@@ -303,7 +306,7 @@ public class Query implements ASTNode {
 				return false;
 		} else if (!select.equals(other.select))
 			return false;
-		if (versiond != other.versiond)
+		if (versioned != other.versioned)
 			return false;
 		if (where == null) {
 			if (other.where != null)
@@ -325,7 +328,7 @@ public class Query implements ASTNode {
 			sb.append(" ");
 		}
 		if (refer != null) {
-			for (Refer r: refer) {
+			for (Refer r : refer) {
 				sb.append(r.toString());
 				sb.append(" ");
 			}
@@ -349,7 +352,7 @@ public class Query implements ASTNode {
 			sb.append(" ");
 			sb.append(limit.toString());
 		}
-		if (versiond) {
+		if (versioned) {
 			sb.append(" versioned");
 		}
 		if (localized) {
@@ -410,6 +413,7 @@ public class Query implements ASTNode {
 	public OrderBy getOrderBy() {
 		return orderBy;
 	}
+
 	public void setOrderBy(OrderBy orderBy) {
 		this.orderBy = orderBy;
 	}
@@ -417,16 +421,35 @@ public class Query implements ASTNode {
 	public Limit getLimit() {
 		return limit;
 	}
+
 	public void setLimit(Limit limit) {
 		this.limit = limit;
 	}
 
+	/**
+	 * @deprecated use {@link #isVersioned()}
+	 * @return
+	 */
+	@Deprecated
 	public boolean isVersiond() {
-		return versiond;
+		return versioned;
 	}
 
-	public void setVersiond(boolean versiond) {
-		this.versiond = versiond;
+	/**
+	 * @deprecated use {@link #setVersioned(boolean)}
+	 * @param versioned
+	 */
+	@Deprecated
+	public void setVersiond(boolean versioned) {
+		this.versioned = versioned;
+	}
+
+	public boolean isVersioned() {
+		return versioned;
+	}
+
+	public void setVersioned(boolean versioned) {
+		this.versioned = versioned;
 	}
 
 	public boolean isLocalized() {
@@ -446,7 +469,7 @@ public class Query implements ASTNode {
 				from.accept(visitor);
 			}
 			if (refer != null) {
-				for (Refer r: refer) {
+				for (Refer r : refer) {
 					r.accept(visitor);
 				}
 			}
@@ -504,7 +527,7 @@ public class Query implements ASTNode {
 		clause.add(value);
 		return this;
 	}
-	
+
 	/**
 	 * selectを構築します。
 	 * その際distinctはfalse（デフォルト値）とします。
@@ -517,7 +540,7 @@ public class Query implements ASTNode {
 		clause.add(value);
 		return this;
 	}
-	
+
 	/**
 	 * ヒント句指定しつつ、selectを構築します。
 	 * その際distinctはfalse（デフォルト値）とします。
@@ -532,7 +555,6 @@ public class Query implements ASTNode {
 		clause.add(value);
 		return this;
 	}
-	
 
 	public Query selectAll(String definitionName, boolean distinct, boolean withReferenceOidAndName) {
 		return selectAll(definitionName, distinct, withReferenceOidAndName, false);
@@ -542,21 +564,25 @@ public class Query implements ASTNode {
 		return selectAll(definitionName, distinct, withReferenceOidAndName, withReferenceVersion, true);
 	}
 
-	public Query selectAll(String definitionName, boolean distinct, boolean withReferenceOidAndName, boolean withReferenceVersion, boolean withMappedByReference) {
+	public Query selectAll(String definitionName, boolean distinct, boolean withReferenceOidAndName, boolean withReferenceVersion,
+			boolean withMappedByReference) {
 		return selectAll(definitionName, null, distinct, withReferenceOidAndName, withReferenceVersion, withMappedByReference);
 	}
 
-	public Query selectAll(String definitionName, HintComment hint, boolean distinct, boolean withReferenceOidAndName, boolean withReferenceVersion, boolean withMappedByReference) {
+	public Query selectAll(String definitionName, HintComment hint, boolean distinct, boolean withReferenceOidAndName, boolean withReferenceVersion,
+			boolean withMappedByReference) {
 		Select clause = new Select();
 		clause.setHintComment(hint);
 		clause.setDistinct(distinct);
-		EntityDefinition ed = ManagerLocator.getInstance().getManager(EntityDefinitionManager.class).get(definitionName);
+		EntityDefinition ed = ManagerLocator.getInstance()
+				.getManager(EntityDefinitionManager.class)
+				.get(definitionName);
 		if (ed == null) {
 			throw new EntityRuntimeException(definitionName + " not found.");
 		}
-		for (PropertyDefinition pd: ed.getPropertyList()) {
+		for (PropertyDefinition pd : ed.getPropertyList()) {
 			if (pd instanceof ReferenceProperty) {
-				ReferenceProperty rp = (ReferenceProperty)pd;
+				ReferenceProperty rp = (ReferenceProperty) pd;
 				if (StringUtil.isNotEmpty(rp.getMappedBy()) && !withMappedByReference) {
 					continue;
 				}
@@ -575,7 +601,7 @@ public class Query implements ASTNode {
 		from(definitionName);
 		return this;
 	}
-	
+
 	/**
 	 * ヒントを追加します。
 	 * 注意：selectAllを利用した場合、Selectインスタンスが初期化されるので、selectAllの後に呼び出すこと。
@@ -587,12 +613,12 @@ public class Query implements ASTNode {
 		select().addHint(hint);
 		return this;
 	}
-	
+
 	public Query hint(List<Hint> hintList) {
 		select().addHint(hintList);
 		return this;
 	}
-	
+
 	private From from() {
 		if (from == null) {
 			from = new From();
@@ -604,7 +630,7 @@ public class Query implements ASTNode {
 		from().setEntityName(entityName);
 		return this;
 	}
-	
+
 	public Query from(String entityName, AsOf asOf) {
 		from().setEntityName(entityName);
 		from().setAsOf(asOf);
@@ -614,11 +640,11 @@ public class Query implements ASTNode {
 	public Query refer(String referenceName, Condition onCondition) {
 		return refer(referenceName, null, onCondition);
 	}
-	
+
 	public Query refer(String referenceName, AsOf asOf) {
 		return refer(referenceName, asOf, null);
 	}
-	
+
 	public Query refer(String referenceName, AsOf asOf, Condition onCondition) {
 		if (refer == null) {
 			refer = new ArrayList<Refer>();
@@ -628,7 +654,9 @@ public class Query implements ASTNode {
 			Iterator<Refer> it = refer.iterator();
 			while (it.hasNext()) {
 				Refer r = it.next();
-				if (r.getReferenceName().getPropertyName().equals(referenceName)) {
+				if (r.getReferenceName()
+						.getPropertyName()
+						.equals(referenceName)) {
 					it.remove();
 					break;
 				}
@@ -643,8 +671,10 @@ public class Query implements ASTNode {
 			refer = new ArrayList<Refer>();
 		}
 		if (refer.size() > 0) {
-			for (Refer r: refer) {
-				if (r.getReferenceName().getPropertyName().equals(referenceName)) {
+			for (Refer r : refer) {
+				if (r.getReferenceName()
+						.getPropertyName()
+						.equals(referenceName)) {
 					return r;
 				}
 			}
@@ -665,7 +695,9 @@ public class Query implements ASTNode {
 	public Query where(String whereClause) {
 		String whereStr = QueryConstants.WHERE + " " + whereClause;
 		try {
-			where = QueryServiceHolder.getInstance().getQueryParser().parse(whereStr, WhereSyntax.class);
+			where = QueryServiceHolder.getInstance()
+					.getQueryParser()
+					.parse(whereStr, WhereSyntax.class);
 		} catch (ParseException e) {
 			throw new QueryException(e.getMessage(), e);
 		}
@@ -688,7 +720,7 @@ public class Query implements ASTNode {
 		if (groupBy == null) {
 			groupBy = new GroupBy();
 		}
-		for (Object v: groupingField) {
+		for (Object v : groupingField) {
 			groupBy.add(v);
 		}
 		return this;
@@ -702,7 +734,9 @@ public class Query implements ASTNode {
 	public Query having(String havingClause) {
 		String havingStr = QueryConstants.HAVING + " " + havingClause;
 		try {
-			having = QueryServiceHolder.getInstance().getQueryParser().parse(havingStr, HavingSyntax.class);
+			having = QueryServiceHolder.getInstance()
+					.getQueryParser()
+					.parse(havingStr, HavingSyntax.class);
 		} catch (ParseException e) {
 			throw new QueryException(e.getMessage(), e);
 		}
@@ -714,7 +748,7 @@ public class Query implements ASTNode {
 		if (orderBy == null) {
 			orderBy = new OrderBy();
 		}
-		for (SortSpec o: sortSpec) {
+		for (SortSpec o : sortSpec) {
 			orderBy.add(o);
 		}
 		return this;
@@ -731,10 +765,10 @@ public class Query implements ASTNode {
 	}
 
 	public Query versioned(boolean versioned) {
-		this.versiond = versioned;
+		this.versioned = versioned;
 		return this;
 	}
-	
+
 	/**
 	 * versioned=trueに設定します
 	 * 
@@ -743,12 +777,12 @@ public class Query implements ASTNode {
 	public Query versioned() {
 		return versioned(true);
 	}
-	
+
 	public Query localized(boolean localized) {
 		this.localized = localized;
 		return this;
 	}
-	
+
 	/**
 	 * localized=trueに設定します
 	 * 
@@ -758,7 +792,7 @@ public class Query implements ASTNode {
 		return localized(true);
 	}
 
-
+	@Override
 	public ASTNode accept(ASTTransformer transformer) {
 		return transformer.visit(this);
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,8 +22,6 @@ package org.iplass.mtp.impl.view.generic.editor;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.xml.bind.annotation.XmlTransient;
 
 import org.iplass.mtp.entity.definition.PropertyDefinition;
 import org.iplass.mtp.entity.definition.properties.ReferenceProperty;
@@ -52,6 +50,8 @@ import org.iplass.mtp.view.generic.editor.ReferencePropertyEditor.RefSortType;
 import org.iplass.mtp.view.generic.editor.ReferencePropertyEditor.ReferenceDisplayType;
 import org.iplass.mtp.view.generic.editor.ReferencePropertyEditor.UrlParameterActionType;
 
+import jakarta.xml.bind.annotation.XmlTransient;
+
 /**
  * 参照型プロパティエディタのメタデータ
  * @author lis3wg
@@ -77,11 +77,14 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	/** プロパティと一緒にネスト項目を条件に利用するか */
 	private boolean useNestConditionWithProperty;
 
-	/** オブジェクトID(参照EntityのID) */
+	/** 参照先オブジェクトID */
 	private String objectId;
 
 	/** 参照元オブジェクトID */
 	private String referenceFromObjectId;
+
+	/** ルートオブジェクトID、NestPropertyの場合に利用 */
+	private String rootObjectId;
 
 	/** 参照型の表示プロパティ */
 	private List<MetaNestProperty> nestProperties;
@@ -116,11 +119,26 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	/** ビュー定義名 */
 	private String viewName;
 
+	/** 参照型モーダルの初期表示幅（ピクセル） */
+	private Integer dialogWidth;
+
+	/** 参照型モーダルの初期表示高さ（ピクセル） */
+	private Integer dialogHeight;
+
+	/** 参照型モーダルを初期表示時に最大化 */
+	private boolean dialogMaximize;
+
 	/** URLパラメータ */
 	private String urlParameter;
 
 	/** URLパラメータAction */
 	private List<UrlParameterActionType> urlParameterAction;
+
+	/** 動的URLパラメータ */
+	private String dynamicUrlParameter;
+
+	/** 動的URLパラメータAction */
+	private List<UrlParameterActionType> dynamicUrlParameterAction;
 
 	/** URLパラメータをコンパイルした際に生成したキー */
 	@XmlTransient
@@ -137,6 +155,9 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 
 	/** 参照コンボ設定 */
 	private MetaReferenceComboSetting referenceComboSetting;
+
+	/** 参照選択フィルター設定 */
+	private MetaReferenceSelectFilterSetting referenceSelectFilterSetting;
 
 	/** 選択アクションコールバックスクリプト */
 	private String selectActionCallbackScript;
@@ -188,6 +209,12 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	/** Label形式の場合の更新制御 */
 	private boolean updateWithLabelValue = false;
 
+	/** CHECKBOX形式の場合のアイテムを縦に並べるような表示するか */
+	private boolean itemDirectionColumn;
+
+	/** 「値なし」を検索条件の選択肢に追加するか */
+	private boolean isNullSearchEnabled;
+
 	/**
 	 * 表示タイプを取得します。
 	 * @return 表示タイプ
@@ -205,16 +232,17 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	}
 
 	/**
-	 * オブジェクトIDを取得します。
-	 * @return オブジェクトID
+	 * 参照先オブジェクトIDを取得します。
+	 * @return 参照先オブジェクトID
 	 */
+	@Override
 	public String getObjectId() {
 		return objectId;
 	}
 
 	/**
-	 * オブジェクトIDを設定します。
-	 * @param objectName オブジェクトID
+	 * 参照先オブジェクトIDを設定します。
+	 * @param objectName 参照先オブジェクトID
 	 */
 	public void setObjectId(String objectName) {
 		this.objectId = objectName;
@@ -237,11 +265,28 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	}
 
 	/**
+	 * ルートオブジェクトIDを取得します。
+	 * NestProperty上のEditorで設定されます。
+	 * @return ルートオブジェクトID
+	 */
+	public String getRootObjectId() {
+		return rootObjectId;
+	}
+
+	/**
+	 * ルートオブジェクトIDを設定します。
+	 * @param rootObjectId ルートオブジェクトID
+	 */
+	public void setRootObjectId(String rootObjectId) {
+		this.rootObjectId = rootObjectId;
+	}
+
+	/**
 	 * 選択ダイアログ利用可否を取得します。
 	 * @return 選択ダイアログ利用可否
 	 */
 	public boolean isUseSearchDialog() {
-	    return useSearchDialog;
+		return useSearchDialog;
 	}
 
 	/**
@@ -249,7 +294,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @param useSearchDialog 選択ダイアログ利用可否
 	 */
 	public void setUseSearchDialog(boolean useSearchDialog) {
-	    this.useSearchDialog = useSearchDialog;
+		this.useSearchDialog = useSearchDialog;
 	}
 
 	/**
@@ -257,7 +302,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @return 検索条件で単一選択
 	 */
 	public boolean isSingleSelect() {
-	    return singleSelect;
+		return singleSelect;
 	}
 
 	/**
@@ -265,7 +310,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @param singleSelect 検索条件で単一選択
 	 */
 	public void setSingleSelect(boolean singleSelect) {
-	    this.singleSelect = singleSelect;
+		this.singleSelect = singleSelect;
 	}
 
 	/**
@@ -290,7 +335,8 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 */
 	@Override
 	public List<MetaNestProperty> getNestProperties() {
-		if (nestProperties == null) nestProperties = new ArrayList<>();
+		if (nestProperties == null)
+			nestProperties = new ArrayList<>();
 		return nestProperties;
 	}
 
@@ -343,7 +389,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @return 新規ボタン非表示設定
 	 */
 	public boolean isHideSelectButton() {
-	    return hideSelectButton;
+		return hideSelectButton;
 	}
 
 	/**
@@ -351,7 +397,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @param hideSelectButton 新規ボタン非表示設定
 	 */
 	public void setHideSelectButton(boolean hideSelectButton) {
-	    this.hideSelectButton = hideSelectButton;
+		this.hideSelectButton = hideSelectButton;
 	}
 
 	/**
@@ -359,7 +405,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @return 参照リンク編集可否
 	 */
 	public boolean isEditableReference() {
-	    return editableReference;
+		return editableReference;
 	}
 
 	/**
@@ -367,7 +413,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @param editableReference 参照リンク編集可否
 	 */
 	public void setEditableReference(boolean editableReference) {
-	    this.editableReference = editableReference;
+		this.editableReference = editableReference;
 	}
 
 	/**
@@ -407,7 +453,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @return ダイアログ編集アクション名
 	 */
 	public String getDetailrefActionName() {
-	    return detailrefActionName;
+		return detailrefActionName;
 	}
 
 	/**
@@ -415,7 +461,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @param detailrefActionName ダイアログ編集アクション名
 	 */
 	public void setDetailrefActionName(String detailrefActionName) {
-	    this.detailrefActionName = detailrefActionName;
+		this.detailrefActionName = detailrefActionName;
 	}
 
 	/**
@@ -467,6 +513,56 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	}
 
 	/**
+	 * 参照型モーダルの初期表示幅を取得します。
+	 * @return 幅（ピクセル）
+	 */
+	public Integer getDialogWidth() {
+		return dialogWidth;
+	}
+
+	/**
+	 * 参照型モーダルの初期表示幅を設定します。
+	 * @param dialogWidth 幅（ピクセル）
+	 */
+	public void setDialogWidth(Integer dialogWidth) {
+		this.dialogWidth = dialogWidth;
+	}
+
+	/**
+	 * 参照型モーダルの初期表示高さを取得します。
+	 * @return 高さ（ピクセル）
+	 */
+	public Integer getDialogHeight() {
+		return dialogHeight;
+	}
+
+	/**
+	 * 参照型モーダルの初期表示高さを設定します。
+	 * @param dialogHeight 高さ（ピクセル）
+	 */
+	public void setDialogHeight(Integer dialogHeight) {
+		this.dialogHeight = dialogHeight;
+	}
+
+	/**
+	 * 参照型モーダルを初期表示時に最大化するかを取得します。
+	 * 
+	 * @return 参照型モーダルを初期表示時に最大化するか
+	 */
+	public boolean isDialogMaximized() {
+		return dialogMaximize;
+	}
+
+	/**
+	 * 参照型モーダルを初期表示時に最大化するかを設定します。
+	 * 
+	 * @param dialogMaximize 参照型モーダルを初期表示時に最大化するか
+	 */
+	public void setDialogMaximize(boolean dialogMaximize) {
+		this.dialogMaximize = dialogMaximize;
+	}
+
+	/**
 	 * URLパラメータを取得します。
 	 * @return URLパラメータ
 	 */
@@ -498,6 +594,39 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 		this.urlParameterAction = urlParameterAction;
 	}
 
+	/**
+	 * 動的URLパラメータを取得します。
+	 * @return 動的URLパラメータ
+	 */
+	public String getDynamicUrlParameter() {
+		return dynamicUrlParameter;
+	}
+
+	/**
+	 * 動的URLパラメータを設定します。
+	 * @param dynamicUrlParameter 動的URLパラメータ
+	 */
+	public void setDynamicUrlParameter(String dynamicUrlParameter) {
+		this.dynamicUrlParameter = dynamicUrlParameter;
+	}
+
+	/**
+	 * 動的URLパラメータActionを取得します。
+	 * @return 動的URLパラメータAction
+	 */
+	public List<UrlParameterActionType> getDynamicUrlParameterAction() {
+		return dynamicUrlParameterAction;
+	}
+
+	/**
+	 * 動的URLパラメータActionを設定します。
+	 * @param dynamicUrlParameterAction 動的URLパラメータAction
+	 */
+	public void setDynamicUrlParameterAction(List<UrlParameterActionType> dynamicUrlParameterAction) {
+		this.dynamicUrlParameterAction = dynamicUrlParameterAction;
+	}
+
+	/**
 	/**
 	 * ソートアイテムを取得します。
 	 * @return ソートアイテム
@@ -535,7 +664,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @return 編集ページ
 	 */
 	public EditPage getEditPage() {
-	    return editPage;
+		return editPage;
 	}
 
 	/**
@@ -543,7 +672,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @param editPage 編集ページ
 	 */
 	public void setEditPage(EditPage editPage) {
-	    this.editPage = editPage;
+		this.editPage = editPage;
 	}
 
 	/**
@@ -616,7 +745,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @return 検索条件
 	 */
 	public String getCondition() {
-	    return condition;
+		return condition;
 	}
 
 	/**
@@ -624,7 +753,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @param condition 検索条件
 	 */
 	public void setCondition(String condition) {
-	    this.condition = condition;
+		this.condition = condition;
 	}
 
 	/**
@@ -648,7 +777,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @return 参照コンボの親を表示するか
 	 */
 	public boolean isShowRefComboParent() {
-	    return showRefComboParent;
+		return showRefComboParent;
 	}
 
 	/**
@@ -656,7 +785,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @param showRefComboParent 参照コンボの親を表示するか
 	 */
 	public void setShowRefComboParent(boolean showRefComboParent) {
-	    this.showRefComboParent = showRefComboParent;
+		this.showRefComboParent = showRefComboParent;
 	}
 
 	/**
@@ -664,7 +793,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @return 再帰構造Entityのツリー設定
 	 */
 	public MetaReferenceRecursiveTreeSetting getReferenceRecursiveTreeSetting() {
-	    return referenceRecursiveTreeSetting;
+		return referenceRecursiveTreeSetting;
 	}
 
 	/**
@@ -672,7 +801,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @param referenceRecursiveTreeSetting 再帰構造Entityのツリー設定
 	 */
 	public void setReferenceRecursiveTreeSetting(MetaReferenceRecursiveTreeSetting referenceRecursiveTreeSetting) {
-	    this.referenceRecursiveTreeSetting = referenceRecursiveTreeSetting;
+		this.referenceRecursiveTreeSetting = referenceRecursiveTreeSetting;
 	}
 
 	/**
@@ -696,7 +825,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @return 特定バージョンの基準となるプロパティ
 	 */
 	public String getSpecificVersionPropertyName() {
-	    return specificVersionPropertyName;
+		return specificVersionPropertyName;
 	}
 
 	/**
@@ -704,7 +833,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @param specificVersionPropertyName 特定バージョンの基準となるプロパティ
 	 */
 	public void setSpecificVersionPropertyName(String specificVersionPropertyName) {
-	    this.specificVersionPropertyName = specificVersionPropertyName;
+		this.specificVersionPropertyName = specificVersionPropertyName;
 	}
 
 	/**
@@ -712,7 +841,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @return ネストテーブルの表示順プロパティ
 	 */
 	public String getTableOrderPropertyId() {
-	    return tableOrderPropertyId;
+		return tableOrderPropertyId;
 	}
 
 	/**
@@ -720,7 +849,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @param tableOrderPropertyId ネストテーブルの表示順プロパティ
 	 */
 	public void setTableOrderPropertyId(String tableOrderPropertyId) {
-	    this.tableOrderPropertyId = tableOrderPropertyId;
+		this.tableOrderPropertyId = tableOrderPropertyId;
 	}
 
 	/**
@@ -744,7 +873,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @return 検索条件での全選択を許可
 	 */
 	public boolean isPermitConditionSelectAll() {
-	    return permitConditionSelectAll;
+		return permitConditionSelectAll;
 	}
 
 	/**
@@ -752,7 +881,7 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	 * @param permitConditionSelectAll 検索条件での全選択を許可
 	 */
 	public void setPermitConditionSelectAll(boolean permitConditionSelectAll) {
-	    this.permitConditionSelectAll = permitConditionSelectAll;
+		this.permitConditionSelectAll = permitConditionSelectAll;
 	}
 
 	/**
@@ -831,6 +960,54 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 		this.updateWithLabelValue = updateWithLabelValue;
 	}
 
+	/**
+	 * CHECKBOX形式の場合のアイテムを縦に並べるような表示するかを取得します。
+	 * @return CHECKBOX形式の場合のアイテムを縦に並べるような表示するか
+	 */
+	public boolean isItemDirectionColumn() {
+		return itemDirectionColumn;
+	}
+
+	/**
+	 * CHECKBOX形式の場合のアイテムを縦に並べるような表示するかを設定します。
+	 * @param itemDirectionColumn CHECKBOX形式の場合のアイテムを縦に並べるような表示するか
+	 */
+	public void setItemDirectionColumn(boolean itemDirectionColumn) {
+		this.itemDirectionColumn = itemDirectionColumn;
+	}
+
+	/**
+	 * 「値なし」を検索条件の選択肢に追加するかを取得します。
+	 * @return 「値なし」を検索条件の選択肢に追加するか
+	 */
+	public boolean isIsNullSearchEnabled() {
+		return isNullSearchEnabled;
+	}
+
+	/**
+	 * 「値なし」を検索条件の選択肢に追加するかを設定します。
+	 * @param isNullSearchEnabled 「値なし」を検索条件の選択肢に追加するか
+	 */
+	public void setIsNullSearchEnabled(boolean isNullSearchEnabled) {
+		this.isNullSearchEnabled = isNullSearchEnabled;
+	}
+
+	/**
+	 * 参照選択フィルター設定を取得します。
+	 * @return 参照選択フィルター設定
+	 */
+	public MetaReferenceSelectFilterSetting getReferenceSelectFilterSetting() {
+		return referenceSelectFilterSetting;
+	}
+
+	/**
+	 * 参照選択フィルター設定を設定します。
+	 * @param referenceSelectFilterSetting 参照選択フィルター設定
+	 */
+	public void setReferenceSelectFilterSetting(MetaReferenceSelectFilterSetting referenceSelectFilterSetting) {
+		this.referenceSelectFilterSetting = referenceSelectFilterSetting;
+	}
+
 	@Override
 	public void applyConfig(PropertyEditor editor) {
 		super.fillFrom(editor);
@@ -838,34 +1015,55 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 		ReferencePropertyEditor rpe = (ReferencePropertyEditor) editor;
 
 		EntityContext context = EntityContext.getCurrentContext();
-		EntityHandler refEntity = context.getHandlerByName(rpe.getObjectName());
+
+		EntityHandler referenceEntity = context.getHandlerByName(rpe.getObjectName());
+		objectId = referenceEntity.getMetaData()
+				.getId();
+
 		EntityHandler fromEntity = null;
 		if (rpe.getReferenceFromObjectName() != null) {
 			fromEntity = context.getHandlerByName(rpe.getReferenceFromObjectName());
 		}
+		if (fromEntity != null) {
+			referenceFromObjectId = fromEntity.getMetaData()
+					.getId();
+		} else {
+			referenceFromObjectId = null;
+		}
+
+		EntityHandler rootEntity = null;
+		if (rpe.getRootObjectName() != null) {
+			rootEntity = context.getHandlerByName(rpe.getRootObjectName());
+		}
+		if (rootEntity != null) {
+			rootObjectId = rootEntity.getMetaData()
+					.getId();
+		} else {
+			rootObjectId = null;
+			// ルートを参照元Entityとする
+			rootEntity = fromEntity;
+		}
+
+		displayType = rpe.getDisplayType();
 
 		PropertyHandler sortProperty = null;
 		if (rpe.getSortItem() != null) {
-			sortProperty = refEntity.getProperty(rpe.getSortItem(), context);
-		}
-		displayType = rpe.getDisplayType();
-		objectId = refEntity.getMetaData().getId();
-		if (fromEntity != null) {
-			referenceFromObjectId = fromEntity.getMetaData().getId();
+			sortProperty = referenceEntity.getProperty(rpe.getSortItem(), context);
 		}
 		PropertyHandler displayLabelProperty = null;
 		if (rpe.getDisplayLabelItem() != null) {
-			displayLabelProperty = refEntity.getProperty(rpe.getDisplayLabelItem(), context);
+			displayLabelProperty = referenceEntity.getProperty(rpe.getDisplayLabelItem(), context);
 		}
 		PropertyHandler uniqueProperty = null;
 		if (rpe.getUniqueItem() != null) {
-			uniqueProperty = refEntity.getProperty(rpe.getUniqueItem(), context);
+			uniqueProperty = referenceEntity.getProperty(rpe.getUniqueItem(), context);
 		}
+
 		useSearchDialog = rpe.isUseSearchDialog();
 		singleSelect = rpe.isSingleSelect();
 		useNestConditionWithProperty = rpe.isUseNestConditionWithProperty();
-		hideDeleteButton  =rpe.isHideDeleteButton();
-		hideRegistButton  =rpe.isHideRegistButton();
+		hideDeleteButton = rpe.isHideDeleteButton();
+		hideRegistButton = rpe.isHideRegistButton();
 		hideSelectButton = rpe.isHideSelectButton();
 		editableReference = rpe.isEditableReference();
 		insertType = rpe.getInsertType();
@@ -874,8 +1072,13 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 		selectActionName = rpe.getSelectActionName();
 		addActionName = rpe.getAddActionName();
 		viewName = rpe.getViewName();
+		dialogWidth = rpe.getDialogWidth();
+		dialogHeight = rpe.getDialogHeight();
+		dialogMaximize = rpe.isDialogMaximized();
 		urlParameter = rpe.getUrlParameter();
-		urlParameterAction = rpe.getUrlParameterAction();
+		urlParameterAction = rpe.getUrlParameterAction() != null ? new ArrayList<>(rpe.getUrlParameterAction()) : null;
+		dynamicUrlParameter = rpe.getDynamicUrlParameter();
+		dynamicUrlParameterAction = rpe.getDynamicUrlParameterAction() != null ? new ArrayList<>(rpe.getDynamicUrlParameterAction()) : null;
 		sortItem = sortProperty != null ? sortProperty.getId() : null;
 		sortType = rpe.getSortType();
 		editPage = rpe.getEditPage();
@@ -891,37 +1094,53 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 		displayLabelItem = displayLabelProperty != null ? displayLabelProperty.getId() : null;
 		uniqueItem = uniqueProperty != null ? uniqueProperty.getId() : null;
 		if (rpe.getTableOrderPropertyName() != null) {
-			PropertyHandler tableOrderProperty = refEntity.getProperty(rpe.getTableOrderPropertyName(), context);
+			PropertyHandler tableOrderProperty = referenceEntity.getProperty(rpe.getTableOrderPropertyName(), context);
 			tableOrderPropertyId = tableOrderProperty != null ? tableOrderProperty.getId() : null;
 		}
 		forceUpadte = rpe.isForceUpadte();
 		for (NestProperty np : rpe.getNestProperties()) {
 			MetaNestProperty mnp = new MetaNestProperty();
-			mnp.applyConfig(np, refEntity, fromEntity);
-			if (mnp.getPropertyId() != null) addNestProperty(mnp);
+			mnp.applyConfig(np, referenceEntity, fromEntity, rootEntity);
+			if (mnp.getPropertyId() != null)
+				addNestProperty(mnp);
 		}
-		if (rpe.getReferenceComboSetting() != null && rpe.getReferenceComboSetting().getPropertyName() != null) {
+		if (rpe.getReferenceComboSetting() != null && rpe.getReferenceComboSetting()
+				.getPropertyName() != null) {
 			MetaReferenceComboSetting tmp = new MetaReferenceComboSetting();
-			tmp.applyConfig(rpe.getReferenceComboSetting(), refEntity);
+			tmp.applyConfig(rpe.getReferenceComboSetting(), referenceEntity);
 
 			//プロパティIDが設定されてない場合は保存しない(不正なプロパティ名や被参照でない場合等)
-			if (tmp.getPropertyId() != null) referenceComboSetting = tmp;
+			if (tmp.getPropertyId() != null)
+				referenceComboSetting = tmp;
+		}
+		if (ReferenceDisplayType.SELECTFILTER == rpe.getDisplayType() && rpe.getReferenceSelectFilterSetting() != null
+				&& rpe.getReferenceSelectFilterSetting()
+						.getPropertyName() != null) {
+			MetaReferenceSelectFilterSetting selectFilterSetting = new MetaReferenceSelectFilterSetting();
+			selectFilterSetting.applyConfig(rpe.getReferenceSelectFilterSetting(), referenceEntity);
+
+			//プロパティIDが設定されてない場合は保存しない(不正なプロパティ名や被参照でない場合等)
+			if (selectFilterSetting.getPropertyId() != null)
+				referenceSelectFilterSetting = selectFilterSetting;
 		}
 		if (rpe.getReferenceRecursiveTreeSetting() != null) {
 			MetaReferenceRecursiveTreeSetting setting = new MetaReferenceRecursiveTreeSetting();
-			setting.applyConfig(rpe.getReferenceRecursiveTreeSetting(), refEntity);
+			setting.applyConfig(rpe.getReferenceRecursiveTreeSetting(), referenceEntity);
 
 			//プロパティIDが設定されてない場合は保存しない
-			if (setting.getChildPropertyId() != null) referenceRecursiveTreeSetting = setting;
+			if (setting.getChildPropertyId() != null)
+				referenceRecursiveTreeSetting = setting;
 		}
 		if (rpe.getLinkProperty() != null && fromEntity != null) {
 			//参照元Entityが設定されている場合のみ有効にする
 			MetaLinkProperty link = new MetaLinkProperty();
-			link.applyConfig(rpe.getLinkProperty(), refEntity, fromEntity);
+			link.applyConfig(rpe.getLinkProperty(), referenceEntity, fromEntity, rootEntity);
 			linkProperty = link;
 		}
 		insertWithLabelValue = rpe.isInsertWithLabelValue();
 		updateWithLabelValue = rpe.isUpdateWithLabelValue();
+		itemDirectionColumn = rpe.isItemDirectionColumn();
+		isNullSearchEnabled = rpe.isIsNullSearchEnabled();
 
 	}
 
@@ -929,36 +1148,52 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 	public PropertyEditor currentConfig(String propertyName) {
 		//対象Entityの存在チェック
 		EntityContext context = EntityContext.getCurrentContext();
-		EntityHandler refEntity = context.getHandlerById(objectId);
-		if (refEntity == null) {
+
+		EntityHandler referenceEntity = context.getHandlerById(objectId);
+		if (referenceEntity == null) {
 			return null;
-		}
-		EntityHandler fromEntity = null;
-		if (referenceFromObjectId != null) {
-			fromEntity = context.getHandlerById(referenceFromObjectId);
 		}
 
 		ReferencePropertyEditor editor = new ReferencePropertyEditor();
 		super.fillTo(editor);
 
-		PropertyHandler sortProperty = null;
-		if (sortItem != null) {
-			sortProperty = refEntity.getPropertyById(sortItem, context);
-		}
 		editor.setDisplayType(displayType);
-		if (refEntity != null) {
-			editor.setObjectName(refEntity.getMetaData().getName());
+
+		editor.setObjectName(referenceEntity.getMetaData()
+				.getName());
+
+		EntityHandler fromEntity = null;
+		if (referenceFromObjectId != null) {
+			fromEntity = context.getHandlerById(referenceFromObjectId);
 		}
 		if (fromEntity != null) {
-			editor.setReferenceFromObjectName(fromEntity.getMetaData().getName());
+			editor.setReferenceFromObjectName(fromEntity.getMetaData()
+					.getName());
 		}
+
+		EntityHandler rootEntity = null;
+		if (rootObjectId != null) {
+			rootEntity = context.getHandlerById(rootObjectId);
+		}
+		if (rootEntity != null) {
+			editor.setRootObjectName(rootEntity.getMetaData()
+					.getName());
+		} else {
+			// ルートを参照元Entityとする
+			rootEntity = fromEntity;
+		}
+
 		PropertyHandler displayLabelProperty = null;
 		if (displayLabelItem != null) {
-			displayLabelProperty = refEntity.getPropertyById(displayLabelItem, context);
+			displayLabelProperty = referenceEntity.getPropertyById(displayLabelItem, context);
 		}
 		PropertyHandler uniqueProperty = null;
 		if (uniqueItem != null) {
-			uniqueProperty = refEntity.getPropertyById(uniqueItem, context);
+			uniqueProperty = referenceEntity.getPropertyById(uniqueItem, context);
+		}
+		PropertyHandler sortProperty = null;
+		if (sortItem != null) {
+			sortProperty = referenceEntity.getPropertyById(sortItem, context);
 		}
 		editor.setUseSearchDialog(useSearchDialog);
 		editor.setSingleSelect(singleSelect);
@@ -973,9 +1208,14 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 		editor.setSelectActionName(selectActionName);
 		editor.setAddActionName(addActionName);
 		editor.setViewName(viewName);
+		editor.setDialogWidth(dialogWidth);
+		editor.setDialogHeight(dialogHeight);
+		editor.setDialogMaximize(dialogMaximize);
 		editor.setUrlParameter(urlParameter);
-		editor.setUrlParameterAction(urlParameterAction);
+		editor.setUrlParameterAction(urlParameterAction != null ? new ArrayList<>(urlParameterAction) : null);
 		editor.setUrlParameterScriptKey(urlParameterScriptKey);
+		editor.setDynamicUrlParameter(dynamicUrlParameter);
+		editor.setDynamicUrlParameterAction(dynamicUrlParameterAction != null ? new ArrayList<>(dynamicUrlParameterAction) : null);
 		editor.setSortItem(sortProperty != null ? sortProperty.getName() : null);
 		editor.setSortType(sortType);
 		editor.setEditPage(editPage);
@@ -991,26 +1231,33 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 		editor.setDisplayLabelItem(displayLabelProperty != null ? displayLabelProperty.getName() : null);
 		editor.setUniqueItem(uniqueProperty != null ? uniqueProperty.getName() : null);
 		if (tableOrderPropertyId != null) {
-			PropertyHandler tableOrderProperty = refEntity.getPropertyById(tableOrderPropertyId, context);
+			PropertyHandler tableOrderProperty = referenceEntity.getPropertyById(tableOrderPropertyId, context);
 			editor.setTableOrderPropertyName(tableOrderProperty != null ? tableOrderProperty.getName() : null);
 		}
 		editor.setForceUpadte(forceUpadte);
 		for (MetaNestProperty mnp : getNestProperties()) {
-			NestProperty np = mnp.currentConfig(refEntity, fromEntity);
-			if (np != null && np.getPropertyName() != null) editor.addNestProperty(np);
+			NestProperty np = mnp.currentConfig(referenceEntity, fromEntity, rootEntity);
+			if (np != null && np.getPropertyName() != null)
+				editor.addNestProperty(np);
 		}
 		if (referenceComboSetting != null && referenceComboSetting.getPropertyId() != null) {
-			editor.setReferenceComboSetting(referenceComboSetting.currentConfig(refEntity));
+			editor.setReferenceComboSetting(referenceComboSetting.currentConfig(referenceEntity));
+		}
+		if (referenceSelectFilterSetting != null && referenceSelectFilterSetting.getPropertyId() != null) {
+			editor.setReferenceSelectFilterSetting(
+					referenceSelectFilterSetting.currentConfig(referenceEntity));
 		}
 		if (referenceRecursiveTreeSetting != null && referenceRecursiveTreeSetting.getChildPropertyId() != null) {
-			editor.setReferenceRecursiveTreeSetting(referenceRecursiveTreeSetting.currentConfig(refEntity));
+			editor.setReferenceRecursiveTreeSetting(referenceRecursiveTreeSetting.currentConfig(referenceEntity));
 		}
 		if (linkProperty != null && fromEntity != null) {
 			//参照元Entityが設定されている場合のみ有効にする
-			editor.setLinkProperty(linkProperty.currentConfig(refEntity, fromEntity));
+			editor.setLinkProperty(linkProperty.currentConfig(referenceEntity, fromEntity, rootEntity));
 		}
 		editor.setInsertWithLabelValue(insertWithLabelValue);
 		editor.setUpdateWithLabelValue(updateWithLabelValue);
+		editor.setItemDirectionColumn(itemDirectionColumn);
+		editor.setIsNullSearchEnabled(isNullSearchEnabled);
 		return editor;
 	}
 
@@ -1036,8 +1283,11 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 			super(entityView, formView, propertyLayout, context, eh);
 
 			if (StringUtil.isNotEmpty(urlParameter)) {
-				urlParameterScriptKey = "ReferencePropertyEditor_UrlParameter_" + GroovyTemplateCompiler.randomName().replace("-", "_");
-				ScriptEngine scriptEngine = ExecuteContext.getCurrentContext().getTenantContext().getScriptEngine();
+				urlParameterScriptKey = "ReferencePropertyEditor_UrlParameter_" + GroovyTemplateCompiler.randomName()
+						.replace("-", "_");
+				ScriptEngine scriptEngine = ExecuteContext.getCurrentContext()
+						.getTenantContext()
+						.getScriptEngine();
 				urlParameterScript = GroovyTemplateCompiler.compile(urlParameter,
 						urlParameterScriptKey + "_" + SCRIPT_PREFIX,
 						(GroovyScriptEngine) scriptEngine);
@@ -1047,8 +1297,9 @@ public class MetaReferencePropertyEditor extends MetaPropertyEditor implements H
 
 			if (nestProperties != null && !nestProperties.isEmpty()) {
 				for (MetaNestProperty meta : nestProperties) {
-					if (meta.getAutocompletionSetting()  != null) {
-						entityView.addAutocompletionSetting(meta.getAutocompletionSetting().createRuntime(entityView));
+					if (meta.getAutocompletionSetting() != null) {
+						entityView.addAutocompletionSetting(meta.getAutocompletionSetting()
+								.createRuntime(entityView));
 					}
 				}
 			}

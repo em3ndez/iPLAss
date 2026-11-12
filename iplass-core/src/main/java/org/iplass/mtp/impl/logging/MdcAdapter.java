@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,9 +28,9 @@ import java.util.Set;
 import org.slf4j.MDC;
 
 class MdcAdapter implements Map<String, String> {
-	
+
 	private Map<String, String> mdcCopy;
-	
+
 	private void initCopy() {
 		if (mdcCopy == null) {
 			mdcCopy = MDC.getCopyOfContextMap();

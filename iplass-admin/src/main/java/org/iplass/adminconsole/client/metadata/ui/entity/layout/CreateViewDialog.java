@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -105,7 +105,8 @@ public class CreateViewDialog extends MtpDialog {
 				@Override
 				public void onSuccess(EntityView ev) {
 					//作成済みのView定義名取得
-					String name = nameItem.getValue().toString();
+					String name = nameItem.getValue()
+							.toString();
 
 					//プルダウンに追加、処理は画面の方に作成
 					if (okClickHandler != null) {
@@ -138,4 +139,3 @@ public class CreateViewDialog extends MtpDialog {
 		this.okClickHandler = handler;
 	}
 }
-

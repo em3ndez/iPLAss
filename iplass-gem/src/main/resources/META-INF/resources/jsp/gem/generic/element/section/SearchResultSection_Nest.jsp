@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
 <%@ page import="org.iplass.gem.command.Constants"%>
@@ -29,6 +29,7 @@
 <%@ page import="org.iplass.mtp.entity.definition.PropertyDefinition"%>
 <%@ page import="org.iplass.mtp.entity.definition.properties.ReferenceProperty"%>
 <%@ page import="org.iplass.mtp.util.StringUtil"%>
+<%@ page import="org.iplass.mtp.view.generic.EntityViewUtil"%>
 <%@ page import="org.iplass.mtp.view.generic.editor.NestProperty"%>
 <%@ page import="org.iplass.mtp.view.generic.editor.ReferencePropertyEditor"%>
 <%@ page import="org.iplass.mtp.web.template.TemplateUtil"%>
@@ -48,7 +49,7 @@
 	EntityDefinition red = edm.get(rp.getObjectDefinitionName());
 	int colCount = 0;
 	for (NestProperty np : editor.getNestProperties()) {
-		PropertyDefinition pd = red.getProperty(np.getPropertyName());
+		PropertyDefinition pd = EntityViewUtil.getNestTablePropertyDefinition(np, red);
 		if (isDispProperty(np)) {
 			String nestStyle = StringUtil.isNotBlank(style) ? style + "_col" + colCount++ : "";
 			if (pd instanceof ReferenceProperty
@@ -78,7 +79,7 @@
 					align = ", align:'" + np.getTextAlign().name().toLowerCase() + "'";
 				}
 				String sortable = "sortable:true";
-				if (!ViewUtil.getEntityViewHelper().isSortable(pd)) {
+				if (np.isVirtual() || !np.isSortable() || !ViewUtil.getEntityViewHelper().isSortable(pd)) {
 					sortable = "sortable:false";
 				}
 				String hidden = ", hidden:false";
@@ -87,7 +88,7 @@
 				}
 %>
 <%-- XSS対応-メタの設定のため対応なし(displayLabel,nestStyle) --%>
-	colModel.push({name:"<%=sortPropName%>", index:"<%=sortPropName%>", classes:"<%=nestStyle%>", label:"<p class='title'><%=displayLabel%></p>", <%=sortable%><%=hidden%><%=width%><%=align%>});
+	colModel.push({name:"<%=sortPropName%>", index:"<%=sortPropName%>", classes:"<%=nestStyle%>", label:"<p class='title'><%=displayLabel%></p>", <%=sortable%><%=hidden%><%=width%><%=align%>, cellattr: cellAttrFunc});
 <%
 			}
 		}

@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,13 +18,15 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
 <%@ page import="java.util.HashMap" %>
 <%@ page import="java.util.List"%>
 <%@ page import="org.iplass.mtp.auth.AuthContext"%>
+<%@ page import="org.iplass.mtp.auth.User"%>
+<%@ page import="org.iplass.mtp.tenant.Tenant"%>
 <%@ page import="org.iplass.mtp.entity.permission.EntityPermission"%>
 <%@ page import="org.iplass.mtp.entity.definition.properties.BinaryProperty"%>
 <%@ page import="org.iplass.mtp.entity.definition.properties.ReferenceProperty"%>
@@ -87,7 +89,15 @@
 	HashMap<String, Object> defaultSearchCond = (HashMap<String, Object>) request.getAttribute(Constants.DEFAULT_SEARCH_COND);
 	String executeSearch = getDefaultValue(defaultSearchCond, searchCond, Constants.EXECUTE_SEARCH);
 
-	String multiplicity = request.getParameter(Constants.SELECT_MULTI);
+	String _multiplicity = request.getParameter(Constants.SELECT_MULTI);
+	int multiplicity = 1;
+	if (_multiplicity != null) {
+		try {
+			multiplicity = Integer.parseInt(_multiplicity);
+		} catch (NumberFormatException e) {
+		}
+	}
+	
 	String _permitConditionSelectAll = request.getParameter(Constants.PERMIT_CONDITION_SELECT_ALL);
 	//全選択の範囲、trueの場合は他ページも含む検索条件に一致する全データ
 	boolean permitConditionSelectAll = StringUtil.isNotBlank(_permitConditionSelectAll) && "true".equals(_permitConditionSelectAll);
@@ -147,6 +157,20 @@
 	//Limit件数
 	int limit = ViewUtil.getSearchLimit(section);
 
+	//検索結果TABLEの高さ自動調節(section未設定時はServiceConfig既定値)
+	SearchResultSection.AutoHeightAdjustMode autoHeightAdjustMode = ViewUtil.getAutoHeightAdjustMode(section);
+	//高さ自動調節(画面fit)は「検索結果TABLEの高さ」が0かつ一般検索画面の場合のみ有効(dispHeight>0は固定高優先)
+	boolean fitToViewport = section.getDispHeight() == 0
+			&& autoHeightAdjustMode == SearchResultSection.AutoHeightAdjustMode.FIT_TO_VIEWPORT
+			&& OutputType.SEARCHRESULT == type;
+
+	// カラム固定の永続化キー接頭辞(tenant/user 単位で分離)
+	Tenant frozenTenant = auth.getTenant();
+	User frozenUser = auth.getUser();
+	String frozenKeyPrefix = (frozenTenant != null ? frozenTenant.getId() : -1)
+			+ "." + (frozenUser != null ? frozenUser.getOid() : "anonymous");
+	frozenKeyPrefix = StringUtil.escapeJavaScript(frozenKeyPrefix);
+
 	//一括詳細表示アクション
 	String bulkEditAction = BulkUpdateViewCommand.BULK_EDIT_ACTION_NAME + urlPath;
 	if (section.isUseBulkView()) {
@@ -158,14 +182,32 @@
 
 	Boolean multiSelect = OutputType.SEARCHRESULT == type && !section.isHideDelete() && canDelete || OutputType.SEARCHRESULT == type && section.isShowBulkUpdate() && canUpdate || OutputType.MULTISELECT == type;
 	if (multiSelect == null) multiSelect = false;
+
+	String id = "";
+	if (StringUtil.isNotBlank(section.getId())) {
+		id = "id=\"" + StringUtil.escapeHtml(section.getId()) + "\"";
+	}
+
+	String secStyle = "";
+	if (StringUtil.isNotBlank(section.getStyle())) {
+		secStyle = section.getStyle();
+	}
+
+	String title = GemResourceBundleUtil.resourceString("generic.element.section.SearchResultSection.srchrslt");
+	if (StringUtil.isNotBlank(section.getTitle())) {
+		title = TemplateUtil.getMultilingualString(section.getTitle(), section.getLocalizedTitleList());
+	}
+	
+	String styleAttr = ViewUtil.buildHeightStyleAttr(section.getSectionHeight());
 %>
-<div class="result-block" style="display:none;">
+<div <%=id %> class="result-block search-result-section <c:out value="<%=secStyle %>"/>" style="display:none;">
 <h3 class="hgroup-02">
-${m:rs("mtp-gem-messages", "generic.element.section.SearchResultSection.srchrslt")}
+<c:out value="<%=title %>"/>
 <span class="chagne-condition" style="display:none;">${m:rs("mtp-gem-messages", "generic.element.section.SearchResultSection.conditionChanged")}</span>
 <span class="searching" style="display:none;">${m:rs("mtp-gem-messages", "generic.element.section.SearchResultSection.searching")}</span>
+<span class="paginInputError" style="display:none;">${m:rs("mtp-gem-messages", "generic.element.section.SearchResultSection.paginInputError")}</span>
 </h3>
-<div class="result-data" style="display:none;">
+<div class="result-data" style="display:none;<%= styleAttr %>">
 <%
 	if (showdDetermineButton) {
 		//選択画面の確定ボタンを結果の上にも出す
@@ -180,6 +222,8 @@ ${m:rs("mtp-gem-messages", "generic.element.section.SearchResultSection.srchrslt
 <script type="text/javascript">
 var $pager = null;
 var grid = null;
+// カラム固定の制御オブジェクト(frozenColumns.js)。一般検索画面(SEARCHRESULT)かつ Section がカラム固定を許可している場合のみ設定する
+let frozenColumns = null;
 var isloaded = false;
 var keepSelectAllStatus = false;
 $(function() {
@@ -206,7 +250,8 @@ $(function() {
 			if (row.orgOid != beforeRow.orgOid || row.orgVersion != beforeRow.orgVersion || row[colName] != beforeRow[colName]) {
 				dif = true;
 			}
-			if (!dif) return " style=\"display:none;\" ";//同じ場合は非表示にする
+			//同じ場合は非表示にする、タイトルを指定しないと(""含む)CELL値が設定されるので指定
+			if (!dif) return " title=\"&nbsp;\" style=\"display:none;\" ";
 		}
 
 		//この行から何行分rowspanを設定するか計算
@@ -222,8 +267,16 @@ $(function() {
 			if (!dif) count++;
 			else break;
 		}
-		if (count > 1) return " style=\"vertical-align: center !important;\" rowspan=\"" + count + "\"";
-		else return null;
+		if (count > 1) {
+			var label = $.jgrid.stripHtml(rdata[colModel.name]).replace(/'/g, "&apos;");
+			if (!label || typeof label === "undefined") {
+				//タイトルを指定しないと(""含む)CELL値が設定されるので指定
+				label = "&nbsp;";
+			}
+			return " title=\"" + label + "\" style=\"vertical-align: center !important;\" rowspan=\"" + count + "\"";
+		} else {
+			return null;
+		}
 <%
 	} else {
 %>
@@ -264,6 +317,8 @@ $(function() {
 			String displayLabel = TemplateUtil.getMultilingualString(property.getDisplayLabel(), property.getLocalizedDisplayLabelList(), pd.getDisplayName(), pd.getLocalizedDisplayNameList());
 
 			if (isDispProperty(defName, pd, property)) {
+				// Section の「固定指定を許可」が ON の場合のみ「列を固定」指定列に frozen:true を出力する(初期固定の指定。frozenColumns.js 参照)
+				String frozen = section.isFrozenEnabled() && property.isFrozen() ? ", frozen:true" : "";
 				if (!(pd instanceof ReferenceProperty)) {
 					String sortPropName = StringUtil.escapeHtml(propName);
 					String width = "";
@@ -276,7 +331,7 @@ $(function() {
 					}
 					String style = property.getStyle() != null ? property.getStyle() : "";
 					String sortable = "sortable:true";
-					if (!ViewUtil.getEntityViewHelper().isSortable(pd)) {
+					if (!property.isSortable() || !ViewUtil.getEntityViewHelper().isSortable(pd)) {
 						sortable = "sortable:false";
 					}
 					String hidden = ", hidden:false";
@@ -285,7 +340,7 @@ $(function() {
 					}
 %>
 <%-- XSS対応-メタの設定のため対応なし(displayLabel,style) --%>
-	colModel.push({name:"<%=sortPropName%>", index:"<%=sortPropName%>", classes:"<%=style%>", label:"<p class='title'><%=displayLabel%></p>", <%=sortable%><%=hidden%><%=width%><%=align%>, cellattr: cellAttrFunc});
+	colModel.push({name:"<%=sortPropName%>", index:"<%=sortPropName%>", classes:"<%=style%>", label:"<p class='title'><%=displayLabel%></p>", <%=sortable%><%=hidden%><%=frozen%><%=width%><%=align%>, cellattr: cellAttrFunc});
 
 <%
 				//参照プロパティでJoinPropertyEditorを利用する場合
@@ -301,12 +356,12 @@ $(function() {
 					}
 					String style = property.getStyle() != null ? property.getStyle() : "";
 					String sortable = "sortable:true";
-					if (!ViewUtil.getEntityViewHelper().isSortable(pd)) {
+					if (!property.isSortable() || !ViewUtil.getEntityViewHelper().isSortable(pd)) {
 						sortable = "sortable:false";
 					}
 %>
 <%-- XSS対応-メタの設定のため対応なし(displayLabel,style) --%>
-	colModel.push({name:"<%=sortPropName%>", index:"<%=sortPropName%>", classes:"<%=style%>", label:"<p class='title'><%=displayLabel%></p>", <%=sortable%><%=width%><%=align%>});
+	colModel.push({name:"<%=sortPropName%>", index:"<%=sortPropName%>", classes:"<%=style%>", label:"<p class='title'><%=displayLabel%></p>", <%=sortable%><%=frozen%><%=width%><%=align%>, cellattr: cellAttrFunc});
 <%
 				} else if (property.getEditor() instanceof ReferencePropertyEditor) {
 					//参照型のName以外を表示する場合
@@ -323,7 +378,7 @@ $(function() {
 						}
 						String style = property.getStyle() != null ? property.getStyle() : "";
 						String sortable = "sortable:true";
-						if (!ViewUtil.getEntityViewHelper().isSortable(pd)) {
+						if (!property.isSortable() || !ViewUtil.getEntityViewHelper().isSortable(pd)) {
 							sortable = "sortable:false";
 						}
 						String hidden = ", hidden:false";
@@ -332,7 +387,7 @@ $(function() {
 						}
 %>
 <%-- XSS対応-メタの設定のため対応なし(displayLabel,style) --%>
-	colModel.push({name:"<%=sortPropName%>", index:"<%=sortPropName%>", classes:"<%=style%>", label:"<p class='title'><%=displayLabel%></p>", <%=sortable%><%=hidden%><%=width%><%=align%>});
+	colModel.push({name:"<%=sortPropName%>", index:"<%=sortPropName%>", classes:"<%=style%>", label:"<p class='title'><%=displayLabel%></p>", <%=sortable%><%=hidden%><%=frozen%><%=width%><%=align%>, cellattr: cellAttrFunc});
 <%
 					} else if (nest.size() > 0) {
 						String style = property.getStyle() != null ? property.getStyle() : "";
@@ -369,7 +424,7 @@ $(function() {
 			String style = property.getStyle() != null ? property.getStyle() : "";
 %>
 <%-- XSS対応-メタの設定のため対応なし(displayLabel,style) --%>
-colModel.push({name:"<%=propName%>", index:"<%=propName%>", classes:"<%=style%>", label:"<p class='title'><%=displayLabel%></p>", sortable:false <%=hidden%><%=width%><%=align%>});
+colModel.push({name:"<%=propName%>", index:"<%=propName%>", classes:"<%=style%>", label:"<p class='title'><%=displayLabel%></p>", sortable:false <%=hidden%><%=width%><%=align%>, cellattr: cellAttrFunc});
 <%
 		}
 	}
@@ -531,7 +586,8 @@ colModel.push({name:"<%=propName%>", index:"<%=propName%>", classes:"<%=style%>"
 			var data = $("#searchResult").getGridParam("_data");
 			if (!data) return;
 			//チェックボタン一覧の結合処理を行います。
-			$("#gview_searchResult tr.jqgrow").each(function(index){
+			// 凍結中は clone 側(frozen-bdiv)にも tr.jqgrow が存在するため主表のみを対象とする(二重走査防止)
+			$("#gview_searchResult .ui-jqgrid-bdiv:not(.frozen-bdiv) tr.jqgrow").each(function(index){
 				var row = data[index];
 				if (index > 0) {
 					var beforeRow = data[index - 1];
@@ -564,6 +620,20 @@ colModel.push({name:"<%=propName%>", index:"<%=propName%>", classes:"<%=style%>"
 	}
 %>
 	});
+<%
+	if (OutputType.SEARCHRESULT == type && section.isFrozenEnabled()) {
+%>
+	// カラム固定: colModel 確定後に初期化する(固定の適用は検索結果の描画後)。Section がカラム固定を許可していない場合は初期化しない
+	// freezeLabel/unfreezeLabel は Pin の操作ラベル({0}=表示列名。frozenColumns.js で埋め込む)
+	frozenColumns = $("#searchResult").frozenColumns({
+		storageKey: "frozenColumns_<%=frozenKeyPrefix%>_<%=StringUtil.escapeJavaScript(defName)%>_<%=StringUtil.escapeJavaScript(viewName)%>",
+		containerSelector: ".result-data",
+		freezeLabel: "<%=StringUtil.escapeJavaScript(GemResourceBundleUtil.resourceString("generic.element.section.SearchResultSection.freezeColumn"))%>",
+		unfreezeLabel: "<%=StringUtil.escapeJavaScript(GemResourceBundleUtil.resourceString("generic.element.section.SearchResultSection.unfreezeColumn"))%>"
+	});
+<%
+	}
+%>
 
 <%
 	if (!section.isHidePaging()) {
@@ -604,6 +674,12 @@ colModel.push({name:"<%=propName%>", index:"<%=propName%>", classes:"<%=style%>"
 			}
 			var val = currentPage * limit;
 			doSearch($(":hidden[name='searchType']").val(), val, false, $(".ui-icon-search"), "pager");
+		},
+		pagingInputErrorFunc: function() {
+			$pager.lock();
+			$(".paginInputError").show().fadeOut(1500, function() {
+				$pager.unlock();
+			});
 		}
 	});
 <%
@@ -693,6 +769,15 @@ function setData(list, count) {
 %>
 		grid.addRowData(index + 1, this);
 	});
+
+<%
+	if (section.getDispHeight() > 0) {
+%>
+	//データ描画後に幅を再計算してjqGridにスクロールバー幅を確保させる(列幅・横スクロールは保持)。
+	grid.jqGrid("setGridWidth", $("#gbox_searchResult").width(), false);
+<%
+	}
+%>
 
 	if ($("audio, video").length > 0) {
 		$('audio, video').mediaelementplayer({
@@ -794,6 +879,15 @@ function setData(list, count) {
 	clearAllDelete();
 <%	} %>
 
+	$(".fixHeight").fixHeight();
+	adjustResultGridHeight();
+	if (frozenColumns != null) {
+		frozenColumns.refresh();
+	}
+
+	// ソート状態の表頭反映(sortGrid)は凍結クローン再構築の後に実施する。
+	// 凍結中は jqGrid がソートアイコンをクローン側(fhDiv)に表示するため、クローン再構築の前に
+	// 適用すると表示が失われる(固定適用後ソート矢印が出ない問題の対策)
 	var sortKey = $(":hidden[name='sortKey']").val();
 	var sortType = $(":hidden[name='sortType']").val();
 	if (sortKey.length > 0 && sortType.length > 0) {
@@ -811,7 +905,11 @@ function setData(list, count) {
 		}
 	}
 
-	$(".fixHeight").fixHeight();
+	// 高さ自動調節(画面fit)時は、初回計算後にページ全体のレイアウト確定(コンテンツ領域の
+	// 画面高調整がボタン区等へ波及する)ことで下方要素の高さが変わり得るため、遅延して再計算する
+	if (fitToViewportMode) {
+		setTimeout(adjustResultGridHeight, 300);
+	}
 }
 function applyGridSelection(onselectrow) {
 	$("#searchResult tr[id]").each(function() {
@@ -862,6 +960,64 @@ var setRowHighlight = function (rowIndex) {
 	if (rowIndex >= $rows.length) return;
 	$rows.eq(rowIndex).addClass("ui-state-highlight");
 }
+var fitToViewportMode = <%=fitToViewport%>;
+var RESULT_GRID_MIN_HEIGHT = 80;
+function adjustResultGridHeight() {
+	if (!fitToViewportMode) return;
+	if ($("div.result-data").css("display") == "none") return;
+	var $gbox = $("#gbox_searchResult");
+	if ($gbox.length == 0) return;
+
+	var gridTop = $gbox.offset().top;
+	var $win = $(window);
+	var viewportBottom = $win.scrollTop() + $win.height();
+
+	//テーブル下端以降の可視要素(ページング・削除/一括更新ボタン区等)の高さを算出
+	var belowHeight = 0;
+	$gbox.nextAll().each(function() {
+		var $elem = $(this);
+		if ($elem.css("display") != "none" && $elem.css("visibility") != "hidden") {
+			var h = $elem.outerHeight(true);
+			if ($elem.hasClass("result-btns")) {
+				// ボタン区はページレイアウト(コンテンツ領域の画面高調整)の引き伸ばしにより
+				// 実際の内容以上の高さで測定される実測がある(内容はボタンのみ)。
+				// そのため内容(ボタン)の実高と上下 margin のみを計上し、テーブル高の不当な圧縮を防ぐ
+				var btnH = 0;
+				$elem.children(":visible").each(function() {
+					btnH += $(this).outerHeight(true);
+				});
+				h = btnH + parseFloat($elem.css("marginTop") || 0) + parseFloat($elem.css("marginBottom") || 0);
+			}
+			belowHeight += h;
+		}
+	});
+
+	//gbox全体に割当て可能な高さ
+	var gboxHeight = Math.floor(viewportBottom - gridTop - belowHeight);
+	var $bdiv = $(grid[0].grid.bDiv);
+	var outsideBodyHeight = $gbox.outerHeight(true) - $bdiv.outerHeight(true);
+	if (outsideBodyHeight < 0) outsideBodyHeight = 0;
+
+	var height = gboxHeight - outsideBodyHeight;
+	if (height < RESULT_GRID_MIN_HEIGHT) height = RESULT_GRID_MIN_HEIGHT;
+
+	grid.jqGrid("setGridHeight", height);
+	//スクロールバー出現後の横幅再計算(列幅・横スクロールは保持: 既存dispHeight>0時と同じ考慮)
+	grid.jqGrid("setGridWidth", $("#gbox_searchResult").width(), false);
+}
+//リサイズイベント連続発火時の過剰実行を抑止するためのデバウンス用タイマーID
+var resultGridResizeTimerId = null;
+$(window).on("resize", function() {
+	//ウィンドウリサイズ時も高さを再調節
+	if (!fitToViewportMode) return;
+	if (resultGridResizeTimerId != null) {
+		clearTimeout(resultGridResizeTimerId);
+	}
+	resultGridResizeTimerId = setTimeout(function() {
+		resultGridResizeTimerId = null;
+		adjustResultGridHeight();
+	}, 200);
+});
 var loadingOff = null;
 loadingOff = function(event, src) {
 	if (src === "pager") {
@@ -888,7 +1044,7 @@ ${m:outputToken('FORM_XHTML', false)}
 <%
 	}
 %>
-<p>
+<p class="result-btns">
 <%
 	if (OutputType.SEARCHRESULT == type && !section.isHideDelete() && canDelete) {
 %>
@@ -968,8 +1124,9 @@ function doDelete() {
 function deleteByCondition() {
 	$.blockUI({message: $("#blockLayer"), css: {width: "20px", left: "50%", top: "50%"}});
 	var type = $(":hidden[name='searchType']").val();
+	var allVersion = $("[name*='allVersion']:checked", $("[name='" + type + "Form']")).val();
 	var t = $(":hidden[name='_t']").val();
-	deleteAll("<%=StringUtil.escapeJavaScript(deleteAllWebapi)%>", type, type + "Form", t, function(message) {
+	deleteAll("<%=StringUtil.escapeJavaScript(deleteAllWebapi)%>", type, type + "Form", allVersion, t, function(message) {
 		if (message && message.length > 0) {
 			alert(message);
 		} else {
@@ -995,8 +1152,10 @@ function deleteRow(isConfirmed) {
 		//rowid_oid_version
 		oid.push(id + "_" + row.orgOid + "_" + row.orgVersion);
 	}
+	var type = $(":hidden[name='searchType']").val();
+	var allVersion = $("[name*='allVersion']:checked", $("[name='" + type + "Form']")).val();
 	var t = $(":hidden[name='_t']").val();
-	deleteList("<%=StringUtil.escapeJavaScript(deleteListWebapi)%>", oid, "<%=StringUtil.escapeJavaScript(viewName)%>", t, function(message) {
+	deleteList("<%=StringUtil.escapeJavaScript(deleteListWebapi)%>", oid, "<%=StringUtil.escapeJavaScript(viewName)%>", allVersion, t, function(message) {
 		if (message && message.length > 0) {
 			alert(message);
 		} else {
@@ -1161,9 +1320,10 @@ function closeBulkUpdateModalWindow() {
 <li>
 <label><input type="radio" name="selectAllType" value="current">${m:rs("mtp-gem-messages", "generic.element.section.SearchResultSection.selectCurrentPage")}</label>
 </li>
-<% 		if (!"-1".equals(multiplicity)) { %>
+<% 		if (multiplicity != -1) { %>
+<c:set var="multiplicity" value="<%=multiplicity%>" />
 <li class="selectalltype-message">
-<%= TemplateUtil.getResourceString("mtp-gem-messages", "generic.element.section.SearchResultSection.selectAllTypeMessage", multiplicity) %>
+${m:rsp("mtp-gem-messages", "generic.element.section.SearchResultSection.selectAllTypeMessage", multiplicity)}
 </li>
 <% 		} %>
 </ul>

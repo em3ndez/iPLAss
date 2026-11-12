@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,6 +27,7 @@ import org.iplass.mtp.definition.TypedDefinitionManager;
 import org.iplass.mtp.impl.command.async.MetaAsyncCommand.AsyncCommandRuntime;
 import org.iplass.mtp.impl.definition.AbstractTypedMetaDataService;
 import org.iplass.mtp.impl.definition.DefinitionMetaDataTypeMap;
+import org.iplass.mtp.impl.definition.DefinitionNameChecker;
 import org.iplass.mtp.spi.Config;
 import org.iplass.mtp.spi.Service;
 
@@ -37,9 +38,16 @@ public class AsyncCommandService extends AbstractTypedMetaDataService<MetaAsyncC
 		public TypeMap() {
 			super(getFixedPath(), MetaAsyncCommand.class, AsyncCommandDefinition.class);
 		}
+
 		@Override
 		public TypedDefinitionManager<AsyncCommandDefinition> typedDefinitionManager() {
-			return ManagerLocator.getInstance().getManager(AsyncCommandDefinitionManager.class);
+			return ManagerLocator.getInstance()
+					.getManager(AsyncCommandDefinitionManager.class);
+		}
+
+		@Override
+		protected DefinitionNameChecker createDefinitionNameChecker() {
+			return DefinitionNameChecker.getPathSlashDefinitionNameChecker();
 		}
 	}
 
@@ -64,6 +72,5 @@ public class AsyncCommandService extends AbstractTypedMetaDataService<MetaAsyncC
 	public Class<AsyncCommandRuntime> getRuntimeType() {
 		return AsyncCommandRuntime.class;
 	}
-
 
 }

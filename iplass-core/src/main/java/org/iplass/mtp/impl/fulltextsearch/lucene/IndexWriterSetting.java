@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,20 +21,31 @@
 package org.iplass.mtp.impl.fulltextsearch.lucene;
 
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.index.IndexDeletionPolicy;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.MergePolicy;
 import org.apache.lucene.util.InfoStream;
 
 public class IndexWriterSetting {
-	
+
 	private int commitLimit;
 	private Double ramBufferSizeMB = 64.0;
 	private MergePolicy mergePolicy;
 	private InfoStream infoStream;
-	
+	private IndexDeletionPolicy indexDeletionPolicy;
+
+	public IndexDeletionPolicy getIndexDeletionPolicy() {
+		return indexDeletionPolicy;
+	}
+
+	public void setIndexDeletionPolicy(IndexDeletionPolicy indexDeletionPolicy) {
+		this.indexDeletionPolicy = indexDeletionPolicy;
+	}
+
 	public int getCommitLimit() {
 		return commitLimit;
 	}
+
 	public void setCommitLimit(int commitLimit) {
 		this.commitLimit = commitLimit;
 	}
@@ -42,18 +53,23 @@ public class IndexWriterSetting {
 	public InfoStream getInfoStream() {
 		return infoStream;
 	}
+
 	public void setInfoStream(InfoStream infoStream) {
 		this.infoStream = infoStream;
 	}
+
 	public MergePolicy getMergePolicy() {
 		return mergePolicy;
 	}
+
 	public void setMergePolicy(MergePolicy mergePolicy) {
 		this.mergePolicy = mergePolicy;
 	}
+
 	public Double getRamBufferSizeMB() {
 		return ramBufferSizeMB;
 	}
+
 	public void setRamBufferSizeMB(Double ramBufferSizeMB) {
 		this.ramBufferSizeMB = ramBufferSizeMB;
 	}
@@ -65,7 +81,7 @@ public class IndexWriterSetting {
 		} else {
 			config = new IndexWriterConfig(analyzer);
 		}
-		
+
 		if (ramBufferSizeMB != null) {
 			config.setRAMBufferSizeMB(ramBufferSizeMB);
 		}
@@ -74,6 +90,9 @@ public class IndexWriterSetting {
 		}
 		if (infoStream != null) {
 			config.setInfoStream(infoStream);
+		}
+		if (indexDeletionPolicy != null) {
+			config.setIndexDeletionPolicy(indexDeletionPolicy);
 		}
 		return config;
 	}

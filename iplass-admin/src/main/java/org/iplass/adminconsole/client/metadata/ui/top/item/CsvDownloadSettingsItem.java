@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,8 +28,6 @@ import org.iplass.adminconsole.client.metadata.ui.top.PartsOperationHandler;
 import org.iplass.mtp.view.top.parts.CsvDownloadSettingsParts;
 
 import com.google.gwt.core.shared.GWT;
-import com.smartgwt.client.types.HeaderControls;
-import com.smartgwt.client.widgets.HeaderControl;
 import com.smartgwt.client.widgets.IButton;
 import com.smartgwt.client.widgets.events.ClickEvent;
 import com.smartgwt.client.widgets.events.ClickHandler;
@@ -53,20 +51,17 @@ public class CsvDownloadSettingsItem extends PartsItem {
 		this.controler = controler;
 		setTitle("CsvDownload Settings");
 		setBackgroundColor("#B0B0B0");
-
-		setHeaderControls(HeaderControls.HEADER_LABEL, new HeaderControl(HeaderControl.SETTINGS, new ClickHandler() {
-
-			@Override
-			public void onClick(ClickEvent event) {
-				CsvDownloadSettingsItemSettingDialog dialog = new CsvDownloadSettingsItemSettingDialog();
-				dialog.show();
-			}
-		}), HeaderControls.CLOSE_BUTTON);
 	}
 
 	@Override
 	public CsvDownloadSettingsParts getParts() {
 		return parts;
+	}
+
+	@Override
+	protected void onOpen() {
+		CsvDownloadSettingsItemSettingDialog dialog = new CsvDownloadSettingsItemSettingDialog();
+		dialog.show();
 	}
 
 	@Override
@@ -99,8 +94,9 @@ public class CsvDownloadSettingsItem extends PartsItem {
 
 			IButton save = new IButton("OK");
 			save.addClickHandler(new ClickHandler() {
+				@Override
 				public void onClick(ClickEvent event) {
-					if (form.validate()){
+					if (form.validate()) {
 						formController.applyTo(parts);
 						destroy();
 					}
@@ -109,6 +105,7 @@ public class CsvDownloadSettingsItem extends PartsItem {
 
 			IButton cancel = new IButton("Cancel");
 			cancel.addClickHandler(new ClickHandler() {
+				@Override
 				public void onClick(ClickEvent event) {
 					destroy();
 				}

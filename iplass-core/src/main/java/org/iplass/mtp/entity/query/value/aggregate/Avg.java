@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -37,11 +37,11 @@ public class Avg extends Aggregate {
 
 	public Avg() {
 	}
-	
+
 	public Avg(String propertyName) {
 		setValue(new EntityField(propertyName));
 	}
-	
+
 	public Avg(ValueExpression value) {
 		setValue(value);
 	}

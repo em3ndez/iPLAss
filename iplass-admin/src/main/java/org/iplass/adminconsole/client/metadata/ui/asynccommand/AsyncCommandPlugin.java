@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,7 +35,6 @@ import org.iplass.mtp.command.async.definition.AsyncCommandDefinition;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.smartgwt.client.util.SC;
-
 
 public class AsyncCommandPlugin extends DefaultMetaDataPlugin {
 
@@ -103,23 +102,27 @@ public class AsyncCommandPlugin extends DefaultMetaDataPlugin {
 	@Override
 	protected void itemDelete(final MetaDataItemMenuTreeNode itemNode) {
 		MetaDataServiceAsync service = MetaDataServiceFactory.get();
-		service.deleteDefinition(TenantInfoHolder.getId(), AsyncCommandDefinition.class.getName(), itemNode.getDefName(), new AsyncCallback<AdminDefinitionModifyResult>() {
-			public void onFailure(Throwable caught) {
-				// 失敗時
-				SC.warn(AdminClientMessageUtil.getString("ui_metadata_asyncCommand_AsyncCommandPluginManager_failedToDeleteAsyncCommand") + caught.getMessage());
-			}
-			public void onSuccess(AdminDefinitionModifyResult result) {
-				if (result.isSuccess()) {
-					SC.say(AdminClientMessageUtil.getString("ui_metadata_asyncCommand_AsyncCommandPluginManager_completion"),
-							AdminClientMessageUtil.getString("ui_metadata_asyncCommand_AsyncCommandPluginManager_deleteAsyncCommandComp"));
+		service.deleteDefinition(TenantInfoHolder.getId(), AsyncCommandDefinition.class.getName(), itemNode.getDefName(),
+				new AsyncCallback<AdminDefinitionModifyResult>() {
+					public void onFailure(Throwable caught) {
+						// 失敗時
+						SC.warn(AdminClientMessageUtil.getString("ui_metadata_asyncCommand_AsyncCommandPluginManager_failedToDeleteAsyncCommand")
+								+ caught.getMessage());
+					}
 
-					refresh();
-					removeTab(itemNode);
-				} else {
-					SC.warn(AdminClientMessageUtil.getString("ui_metadata_asyncCommand_AsyncCommandPluginManager_failedToDeleteAsyncCommand") + result.getMessage());
-				}
-			}
-		});
+					public void onSuccess(AdminDefinitionModifyResult result) {
+						if (result.isSuccess()) {
+							SC.say(AdminClientMessageUtil.getString("ui_metadata_asyncCommand_AsyncCommandPluginManager_completion"),
+									AdminClientMessageUtil.getString("ui_metadata_asyncCommand_AsyncCommandPluginManager_deleteAsyncCommandComp"));
+
+							refresh();
+							removeTab(itemNode);
+						} else {
+							SC.warn(AdminClientMessageUtil.getString("ui_metadata_asyncCommand_AsyncCommandPluginManager_failedToDeleteAsyncCommand")
+									+ result.getMessage());
+						}
+					}
+				});
 	}
 
 	@Override
@@ -129,6 +132,6 @@ public class AsyncCommandPlugin extends DefaultMetaDataPlugin {
 
 	@Override
 	protected Class<?>[] workspaceContentsPaneClass() {
-		return new Class[]{AsyncCommandEditPane.class};
+		return new Class[] { AsyncCommandEditPane.class };
 	}
 }

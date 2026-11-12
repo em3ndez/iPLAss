@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 class Holder {
-	static final TransactionManager tm = ManagerLocator.getInstance().getManager(TransactionManager.class);
+	static final TransactionManager tm = ManagerLocator.getInstance()
+			.getManager(TransactionManager.class);
 	static Logger logger = LoggerFactory.getLogger(Transaction.class);
 }

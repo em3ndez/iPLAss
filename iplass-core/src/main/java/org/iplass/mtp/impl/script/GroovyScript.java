@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,7 +24,6 @@ import org.codehaus.groovy.GroovyBugError;
 
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyCodeSource;
-
 
 public class GroovyScript implements Script {
 
@@ -90,7 +89,5 @@ public class GroovyScript implements Script {
 		//FIXME GroovyClassLoaderから自身の削除（sharedClassLoaderで、Scriptの場合だけか？）
 		super.finalize();
 	}
-
-
 
 }

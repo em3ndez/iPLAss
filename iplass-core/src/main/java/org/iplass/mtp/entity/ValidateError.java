@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,41 +31,48 @@ import java.util.List;
  *
  */
 public class ValidateError {
-	
+
 	private String propertyName;
 	private String propertyDisplayName;
 	private List<String> errorMessages;
 	private List<String> errorCodes;
-	
+
 	public String getPropertyName() {
 		return propertyName;
 	}
+
 	public void setPropertyName(String propertyName) {
 		this.propertyName = propertyName;
 	}
+
 	public String getPropertyDisplayName() {
 		return propertyDisplayName;
 	}
+
 	public void setPropertyDisplayName(String propertyDisplayName) {
 		this.propertyDisplayName = propertyDisplayName;
 	}
+
 	public List<String> getErrorCodes() {
 		return errorCodes;
 	}
+
 	public void setErrorCodes(List<String> errorCodes) {
 		this.errorCodes = errorCodes;
 	}
+
 	public List<String> getErrorMessages() {
 		return errorMessages;
 	}
+
 	public void setErrorMessages(List<String> errorMessages) {
 		this.errorMessages = errorMessages;
 	}
-	
+
 	public void addErrorMessage(String errorMessage) {
 		addErrorMessage(errorMessage, "");
 	}
-	
+
 	public void addErrorMessage(String errorMessage, String errorCode) {
 		if (errorMessages == null) {
 			errorMessages = new ArrayList<String>();

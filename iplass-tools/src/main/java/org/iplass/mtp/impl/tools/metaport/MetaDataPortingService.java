@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -105,9 +105,32 @@ public interface MetaDataPortingService extends Service {
 	void patchEntityDataWithPrivilegedAuth(PatchEntityDataParameter param);
 
 	/**
-	 * Entityデータのパッチ処理をユーザ認証モードで行います。
+	 * Entityデータのパッチ処理をユーザー認証モードで行います。
 	 * 
 	 * @param param EntityDataパッチパラメータ
 	 */
 	void patchEntityDataWithUserAuth(PatchEntityDataParameter param, String userId, String password);
+
+	/**
+	 * <p>MetaDataEntryのメタデータ整合性チェックを行います(選択Pathのみ)。</p>
+	 * <p>
+	 * MetaDataExplorerで利用しています。
+	 * </p>
+	 *
+	 * @param targetName インポート対象の名前(Package名、XMLファイル名、Tag名)
+	 * @param entryInfo 取り込み対象が含まれたMetaData情報
+	 * @param selectedPaths 取り込み対象のList
+	 */
+	MetaDataCheckResult checkMetaData(String targetName, XMLEntryInfo entryInfo, final List<String> selectedPaths);
+
+	/**
+	 * <p>MetaDataEntryのメタデータ整合性チェックを行います(全件)。</p>
+	 * <p>
+	 * Packageで利用しています。
+	 * </p>
+	 *
+	 * @param targetName インポート対象の名前(Package名、XMLファイル名、Tag名)
+	 * @param entryInfo 取り込み対象が含まれたMetaData情報
+	 */
+	MetaDataCheckResult checkMetaData(String targetName, XMLEntryInfo entryInfo);
 }

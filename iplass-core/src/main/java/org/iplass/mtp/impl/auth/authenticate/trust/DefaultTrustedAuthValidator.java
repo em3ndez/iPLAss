@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,10 +33,9 @@ import org.iplass.mtp.impl.auth.authenticate.AuthenticationProvider;
  *
  */
 public class DefaultTrustedAuthValidator implements TrustedAuthValidator {
-	
+
 	private String accountHandleClass;
 	private String requiredCredentialClass;
-	
 
 	public DefaultTrustedAuthValidator(String accountHandleClass,
 			String requiredCredentialClass) {
@@ -64,7 +63,9 @@ public class DefaultTrustedAuthValidator implements TrustedAuthValidator {
 	@Override
 	public TrustedAuthValidateResult checkTrusted(UserContext userContext) {
 		AccountHandle account = userContext.getAccount();
-		if (account.getClass().getName().equals(accountHandleClass)) {
+		if (account.getClass()
+				.getName()
+				.equals(accountHandleClass)) {
 			return new TrustedAuthValidateResult(true, null);
 		} else {
 			try {

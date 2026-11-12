@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,19 +22,19 @@ package org.iplass.mtp.impl.validation.bean;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.validation.Configuration;
-import javax.validation.MessageInterpolator;
-import javax.validation.Validation;
-import javax.validation.ValidatorFactory;
-
 import org.iplass.mtp.impl.core.ExecuteContext;
+
+import jakarta.validation.Configuration;
+import jakarta.validation.MessageInterpolator;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidatorFactory;
 
 public class BeanValidationConfig {
 	@SuppressWarnings("rawtypes")
 	private Class providerClass;
 	private MessageInterpolator messageInterpolator;
 	private Map<String, String> properties;
-	
+
 	public Class<?> getProviderClass() {
 		return providerClass;
 	}
@@ -61,38 +61,41 @@ public class BeanValidationConfig {
 
 	@SuppressWarnings("unchecked")
 	public ValidatorFactory getValidatorFactory() {
-		
+
 		Configuration<?> config;
 		if (this.providerClass != null) {
-			config = Validation.byProvider(this.providerClass).configure();
+			config = Validation.byProvider(this.providerClass)
+					.configure();
 		} else {
-			config = Validation.byDefaultProvider().configure();
+			config = Validation.byDefaultProvider()
+					.configure();
 		}
-		
+
 		if (messageInterpolator != null) {
 			config.messageInterpolator(new TenantLocaleMessageInterpolator(messageInterpolator));
 		} else {
 			config.messageInterpolator(new TenantLocaleMessageInterpolator(config.getDefaultMessageInterpolator()));
 		}
-		
+
 		if (properties != null) {
 			properties.forEach((name, value) -> config.addProperty(name, value));
 		}
 
 		return config.buildValidatorFactory();
 	}
-	
+
 	private static class TenantLocaleMessageInterpolator implements MessageInterpolator {
-		
+
 		private MessageInterpolator wrapped;
-		
+
 		private TenantLocaleMessageInterpolator(MessageInterpolator wrapped) {
 			this.wrapped = wrapped;
 		}
 
 		@Override
 		public String interpolate(String messageTemplate, Context context) {
-			return wrapped.interpolate(messageTemplate, context, ExecuteContext.getCurrentContext().getLangLocale());
+			return wrapped.interpolate(messageTemplate, context, ExecuteContext.getCurrentContext()
+					.getLangLocale());
 		}
 
 		@Override

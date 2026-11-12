@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,9 +21,15 @@
 package org.iplass.mtp.impl.rdb.connection;
 
 public interface AdditionalWarnLogInfo {
-	
+
 	public boolean logBefore();
-	
+
 	public String toString();
+
+	public String logFormat();
+
+	public int parameterSize();
+
+	public void setParameter(int offset, Object[] params);
 
 }

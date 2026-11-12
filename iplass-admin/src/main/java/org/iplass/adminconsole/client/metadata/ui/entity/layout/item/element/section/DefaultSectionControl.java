@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,7 +24,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.iplass.adminconsole.client.metadata.ui.entity.layout.EntityViewDragPane;
+import org.iplass.adminconsole.client.metadata.ui.entity.layout.item.BulkDropLayout;
 import org.iplass.adminconsole.client.metadata.ui.entity.layout.item.DetailDropLayout;
+import org.iplass.adminconsole.client.metadata.ui.entity.layout.item.EntityViewItemDropLayout;
 import org.iplass.adminconsole.client.metadata.ui.entity.layout.item.ItemControl;
 import org.iplass.adminconsole.client.metadata.ui.entity.layout.item.element.ElementControl;
 import org.iplass.adminconsole.client.metadata.ui.entity.layout.item.element.VirtualPropertyControl;
@@ -52,12 +54,14 @@ import com.smartgwt.client.widgets.Canvas;
 public class DefaultSectionControl extends ItemControl implements SectionControl {
 
 	/** 内部のレイアウト */
-	private DetailDropLayout layout = null;
+	private EntityViewItemDropLayout layout = null;
 
 	private EntityDefinition ed;
 
 	/** SectionWindowController */
 	private SectionController sectionController = GWT.create(SectionController.class);
+
+	private static final String BG_COLOR = "#DDFFFF";
 
 	/**
 	 * コンストラクタ
@@ -67,29 +71,19 @@ public class DefaultSectionControl extends ItemControl implements SectionControl
 	private DefaultSectionControl(final String defName, FieldReferenceType triggerType, String title, int colNum) {
 		super(defName, triggerType);
 
-		String bgColor = "#DDFFFF";
-
-
 		if (title != null && !title.isEmpty()) {
 			setTitle(title);
 		} else {
 			setTitle("Default Section");
 		}
-		setBackgroundColor(bgColor);
+		setBackgroundColor(BG_COLOR);
 		setDragType(EntityViewDragPane.DRAG_TYPE_SECTION);
 		setAutoSize(true);
 		setBorder("1px solid navy");
 
 		setHeaderControls(HeaderControls.MINIMIZE_BUTTON, HeaderControls.HEADER_LABEL, setting, HeaderControls.CLOSE_BUTTON);
 
-		layout = new DetailDropLayout(colNum, defName);
-		layout.setDropTypes(
-				EntityViewDragPane.DRAG_TYPE_SECTION,
-				EntityViewDragPane.DRAG_TYPE_PROPERTY,
-				EntityViewDragPane.DRAG_TYPE_ELEMENT);
-		layout.setCanDropComponents(true);
-		layout.setPadding(5);
-		layout.setBackgroundColor(bgColor);
+		layout = createDropLayout(triggerType, defName, colNum);
 
 		addItem(layout);
 
@@ -100,16 +94,18 @@ public class DefaultSectionControl extends ItemControl implements SectionControl
 				//カラム数が変更されていたら再構築
 				DefaultSection section = (DefaultSection) event.getValue();
 
-				if (section.getTitle() != null && !section.getTitle().isEmpty()) {
+				if (section.getTitle() != null && !section.getTitle()
+						.isEmpty()) {
 					setTitle(section.getTitle());
 				} else {
 					setTitle("Default Section");
 				}
 
-				if (section.getColNum() == layout.getColNum()) return;
+				if (section.getColNum() == layout.getColNum())
+					return;
 
-				DetailDropLayout old = layout;
-				layout = new DetailDropLayout(section.getColNum(), defName);
+				EntityViewItemDropLayout old = layout;
+				layout = createDropLayout(triggerType, defName, section.getColNum());
 				layout.setEntityDefinition(ed);
 
 				//カラム変更前のレイアウトからメンバー取得
@@ -136,13 +132,33 @@ public class DefaultSectionControl extends ItemControl implements SectionControl
 		});
 	}
 
+	private EntityViewItemDropLayout createDropLayout(FieldReferenceType triggerType, final String defName, int colNum) {
+		EntityViewItemDropLayout layout = null;
+		if (FieldReferenceType.BULK.equals(triggerType)) {
+			layout = new BulkDropLayout(colNum, defName);
+		} else {
+			layout = new DetailDropLayout(colNum, defName);
+		}
+
+		layout.setDropTypes(
+				EntityViewDragPane.DRAG_TYPE_SECTION,
+				EntityViewDragPane.DRAG_TYPE_PROPERTY,
+				EntityViewDragPane.DRAG_TYPE_ELEMENT);
+		layout.setCanDropComponents(true);
+		layout.setPadding(5);
+		layout.setBackgroundColor(BG_COLOR);
+
+		return layout;
+	}
+
 	/**
 	 * コンストラクタ
 	 * @param section
 	 */
 	public DefaultSectionControl(String defName, FieldReferenceType triggerType, DefaultSection section) {
 		this(defName, triggerType, section.getTitle(), section.getColNum());
-		setClassName(section.getClass().getName());
+		setClassName(section.getClass()
+				.getName());
 		setValueObject(section);
 	}
 
@@ -170,14 +186,14 @@ public class DefaultSectionControl extends ItemControl implements SectionControl
 	 * @param propertyOperationHandler
 	 */
 	public void restoreMember() {
-		DefaultSection section = (DefaultSection)getValueObject();
+		DefaultSection section = (DefaultSection) getValueObject();
 
 		//配下の要素を復元
 		for (Element element : section.getElements()) {
 			if (element instanceof Section) {
-				ItemControl child = sectionController.createControl((Section)element, defName, getTriggerType(), ed);
+				ItemControl child = sectionController.createControl((Section) element, defName, getTriggerType(), ed);
 				if (child instanceof DefaultSectionControl) {
-					DefaultSectionControl dsChild = (DefaultSectionControl)child;
+					DefaultSectionControl dsChild = (DefaultSectionControl) child;
 					dsChild.setEntityDefinition(ed);
 					dsChild.restoreMember();
 				}
@@ -208,13 +224,16 @@ public class DefaultSectionControl extends ItemControl implements SectionControl
 		}
 	}
 
-	/* (非 Javadoc)
+	/*
+	 * (非 Javadoc)
+	 * 
 	 * @see org.iplass.adminconsole.client.ui.layout.SectionWindow#getSection()
 	 */
 	@Override
 	public DefaultSection getSection() {
 		DefaultSection section = (DefaultSection) getValueObject();
-		section.getElements().clear();
+		section.getElements()
+				.clear();
 		section.setElements(getData());
 		return section;
 	}

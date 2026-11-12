@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,8 +27,6 @@ import org.iplass.mtp.entity.query.ASTNode;
 import org.iplass.mtp.entity.query.ASTTransformer;
 import org.iplass.mtp.entity.query.value.ValueExpression;
 import org.iplass.mtp.entity.query.value.ValueExpressionVisitor;
-
-
 
 /**
  * 多項式 （加減算）を表す。
@@ -114,12 +112,12 @@ public class Polynomial extends ValueExpression {
 	public void accept(ValueExpressionVisitor visitor) {
 		if (visitor.visit(this)) {
 			if (addValues != null) {
-				for (ValueExpression v: addValues) {
+				for (ValueExpression v : addValues) {
 					v.accept(visitor);
 				}
 			}
 			if (subValues != null) {
-				for (ValueExpression v: subValues) {
+				for (ValueExpression v : subValues) {
 					v.accept(visitor);
 				}
 			}

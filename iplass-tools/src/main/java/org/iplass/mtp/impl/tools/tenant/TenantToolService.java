@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -39,6 +39,7 @@ import org.iplass.mtp.impl.tools.tenant.create.TenantCreateProcess;
 import org.iplass.mtp.impl.tools.tenant.log.LogHandler;
 import org.iplass.mtp.impl.tools.tenant.rdb.TenantRdbManager;
 import org.iplass.mtp.impl.tools.tenant.rdb.TenantRdbManagerFactory;
+import org.iplass.mtp.impl.tools.tenant.rdb.TenantRdbManagerParameter;
 import org.iplass.mtp.impl.util.InternalDateUtil;
 import org.iplass.mtp.spi.Config;
 import org.iplass.mtp.spi.Service;
@@ -70,7 +71,6 @@ public class TenantToolService implements Service {
 
 	private TenantRdbManager rdbManager;
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void init(Config config) {
 		tenantContextService = config.getDependentService(TenantContextService.class);
@@ -78,11 +78,15 @@ public class TenantToolService implements Service {
 		metaTenantService = config.getDependentService(MetaTenantService.class);
 		authService = config.getDependentService(AuthService.class);
 
-		RdbAdapter rdbAdapter = config.getDependentService(RdbAdapterService.class).getRdbAdapter();
+		RdbAdapter rdbAdapter = config.getDependentService(RdbAdapterService.class)
+				.getRdbAdapter();
 
-		createProcesses = (List<TenantCreateProcess>) config.getBeans("createProcesses");
+		createProcesses = config.getValues("createProcesses", TenantCreateProcess.class);
 
-		rdbManager = new TenantRdbManagerFactory().createManager(rdbAdapter);
+		// TenantRdbManager のパラメータを取得
+		TenantRdbManagerParameter parameter = config.getValue("tenantRdbManagerParameter", TenantRdbManagerParameter.class);
+		// TenantRdbManager インスタンス生成
+		rdbManager = new TenantRdbManagerFactory().createManager(rdbAdapter, parameter);
 	}
 
 	@Override
@@ -91,26 +95,26 @@ public class TenantToolService implements Service {
 
 	public List<TenantInfo> getValidTenantInfoList() {
 		return Transaction.required(t -> {
-				return rdbManager.getValidTenantInfoList();
+			return rdbManager.getValidTenantInfoList();
 		});
 
 	}
 
 	public List<TenantInfo> getAllTenantInfoList() {
 		return Transaction.required(t -> {
-				return rdbManager.getAllTenantInfoList();
+			return rdbManager.getAllTenantInfoList();
 		});
 	}
 
 	public boolean existsURL(final String url) {
 		return Transaction.required(t -> {
-				return rdbManager.existsURL(url);
+			return rdbManager.existsURL(url);
 		});
 	}
 
 	public TenantInfo getTenantInfo(final String url) {
 		return Transaction.required(t -> {
-				return rdbManager.getTenantInfo(url);
+			return rdbManager.getTenantInfo(url);
 		});
 	}
 
@@ -125,7 +129,8 @@ public class TenantToolService implements Service {
 	 * @return
 	 */
 	public boolean create(final TenantCreateParameter param) {
-		return create(param, new LogHandler() {});
+		return create(param, new LogHandler() {
+		});
 	}
 
 	/**
@@ -163,11 +168,12 @@ public class TenantToolService implements Service {
 			ExecuteContext.executeAs(tContext, () -> {
 
 				for (TenantCreateProcess process : createProcesses) {
-					logger.debug("execute " + process.getClass().getSimpleName());
+					logger.debug("execute " + process.getClass()
+							.getSimpleName());
 					if (!process.execute(param, logHandler)) {
 						break;
 					}
-				};
+				} ;
 
 				return null;
 			});
@@ -185,7 +191,8 @@ public class TenantToolService implements Service {
 
 		//存在チェック
 		if (rdbManager.existsURL(param.getTenantUrl())) {
-			throw new IllegalArgumentException(ToolsResourceBundleUtil.resourceString(param.getLoggerLanguage(), "tenant.create.existsURLMsg", param.getTenantUrl()));
+			throw new IllegalArgumentException(
+					ToolsResourceBundleUtil.resourceString(param.getLoggerLanguage(), "tenant.create.existsURLMsg", param.getTenantUrl()));
 		}
 
 		Tenant tenant = new Tenant();
@@ -268,8 +275,10 @@ public class TenantToolService implements Service {
 
 		TenantI18nInfo i18Info = new TenantI18nInfo();
 		i18Info.setUseMultilingual(true);
-		if (param.getUseLanguages() != null && !param.getUseLanguages().isEmpty()) {
-			String[] langArray = param.getUseLanguages().split(",");
+		if (param.getUseLanguages() != null && !param.getUseLanguages()
+				.isEmpty()) {
+			String[] langArray = param.getUseLanguages()
+					.split(",");
 			List<String> useLanguageList = new ArrayList<>(langArray.length);
 			for (String lang : langArray) {
 				useLanguageList.add(lang);
@@ -293,8 +302,10 @@ public class TenantToolService implements Service {
 	 */
 	private void setDefaultTenantI18nInfo(final TenantCreateParameter param, final Tenant tenant) {
 		TenantI18nInfo i18Info = new TenantI18nInfo();
-		if (param.getUseLanguages() != null && !param.getUseLanguages().isEmpty()) {
-			String[] langArray = param.getUseLanguages().split(",");
+		if (param.getUseLanguages() != null && !param.getUseLanguages()
+				.isEmpty()) {
+			String[] langArray = param.getUseLanguages()
+					.split(",");
 			List<String> useLanguageList = new ArrayList<>(langArray.length);
 			for (String lang : langArray) {
 				useLanguageList.add(lang);
@@ -321,7 +332,8 @@ public class TenantToolService implements Service {
 	 * @return
 	 */
 	public boolean remove(final TenantDeleteParameter param) {
-		return remove(param, new LogHandler() {});
+		return remove(param, new LogHandler() {
+		});
 	}
 
 	/**
@@ -337,16 +349,16 @@ public class TenantToolService implements Service {
 
 		boolean isSuccess = Transaction.requiresNew(t -> {
 
-				boolean deleteAccount = false;
-				AuthenticationProvider provider = authService.getAuthenticationProvider();
-				if (provider instanceof BuiltinAuthenticationProvider) {
-					deleteAccount = true;
-				}
+			boolean deleteAccount = false;
+			AuthenticationProvider provider = authService.getAuthenticationProvider();
+			if (provider instanceof BuiltinAuthenticationProvider) {
+				deleteAccount = true;
+			}
 
-				//テナントの削除
-				rdbManager.deleteTenant(param, deleteAccount, wrapLogger);
+			//テナントの削除
+			rdbManager.deleteTenant(param, deleteAccount, wrapLogger);
 
-				return true;
+			return true;
 		});
 
 		return isSuccess;
@@ -357,7 +369,7 @@ public class TenantToolService implements Service {
 		if (rdbManager.isSupportPartition()) {
 
 			return Transaction.required(t -> {
-					return rdbManager.getPartitionInfo();
+				return rdbManager.getPartitionInfo();
 			});
 		}
 
@@ -368,7 +380,7 @@ public class TenantToolService implements Service {
 
 		if (rdbManager.isSupportPartition()) {
 			return Transaction.required(t -> {
-					return rdbManager.createPartition(param, logHandler);
+				return rdbManager.createPartition(param, logHandler);
 			});
 		}
 
@@ -388,36 +400,43 @@ public class TenantToolService implements Service {
 			logger.debug(message);
 			logHandler.debug(message);
 		}
+
 		@Override
 		public void debug(String message, Throwable e) {
 			logger.debug(message, e);
 			logHandler.debug(message, e);
 		}
+
 		@Override
 		public void info(String message) {
 			logger.info(message);
 			logHandler.info(message);
 		}
+
 		@Override
 		public void info(String message, Throwable e) {
 			logger.info(message, e);
 			logHandler.info(message, e);
 		}
+
 		@Override
 		public void warn(String message) {
 			logger.warn(message);
 			logHandler.warn(message);
 		}
+
 		@Override
 		public void warn(String message, Throwable e) {
 			logger.warn(message, e);
 			logHandler.warn(message, e);
 		}
+
 		@Override
 		public void error(String message) {
 			logger.error(message);
 			logHandler.error(message);
 		}
+
 		@Override
 		public void error(String message, Throwable e) {
 			logger.error(message, e);

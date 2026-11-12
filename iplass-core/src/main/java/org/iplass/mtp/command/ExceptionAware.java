@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -58,7 +58,7 @@ package org.iplass.mtp.command;
  *
  */
 public interface ExceptionAware {
-	
+
 	/**
 	 * {@link Command#execute(RequestContext)}内、もしくはCommandInterceptor内で例外が発生した場合、 当メソッドが呼び出される。
 	 * 返り値として、Commandのステータスを返却するか、例外を再スローするようにする。

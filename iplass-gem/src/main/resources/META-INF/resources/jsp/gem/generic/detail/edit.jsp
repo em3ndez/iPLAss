@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -48,6 +48,7 @@
 	DetailFormViewData data = (DetailFormViewData) request.getAttribute(Constants.DATA);
 	String searchCond = (String) request.getAttribute(Constants.SEARCH_COND);
 	String message = (String) request.getAttribute(Constants.MESSAGE);
+	boolean isVersionSpecified = Boolean.TRUE.equals(request.getAttribute(Constants.VERSION_SPECIFIED));
 
 	OutputType type = OutputType.EDIT;
 	String contextPath = TemplateUtil.getTenantContextPath();
@@ -192,6 +193,8 @@ function onclick_save(action, target, hidden) {
 		return;
 	}
 
+	if (!validation()) return;
+
 	button_onclick(action, hidden);
 	if (target) $(target).prop("disabled", true);
 }
@@ -199,6 +202,8 @@ function onclick_insert(action, target, hidden) {
 	if ($("#confirmEditSave").val() == "true" && !confirm("${m:rs('mtp-gem-messages', 'generic.detail.detail.saveMsg')}")) {
 		return;
 	}
+
+	if (!validation()) return;
 
 	button_onclick(action, hidden);
 	if (target) $(target).prop("disabled", true);
@@ -228,6 +233,9 @@ function cancel() {
 <%	if (!moveToSearchList) {
 		//一覧に戻らない場合
 %>
+		<% if (moveToView && isVersionSpecified) { %>
+		<%=Constants.VERSION_SPECIFIED%>:$(":hidden[name='versionSpecified']").val(),
+		<% } %>
 		<%=Constants.VERSION%>:$(":hidden[name='version']").val(),
 		<%=Constants.BACK_PATH%>:$(":hidden[name='backPath']").val(),
 <%	}
@@ -237,6 +245,16 @@ function cancel() {
 		<%=Constants.TOPVIEW_LIST_OFFSET%>:"<%=StringUtil.escapeJavaScript(topViewListOffset)%>"
 	});
 }
+function validation() {
+	<%-- common.js --%>
+	var ret = editValidate();
+	var message = !ret ? "${m:rs('mtp-gem-messages', 'command.generic.detail.DetailCommandBase.inputErr')}" : "";
+	$(".detail_edit > .page-error").text(message);
+	return ret;
+}
+$(function(){
+	$('.disabled-btn').removeAttr('disabled');
+});
 </script>
 <%
 	if (form.isValidJavascriptDetailPage() && StringUtil.isNotBlank(form.getJavaScript())) {
@@ -249,41 +267,45 @@ function cancel() {
 	}
 %>
 <h3 class="hgroup-02 hgroup-02-01"><%= GemResourceBundleUtil.resourceString("generic.detail.detail.edit", displayName) %></h3>
+<span class="error page-error">
 <%
 	if (StringUtil.isNotBlank(message)) {
 %>
-<span class="error">
 <c:out value="<%= message %>"/>
-</span>
 <%
 	}
 %>
+</span>
 <form id="detailForm" method="post" action="<c:out value="<%=defaultAction%>"/>">
-${m:outputToken('FORM_XHTML', true)}
-<input type="hidden" name="defName" value="<c:out value="<%=defName%>"/>" />
-<input type="hidden" name="searchCond" value="<c:out value="<%=searchCond%>"/>" />
-<input type="hidden" name="execType" value="<c:out value="<%=execType%>"/>" />
-<input type="hidden" name="backPath" value="<c:out value="<%=backPath%>"/>" />
-<input type="hidden" name="topViewListOffset" value="<c:out value="<%=topViewListOffset%>"/>" />
+<input type="hidden" name="<%=Constants.DEF_NAME%>" value="<c:out value="<%=defName%>"/>" />
+<input type="hidden" name="<%=Constants.SEARCH_COND%>" value="<c:out value="<%=searchCond%>"/>" />
+<input type="hidden" name="<%=Constants.EXEC_TYPE%>" value="<c:out value="<%=execType%>"/>" />
+<input type="hidden" name="<%=Constants.BACK_PATH%>" value="<c:out value="<%=backPath%>"/>" />
+<input type="hidden" name="<%=Constants.TOPVIEW_LIST_OFFSET%>" value="<c:out value="<%=topViewListOffset%>"/>" />
 <%
 	if (newversion != null) {
 %>
-<input type="hidden" name="newversion" value="true" />
+<input type="hidden" name="<%=Constants.NEWVERSION%>" value="true" />
 <%
 	}
 	if (oid != null) {
 %>
-<input type="hidden" name="oid" value="<c:out value="<%=oid%>"/>" />
+<input type="hidden" name="<%=Constants.OID%>" value="<c:out value="<%=oid%>"/>" />
 <%
 	}
 	if (updateDate != null) {
 %>
-<input type="hidden" name="timestamp" value="<c:out value="<%=updateDate%>"/>" />
+<input type="hidden" name="<%=Constants.TIMESTAMP%>" value="<c:out value="<%=updateDate%>"/>" />
 <%
 	}
 	if (version != null) {
 %>
-<input type="hidden" name="version" value="<c:out value="<%=version%>"/>" />
+<input type="hidden" name="<%=Constants.VERSION%>" value="<c:out value="<%=version%>"/>" />
+<%
+	}
+	if (isVersionSpecified) {
+%>
+<input type="hidden" name="<%=Constants.VERSION_SPECIFIED%>" value="true" />
 <%
 	}
 %>
@@ -323,5 +345,6 @@ ${m:outputToken('FORM_XHTML', true)}
 <div class="operation-bar operation-bar_bottom">
 <jsp:include page="editButton.inc.jsp" />
 </div><!--operation-bar-->
+${m:outputToken('FORM_XHTML', true)}
 </form>
 </div>

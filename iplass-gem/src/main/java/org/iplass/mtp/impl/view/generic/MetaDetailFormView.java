@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,15 +23,15 @@ package org.iplass.mtp.impl.view.generic;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-
 import org.iplass.mtp.impl.i18n.I18nUtil;
 import org.iplass.mtp.impl.i18n.MetaLocalizedString;
 import org.iplass.mtp.impl.util.ObjectUtil;
 import org.iplass.mtp.view.generic.DetailFormView;
 import org.iplass.mtp.view.generic.DetailFormView.CopyTarget;
 import org.iplass.mtp.view.generic.FormView;
+
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
 
 /**
  * 編集画面用のレイアウト情報
@@ -137,6 +137,9 @@ public class MetaDetailFormView extends MetaFormView {
 	/** Entity権限の可能範囲条件でボタン表示を制御 */
 	private boolean checkEntityPermissionLimitConditionOfButton;
 
+	/** ロード時にSearchLayoutのデフォルト検索条件を適用する */
+	private boolean applySearchLayoutDefaultCondition;
+
 	/** 物理削除するかどうか */
 	private boolean isPurge;
 
@@ -148,6 +151,9 @@ public class MetaDetailFormView extends MetaFormView {
 
 	/** 更新時に強制的に更新処理を行う */
 	private boolean forceUpadte;
+
+	/** 特権実行でユーザー名を表示 */
+	private boolean showUserNameWithPrivilegedValue;
 
 	/** コピー対象 */
 	private CopyTarget copyTarget;
@@ -191,7 +197,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return 参照時編集アクション名
 	 */
 	public String getRefEditActionName() {
-	    return refEditActionName;
+		return refEditActionName;
 	}
 
 	/**
@@ -199,7 +205,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param refEditActionName 参照時編集アクション名
 	 */
 	public void setRefEditActionName(String refEditActionName) {
-	    this.refEditActionName = refEditActionName;
+		this.refEditActionName = refEditActionName;
 	}
 
 	/**
@@ -207,7 +213,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return 編集ボタン表示ラベル
 	 */
 	public String getEditDisplayLabel() {
-	    return editDisplayLabel;
+		return editDisplayLabel;
 	}
 
 	/**
@@ -215,7 +221,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param editDisplayLabel 編集ボタン表示ラベル
 	 */
 	public void setEditDisplayLabel(String editDisplayLabel) {
-	    this.editDisplayLabel = editDisplayLabel;
+		this.editDisplayLabel = editDisplayLabel;
 	}
 
 	/**
@@ -223,7 +229,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return 多言語設定情報
 	 */
 	public List<MetaLocalizedString> getLocalizedEditDisplayLabelList() {
-	    return localizedEditDisplayLabelList;
+		return localizedEditDisplayLabelList;
 	}
 
 	/**
@@ -231,7 +237,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param localizedEditDisplayLabelList 多言語設定情報
 	 */
 	public void setLocalizedEditDisplayLabelList(List<MetaLocalizedString> localizedEditDisplayLabelList) {
-	    this.localizedEditDisplayLabelList = localizedEditDisplayLabelList;
+		this.localizedEditDisplayLabelList = localizedEditDisplayLabelList;
 	}
 
 	/**
@@ -239,7 +245,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return コピーアップボタン表示ラベル
 	 */
 	public String getCopyDisplayLabel() {
-	    return copyDisplayLabel;
+		return copyDisplayLabel;
 	}
 
 	/**
@@ -247,7 +253,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param copyDisplayLabel コピーアップボタン表示ラベル
 	 */
 	public void setCopyDisplayLabel(String copyDisplayLabel) {
-	    this.copyDisplayLabel = copyDisplayLabel;
+		this.copyDisplayLabel = copyDisplayLabel;
 	}
 
 	/**
@@ -255,7 +261,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return 多言語設定情報
 	 */
 	public List<MetaLocalizedString> getLocalizedCopyDisplayLabelList() {
-	    return localizedCopyDisplayLabelList;
+		return localizedCopyDisplayLabelList;
 	}
 
 	/**
@@ -263,7 +269,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param localizedCopyDisplayLabelList 多言語設定情報
 	 */
 	public void setLocalizedCopyDisplayLabelList(List<MetaLocalizedString> localizedCopyDisplayLabelList) {
-	    this.localizedCopyDisplayLabelList = localizedCopyDisplayLabelList;
+		this.localizedCopyDisplayLabelList = localizedCopyDisplayLabelList;
 	}
 
 	/**
@@ -271,7 +277,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return バージョンアップボタン表示ラベル
 	 */
 	public String getVersionupDisplayLabel() {
-	    return versionupDisplayLabel;
+		return versionupDisplayLabel;
 	}
 
 	/**
@@ -279,7 +285,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param versionupDisplayLabel バージョンアップボタン表示ラベル
 	 */
 	public void setVersionupDisplayLabel(String versionupDisplayLabel) {
-	    this.versionupDisplayLabel = versionupDisplayLabel;
+		this.versionupDisplayLabel = versionupDisplayLabel;
 	}
 
 	/**
@@ -287,7 +293,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return 多言語設定情報
 	 */
 	public List<MetaLocalizedString> getLocalizedVersionupDisplayLabelList() {
-	    return localizedVersionupDisplayLabelList;
+		return localizedVersionupDisplayLabelList;
 	}
 
 	/**
@@ -295,7 +301,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param localizedVersionupDisplayLabelList 多言語設定情報
 	 */
 	public void setLocalizedVersionupDisplayLabelList(List<MetaLocalizedString> localizedVersionupDisplayLabelList) {
-	    this.localizedVersionupDisplayLabelList = localizedVersionupDisplayLabelList;
+		this.localizedVersionupDisplayLabelList = localizedVersionupDisplayLabelList;
 	}
 
 	/**
@@ -319,7 +325,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return 参照時追加アクション名
 	 */
 	public String getRefInsertActionName() {
-	    return refInsertActionName;
+		return refInsertActionName;
 	}
 
 	/**
@@ -327,7 +333,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param refInsertActionName 参照時追加アクション名
 	 */
 	public void setRefInsertActionName(String refInsertActionName) {
-	    this.refInsertActionName = refInsertActionName;
+		this.refInsertActionName = refInsertActionName;
 	}
 
 	/**
@@ -335,7 +341,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return 追加ボタン表示ラベル
 	 */
 	public String getInsertDisplayLabel() {
-	    return insertDisplayLabel;
+		return insertDisplayLabel;
 	}
 
 	/**
@@ -343,7 +349,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param insertDisplayLabel 追加ボタン表示ラベル
 	 */
 	public void setInsertDisplayLabel(String insertDisplayLabel) {
-	    this.insertDisplayLabel = insertDisplayLabel;
+		this.insertDisplayLabel = insertDisplayLabel;
 	}
 
 	/**
@@ -351,7 +357,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return 多言語設定情報
 	 */
 	public List<MetaLocalizedString> getLocalizedInsertDisplayLabelList() {
-	    return localizedInsertDisplayLabelList;
+		return localizedInsertDisplayLabelList;
 	}
 
 	/**
@@ -359,7 +365,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param localizedInsertDisplayLabelList 多言語設定情報
 	 */
 	public void setLocalizedInsertDisplayLabelList(List<MetaLocalizedString> localizedInsertDisplayLabelList) {
-	    this.localizedInsertDisplayLabelList = localizedInsertDisplayLabelList;
+		this.localizedInsertDisplayLabelList = localizedInsertDisplayLabelList;
 	}
 
 	/**
@@ -383,7 +389,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return 参照時更新アクション名
 	 */
 	public String getRefUpdateActionName() {
-	    return refUpdateActionName;
+		return refUpdateActionName;
 	}
 
 	/**
@@ -391,7 +397,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param refUpdateActionName 参照時更新アクション名
 	 */
 	public void setRefUpdateActionName(String refUpdateActionName) {
-	    this.refUpdateActionName = refUpdateActionName;
+		this.refUpdateActionName = refUpdateActionName;
 	}
 
 	/**
@@ -399,7 +405,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return 更新ボタン表示ラベル
 	 */
 	public String getUpdateDisplayLabel() {
-	    return updateDisplayLabel;
+		return updateDisplayLabel;
 	}
 
 	/**
@@ -407,7 +413,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param updateDisplayLabel 更新ボタン表示ラベル
 	 */
 	public void setUpdateDisplayLabel(String updateDisplayLabel) {
-	    this.updateDisplayLabel = updateDisplayLabel;
+		this.updateDisplayLabel = updateDisplayLabel;
 	}
 
 	/**
@@ -415,7 +421,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return 多言語設定情報
 	 */
 	public List<MetaLocalizedString> getLocalizedUpdateDisplayLabelList() {
-	    return localizedUpdateDisplayLabelList;
+		return localizedUpdateDisplayLabelList;
 	}
 
 	/**
@@ -423,7 +429,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param localizedUpdateDisplayLabelList 多言語設定情報
 	 */
 	public void setLocalizedUpdateDisplayLabelList(List<MetaLocalizedString> localizedUpdateDisplayLabelList) {
-	    this.localizedUpdateDisplayLabelList = localizedUpdateDisplayLabelList;
+		this.localizedUpdateDisplayLabelList = localizedUpdateDisplayLabelList;
 	}
 
 	/**
@@ -447,7 +453,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return 削除ボタン表示ラベル
 	 */
 	public String getDeleteDisplayLabel() {
-	    return deleteDisplayLabel;
+		return deleteDisplayLabel;
 	}
 
 	/**
@@ -455,7 +461,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param deleteDisplayLabel 削除ボタン表示ラベル
 	 */
 	public void setDeleteDisplayLabel(String deleteDisplayLabel) {
-	    this.deleteDisplayLabel = deleteDisplayLabel;
+		this.deleteDisplayLabel = deleteDisplayLabel;
 	}
 
 	/**
@@ -463,7 +469,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return 多言語設定情報
 	 */
 	public List<MetaLocalizedString> getLocalizedDeleteDisplayLabelList() {
-	    return localizedDeleteDisplayLabelList;
+		return localizedDeleteDisplayLabelList;
 	}
 
 	/**
@@ -471,7 +477,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param localizedDeleteDisplayLabelList 多言語設定情報
 	 */
 	public void setLocalizedDeleteDisplayLabelList(List<MetaLocalizedString> localizedDeleteDisplayLabelList) {
-	    this.localizedDeleteDisplayLabelList = localizedDeleteDisplayLabelList;
+		this.localizedDeleteDisplayLabelList = localizedDeleteDisplayLabelList;
 	}
 
 	/**
@@ -479,7 +485,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return 削除ボタン表示ラベル
 	 */
 	public String getDeleteSpecificVersionDisplayLabel() {
-	    return deleteSpecificVersionDisplayLabel;
+		return deleteSpecificVersionDisplayLabel;
 	}
 
 	/**
@@ -487,7 +493,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param deleteSpecificVersionDisplayLabel 削除ボタン表示ラベル
 	 */
 	public void setDeleteSpecificVersionDisplayLabel(String deleteSpecificVersionDisplayLabel) {
-	    this.deleteSpecificVersionDisplayLabel = deleteSpecificVersionDisplayLabel;
+		this.deleteSpecificVersionDisplayLabel = deleteSpecificVersionDisplayLabel;
 	}
 
 	/**
@@ -495,7 +501,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return バージョン削除ボタン表示ラベル多言語設定情報
 	 */
 	public List<MetaLocalizedString> getLocalizedDeleteSpecificVersionDisplayLabelList() {
-	    return localizedDeleteSpecificVersionDisplayLabelList;
+		return localizedDeleteSpecificVersionDisplayLabelList;
 	}
 
 	/**
@@ -503,7 +509,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param localizedDeleteSpecificVersionDisplayLabelList バージョン削除ボタン表示ラベル多言語設定情報
 	 */
 	public void setLocalizedDeleteSpecificVersionDisplayLabelList(List<MetaLocalizedString> localizedDeleteSpecificVersionDisplayLabelList) {
-	    this.localizedDeleteSpecificVersionDisplayLabelList = localizedDeleteSpecificVersionDisplayLabelList;
+		this.localizedDeleteSpecificVersionDisplayLabelList = localizedDeleteSpecificVersionDisplayLabelList;
 	}
 
 	/**
@@ -527,7 +533,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return 編集ボタン非表示
 	 */
 	public boolean isHideDetail() {
-	    return hideDetail;
+		return hideDetail;
 	}
 
 	/**
@@ -535,7 +541,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param hideDetail 編集ボタン非表示
 	 */
 	public void setHideDetail(boolean hideDetail) {
-	    this.hideDetail = hideDetail;
+		this.hideDetail = hideDetail;
 	}
 
 	/**
@@ -543,7 +549,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return ロックボタン非表示設定
 	 */
 	public boolean isHideLock() {
-	    return hideLock;
+		return hideLock;
 	}
 
 	/**
@@ -551,7 +557,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param hideLock ロックボタン非表示設定
 	 */
 	public void setHideLock(boolean hideLock) {
-	    this.hideLock = hideLock;
+		this.hideLock = hideLock;
 	}
 
 	/**
@@ -575,7 +581,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return 削除ボタン非表示
 	 */
 	public boolean isHideDelete() {
-	    return hideDelete;
+		return hideDelete;
 	}
 
 	/**
@@ -583,7 +589,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param hideDelete 削除ボタン非表示
 	 */
 	public void setHideDelete(boolean hideDelete) {
-	    this.hideDelete = hideDelete;
+		this.hideDelete = hideDelete;
 	}
 
 	/**
@@ -619,11 +625,27 @@ public class MetaDetailFormView extends MetaFormView {
 	}
 
 	/**
+	 * ロード時にSearchLayoutのデフォルト検索条件を適用するかを取得します。
+	 * @return ロード時にSearchLayoutのデフォルト検索条件を適用するか
+	 */
+	public boolean isApplySearchLayoutDefaultCondition() {
+		return applySearchLayoutDefaultCondition;
+	}
+
+	/**
+	 * ロード時にSearchLayoutのデフォルト検索条件を適用するかを設定します。
+	 * @param applySearchLayoutDefaultCondition ロード時にSearchLayoutのデフォルト検索条件を適用するか
+	 */
+	public void setApplySearchLayoutDefaultCondition(boolean applySearchLayoutDefaultCondition) {
+		this.applySearchLayoutDefaultCondition = applySearchLayoutDefaultCondition;
+	}
+
+	/**
 	 * 物理削除するかどうかを取得します。
 	 * @return 物理削除するかどうか
 	 */
 	public boolean isPurge() {
-	    return isPurge;
+		return isPurge;
 	}
 
 	/**
@@ -631,7 +653,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param isPurge 物理削除するかどうか
 	 */
 	public void setPurge(boolean isPurge) {
-	    this.isPurge = isPurge;
+		this.isPurge = isPurge;
 	}
 
 	/**
@@ -639,7 +661,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return 親子関係の参照を物理削除するか
 	 */
 	public boolean isPurgeCompositionedEntity() {
-	    return purgeCompositionedEntity;
+		return purgeCompositionedEntity;
 	}
 
 	/**
@@ -647,7 +669,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param purgeCompositionedEntity 親子関係の参照を物理削除するか
 	 */
 	public void setPurgeCompositionedEntity(boolean purgeCompositionedEntity) {
-	    this.purgeCompositionedEntity = purgeCompositionedEntity;
+		this.purgeCompositionedEntity = purgeCompositionedEntity;
 	}
 
 	/**
@@ -655,7 +677,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return 定義されている参照プロパティのみを取得
 	 */
 	public boolean isLoadDefinedReferenceProperty() {
-	    return loadDefinedReferenceProperty;
+		return loadDefinedReferenceProperty;
 	}
 
 	/**
@@ -663,7 +685,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param loadDefinedReferenceProperty 定義されている参照プロパティのみを取得
 	 */
 	public void setLoadDefinedReferenceProperty(boolean loadDefinedReferenceProperty) {
-	    this.loadDefinedReferenceProperty = loadDefinedReferenceProperty;
+		this.loadDefinedReferenceProperty = loadDefinedReferenceProperty;
 	}
 
 	/**
@@ -680,6 +702,22 @@ public class MetaDetailFormView extends MetaFormView {
 	 */
 	public void setForceUpadte(boolean forceUpadte) {
 		this.forceUpadte = forceUpadte;
+	}
+
+	/**
+	 * 特権実行でユーザー名を表示を取得します。
+	 * @return 特権実行でユーザー名を表示
+	 */
+	public boolean isShowUserNameWithPrivilegedValue() {
+		return showUserNameWithPrivilegedValue;
+	}
+
+	/**
+	 * 特権実行でユーザー名を表示を設定します。
+	 * @param showUserNameWithPrivilegedValue 特権実行でユーザー名を表示
+	 */
+	public void setShowUserNameWithPrivilegedValue(boolean showUserNameWithPrivilegedValue) {
+		this.showUserNameWithPrivilegedValue = showUserNameWithPrivilegedValue;
 	}
 
 	/**
@@ -703,7 +741,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return カスタムコピースクリプト
 	 */
 	public String getCustomCopyScript() {
-	    return customCopyScript;
+		return customCopyScript;
 	}
 
 	/**
@@ -711,7 +749,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param customCopyScript カスタムコピースクリプト
 	 */
 	public void setCustomCopyScript(String customCopyScript) {
-	    this.customCopyScript = customCopyScript;
+		this.customCopyScript = customCopyScript;
 	}
 
 	/**
@@ -719,7 +757,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return Javascriptコード有効可否(編集)
 	 */
 	public Boolean getValidJavascriptDetailPage() {
-	    return validJavascriptDetailPage;
+		return validJavascriptDetailPage;
 	}
 
 	/**
@@ -727,7 +765,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param validJavascriptDetailPage Javascriptコード有効可否(編集)
 	 */
 	public void setValidJavascriptDetailPage(Boolean validJavascriptDetailPage) {
-	    this.validJavascriptDetailPage = validJavascriptDetailPage;
+		this.validJavascriptDetailPage = validJavascriptDetailPage;
 	}
 
 	/**
@@ -735,7 +773,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return Javascriptコード有効可否(表示)
 	 */
 	public Boolean getValidJavascriptViewPage() {
-	    return validJavascriptViewPage;
+		return validJavascriptViewPage;
 	}
 
 	/**
@@ -743,7 +781,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param validJavascriptViewPage Javascriptコード有効可否(表示)
 	 */
 	public void setValidJavascriptViewPage(Boolean validJavascriptViewPage) {
-	    this.validJavascriptViewPage = validJavascriptViewPage;
+		this.validJavascriptViewPage = validJavascriptViewPage;
 	}
 
 	/**
@@ -751,7 +789,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return コピー対象
 	 */
 	public CopyTarget getCopyTarget() {
-	    return copyTarget;
+		return copyTarget;
 	}
 
 	/**
@@ -759,7 +797,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param copyTarget コピー対象
 	 */
 	public void setCopyTarget(CopyTarget copyTarget) {
-	    this.copyTarget = copyTarget;
+		this.copyTarget = copyTarget;
 	}
 
 	/**
@@ -767,7 +805,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return カスタム登録処理クラス名
 	 */
 	public String getInterrupterName() {
-	    return interrupterName;
+		return interrupterName;
 	}
 
 	/**
@@ -775,7 +813,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param interrupterName カスタム登録処理クラス名
 	 */
 	public void setInterrupterName(String interrupterName) {
-	    this.interrupterName = interrupterName;
+		this.interrupterName = interrupterName;
 	}
 
 	/**
@@ -783,7 +821,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return カスタムロード処理クラス名
 	 */
 	public String getLoadEntityInterrupterName() {
-	    return loadEntityInterrupterName;
+		return loadEntityInterrupterName;
 	}
 
 	/**
@@ -791,7 +829,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param loadEntityInterrupterName カスタムロード処理クラス名
 	 */
 	public void setLoadEntityInterrupterName(String loadEntityInterrupterName) {
-	    this.loadEntityInterrupterName = loadEntityInterrupterName;
+		this.loadEntityInterrupterName = loadEntityInterrupterName;
 	}
 
 	/**
@@ -815,7 +853,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @return 初期化スクリプト
 	 */
 	public String getInitScript() {
-	    return initScript;
+		return initScript;
 	}
 
 	/**
@@ -823,7 +861,7 @@ public class MetaDetailFormView extends MetaFormView {
 	 * @param initScript 初期化スクリプト
 	 */
 	public void setInitScript(String initScript) {
-	    this.initScript = initScript;
+		this.initScript = initScript;
 	}
 
 	@Override
@@ -869,17 +907,19 @@ public class MetaDetailFormView extends MetaFormView {
 		hideDelete = dForm.isHideDelete();
 		showDeleteSpecificVersion = dForm.isShowDeleteSpecificVersion();
 		checkEntityPermissionLimitConditionOfButton = dForm.isCheckEntityPermissionLimitConditionOfButton();
+		applySearchLayoutDefaultCondition = dForm.isApplySearchLayoutDefaultCondition();
 		isPurge = dForm.isPurge();
 		purgeCompositionedEntity = dForm.isPurgeCompositionedEntity();
 		loadDefinedReferenceProperty = dForm.isLoadDefinedReferenceProperty();
 		forceUpadte = dForm.isForceUpadte();
+		showUserNameWithPrivilegedValue = dForm.isShowUserNameWithPrivilegedValue();
 		javaScript = dForm.getJavaScript();
 		validJavascriptDetailPage = dForm.isValidJavascriptDetailPage();
 		validJavascriptViewPage = dForm.isValidJavascriptViewPage();
 		copyTarget = dForm.getCopyTarget();
 		interrupterName = dForm.getInterrupterName();
 		loadEntityInterrupterName = dForm.getLoadEntityInterrupterName();
-		detailFormViewHandlerName = dForm.getDetailFormViewHandlerName();
+		detailFormViewHandlerName = dForm.getDetailFormViewHandlerName() == null ? null : new ArrayList<>(dForm.getDetailFormViewHandlerName());
 		customCopyScript = dForm.getCustomCopyScript();
 		initScript = dForm.getInitScript();
 	}
@@ -922,14 +962,16 @@ public class MetaDetailFormView extends MetaFormView {
 		form.setHideDelete(hideDelete);
 		form.setShowDeleteSpecificVersion(showDeleteSpecificVersion);
 		form.setCheckEntityPermissionLimitConditionOfButton(checkEntityPermissionLimitConditionOfButton);
+		form.setApplySearchLayoutDefaultCondition(applySearchLayoutDefaultCondition);
 		form.setPurge(isPurge);
 		form.setPurgeCompositionedEntity(purgeCompositionedEntity);
 		form.setLoadDefinedReferenceProperty(loadDefinedReferenceProperty);
 		form.setForceUpadte(forceUpadte);
+		form.setShowUserNameWithPrivilegedValue(showUserNameWithPrivilegedValue);
 		form.setJavaScript(javaScript);
 		form.setInterrupterName(interrupterName);
 		form.setLoadEntityInterrupterName(loadEntityInterrupterName);
-		form.setDetailFormViewHandlerName(detailFormViewHandlerName);
+		form.setDetailFormViewHandlerName(detailFormViewHandlerName == null ? null : new ArrayList<>(detailFormViewHandlerName));
 		form.setCustomCopyScript(customCopyScript);
 		form.setInitScript(initScript);
 		if (validJavascriptDetailPage != null) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -57,6 +57,7 @@ public final class AnonymousUserContext implements UserContext {
 				public String getId() {
 					return "Anonymous";
 				}
+
 				@Override
 				public Object getAuthenticationFactor(String name) {
 					return null;
@@ -92,7 +93,6 @@ public final class AnonymousUserContext implements UserContext {
 	static {
 		anonymousUser = new User("Anonymous", "Anonymous", true);
 	}
-
 
 //	@Override
 //	public User getUser() {

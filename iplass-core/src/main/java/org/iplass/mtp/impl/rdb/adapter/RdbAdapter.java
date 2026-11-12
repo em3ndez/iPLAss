@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -34,21 +34,15 @@ import java.sql.Types;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.TimeZone;
+import java.util.function.UnaryOperator;
 
 import org.iplass.mtp.entity.EntityRuntimeException;
 import org.iplass.mtp.entity.query.GroupBy.RollType;
+import org.iplass.mtp.entity.query.Query;
 import org.iplass.mtp.entity.query.SortSpec.NullOrderingSpec;
 import org.iplass.mtp.entity.query.SortSpec.SortType;
 import org.iplass.mtp.entity.query.value.aggregate.Aggregate;
-import org.iplass.mtp.entity.query.value.aggregate.Avg;
-import org.iplass.mtp.entity.query.value.aggregate.Count;
-import org.iplass.mtp.entity.query.value.aggregate.Max;
-import org.iplass.mtp.entity.query.value.aggregate.Min;
-import org.iplass.mtp.entity.query.value.aggregate.StdDevPop;
-import org.iplass.mtp.entity.query.value.aggregate.StdDevSamp;
-import org.iplass.mtp.entity.query.value.aggregate.Sum;
-import org.iplass.mtp.entity.query.value.aggregate.VarPop;
-import org.iplass.mtp.entity.query.value.aggregate.VarSamp;
+import org.iplass.mtp.entity.query.value.primary.Function;
 import org.iplass.mtp.entity.query.value.window.CumeDist;
 import org.iplass.mtp.entity.query.value.window.DenseRank;
 import org.iplass.mtp.entity.query.value.window.PercentRank;
@@ -68,23 +62,31 @@ import org.iplass.mtp.impl.properties.extend.WrapperType;
 import org.iplass.mtp.impl.rdb.adapter.bulk.BulkDeleteContext;
 import org.iplass.mtp.impl.rdb.adapter.bulk.BulkInsertContext;
 import org.iplass.mtp.impl.rdb.adapter.bulk.BulkUpdateContext;
+import org.iplass.mtp.impl.rdb.adapter.function.AggregateFunctionAdapter;
 import org.iplass.mtp.impl.rdb.adapter.function.FunctionAdapter;
 import org.iplass.mtp.impl.rdb.connection.ConnectionFactory;
 import org.iplass.mtp.spi.ServiceRegistry;
 import org.iplass.mtp.util.StringUtil;
 
-
 public abstract class RdbAdapter {
 
+	private String listaggDefaultSeparator = ",";
 	private String rdbTimeZone;
 	private TimeZone rdbTimeZoneInstance;
 
-	private HashMap<String, FunctionAdapter> functionMap = new HashMap<String, FunctionAdapter>();
+	private HashMap<String, FunctionAdapter<Function>> functionMap = new HashMap<String, FunctionAdapter<Function>>();
+	private HashMap<Class<? extends Aggregate>, AggregateFunctionAdapter<? extends Aggregate>> aggMap = new HashMap<>();
 
-	protected void addFunction(FunctionAdapter functionAdapter) {
+	protected <T extends Aggregate> void addAggregateFunction(Class<T> aggType, AggregateFunctionAdapter<T> functionAdapter) {
+		aggMap.put(aggType, functionAdapter);
+	}
+
+	protected void addFunction(FunctionAdapter<Function> functionAdapter) {
 		//LowerCase,UpperCase両方登録しとく
-		functionMap.put(functionAdapter.getFunctionName().toLowerCase(), functionAdapter);
-		functionMap.put(functionAdapter.getFunctionName().toUpperCase(), functionAdapter);
+		functionMap.put(functionAdapter.getFunctionName()
+				.toLowerCase(), functionAdapter);
+		functionMap.put(functionAdapter.getFunctionName()
+				.toUpperCase(), functionAdapter);
 	}
 
 	public <T extends UpdateSqlHandler> T getUpdateSqlCreator(Class<T> sqlCreatorClass) {
@@ -113,7 +115,7 @@ public abstract class RdbAdapter {
 
 	public String[] castExp(int sqlType, Integer lengthOrPrecision, Integer scale) {
 		String rdbType = getDataTypeOf(sqlType, lengthOrPrecision, scale);
-		return new String[]{"CAST(", " AS " + rdbType + ")"};
+		return new String[] { "CAST(", " AS " + rdbType + ")" };
 	}
 
 	public CharSequence cast(int fromSqlType, int toSqlType, CharSequence valExpr, Integer lengthOrPrecision, Integer scale) {
@@ -125,12 +127,20 @@ public abstract class RdbAdapter {
 		}
 	}
 
+	public UnaryOperator<CharSequence> countQuery(Query q) {
+		return sql -> "SELECT COUNT(*) FROM (" + sql + ") CT";
+	}
+
 	public abstract boolean isSupportOptimizerHint();
+
 	public abstract String getOptimizerHint();
+
 	public abstract HintPlace getOptimizerHintPlace();
+
 	public abstract String[] getOptimizerHintBracket();
 
 	public abstract boolean isSupportTableHint();
+
 	public abstract String[] getTableHintBracket();
 
 	protected abstract String getDataTypeOf(int sqlType, Integer lengthOrPrecision, Integer scale);
@@ -229,7 +239,8 @@ public abstract class RdbAdapter {
 			return toTimeStampExpression((Timestamp) rdbValue);
 		}
 
-		throw new UnsupportedDataTypeException("Unsupported Data Type:" + rdbValue.getClass().getName());
+		throw new UnsupportedDataTypeException("Unsupported Data Type:" + rdbValue.getClass()
+				.getName());
 	}
 
 	public void setParameter(PreparedStatement ps, int index, Object rdbValue) throws SQLException {//TODO 型情報が必要では？？
@@ -290,8 +301,8 @@ public abstract class RdbAdapter {
 		}
 	}
 
-	public final FunctionAdapter resolveFunction(String name) {
-		FunctionAdapter ret = functionMap.get(name);
+	public final FunctionAdapter<Function> resolveFunction(String name) {
+		FunctionAdapter<Function> ret = functionMap.get(name);
 		//ファンクション名をtoUpperCaseして再取得
 		if (ret == null) {
 			ret = functionMap.get(name.toUpperCase());
@@ -299,22 +310,34 @@ public abstract class RdbAdapter {
 		return ret;
 	}
 
+	@SuppressWarnings("unchecked")
+	public final <T extends Aggregate> AggregateFunctionAdapter<T> resolveAggregateFunction(Class<T> aggClass) {
+		return (AggregateFunctionAdapter<T>) aggMap.get(aggClass);
+	}
+
 	public abstract String systimestamp();
 
 	public abstract MultiInsertContext createMultiInsertContext(Statement stmt);
 
 	public abstract BulkInsertContext createBulkInsertContext();
+
 	public abstract BulkUpdateContext createBulkUpdateContext();
+
 	public abstract BulkDeleteContext createBulkDeleteContext();
 
 	public final Connection getConnection() throws SQLException {
 		return getConnection(null);
 	}
+
 	public Connection getConnection(String connectionFactoryName) throws SQLException {
 		if (connectionFactoryName == null) {
-			return ServiceRegistry.getRegistry().getService(ConnectionFactory.class).getConnection();
+			return ServiceRegistry.getRegistry()
+					.getService(ConnectionFactory.class)
+					.getConnection();
 		} else {
-			return ServiceRegistry.getRegistry().<ConnectionFactory>getService(connectionFactoryName).getConnection();
+			return ServiceRegistry.getRegistry()
+					.<ConnectionFactory> getService(connectionFactoryName)
+					.getConnection();
 		}
 	}
 
@@ -330,7 +353,9 @@ public abstract class RdbAdapter {
 	public String toLimitSql(String selectSql, int limitCount, int offset) {
 		return toLimitSql(selectSql, limitCount, offset, false);
 	}
+
 	public abstract String toLimitSql(String selectSql, int limitCount, int offset, boolean asBind);
+
 	public abstract Object[] toLimitSqlBindValue(int limitCount, int offset);
 
 	public abstract boolean isDuplicateValueException(SQLException e);
@@ -338,6 +363,7 @@ public abstract class RdbAdapter {
 	public abstract boolean isDeadLock(SQLException e);
 
 	public abstract boolean isLockFailed(SQLException e);
+
 	public abstract boolean isCastFailed(SQLException e);
 
 	public abstract String addDate(String dateExpression, int day);
@@ -375,6 +401,7 @@ public abstract class RdbAdapter {
 	public abstract boolean isSupportGroupingExtention(RollType rollType);
 
 	public abstract boolean isSupportGroupingExtention();
+
 	public abstract boolean isSupportGroupingExtentionWithOrderBy();
 
 	public abstract String rollUpStart(RollType rollType);
@@ -382,6 +409,14 @@ public abstract class RdbAdapter {
 	public abstract String rollUpEnd(RollType rollType);
 
 	public abstract void appendSortSpecExpression(StringBuilder sb, CharSequence sortValue, SortType sortType, NullOrderingSpec nullOrderingSpec);
+
+	public String getListaggDefaultSeparator() {
+		return listaggDefaultSeparator;
+	}
+
+	public void setListaggDefaultSeparator(String listaggDefaultSeparator) {
+		this.listaggDefaultSeparator = listaggDefaultSeparator;
+	}
 
 	public String getRdbTimeZone() {
 		return rdbTimeZone;
@@ -434,6 +469,7 @@ public abstract class RdbAdapter {
 	public abstract String initBlob();
 
 	public abstract boolean isEnableInPartitioning();
+
 	public abstract int getInPartitioningSize();
 
 	/**
@@ -492,29 +528,20 @@ public abstract class RdbAdapter {
 	 */
 	public abstract int getThresholdCountOfUsePrepareStatement();
 
-	//FIXME 暫定の実装。ver3.1で正式対応
-	private HashMap<Class<? extends Aggregate>, String> aggNameMap = createAggNameMap();
-	private HashMap<Class<? extends Aggregate>, String> createAggNameMap() {
-		HashMap<Class<? extends Aggregate>, String> map = new HashMap<>();
-		map.put(Count.class, "COUNT");
-		map.put(Sum.class, "SUM");
-		map.put(Avg.class, "AVG");
-		map.put(Max.class, "MAX");
-		map.put(Min.class, "MIN");
-		map.put(StdDevPop.class, "STDDEV_POP");
-		map.put(StdDevSamp.class, "STDDEV_SAMP");
-		map.put(VarPop.class, "STDDEV_SAMP");
-		map.put(VarSamp.class, "VAR_SAMP");
-		return map;
-	}
 	public String aggregateFunctionName(Aggregate agg) {
-		return aggNameMap.get(agg.getClass());
+		AggregateFunctionAdapter<?> aa = aggMap.get(agg.getClass());
+		if (aa != null) {
+			return aa.getSqlFunctionName();
+		} else {
+			return null;
+		}
 	}
 
 	public abstract boolean isSupportWindowFunction();
 
 	//FIXME 暫定の実装。ver3.1で正式対応
 	private HashMap<Class<? extends WindowRankFunction>, String> windowRankFuncNameMap = createWindowRankFuncNameMap();
+
 	private HashMap<Class<? extends WindowRankFunction>, String> createWindowRankFuncNameMap() {
 		HashMap<Class<? extends WindowRankFunction>, String> map = new HashMap<>();
 		map.put(CumeDist.class, "CUME_DIST");
@@ -524,6 +551,7 @@ public abstract class RdbAdapter {
 		map.put(RowNumber.class, "ROW_NUMBER");
 		return map;
 	}
+
 	public String windowRankFunctionName(WindowRankFunction rankFunc) {
 		return windowRankFuncNameMap.get(rankFunc.getClass());
 	}
@@ -660,5 +688,19 @@ public abstract class RdbAdapter {
 	 */
 	public String getMultiTableTrickClauseForUpdate() {
 		return null;
+	}
+
+	/**
+	 * SELECT DISTINCT時に、ORDER BYで指定した式（列そのものでなく式自体）がSELECT句に
+	 * 含まれていないとエラーとなるRDBの場合に<code>true</code>を返します。
+	 * <p>
+	 * PostgreSQLやSQL Serverが該当します（Oracleは、ORDER BYの式内で参照している列がSELECT句に
+	 * 含まれていれば、式自体が含まれていなくてもエラーとならない為、対象外です）。
+	 * </p>
+	 *
+	 * @return 該当する場合は<code>true</code>を返します。
+	 */
+	public boolean isRequireOrderByExpressionInSelectForDistinct() {
+		return false;
 	}
 }

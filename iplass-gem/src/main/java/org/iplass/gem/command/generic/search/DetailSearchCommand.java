@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,13 +22,14 @@ package org.iplass.gem.command.generic.search;
 
 import org.iplass.gem.command.Constants;
 import org.iplass.gem.command.GemResourceBundleUtil;
+import org.iplass.mtp.command.RequestContext;
 import org.iplass.mtp.command.annotation.CommandClass;
 import org.iplass.mtp.entity.query.Query;
 import org.iplass.mtp.view.filter.expression.UnsupportedFilterOperationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@CommandClass(name=DetailSearchCommand.CMD_NAME, displayName="詳細検索")
+@CommandClass(name = DetailSearchCommand.CMD_NAME, displayName = "詳細検索")
 public final class DetailSearchCommand extends SearchCommandBase {
 
 	public static final String CMD_NAME = "gem/generic/search/DetailSearchCommand";
@@ -36,8 +37,13 @@ public final class DetailSearchCommand extends SearchCommandBase {
 	private static Logger log = LoggerFactory.getLogger(DetailSearchCommand.class);
 
 	@Override
-	protected Class<? extends SearchContext> getContextClass() {
-		return DetailSearchContext.class;
+	public SearchContext getContext(RequestContext request) {
+		SearchContext context = new DetailSearchContext();
+		context.setRequest(request);
+		context.setEntityDefinition(edm.get(context.getDefName()));
+		context.setEntityView(evm.get(context.getDefName()));
+
+		return context;
 	}
 
 	@Override
@@ -48,13 +54,15 @@ public final class DetailSearchCommand extends SearchCommandBase {
 			if (log.isDebugEnabled()) {
 				log.debug(e.getMessage(), e);
 			}
-			context.getRequest().setAttribute(Constants.MESSAGE, e.getMessage());
+			context.getRequest()
+					.setAttribute(Constants.MESSAGE, e.getMessage());
 			return null;
 		} catch (IllegalArgumentException e) {
 			if (log.isDebugEnabled()) {
 				log.debug(e.getMessage(), e);
 			}
-			context.getRequest().setAttribute(Constants.MESSAGE, resourceString("command.generic.search.SearchCommandBase.searchCondErr"));
+			context.getRequest()
+					.setAttribute(Constants.MESSAGE, resourceString("command.generic.search.SearchCommandBase.searchCondErr"));
 			return null;
 		}
 	}
@@ -62,4 +70,5 @@ public final class DetailSearchCommand extends SearchCommandBase {
 	private static String resourceString(String key, Object... arguments) {
 		return GemResourceBundleUtil.resourceString(key, arguments);
 	}
+
 }

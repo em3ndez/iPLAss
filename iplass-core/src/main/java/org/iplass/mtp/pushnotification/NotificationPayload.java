@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -52,12 +52,11 @@ public class NotificationPayload extends HashMap<String, Object> implements Payl
 	 * Androidで指定可能かつ必須。<br>
 	 */
 	public static final String ICON = "icon";
-	
-	
+
 	public NotificationPayload() {
 		super();
 	}
-	
+
 	/**
 	 * 指定のtitle,body,iconで通知を構築する。
 	 * 
@@ -77,7 +76,7 @@ public class NotificationPayload extends HashMap<String, Object> implements Payl
 			put(BODY, body);
 		}
 	}
-	
+
 	/**
 	 * 指定のbodyで通知を構築する。
 	 * 
@@ -89,7 +88,7 @@ public class NotificationPayload extends HashMap<String, Object> implements Payl
 			put(BODY, body);
 		}
 	}
-	
+
 	@Override
 	public Object get(String key) {
 		return get((Object) key);

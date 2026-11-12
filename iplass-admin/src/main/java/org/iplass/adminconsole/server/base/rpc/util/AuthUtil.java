@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -19,10 +19,6 @@
  */
 
 package org.iplass.adminconsole.server.base.rpc.util;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.iplass.adminconsole.server.base.i18n.AdminResourceBundleUtil;
 import org.iplass.adminconsole.shared.base.dto.AdminUncaughtException;
@@ -50,6 +46,9 @@ import org.iplass.mtp.transaction.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class AuthUtil {
 
@@ -88,7 +87,8 @@ public class AuthUtil {
 			//Admin許可チェック
 			checkAdmin();
 
-			AuthService auth = ServiceRegistry.getRegistry().getService(AuthService.class);
+			AuthService auth = ServiceRegistry.getRegistry()
+					.getService(AuthService.class);
 
 			return auth.doSecuredAction(AuthContextHolder.getAuthContext(), () -> callable.call());
 
@@ -118,7 +118,7 @@ public class AuthUtil {
 	 * @param request HttpServletRequest
 	 * @param response HttpServletResponse
 	 * @param tenantId テナントID
-	 * @param id ユーザID
+	 * @param id ユーザーID
 	 * @param password パスワード
 	 */
 	public static void authLogin(
@@ -127,7 +127,8 @@ public class AuthUtil {
 
 		doInvoke(context, request, response, tenantId, () -> {
 
-			AuthService auth = ServiceRegistry.getRegistry().getService(AuthService.class);
+			AuthService auth = ServiceRegistry.getRegistry()
+					.getService(AuthService.class);
 			try {
 				//ログイン
 				auth.login(new IdPasswordCredential(id, password));
@@ -163,7 +164,8 @@ public class AuthUtil {
 			int tenantId) {
 
 		doInvoke(context, request, response, tenantId, () -> {
-			AuthService auth = ServiceRegistry.getRegistry().getService(AuthService.class);
+			AuthService auth = ServiceRegistry.getRegistry()
+					.getService(AuthService.class);
 			auth.logout();
 			return null;
 		});
@@ -208,14 +210,14 @@ public class AuthUtil {
 			log.info(e.getMessage());
 			throw e;
 		} catch (Throwable e) {
-		    if (e instanceof Error) {
-		        fatalLogger.error(e.getMessage(), e);
-		    } else {
-		    	log.error(e.getMessage(), e);
-		    }
+			if (e instanceof Error) {
+				fatalLogger.error(e.getMessage(), e);
+			} else {
+				log.error(e.getMessage(), e);
+			}
 
 			if (e instanceof RuntimeException) {
-				throw (RuntimeException)e;
+				throw (RuntimeException) e;
 			} else {
 				throw new AdminUncaughtException(e);
 			}
@@ -225,12 +227,14 @@ public class AuthUtil {
 	}
 
 	private static TenantContext getTenantContext(int tenantId) {
-		if(log.isTraceEnabled()) {
+		if (log.isTraceEnabled()) {
 			log.trace(rs("util.AuthUtil.runAdminConsoleId", tenantId));
 		}
 
-		TenantContext tc = ServiceRegistry.getRegistry().getService(TenantContextService.class).getTenantContext(tenantId);
-		if(tc == null) {
+		TenantContext tc = ServiceRegistry.getRegistry()
+				.getService(TenantContextService.class)
+				.getTenantContext(tenantId);
+		if (tc == null) {
 			throw new TenantNotFoundException(rs("util.AuthUtil.canNotGetTenantInfo"));
 		}
 
@@ -238,12 +242,14 @@ public class AuthUtil {
 	}
 
 	private static void checkAdmin() {
-		UserContext userContext = AuthContextHolder.getAuthContext().getUserContext();
+		UserContext userContext = AuthContextHolder.getAuthContext()
+				.getUserContext();
 
 		if (userContext instanceof AnonymousUserContext) {
 			throw new UnauthenticatedException(rs("util.AuthUtil.notLogin"));
 		}
-		if (!userContext.getUser().isAdmin()) {
+		if (!userContext.getUser()
+				.isAdmin()) {
 			throw new UnauthorizedAccessException(rs("util.AuthUtil.notHavePermission"));
 		}
 	}

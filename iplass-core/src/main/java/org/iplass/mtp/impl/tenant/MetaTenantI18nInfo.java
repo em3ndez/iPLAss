@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -147,7 +147,8 @@ public class MetaTenantI18nInfo extends MetaTenantConfig<TenantI18nInfo> {
 		public MetaTenantI18nInfoRuntime() {
 
 			try {
-				I18nService i18n = ServiceRegistry.getRegistry().getService(I18nService.class);
+				I18nService i18n = ServiceRegistry.getRegistry()
+						.getService(I18nService.class);
 				if (locale != null) {
 					localeRuntime = I18nUtil.getLocale(locale);
 				} else {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,23 +27,23 @@ package org.iplass.mtp.entity;
  *
  */
 public class DeleteOption {
-	
+
 	/** 更新時タイムスタンプチェックを行うかどうか */
 	private boolean checkTimestamp;
-	
+
 	/** ごみ箱に入れず、物理削除するかどうか（デフォルトtrue） */
 	private boolean purge = true;
-	
-	/**　ユーザによるロックのチェックを行うかどうか。デフォルトtrue */
+
+	/**　ユーザーによるロックのチェックを行うかどうか。デフォルトtrue */
 	private boolean checkLockedByUser = true;
-	
+
 	private boolean notifyListeners = true;
-	
+
 	private DeleteTargetVersion targetVersion = DeleteTargetVersion.ALL;
-	
+
 	public DeleteOption() {
 	}
-	
+
 	/**
 	 * コンストラクタ。
 	 * 
@@ -75,6 +75,7 @@ public class DeleteOption {
 	/**
 	 * Entityがバージョン管理されている場合に、削除対象とする対象バージョンを指定。
 	 * デフォルトはALL。
+	 * DeleteTargetVersion.SPECIFICを指定した場合、purgeはfalseに設定できません。
 	 * 
 	 * @param targetVersion
 	 */
@@ -95,6 +96,7 @@ public class DeleteOption {
 	/**
 	 * ごみ箱に入れず、物理削除するかどうかを設定。
 	 * trueの場合、物理削除。
+	 * DeleteTargetVersion.SPECIFICを指定した場合、purgeはfalseに設定できません。
 	 * 
 	 * @param purge
 	 */
@@ -122,29 +124,29 @@ public class DeleteOption {
 	}
 
 	/**
-	 * {@link EntityManager#lockByUser(String, String)}により、ユーザによってロックされている場合、
+	 * {@link EntityManager#lockByUser(String, String)}により、ユーザーによってロックされている場合、
 	 * 更新エラー(EntityLockedByUserException)とするかどうか。
 	 * 
-	 * @return trueの場合、別ユーザによりロックされている場合は更新エラーとする。
+	 * @return trueの場合、別ユーザーによりロックされている場合は更新エラーとする。
 	 */
 	public boolean isCheckLockedByUser() {
 		return checkLockedByUser;
 	}
 
 	/**
-	 * {@link EntityManager#lockByUser(String, String)}により、ユーザによってロックされている場合、
+	 * {@link EntityManager#lockByUser(String, String)}により、ユーザーによってロックされている場合、
 	 * 更新エラー(EntityLockedByUserException)とするかどうかをセット。
 	 * デフォルトtrue。
 	 * 例えば、バックエンドのクリーンナッププログラムにてすでに無用なデータを削除するような場合、
 	 * 当該オプションをfalseに指定して削除することにより、
-	 * バックエンドのプログラムはユーザのロック状態によらず、データを削除することが可能となる。
+	 * バックエンドのプログラムはユーザーのロック状態によらず、データを削除することが可能となる。
 	 * 
 	 * @param checkLockedByUser
 	 */
 	public void setCheckLockedByUser(boolean checkLockedByUser) {
 		this.checkLockedByUser = checkLockedByUser;
 	}
-	
+
 	/**
 	 * 削除時、 {@link EntityEventListener}に通知するか否か
 	 * 
@@ -163,26 +165,26 @@ public class DeleteOption {
 	public void setNotifyListeners(boolean notifyListeners) {
 		this.notifyListeners = notifyListeners;
 	}
-	
-	
+
 	/**
-	 * ユーザにより、当該Entityがロックされているか否かを確認せず削除処理する。
+	 * ユーザーにより、当該Entityがロックされているか否かを確認せず削除処理する。
 	 * @return
 	 */
 	public DeleteOption noCheckLockedByUser() {
 		this.checkLockedByUser = false;
 		return this;
 	}
-	
+
 	/**
-	 * 削除時、パージしないように設定
+	 * 削除時、パージしないように設定。
+	 * DeleteTargetVersion.SPECIFICを指定した場合、purgeはfalseに設定できません。
 	 * @return
 	 */
 	public DeleteOption noPurge() {
 		this.purge = false;
 		return this;
 	}
-	
+
 	/**
 	 * 削除時に{@link EntityEventListener}に通知しないように設定。
 	 * @return
@@ -191,7 +193,7 @@ public class DeleteOption {
 		this.notifyListeners = false;
 		return this;
 	}
-	
+
 	@Override
 	public String toString() {
 		return "DeleteOption [checkTimestamp=" + checkTimestamp + ", targetVersion=" + targetVersion + ", purge="

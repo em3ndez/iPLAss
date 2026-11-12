@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,16 +23,14 @@ package org.iplass.mtp.entity.definition;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.iplass.adminconsole.annotation.MultiLang;
 import org.iplass.mtp.definition.Definition;
 import org.iplass.mtp.definition.LocalizedStringDefinition;
 import org.iplass.mtp.entity.definition.stores.SchemalessRdbStore;
 
-
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * <p>
@@ -59,7 +57,13 @@ public class EntityDefinition implements Definition {
 	private String name;
 
 	/** 表示名 */
-	@MultiLang(itemNameGetter = "getName", itemKey = "displayName", itemGetter = "getDisplayName", itemSetter = "setDisplayName", multiLangGetter = "getLocalizedDisplayNameList", multiLangSetter = "setLocalizedDisplayNameList")
+	@MultiLang(
+			itemNameGetter = "getName",
+			itemKey = "displayName",
+			itemGetter = "getDisplayName",
+			itemSetter = "setDisplayName",
+			multiLangGetter = "getLocalizedDisplayNameList",
+			multiLangSetter = "setLocalizedDisplayNameList")
 	private String displayName;
 
 	/** 説明 */
@@ -223,7 +227,7 @@ public class EntityDefinition implements Definition {
 	public List<PropertyDefinition> getDeclaredPropertyList() {
 		ArrayList<PropertyDefinition> decList = new ArrayList<PropertyDefinition>();
 		if (propertyList != null) {
-			for (PropertyDefinition pd: propertyList) {
+			for (PropertyDefinition pd : propertyList) {
 				if (!pd.isInherited()) {
 					decList.add(pd);
 				}
@@ -263,7 +267,7 @@ public class EntityDefinition implements Definition {
 			return null;
 		}
 
-		for (PropertyDefinition p: propertyList) {
+		for (PropertyDefinition p : propertyList) {
 			if (propName.equals(p.getName())) {
 				return p;
 			}

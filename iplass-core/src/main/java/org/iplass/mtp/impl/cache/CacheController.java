@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -45,18 +45,19 @@ public class CacheController<K, V> {
 
 	private static final Logger logger = LoggerFactory.getLogger(CacheController.class);
 
-	private final LoadingAdapter<K,V> adapter;
+	private final LoadingAdapter<K, V> adapter;
 	private final CacheStore store;
 	private final boolean hasVersion;
 	private final int indexCount;
 	private final boolean useNegativeCacheOnSharedCache;
 	private final boolean isStrictUpdate;
 
-	public CacheController(CacheStore store, boolean hasVersion, int indexCount, LoadingAdapter<K,V> adapter, boolean useNegativeCacheOnSharedCache) {
+	public CacheController(CacheStore store, boolean hasVersion, int indexCount, LoadingAdapter<K, V> adapter, boolean useNegativeCacheOnSharedCache) {
 		this(store, hasVersion, indexCount, adapter, useNegativeCacheOnSharedCache, false);
 	}
 
-	public CacheController(CacheStore store, boolean hasVersion, int indexCount, LoadingAdapter<K,V> adapter, boolean useNegativeCacheOnSharedCache, boolean isStrictUpdate) {
+	public CacheController(CacheStore store, boolean hasVersion, int indexCount, LoadingAdapter<K, V> adapter, boolean useNegativeCacheOnSharedCache,
+			boolean isStrictUpdate) {
 		this.adapter = adapter;
 		this.hasVersion = hasVersion;
 		this.indexCount = indexCount;
@@ -75,7 +76,6 @@ public class CacheController<K, V> {
 	 */
 	@SuppressWarnings("unchecked")
 	public V get(K key) {
-
 
 //		if (store instanceof TransactionLocalCacheStore) {
 //			if (((TransactionLocalCacheStore) store).isNegativeCachedOnLocalStore(key)) {
@@ -183,7 +183,7 @@ public class CacheController<K, V> {
 		V value = null;
 		List<V> list = adapter.loadByIndex(indexType, indexVal);
 		if (list != null && list.size() > 0) {
-			for (V v: list) {
+			for (V v : list) {
 				putToCache(v, true, null, 0);
 			}
 			CacheEntry entry = store.getByIndex(indexType, indexVal);
@@ -194,7 +194,8 @@ public class CacheController<K, V> {
 			//negativeCacheする場合は、nullをキャッシュ
 			if (useNegativeCacheOnSharedCache) {
 				CacheEntry ce;
-				Object[] indexValues = new Object[store.getFactory().getIndexCount()];
+				Object[] indexValues = new Object[store.getFactory()
+						.getIndexCount()];
 				indexValues[indexType] = indexVal;
 				if (hasVersion) {
 					ce = new CacheEntry(new NullKey(), null, Long.MIN_VALUE, indexValues);
@@ -262,7 +263,7 @@ public class CacheController<K, V> {
 //		}
 		if (ceList.size() > 0) {
 			ArrayList<V> ret = new ArrayList<V>();
-			for (CacheEntry ce: ceList) {
+			for (CacheEntry ce : ceList) {
 				ret.add((V) ce.getValue());
 			}
 			return ret;
@@ -286,7 +287,7 @@ public class CacheController<K, V> {
 		List<CacheEntry> ceList = store.removeByIndex(indexType, indexVal);
 		if (ceList != null && ceList.size() > 0) {
 			ArrayList<V> ret = new ArrayList<V>();
-			for (CacheEntry ce: ceList) {
+			for (CacheEntry ce : ceList) {
 				ret.add((V) ce.getValue());
 			}
 			return ret;
@@ -417,7 +418,7 @@ public class CacheController<K, V> {
 			((TransactionLocalCacheStore) store).reloadFromBackendStore(key);
 		}
 	}
-	
+
 	public void maintenance(Consumer<CacheController<K, V>> maintenanceFunction) {
 		if (isStrictUpdate) {
 			synchronized (this) {
@@ -429,23 +430,30 @@ public class CacheController<K, V> {
 	}
 
 	public void invalidateCacheStore() {
-		ServiceRegistry.getRegistry().getService(CacheService.class).invalidate(store.getNamespace());
+		ServiceRegistry.getRegistry()
+				.getService(CacheService.class)
+				.invalidate(store.getNamespace());
 	}
 
+	//TODO voidに
 	public String trace() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("CacheController Info");
-		builder.append("\nCacheController:" + this);
-		builder.append("\n\tCacheStore:" + store);
-		builder.append("\n\tLoadingAdapter:" + adapter);
-		builder.append("\n\thasVersion:" + hasVersion);
-		builder.append("\n\tindexCount:" + indexCount);
-		builder.append("\n\tuseNegativeCacheOnSharedCache:" + useNegativeCacheOnSharedCache);
+		if (logger.isTraceEnabled()) {
+			StringBuilder builder = new StringBuilder();
+			builder.append("CacheController Info");
+			builder.append("\nCacheController:" + this);
+			builder.append("\n\tCacheStore:" + store);
+			builder.append("\n\tLoadingAdapter:" + adapter);
+			builder.append("\n\thasVersion:" + hasVersion);
+			builder.append("\n\tindexCount:" + indexCount);
+			builder.append("\n\tuseNegativeCacheOnSharedCache:" + useNegativeCacheOnSharedCache);
 
-		builder.append("\n" + store.trace());
+			builder.append("\n" + store.trace());
 
-		logger.trace(builder.toString());
-		return builder.toString();
+			logger.trace(builder.toString());
+			return builder.toString();
+		} else {
+			return "CacheController Info(no details)";
+		}
 	}
 
 }

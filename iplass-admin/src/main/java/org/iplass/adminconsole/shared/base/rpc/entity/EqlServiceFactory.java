@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -39,7 +39,7 @@ public abstract class EqlServiceFactory extends AbstractAdminServiceFactory {
 
 		EqlServiceAsync service = GWT.create(EqlService.class);
 
-		init((HasRpcToken)service);
+		init((HasRpcToken) service);
 
 		EqlServiceFactory.service = service;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,9 +27,9 @@ import org.iplass.mtp.impl.auth.authenticate.TemporaryUserContext;
 import org.iplass.mtp.impl.web.auth.ActionAuthContext;
 
 class AllPermissionActionAuthContext implements ActionAuthContext {
-	
+
 	private final boolean withAnonymous;
-	
+
 	AllPermissionActionAuthContext(boolean withAnonymous) {
 		this.withAnonymous = withAnonymous;
 	}
@@ -48,7 +48,7 @@ class AllPermissionActionAuthContext implements ActionAuthContext {
 			}
 		}
 	}
-	
+
 	@Override
 	public boolean isResultCacheable(Permission permission) {
 		return true;

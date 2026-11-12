@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -66,7 +66,7 @@ ${m:rs("mtp-gem-messages", "generic.error.errOccurred")}
 <script type="text/javascript">
 function historyBack() {
 	if ($("body.modal-body").length != 0) {
-		document.rootWindow.scriptContext["closeModalFunction"].call(this);
+		document.rootDocument.scriptContext["closeModalFunction"].call(this);
 	} else {
 		history.back();
 	}

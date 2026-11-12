@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -34,7 +34,10 @@ public class QueryCacheTenantResource implements TenantResource {
 
 	@Override
 	public void destory() {
-		ServiceRegistry.getRegistry().getService(CacheService.class).invalidate(EntityCacheInterceptor.QUERY_CACHE_NAMESPACE_PREFIX + tenantId);
+		CacheService cs = ServiceRegistry.getRegistry()
+				.getService(CacheService.class);
+		cs.invalidate(EntityCacheInterceptor.QUERY_CACHE_NAMESPACE_PREFIX + tenantId);
+		cs.invalidate(EntityCacheInterceptor.KEEP_QUERY_CACHE_NAMESPACE_PREFIX + tenantId);
 	}
 
 }

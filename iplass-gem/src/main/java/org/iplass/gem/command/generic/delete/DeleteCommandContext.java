@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,10 +20,10 @@
 
 package org.iplass.gem.command.generic.delete;
 
-
 import java.util.Collections;
 import java.util.List;
 
+import org.iplass.gem.command.Constants;
 import org.iplass.gem.command.GemResourceBundleUtil;
 import org.iplass.gem.command.generic.GenericCommandContext;
 import org.iplass.mtp.ApplicationException;
@@ -59,7 +59,8 @@ public class DeleteCommandContext extends GenericCommandContext {
 	public DeleteCommandContext(RequestContext request) {
 		super(request);
 
-		ucdm = ManagerLocator.getInstance().getManager(UtilityClassDefinitionManager.class);
+		ucdm = ManagerLocator.getInstance()
+				.getManager(UtilityClassDefinitionManager.class);
 	}
 
 	@Override
@@ -103,7 +104,8 @@ public class DeleteCommandContext extends GenericCommandContext {
 	}
 
 	protected String getDeleteInterrupterName() {
-		return getView().getResultSection().getDeleteInterrupterName();
+		return getView().getResultSection()
+				.getDeleteInterrupterName();
 	}
 
 	protected BulkOperationInterrupter createBulkInterrupter(String className) {
@@ -120,7 +122,8 @@ public class DeleteCommandContext extends GenericCommandContext {
 		if (interrupter == null) {
 			// 何もしないデフォルトInterrupter生成
 			getLogger().debug("set default delete operation interrupter.");
-			interrupter = new BulkOperationInterrupter() {};
+			interrupter = new BulkOperationInterrupter() {
+			};
 		}
 		return interrupter;
 	}
@@ -131,12 +134,17 @@ public class DeleteCommandContext extends GenericCommandContext {
 			deleteTargetVersion = DeleteTargetVersion.ALL;
 			if (getEntityDefinition().getVersionControlType() != VersionControlType.NONE) {
 				boolean isDeleteSpecificVersion = getView().isDeleteSpecificVersion();
-				if (isDeleteSpecificVersion) {
+				if (isDeleteSpecificVersion && isAllVersion()) {
 					deleteTargetVersion = DeleteTargetVersion.SPECIFIC;
 				}
 			}
 		}
 		return deleteTargetVersion;
+	}
+
+	private boolean isAllVersion() {
+		String allVer = getRequest().getParam(Constants.SEARCH_ALL_VERSION);
+		return "1".equals(allVer);
 	}
 
 	protected String resourceString(String key, Object... arguments) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,13 +20,8 @@
 
 package org.iplass.mtp.impl.view.generic.element.section;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.iplass.mtp.impl.core.ExecuteContext;
 import org.iplass.mtp.impl.core.TenantContext;
-import org.iplass.mtp.impl.i18n.I18nUtil;
-import org.iplass.mtp.impl.i18n.MetaLocalizedString;
 import org.iplass.mtp.impl.script.GroovyScriptEngine;
 import org.iplass.mtp.impl.script.template.GroovyTemplate;
 import org.iplass.mtp.impl.script.template.GroovyTemplateCompiler;
@@ -52,12 +47,6 @@ public class MetaScriptingSection extends MetaSection {
 	/** スクリプト */
 	private String script;
 
-	/** タイトル */
-	private String title;
-
-	/** id */
-	private String id;
-
 	/** リンクを表示するか */
 	private boolean showLink;
 
@@ -70,8 +59,8 @@ public class MetaScriptingSection extends MetaSection {
 	/** テンプレートのキー */
 	private String key;
 
-	/** 多言語設定情報 */
-	private List<MetaLocalizedString> localizedTitleList = new ArrayList<>();
+	/** セクション内に配置した場合に枠線を表示 */
+	private boolean dispBorderInSection;
 
 	/**
 	 * スクリプトを取得します。
@@ -90,43 +79,11 @@ public class MetaScriptingSection extends MetaSection {
 	}
 
 	/**
-	 * タイトルを取得します。
-	 * @return タイトル
-	 */
-	public String getTitle() {
-	    return title;
-	}
-
-	/**
-	 * タイトルを設定します。
-	 * @param title タイトル
-	 */
-	public void setTitle(String title) {
-	    this.title = title;
-	}
-
-	/**
-	 * idを取得します。
-	 * @return id
-	 */
-	public String getId() {
-	    return id;
-	}
-
-	/**
-	 * idを設定します。
-	 * @param id id
-	 */
-	public void setId(String id) {
-	    this.id = id;
-	}
-
-	/**
 	 * リンクを表示するかを取得します。
 	 * @return リンクを表示するか
 	 */
 	public boolean isShowLink() {
-	    return showLink;
+		return showLink;
 	}
 
 	/**
@@ -134,7 +91,7 @@ public class MetaScriptingSection extends MetaSection {
 	 * @param showLink リンクを表示するか
 	 */
 	public void setShowLink(boolean showLink) {
-	    this.showLink = showLink;
+		this.showLink = showLink;
 	}
 
 	/**
@@ -142,7 +99,7 @@ public class MetaScriptingSection extends MetaSection {
 	 * @return 詳細編集非表示設定
 	 */
 	public boolean isHideDetail() {
-	    return hideDetail;
+		return hideDetail;
 	}
 
 	/**
@@ -150,7 +107,7 @@ public class MetaScriptingSection extends MetaSection {
 	 * @param hideDetail 詳細編集非表示設定
 	 */
 	public void setHideDetail(boolean hideDetail) {
-	    this.hideDetail = hideDetail;
+		this.hideDetail = hideDetail;
 	}
 
 	/**
@@ -158,7 +115,7 @@ public class MetaScriptingSection extends MetaSection {
 	 * @return 詳細表示非表示設定
 	 */
 	public boolean isHideView() {
-	    return hideView;
+		return hideView;
 	}
 
 	/**
@@ -166,23 +123,23 @@ public class MetaScriptingSection extends MetaSection {
 	 * @param hideView 詳細表示非表示設定
 	 */
 	public void setHideView(boolean hideView) {
-	    this.hideView = hideView;
+		this.hideView = hideView;
 	}
 
 	/**
-	 * 多言語設定情報を取得します。
-	 * @return リスト
+	 * セクション内に配置した場合に枠線を表示を取得します。
+	 * @return セクション内に配置した場合に枠線を表示
 	 */
-	public List<MetaLocalizedString> getLocalizedTitleList() {
-		return localizedTitleList;
+	public boolean isDispBorderInSection() {
+		return dispBorderInSection;
 	}
 
 	/**
-	 * 多言語設定情報を設定します。
-	 * @param リスト
+	 * セクション内に配置した場合に枠線を表示を設定します。
+	 * @param dispBorderInSection セクション内に配置した場合に枠線を表示
 	 */
-	public void setLocalizedTitleList(List<MetaLocalizedString> localizedTitleList) {
-		this.localizedTitleList = localizedTitleList;
+	public void setDispBorderInSection(boolean dispBorderInSection) {
+		this.dispBorderInSection = dispBorderInSection;
 	}
 
 	@Override
@@ -196,14 +153,10 @@ public class MetaScriptingSection extends MetaSection {
 
 		ScriptingSection script = (ScriptingSection) element;
 		this.script = script.getScript();
-		title = script.getTitle();
-		id = script.getId();
 		this.showLink = script.isShowLink();
 		this.hideDetail = script.isHideDetail();
 		this.hideView = script.isHideView();
-
-		// 言語毎の文字情報設定
-		localizedTitleList = I18nUtil.toMeta(script.getLocalizedTitleList());
+		this.dispBorderInSection = script.isDispBorderInSection();
 	}
 
 	@Override
@@ -213,12 +166,10 @@ public class MetaScriptingSection extends MetaSection {
 
 		script.setScript(this.script);
 		script.setKey(key);
-		script.setTitle(title);
-		script.setId(id);
 		script.setShowLink(showLink);
 		script.setHideDetail(hideDetail);
 		script.setHideView(hideView);
-		script.setLocalizedTitleList(I18nUtil.toDef(localizedTitleList));
+		script.setDispBorderInSection(dispBorderInSection);
 
 		return script;
 	}
@@ -242,7 +193,8 @@ public class MetaScriptingSection extends MetaSection {
 		public ScriptingSectionRuntime(MetaScriptingSection metadata, EntityViewRuntime entityView) {
 			super(metadata, entityView);
 			if (metadata.script != null && metadata.key == null) {
-				metadata.key = "Jsp_" + GroovyTemplateCompiler.randomName().replace("-", "_");
+				metadata.key = "Jsp_" + GroovyTemplateCompiler.randomName()
+						.replace("-", "_");
 				entityView.addTemplate(key, compile(key));
 			}
 		}
@@ -253,7 +205,8 @@ public class MetaScriptingSection extends MetaSection {
 		 * @return テンプレート
 		 */
 		private GroovyTemplate compile(String key) {
-			TenantContext tenant = ExecuteContext.getCurrentContext().getTenantContext();
+			TenantContext tenant = ExecuteContext.getCurrentContext()
+					.getTenantContext();
 			return GroovyTemplateCompiler.compile(
 					getMetaData().script, key, (GroovyScriptEngine) tenant.getScriptEngine());
 		}

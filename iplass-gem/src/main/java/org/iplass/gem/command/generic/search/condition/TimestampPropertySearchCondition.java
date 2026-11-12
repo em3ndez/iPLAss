@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import org.apache.commons.text.StrTokenizer;
+import org.apache.commons.text.StringTokenizer;
 import org.iplass.gem.command.Constants;
 import org.iplass.gem.command.generic.search.SearchConditionDetail;
 import org.iplass.mtp.entity.definition.PropertyDefinition;
@@ -116,7 +116,7 @@ public class TimestampPropertySearchCondition extends PropertySearchCondition {
 				|| Constants.NULL.equals(detail.getPredicate())) {
 			return null;
 		} else if (Constants.IN.equals(detail.getPredicate())) {
-			StrTokenizer st = StrTokenizer.getCSVInstance(detail.getValue());
+			StringTokenizer st = StringTokenizer.getCSVInstance(detail.getValue());
 			String[] values = st.getTokenArray();
 			Timestamp[] ret = new Timestamp[values.length];
 			for (int i = 0; i < values.length; i++) {
@@ -131,11 +131,14 @@ public class TimestampPropertySearchCondition extends PropertySearchCondition {
 	private Timestamp string2Timestamp(String str) {
 
 		if (str.length() == 8) {
-			return ConvertUtil.convertToDate(Timestamp.class, str, TemplateUtil.getLocaleFormat().getServerDateFormat(), true);
+			return ConvertUtil.convertToDate(Timestamp.class, str, TemplateUtil.getLocaleFormat()
+					.getServerDateFormat(), true);
 		} else if (str.length() == 14) {
-			return ConvertUtil.convertToDate(Timestamp.class, str, TemplateUtil.getLocaleFormat().getServerDateFormat() + "HHmmss", true);
+			return ConvertUtil.convertToDate(Timestamp.class, str, TemplateUtil.getLocaleFormat()
+					.getServerDateFormat() + "HHmmss", true);
 		} else {
-			return ConvertUtil.convertToDate(Timestamp.class, str, TemplateUtil.getLocaleFormat().getServerDateTimeFormat(), true);
+			return ConvertUtil.convertToDate(Timestamp.class, str, TemplateUtil.getLocaleFormat()
+					.getServerDateTimeFormat(), true);
 		}
 	}
 

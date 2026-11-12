@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,7 +30,7 @@ import org.iplass.mtp.impl.rdb.adapter.function.FunctionAdapter;
 import org.iplass.mtp.impl.rdb.common.function.DateTimeUnit;
 import org.iplass.mtp.impl.rdb.sqlserver.SqlServerRdbAdapter;
 
-public class SqlServerDateDiffFunctionAdapter implements FunctionAdapter, DateTimeUnit {
+public class SqlServerDateDiffFunctionAdapter implements FunctionAdapter<Function>, DateTimeUnit {
 
 //	/*HOUR*/
 //	select DATEDIFF(SECOND, '2011-03-01', '2012-03-01 12:12:12')/60/60;
@@ -43,11 +43,13 @@ public class SqlServerDateDiffFunctionAdapter implements FunctionAdapter, DateTi
 
 	@Override
 	public void toSQL(FunctionContext context, Function function, RdbAdapter rdb) {
-		if (function.getArguments() == null || function.getArguments().size() != 3) {
+		if (function.getArguments() == null || function.getArguments()
+				.size() != 3) {
 			throw new QueryException(function.getName() + " must have 3 arguments.");
 		}
 
-		String unit = ((String) ((Literal) function.getArguments().get(0)).getValue()).toUpperCase();
+		String unit = ((String) ((Literal) function.getArguments()
+				.get(0)).getValue()).toUpperCase();
 
 		context.append("(");
 
@@ -58,9 +60,11 @@ public class SqlServerDateDiffFunctionAdapter implements FunctionAdapter, DateTi
 			context.append("(");
 			context.append(YEAR);
 			context.append(",");
-			context.appendArgument(function.getArguments().get(1));
+			context.appendArgument(function.getArguments()
+					.get(1));
 			context.append(",");
-			context.appendArgument(function.getArguments().get(2));
+			context.appendArgument(function.getArguments()
+					.get(2));
 			context.append(")");
 			break;
 		case MONTH:
@@ -69,9 +73,11 @@ public class SqlServerDateDiffFunctionAdapter implements FunctionAdapter, DateTi
 			context.append("(");
 			context.append(MONTH);
 			context.append(",");
-			context.appendArgument(function.getArguments().get(1));
+			context.appendArgument(function.getArguments()
+					.get(1));
 			context.append(",");
-			context.appendArgument(function.getArguments().get(2));
+			context.appendArgument(function.getArguments()
+					.get(2));
 			context.append(")");
 			break;
 		case DAY:
@@ -80,9 +86,11 @@ public class SqlServerDateDiffFunctionAdapter implements FunctionAdapter, DateTi
 			context.append("(");
 			context.append(SECOND);
 			context.append(",");
-			context.appendArgument(function.getArguments().get(1));
+			context.appendArgument(function.getArguments()
+					.get(1));
 			context.append(",");
-			context.appendArgument(function.getArguments().get(2));
+			context.appendArgument(function.getArguments()
+					.get(2));
 			context.append(")/60/60/24");
 			break;
 		case HOUR:
@@ -91,9 +99,11 @@ public class SqlServerDateDiffFunctionAdapter implements FunctionAdapter, DateTi
 			context.append("(");
 			context.append(SECOND);
 			context.append(",");
-			context.appendArgument(function.getArguments().get(1));
+			context.appendArgument(function.getArguments()
+					.get(1));
 			context.append(",");
-			context.appendArgument(function.getArguments().get(2));
+			context.appendArgument(function.getArguments()
+					.get(2));
 			context.append(")/60/60");
 			break;
 		case MINUTE:
@@ -102,9 +112,11 @@ public class SqlServerDateDiffFunctionAdapter implements FunctionAdapter, DateTi
 			context.append("(");
 			context.append(SECOND);
 			context.append(",");
-			context.appendArgument(function.getArguments().get(1));
+			context.appendArgument(function.getArguments()
+					.get(1));
 			context.append(",");
-			context.appendArgument(function.getArguments().get(2));
+			context.appendArgument(function.getArguments()
+					.get(2));
 			context.append(")/60");
 			break;
 		case SECOND:
@@ -113,9 +125,11 @@ public class SqlServerDateDiffFunctionAdapter implements FunctionAdapter, DateTi
 			context.append("(");
 			context.append(SECOND);
 			context.append(",");
-			context.appendArgument(function.getArguments().get(1));
+			context.appendArgument(function.getArguments()
+					.get(1));
 			context.append(",");
-			context.appendArgument(function.getArguments().get(2));
+			context.appendArgument(function.getArguments()
+					.get(2));
 			context.append(")");
 			break;
 		default:
@@ -132,7 +146,9 @@ public class SqlServerDateDiffFunctionAdapter implements FunctionAdapter, DateTi
 			throw new QueryException(getFunctionName() + " must have 3 arguments.");
 		}
 
-		String unit = args.get(0).toString().toUpperCase();
+		String unit = args.get(0)
+				.toString()
+				.toUpperCase();
 
 		context.append("(");
 

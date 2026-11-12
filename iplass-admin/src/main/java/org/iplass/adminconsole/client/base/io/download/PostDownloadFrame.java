@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,13 +25,13 @@ import com.google.gwt.event.dom.client.LoadEvent;
 import com.google.gwt.event.dom.client.LoadHandler;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FormPanel;
-import com.google.gwt.user.client.ui.Hidden;
-import com.google.gwt.user.client.ui.NamedFrame;
-import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.FormPanel.SubmitCompleteEvent;
 import com.google.gwt.user.client.ui.FormPanel.SubmitCompleteHandler;
 import com.google.gwt.user.client.ui.FormPanel.SubmitEvent;
 import com.google.gwt.user.client.ui.FormPanel.SubmitHandler;
+import com.google.gwt.user.client.ui.Hidden;
+import com.google.gwt.user.client.ui.NamedFrame;
+import com.google.gwt.user.client.ui.RootPanel;
 
 /**
  * Postメソッドによるレスポンスダウンロード用フレーム
@@ -84,7 +84,8 @@ public class PostDownloadFrame extends NamedFrame {
 			}
 		});
 
-		RootPanel.get().add(this);
+		RootPanel.get()
+				.add(this);
 	}
 
 	/**
@@ -142,7 +143,8 @@ public class PostDownloadFrame extends NamedFrame {
 			//メソッドはPOST
 			setMethod(METHOD_POST);
 
-			RootPanel.get().add(this);
+			RootPanel.get()
+					.add(this);
 		}
 
 		/**

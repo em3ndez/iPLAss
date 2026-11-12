@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,27 +33,30 @@ import java.io.Serializable;
  */
 public class ColumnMapping implements Serializable {
 	private static final long serialVersionUID = 3409874259116874619L;
-	
+
 	private String propertyName;
 	private String columnName;
-	
+
 	public ColumnMapping() {
 	}
-	
+
 	public ColumnMapping(String propertyName, String columnName) {
 		this.propertyName = propertyName;
 		this.columnName = columnName;
 	}
-	
+
 	public String getPropertyName() {
 		return propertyName;
 	}
+
 	public void setPropertyName(String propertyName) {
 		this.propertyName = propertyName;
 	}
+
 	public String getColumnName() {
 		return columnName;
 	}
+
 	public void setColumnName(String columnName) {
 		this.columnName = columnName;
 	}

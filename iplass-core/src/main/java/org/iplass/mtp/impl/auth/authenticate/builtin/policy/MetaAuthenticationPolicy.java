@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,6 +29,9 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
+import org.iplass.mtp.ManagerLocator;
+import org.iplass.mtp.auth.User;
 import org.iplass.mtp.auth.login.CredentialUpdateException;
 import org.iplass.mtp.auth.login.IdPasswordCredential;
 import org.iplass.mtp.auth.policy.AccountNotification;
@@ -37,6 +40,9 @@ import org.iplass.mtp.auth.policy.PasswordNotification;
 import org.iplass.mtp.auth.policy.PropertyNotification;
 import org.iplass.mtp.auth.policy.definition.AccountNotificationListenerDefinition;
 import org.iplass.mtp.auth.policy.definition.AuthenticationPolicyDefinition;
+import org.iplass.mtp.entity.EntityManager;
+import org.iplass.mtp.entity.query.Query;
+import org.iplass.mtp.entity.query.condition.predicate.Equals;
 import org.iplass.mtp.impl.auth.AccountManagementModuleWrapper;
 import org.iplass.mtp.impl.auth.AuthService;
 import org.iplass.mtp.impl.auth.LoggingAccountManagementModule;
@@ -44,11 +50,16 @@ import org.iplass.mtp.impl.auth.authenticate.AccountManagementModule;
 import org.iplass.mtp.impl.auth.authenticate.AuthenticationProvider;
 import org.iplass.mtp.impl.auth.authenticate.builtin.BuiltinAccount;
 import org.iplass.mtp.impl.auth.authenticate.builtin.BuiltinAccountHandle;
+import org.iplass.mtp.impl.core.ExecuteContext;
+import org.iplass.mtp.impl.core.TenantContext;
 import org.iplass.mtp.impl.definition.DefinableMetaData;
 import org.iplass.mtp.impl.i18n.I18nUtil;
 import org.iplass.mtp.impl.metadata.BaseMetaDataRuntime;
 import org.iplass.mtp.impl.metadata.BaseRootMetaData;
 import org.iplass.mtp.impl.metadata.MetaDataConfig;
+import org.iplass.mtp.impl.script.GroovyScript;
+import org.iplass.mtp.impl.script.ScriptContext;
+import org.iplass.mtp.impl.script.ScriptEngine;
 import org.iplass.mtp.impl.util.CoreResourceBundleUtil;
 import org.iplass.mtp.impl.util.ObjectUtil;
 import org.iplass.mtp.impl.util.random.SecureRandomGenerator;
@@ -65,7 +76,9 @@ public class MetaAuthenticationPolicy extends BaseRootMetaData implements Defina
 	private static final long serialVersionUID = 7953683827749947294L;
 
 	private static class RandomHolder {
-		static final SecureRandomGenerator random = ServiceRegistry.getRegistry().getService(SecureRandomService.class).createGenerator();
+		static final SecureRandomGenerator random = ServiceRegistry.getRegistry()
+				.getService(SecureRandomService.class)
+				.createGenerator();
 	}
 
 	private MetaAccountLockoutPolicy accountLockoutPolicy;
@@ -73,8 +86,10 @@ public class MetaAuthenticationPolicy extends BaseRootMetaData implements Defina
 	private boolean recordLastLoginDate = true;
 	private MetaRememberMePolicy rememberMePolicy;
 	private List<String> authenticationProvider;
+	private List<String> openIdConnectDefinition;
+	private List<String> webAuthnDefinition;
 
-	/** ユーザ作成時、パスワード更新時にその情報を受け取る為のListener */
+	/** ユーザー作成時、パスワード更新時にその情報を受け取る為のListener */
 	private List<MetaAccountNotificationListener> notificationListener;
 
 	public List<String> getAuthenticationProvider() {
@@ -127,6 +142,22 @@ public class MetaAuthenticationPolicy extends BaseRootMetaData implements Defina
 		this.notificationListener = notificationListener;
 	}
 
+	public List<String> getOpenIdConnectDefinition() {
+		return openIdConnectDefinition;
+	}
+
+	public void setOpenIdConnectDefinition(List<String> openIdConnectDefinition) {
+		this.openIdConnectDefinition = openIdConnectDefinition;
+	}
+
+	public List<String> getWebAuthnDefinition() {
+		return webAuthnDefinition;
+	}
+
+	public void setWebAuthnDefinition(List<String> webAuthnDefinition) {
+		this.webAuthnDefinition = webAuthnDefinition;
+	}
+
 	@Override
 	public AuthenticationPolicyRuntime createRuntime(MetaDataConfig metaDataConfig) {
 		return new AuthenticationPolicyRuntime();
@@ -137,6 +168,7 @@ public class MetaAuthenticationPolicy extends BaseRootMetaData implements Defina
 		return ObjectUtil.deepCopy(this);
 	}
 
+	@Override
 	public void applyConfig(AuthenticationPolicyDefinition def) {
 		name = def.getName();
 		description = def.getDescription();
@@ -165,7 +197,7 @@ public class MetaAuthenticationPolicy extends BaseRootMetaData implements Defina
 
 		if (def.getNotificationListener() != null) {
 			notificationListener = new ArrayList<>();
-			for (AccountNotificationListenerDefinition anld: def.getNotificationListener()) {
+			for (AccountNotificationListenerDefinition anld : def.getNotificationListener()) {
 				MetaAccountNotificationListener manl = MetaAccountNotificationListener.newMeta(anld);
 				manl.applyConfig(anld);
 				notificationListener.add(manl);
@@ -179,8 +211,21 @@ public class MetaAuthenticationPolicy extends BaseRootMetaData implements Defina
 		} else {
 			authenticationProvider = null;
 		}
+
+		if (def.getOpenIdConnectDefinition() != null) {
+			openIdConnectDefinition = new ArrayList<String>(def.getOpenIdConnectDefinition());
+		} else {
+			openIdConnectDefinition = null;
+		}
+
+		if (def.getWebAuthnDefinition() != null) {
+			webAuthnDefinition = new ArrayList<String>(def.getWebAuthnDefinition());
+		} else {
+			webAuthnDefinition = null;
+		}
 	}
 
+	@Override
 	public AuthenticationPolicyDefinition currentConfig() {
 		AuthenticationPolicyDefinition def = new AuthenticationPolicyDefinition();
 		def.setName(name);
@@ -202,7 +247,7 @@ public class MetaAuthenticationPolicy extends BaseRootMetaData implements Defina
 
 		if (notificationListener != null) {
 			ArrayList<AccountNotificationListenerDefinition> nlist = new ArrayList<>();
-			for (MetaAccountNotificationListener manl: notificationListener) {
+			for (MetaAccountNotificationListener manl : notificationListener) {
 				nlist.add(manl.currentConfig());
 			}
 			def.setNotificationListener(nlist);
@@ -210,6 +255,14 @@ public class MetaAuthenticationPolicy extends BaseRootMetaData implements Defina
 
 		if (authenticationProvider != null) {
 			def.setAuthenticationProvider(new ArrayList<>(authenticationProvider));
+		}
+
+		if (openIdConnectDefinition != null) {
+			def.setOpenIdConnectDefinition(new ArrayList<>(openIdConnectDefinition));
+		}
+
+		if (webAuthnDefinition != null) {
+			def.setWebAuthnDefinition(new ArrayList<>(webAuthnDefinition));
 		}
 
 		return def;
@@ -222,7 +275,12 @@ public class MetaAuthenticationPolicy extends BaseRootMetaData implements Defina
 		private Set<String> denyList;
 		private char[] randomPasswordIncludeSigns;
 		private char[] randomPasswordExcludeChars;
+		private GroovyScript customUserEndDateScript;
 		private AccountManagementModule amm;
+
+		private ScriptEngine scriptEngine = ExecuteContext.getCurrentContext()
+				.getTenantContext()
+				.getScriptEngine();
 
 		public AuthenticationPolicyRuntime() {
 			try {
@@ -230,31 +288,49 @@ public class MetaAuthenticationPolicy extends BaseRootMetaData implements Defina
 				if (notificationListener != null) {
 					AuthenticationPolicyDefinition def = currentConfig();
 					for (int i = 0; i < notificationListener.size(); i++) {
-						AccountNotificationListener anl = notificationListener.get(i).createInstance(name, i);
+						AccountNotificationListener anl = notificationListener.get(i)
+								.createInstance(name, i);
 						anl.init(def);
 						listeners.add(anl);
 					}
 				}
 				if (passwordPolicy != null) {
 					if (passwordPolicy.getPasswordPattern() != null
-							&& passwordPolicy.getPasswordPattern().length() > 0) {
+							&& passwordPolicy.getPasswordPattern()
+									.length() > 0) {
 						passwordPattern = Pattern.compile(passwordPolicy.getPasswordPattern());
 					}
 					if (passwordPolicy.getDenyList() != null) {
-						denyList = new HashSet<>(Arrays.asList(passwordPolicy.getDenyList().split("\r\n|\n|\r")));
+						denyList = new HashSet<>(Arrays.asList(passwordPolicy.getDenyList()
+								.split("\r\n|\n|\r")));
 					}
-					if (passwordPolicy.getRandomPasswordIncludeSigns() != null && passwordPolicy.getRandomPasswordIncludeSigns().length() > 0) {
-						randomPasswordIncludeSigns = passwordPolicy.getRandomPasswordIncludeSigns().toCharArray();
+					if (passwordPolicy.getRandomPasswordIncludeSigns() != null && passwordPolicy.getRandomPasswordIncludeSigns()
+							.length() > 0) {
+						randomPasswordIncludeSigns = passwordPolicy.getRandomPasswordIncludeSigns()
+								.toCharArray();
 					}
-					if (passwordPolicy.getRandomPasswordExcludeChars() != null && passwordPolicy.getRandomPasswordExcludeChars().length() > 0) {
-						randomPasswordExcludeChars = passwordPolicy.getRandomPasswordExcludeChars().toCharArray();
+					if (passwordPolicy.getRandomPasswordExcludeChars() != null && passwordPolicy.getRandomPasswordExcludeChars()
+							.length() > 0) {
+						randomPasswordExcludeChars = passwordPolicy.getRandomPasswordExcludeChars()
+								.toCharArray();
+					}
+					if (StringUtils.isNotEmpty(passwordPolicy.getCustomUserEndDate())) {
+						try {
+							String scriptName = "MetaPasswordPolicy_customUserEndDate_" + getName();
+							this.customUserEndDateScript = (GroovyScript) scriptEngine.createScript(
+									passwordPolicy.getCustomUserEndDate(), scriptName);
+						} catch (Exception e) {
+							setIllegalStateException(new RuntimeException(e));
+						}
 					}
 				}
 
 				if (authenticationProvider != null && authenticationProvider.size() > 0) {
 					AccountManagementModuleWrapper ammr = new AccountManagementModuleWrapper();
-					AuthenticationProvider[] aps = ServiceRegistry.getRegistry().getService(AuthService.class).getAuthenticationProviders();
-					for (AuthenticationProvider ap: aps) {
+					AuthenticationProvider[] aps = ServiceRegistry.getRegistry()
+							.getService(AuthService.class)
+							.getAuthenticationProviders();
+					for (AuthenticationProvider ap : aps) {
 						if (authenticationProvider.contains(ap.getProviderName())) {
 							ammr.add(ap.getAccountManagementModule());
 						}
@@ -356,7 +432,8 @@ public class MetaAuthenticationPolicy extends BaseRootMetaData implements Defina
 					Timestamp loginErrorDate = account.getLoginErrorDate();
 					if (account.getLoginErrorCnt() > 0 && loginErrorDate != null) {//以前のデータではエラー回数が0以上で、エラー日時が入っていないものがある
 						long currentTime = System.currentTimeMillis();//ExecuteContext#currentTimestampは利用しない（プレビュー機能によって日付変更出来ないように）
-						if (loginErrorDate.getTime() + TimeUnit.MINUTES.toMillis(accountLockoutPolicy.getLockoutFailureExpirationInterval()) < currentTime) {
+						if (loginErrorDate.getTime()
+								+ TimeUnit.MINUTES.toMillis(accountLockoutPolicy.getLockoutFailureExpirationInterval()) < currentTime) {
 							//ログインエラーカウントをリセット
 							account.resetLoginErrorCount();
 							return true;
@@ -425,6 +502,15 @@ public class MetaAuthenticationPolicy extends BaseRootMetaData implements Defina
 
 		}
 
+		public boolean updateLastLoginOn(BuiltinAccount account) {
+			if (isRecordLastLoginDate()) {
+				long currentTime = System.currentTimeMillis();//ExecuteContext#currentTimestampは利用しない（プレビュー機能によって日付変更出来ないように）
+				account.setLastLoginOn(new Timestamp(currentTime));
+				return true;
+			}
+			return false;
+		}
+
 		public void checkPasswordUpdatePolicy(IdPasswordCredential newIdPass, BuiltinAccount account) {
 			//固有のポリシー
 			checkPasswordPattern(newIdPass.getPassword(), account.getAccountId());
@@ -449,7 +535,8 @@ public class MetaAuthenticationPolicy extends BaseRootMetaData implements Defina
 				if (account.getLastPasswordChange() == null) {
 					return true;
 				}
-				long lastPasswordChange = account.getLastPasswordChange().getTime();
+				long lastPasswordChange = account.getLastPasswordChange()
+						.getTime();
 				if (now >= lastPasswordChange + TimeUnit.DAYS.toMillis(passwordPolicy.getMaximumPasswordAge())) {
 					return true;
 				}
@@ -463,7 +550,7 @@ public class MetaAuthenticationPolicy extends BaseRootMetaData implements Defina
 		 * @param tenant
 		 *            テナント情報
 		 * @param id
-		 *            ユーザID
+		 *            ユーザーID
 		 * @param account
 		 *            アカウント情報
 		 * @return true:最小期間内/false:最小期間外
@@ -473,7 +560,8 @@ public class MetaAuthenticationPolicy extends BaseRootMetaData implements Defina
 				if (account.getLastPasswordChange() == null) {
 					return false;
 				}
-				long lastPasswordChange = account.getLastPasswordChange().getTime();
+				long lastPasswordChange = account.getLastPasswordChange()
+						.getTime();
 				if (now <= lastPasswordChange + TimeUnit.DAYS.toMillis(passwordPolicy.getMinimumPasswordAge())) {
 					// 最小変更期間内なので変更できない
 					return true;
@@ -484,30 +572,79 @@ public class MetaAuthenticationPolicy extends BaseRootMetaData implements Defina
 
 		public void checkPasswordPattern(String password, String accountId) {
 
-			if (passwordPattern != null && !passwordPattern.matcher(password).matches()) {
-				String passwordPatternErrorMessage = I18nUtil.stringMeta(passwordPolicy.getPasswordPatternErrorMessage(), passwordPolicy.getLocalizedPasswordPatternErrorMessageList());
+			if (passwordPattern != null && !passwordPattern.matcher(password)
+					.matches()) {
+				String passwordPatternErrorMessage = I18nUtil.stringMeta(passwordPolicy.getPasswordPatternErrorMessage(),
+						passwordPolicy.getLocalizedPasswordPatternErrorMessageList());
 				throw new CredentialUpdateException(passwordPatternErrorMessage);
 			}
 
 			if (passwordPolicy.isDenySamePasswordAsAccountId() && accountId.equals(password)) {
-				String passwordPatternErrorMessage = I18nUtil.stringMeta(passwordPolicy.getPasswordPatternErrorMessage(), passwordPolicy.getLocalizedPasswordPatternErrorMessageList());
+				String passwordPatternErrorMessage = I18nUtil.stringMeta(passwordPolicy.getPasswordPatternErrorMessage(),
+						passwordPolicy.getLocalizedPasswordPatternErrorMessageList());
 				throw new CredentialUpdateException(passwordPatternErrorMessage);
 			}
 
 			if (denyList != null) {
-				if(denyList.contains(password)) {
-					String passwordPatternErrorMessage = I18nUtil.stringMeta(passwordPolicy.getPasswordPatternErrorMessage(), passwordPolicy.getLocalizedPasswordPatternErrorMessageList());
+				if (denyList.contains(password)) {
+					String passwordPatternErrorMessage = I18nUtil.stringMeta(passwordPolicy.getPasswordPatternErrorMessage(),
+							passwordPolicy.getLocalizedPasswordPatternErrorMessageList());
 					throw new CredentialUpdateException(passwordPatternErrorMessage);
+				}
+
+				List<String> selectUserList = new ArrayList<>();
+
+				// DenyListに${プロパティ名}で設定されているプロパティを取得する
+				denyList.forEach(deny -> {
+					// Userエンティティのプロパティを取得
+					if (deny.startsWith("${user.") && deny.endsWith("}")) {
+						selectUserList.add(deny.substring(7, deny.length() - 1));
+					}
+				});
+
+				if (!selectUserList.isEmpty()) {
+					EntityManager em = ManagerLocator.getInstance()
+							.getManager(EntityManager.class);
+					Query q = new Query().select(selectUserList.toArray())
+							.from(User.DEFINITION_NAME)
+							.where(new Equals(User.ACCOUNT_ID, accountId));
+					List<Object[]> result = em.search(q)
+							.getList();
+
+					result.forEach(properties -> {
+						for (Object property : properties) {
+							if (property != null && property.getClass()
+									.isArray()) {
+								Object[] values = (Object[]) property;
+								for (Object value : values) {
+									if (password.equals(value)) {
+										String passwordPatternErrorMessage = I18nUtil.stringMeta(
+												passwordPolicy.getPasswordPatternErrorMessage(),
+												passwordPolicy.getLocalizedPasswordPatternErrorMessageList());
+										throw new CredentialUpdateException(passwordPatternErrorMessage);
+									}
+								}
+							} else {
+								if (password.equals(property)) {
+									String passwordPatternErrorMessage = I18nUtil.stringMeta(
+											passwordPolicy.getPasswordPatternErrorMessage(),
+											passwordPolicy.getLocalizedPasswordPatternErrorMessageList());
+									throw new CredentialUpdateException(passwordPatternErrorMessage);
+								}
+							}
+						}
+					});
 				}
 			}
 		}
 
-		public String makePassword() {
-			return makeRandomString(passwordPolicy.getRandomPasswordLength(), randomPasswordIncludeSigns != null, randomPasswordIncludeSigns, randomPasswordExcludeChars);
-		}
-
 		public boolean isResetPasswordWithSpecificPassword() {
 			return passwordPolicy.isResetPasswordWithSpecificPassword();
+		}
+
+		public String makePassword() {
+			return makeRandomString(passwordPolicy.getRandomPasswordLength(), randomPasswordIncludeSigns != null, randomPasswordIncludeSigns,
+					randomPasswordExcludeChars);
 		}
 
 		private String makeRandomString(int length, boolean isSign, char[] sign, char[] excludedChar) {
@@ -538,7 +675,7 @@ public class MetaAuthenticationPolicy extends BaseRootMetaData implements Defina
 		}
 
 		private char createBuf(int start, int length, char[] sign, boolean signBuf, char[] excludedChar, SecureRandomGenerator rand) {
-			while(true) {
+			while (true) {
 				char buf;
 
 				if (signBuf) {
@@ -566,6 +703,18 @@ public class MetaAuthenticationPolicy extends BaseRootMetaData implements Defina
 			}
 		}
 
+		public Timestamp getCustomUserEndDate(User user) {
+			if (customUserEndDateScript == null) {
+				return null;
+			}
+			TenantContext tc = ExecuteContext.getCurrentContext()
+					.getTenantContext();
+			ScriptEngine ss = tc.getScriptEngine();
+
+			ScriptContext sc = ss.newScriptContext();
+			sc.setAttribute("user", user);
+			return (Timestamp) customUserEndDateScript.eval(sc);
+		}
 	}
 
 	private static String resourceString(String key, Object... arguments) {

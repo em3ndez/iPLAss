@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,7 +35,8 @@ import org.iplass.mtp.view.treeview.TreeViewManager;
 public class TreeViewManagerImpl extends AbstractTypedDefinitionManager<TreeView> implements TreeViewManager {
 
 	/** サービス */
-	private TreeViewService service = ServiceRegistry.getRegistry().getService(TreeViewService.class);
+	private TreeViewService service = ServiceRegistry.getRegistry()
+			.getService(TreeViewService.class);
 
 	@Deprecated
 	@Override

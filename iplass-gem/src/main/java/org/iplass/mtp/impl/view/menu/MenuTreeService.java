@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,6 +24,7 @@ import org.iplass.mtp.ManagerLocator;
 import org.iplass.mtp.definition.TypedDefinitionManager;
 import org.iplass.mtp.impl.definition.AbstractTypedMetaDataService;
 import org.iplass.mtp.impl.definition.DefinitionMetaDataTypeMap;
+import org.iplass.mtp.impl.definition.DefinitionNameChecker;
 import org.iplass.mtp.impl.view.menu.MetaTreeMenu.MetaTreeMenuHandler;
 import org.iplass.mtp.spi.Config;
 import org.iplass.mtp.spi.Service;
@@ -38,9 +39,16 @@ public class MenuTreeService extends AbstractTypedMetaDataService<MetaTreeMenu, 
 		public TypeMap() {
 			super(getFixedPath(), MetaTreeMenu.class, MenuTree.class);
 		}
+
 		@Override
 		public TypedDefinitionManager<MenuTree> typedDefinitionManager() {
-			return ManagerLocator.getInstance().getManager(MenuTreeManager.class);
+			return ManagerLocator.getInstance()
+					.getManager(MenuTreeManager.class);
+		}
+
+		@Override
+		protected DefinitionNameChecker createDefinitionNameChecker() {
+			return DefinitionNameChecker.getPathSlashDefinitionNameChecker();
 		}
 	}
 

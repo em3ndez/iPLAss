@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,9 +35,9 @@ public interface AuthorizationProvider extends ServiceInitListener<AuthService> 
 
 	//sharedの権限の際に、shareTenant側のロールで判断したいため、tenantIdの引数が必要。。。
 	public boolean userInRole(AuthContextHolder userAuthContext, int tenantId, String role);
-	
+
 	public boolean useSharedPermission(Permission permission);
-	
+
 	public AuthorizationContext getAuthorizationContext(int tenantId, Permission permission);
 
 }

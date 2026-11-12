@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,15 +23,15 @@ package org.iplass.mtp.impl.web.actionmapping.cache;
 import java.io.IOException;
 import java.io.Serializable;
 
-import javax.servlet.ServletException;
-
 import org.iplass.mtp.impl.web.WebRequestStack;
 import org.iplass.mtp.impl.web.actionmapping.WebInvocationImpl;
 
+import jakarta.servlet.ServletException;
+
 public interface ContentBlock extends Serializable {
-	
+
 	public void writeTo(WebRequestStack request) throws IOException, ServletException;
 
 	public long lastModified(long lastModified, WebInvocationImpl invocation, ContentCacheContext cc, String lang);
-	
+
 }

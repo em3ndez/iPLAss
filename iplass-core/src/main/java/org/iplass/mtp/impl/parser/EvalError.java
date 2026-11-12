@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,38 +21,43 @@
 package org.iplass.mtp.impl.parser;
 
 public class EvalError {
-	
+
 	private String message;
 	private Syntax<?> syntax;
 	private int position;
 	private String parsedString;
-	
+
 	public EvalError(String message, Syntax<?> syntax, ParseContext parseContext) {
 		this.message = message;
 		this.syntax = syntax;
 		this.position = parseContext.totalCurrentIndex();
 		this.parsedString = parseContext.toString();
 	}
-	
+
 	public String getMessage() {
 		return message;
 	}
+
 	public void setMessage(String message) {
 		this.message = message;
 	}
+
 	public Syntax<?> getSyntax() {
 		return syntax;
 	}
+
 	public void setSyntax(Syntax<?> syntax) {
 		this.syntax = syntax;
 	}
+
 	public int getPosition() {
 		return position;
 	}
+
 	public void setPosition(int position) {
 		this.position = position;
 	}
-	
+
 	public String getParsedString() {
 		return parsedString;
 	}

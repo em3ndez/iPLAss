@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,7 +24,6 @@ import java.sql.Timestamp;
 
 import org.iplass.mtp.impl.metadata.MetaDataEntry.RepositoryType;
 import org.iplass.mtp.impl.metadata.MetaDataEntry.State;
-
 
 /**
  * MetaData本体除く、メタデータ情報。

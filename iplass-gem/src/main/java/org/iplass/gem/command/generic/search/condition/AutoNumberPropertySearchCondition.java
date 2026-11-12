@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -49,7 +49,7 @@ public class AutoNumberPropertySearchCondition extends PropertySearchCondition {
 		//like検索
 		boolean isLike = false;
 		if (editor instanceof AutoNumberPropertyEditor) {
-			AutoNumberPropertyEditor anpe = (AutoNumberPropertyEditor)editor;
+			AutoNumberPropertyEditor anpe = (AutoNumberPropertyEditor) editor;
 			isLike = !anpe.isSearchExactMatchCondition();
 		}
 		if (isLike) {

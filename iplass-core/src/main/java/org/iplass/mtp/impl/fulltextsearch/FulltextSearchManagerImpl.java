@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,7 +28,8 @@ import org.iplass.mtp.spi.ServiceRegistry;
 
 public class FulltextSearchManagerImpl implements FulltextSearchManager {
 
-	FulltextSearchService service = ServiceRegistry.getRegistry().getService(FulltextSearchService.class);
+	FulltextSearchService service = ServiceRegistry.getRegistry()
+			.getService(FulltextSearchService.class);
 
 	@Override
 	public boolean isUseFulltextSearch() {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,7 +31,7 @@ import org.iplass.mtp.entity.ValidateResult;
  *
  */
 public class EntityInterceptorAdapter implements EntityInterceptor {
-	
+
 	@Override
 	public final Object intercept(EntityInvocation<?> invocation) {
 		switch (invocation.getType()) {
@@ -72,6 +72,9 @@ public class EntityInterceptorAdapter implements EntityInterceptor {
 			return lockByUser((EntityLockByUserInvocation) invocation);
 		case UNLOCK_BY_USER:
 			return unlockByUser((EntityUnlockByUserInvocation) invocation);
+		case NORMALIZE:
+			normalize((EntityNormalizeInvocation) invocation);
+			return null;
 		default:
 			throw new IllegalArgumentException("not support method");
 		}
@@ -163,7 +166,7 @@ public class EntityInterceptorAdapter implements EntityInterceptor {
 	public void bulkUpdate(EntityBulkUpdateInvocation invocation) {
 		invocation.proceed();
 	}
-	
+
 	/**
 	 * {@link InvocationType#DELETE_ALL}の際、呼び出される。
 	 * 
@@ -173,7 +176,7 @@ public class EntityInterceptorAdapter implements EntityInterceptor {
 	public int deleteAll(EntityDeleteAllInvocation invocation) {
 		return invocation.proceed();
 	}
-	
+
 	/**
 	 * {@link InvocationType#GET_RECYCLE_BIN}の際、呼び出される。
 	 * 
@@ -201,12 +204,17 @@ public class EntityInterceptorAdapter implements EntityInterceptor {
 	public Entity restore(EntityRestoreInvocation invocation) {
 		return invocation.proceed();
 	}
-	
+
 	public boolean lockByUser(EntityLockByUserInvocation invocation) {
 		return invocation.proceed();
 	}
-	
+
 	public boolean unlockByUser(EntityUnlockByUserInvocation invocation) {
 		return invocation.proceed();
 	}
+
+	public void normalize(EntityNormalizeInvocation invocation) {
+		invocation.proceed();
+	}
+
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -74,7 +74,7 @@ public class CommonAttributeParts2 extends PropertyCommonAttributeParts implemen
 	@Override
 	public void applyFrom(String defName, PropertyListGridRecord record, PropertyAttribute typeAttribute) {
 
-		CommonAttribute commonAttribute = (CommonAttribute)typeAttribute;
+		CommonAttribute commonAttribute = (CommonAttribute) typeAttribute;
 
 		chkNotNull.setValue(commonAttribute.isNotNull());
 		chkUpdatable.setValue(commonAttribute.isUpdatable());
@@ -87,7 +87,7 @@ public class CommonAttributeParts2 extends PropertyCommonAttributeParts implemen
 	@Override
 	public void applyTo(PropertyListGridRecord record) {
 
-		CommonAttribute commonAttribute = (CommonAttribute)record.getCommonAttribute();
+		CommonAttribute commonAttribute = (CommonAttribute) record.getCommonAttribute();
 
 		commonAttribute.setNotNull(SmartGWTUtil.getBooleanValue(chkNotNull));
 		commonAttribute.setUpdatable(SmartGWTUtil.getBooleanValue(chkUpdatable));

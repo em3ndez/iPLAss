@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,15 +30,15 @@ import org.iplass.mtp.auth.Permission;
  *
  */
 public class EntityPropertyPermission extends Permission {
-	
+
 	public enum Action {
 		REFERENCE, CREATE, UPDATE;
 	}
-	
+
 	private final String definitionName;
 	private final String propertyName;
 	private final Action action;
-	
+
 	public EntityPropertyPermission(String definitionName, String propertyName, Action action) {
 		this.definitionName = definitionName;
 		this.propertyName = propertyName;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,16 +32,16 @@ import org.iplass.mtp.impl.parser.SyntaxContext;
 import org.iplass.mtp.impl.query.value.expr.PolynomialSyntax;
 
 public class SortSpecSyntax implements Syntax<SortSpec>, QueryConstants {
-	
+
 	private PolynomialSyntax polynomial;
 
 	public SortSpec parse(ParseContext str) throws ParseException {
-		
+
 		//ValueExpression
 		ValueExpression ve = polynomial.parse(str);
 		SortSpec sortSpec = new SortSpec();
 		sortSpec.setSortKey(ve);
-		
+
 		//ASC or DESC
 //		boolean hasSpace = str.consumeChars(ParseContext.WHITE_SPACES);
 		int current = str.getCurrentIndex();
@@ -53,7 +53,7 @@ public class SortSpecSyntax implements Syntax<SortSpec>, QueryConstants {
 		} else {
 			str.setCurrentIndex(current);
 		}
-		
+
 		//NULLS FIRST/LAST
 		current = str.getCurrentIndex();
 		str.consumeChars(ParseContext.WHITE_SPACES);
@@ -64,7 +64,7 @@ public class SortSpecSyntax implements Syntax<SortSpec>, QueryConstants {
 				str.setCurrentIndex(current);
 				throw new ParseException(new EvalError("FIRST or LAST expected.", this, str));
 			}
-			
+
 			token = str.nextToken(ParseContext.TOKEN_DELIMITERS);
 			if (FIRST.equalsIgnoreCase(token)) {
 				sortSpec.setNullOrderingSpec(NullOrderingSpec.FIRST);
@@ -77,7 +77,7 @@ public class SortSpecSyntax implements Syntax<SortSpec>, QueryConstants {
 		} else {
 			str.setCurrentIndex(current);
 		}
-		
+
 		return sortSpec;
 	}
 

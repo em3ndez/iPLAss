@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,10 +22,10 @@ package org.iplass.adminconsole.client.tools.ui.permissionexplorer;
 
 import org.iplass.adminconsole.client.base.event.DataChangedEvent;
 import org.iplass.adminconsole.client.base.event.DataChangedHandler;
+import org.iplass.adminconsole.client.base.ui.widget.MtpListGrid;
 import org.iplass.adminconsole.client.tools.data.permissionexplorer.PermissionListGridDS;
 import org.iplass.adminconsole.client.tools.data.permissionexplorer.PermissionListGridDS.PermissionListGridRecord;
 
-import com.smartgwt.client.widgets.grid.ListGrid;
 import com.smartgwt.client.widgets.grid.ListGridField;
 import com.smartgwt.client.widgets.grid.ListGridRecord;
 import com.smartgwt.client.widgets.grid.events.CellContextClickEvent;
@@ -36,7 +36,7 @@ import com.smartgwt.client.widgets.menu.Menu;
 import com.smartgwt.client.widgets.menu.MenuItem;
 import com.smartgwt.client.widgets.menu.events.MenuItemClickEvent;
 
-public abstract class PermissionListGrid extends ListGrid implements PermissionGrid {
+public abstract class PermissionListGrid extends MtpListGrid implements PermissionGrid {
 
 	private PermissionListGridDS ds;
 
@@ -59,7 +59,8 @@ public abstract class PermissionListGrid extends ListGrid implements PermissionG
 	 * @param roleCode 対象ロールコード
 	 * @param roleIndex 対象ロールIndex
 	 */
-	protected abstract void removeRolePermission(PermissionListGridRecord record, int rowNum, int colNum, String defName, String roleCode, int roleIndex);
+	protected abstract void removeRolePermission(PermissionListGridRecord record, int rowNum, int colNum, String defName, String roleCode,
+			int roleIndex);
 
 	/**
 	 * <p>Permission編集ダイアログ表示処理</p>
@@ -73,7 +74,8 @@ public abstract class PermissionListGrid extends ListGrid implements PermissionG
 	 * @param roleIndex 対象ロールIndex
 	 * @param dialog ダイアログ
 	 */
-	protected abstract void showRolePermissionEditDialog(PermissionListGridRecord record, String defName, String roleCode, int roleIndex, PermissionEditDialog dialog);
+	protected abstract void showRolePermissionEditDialog(PermissionListGridRecord record, String defName, String roleCode, int roleIndex,
+			PermissionEditDialog dialog);
 
 	/**
 	 * <p>Permission編集ダイアログ結果反映処理</p>
@@ -88,8 +90,8 @@ public abstract class PermissionListGrid extends ListGrid implements PermissionG
 	 * @param roleIndex 対象ロールIndex
 	 * @param event 変更イベント
 	 */
-	protected abstract void applyEditRolePermission(PermissionListGridRecord record, int rowNum, int colNum, String defName, String roleCode, int roleIndex, DataChangedEvent event);
-
+	protected abstract void applyEditRolePermission(PermissionListGridRecord record, int rowNum, int colNum, String defName, String roleCode,
+			int roleIndex, DataChangedEvent event);
 
 	public PermissionListGrid(PermissionListGridDS ds, final Menu contextMenu) {
 		this.ds = ds;
@@ -97,10 +99,8 @@ public abstract class PermissionListGrid extends ListGrid implements PermissionG
 		setWidth100();
 		setHeight100();
 
-		setShowAllRecords(true);
-		setLeaveScrollbarGap(false);	//falseで縦スクロールバー領域が自動表示制御される
-
-		setShowRowNumbers(true);		//行番号表示
+		//行番号表示
+		setShowRowNumbers(true);
 		ListGridField rowNumberField = new ListGridField();
 		rowNumberField.setWidth(30);
 		rowNumberField.setFrozen(true);
@@ -108,17 +108,12 @@ public abstract class PermissionListGrid extends ListGrid implements PermissionG
 
 		setShowSelectedStyle(false);
 
-		setCanFreezeFields(false);
-		setCanGroupBy(false);
-		setCanPickFields(false);
-		setCanSort(false);
-		setCanAutoFitFields(false);
-		setCanDragSelectText(true);	//セルの値をドラッグで選択可能（コピー用）にする
 		setCanSelectCells(true);
 
-		// 横スクロールを表示する為の処理
-		setAutoFitFieldWidths(true);							//データにより幅自動調節
-		setAutoFitFieldsFillViewport(false);					//幅が足りないときに先頭行の自動的に伸ばさない
+		//列幅自動調節（タイトルに設定）
+		setAutoFitFieldWidths(true);
+		//幅が足りないときに先頭行を自動的に伸ばさない
+		setAutoFitFieldsFillViewport(false);
 
 		addCellContextClickHandler(new CellContextClickHandler() {
 
@@ -133,11 +128,11 @@ public abstract class PermissionListGrid extends ListGrid implements PermissionG
 					return;
 				}
 
-				final PermissionListGridRecord record = (PermissionListGridRecord)event.getRecord();
+				final PermissionListGridRecord record = (PermissionListGridRecord) event.getRecord();
 
 				if (colNum == 1) {
 					//名前選択(全ロール対象)
-					contextMenu.setItems(new MenuItem[]{createDefinitionContextMenu(record, rowNum)});
+					contextMenu.setItems(new MenuItem[] { createDefinitionContextMenu(record, rowNum) });
 
 				} else {
 					//個別ロール選択
@@ -160,7 +155,7 @@ public abstract class PermissionListGrid extends ListGrid implements PermissionG
 				}
 
 				//編集処理
-				PermissionListGridRecord record = (PermissionListGridRecord)event.getRecord();
+				PermissionListGridRecord record = (PermissionListGridRecord) event.getRecord();
 				editPermission(record, rowNum, colNum);
 			}
 		});
@@ -168,13 +163,13 @@ public abstract class PermissionListGrid extends ListGrid implements PermissionG
 		setDataSource(ds);
 
 		setHeaderSpans(ds.getHeaderSpan());
-		setHeaderHeight(44);	//デフォルト × 2
+		setHeaderHeight(44); //デフォルト × 2
 
 		setFields(ds.getListGridField());
 	}
 
 	@Override
-    protected String getBaseStyle(ListGridRecord record, int rowNum, int colNum) {
+	protected String getBaseStyle(ListGridRecord record, int rowNum, int colNum) {
 		// grid.setBaseStyleだとセルの高さが不安定になる為ここで指定。
 
 		//行番号、名前列は無視
@@ -182,7 +177,7 @@ public abstract class PermissionListGrid extends ListGrid implements PermissionG
 			return CELL_STYLE_DEFAULT;
 		}
 
-		PermissionListGridRecord precord = (PermissionListGridRecord)record;
+		PermissionListGridRecord precord = (PermissionListGridRecord) record;
 		int roleIndex = ds.getColRoleCodeIndex(colNum);
 
 		if (ds.isDeletingPermission(precord, roleIndex)) {
@@ -253,7 +248,7 @@ public abstract class PermissionListGrid extends ListGrid implements PermissionG
 		});
 		delPermissionMenu.setEnabled(ds.canDeletePermission(record, roleIndex));
 
-		return new MenuItem[]{editPermissionMenu, delPermissionMenu};
+		return new MenuItem[] { editPermissionMenu, delPermissionMenu };
 	}
 
 	/**

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,7 +28,7 @@ import org.iplass.mtp.impl.auth.UserContext;
 public class CallableInput<V> implements Serializable {
 
 	private static final long serialVersionUID = -2374924829357547133L;
-	
+
 	private final Callable<V> actual;
 	private final UserContext userContext;
 	private final boolean privilaged;
@@ -41,15 +41,15 @@ public class CallableInput<V> implements Serializable {
 		this.privilaged = privilaged;
 		this.traceId = traceId;
 	}
-	
+
 	public Callable<V> getActual() {
 		return actual;
 	}
-	
+
 	public UserContext getUserContext() {
 		return userContext;
 	}
-	
+
 	public boolean isPrivilaged() {
 		return privilaged;
 	}

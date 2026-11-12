@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,6 +26,7 @@ import java.util.List;
 import org.iplass.adminconsole.annotation.MultiLang;
 import org.iplass.mtp.definition.LocalizedStringDefinition;
 import org.iplass.mtp.view.generic.editor.DateTimePropertyEditor.TimeDispRange;
+import org.iplass.mtp.view.generic.editor.StringPropertyEditor.RichTextLibrary;
 
 /**
  * お知らせ一覧パーツ
@@ -49,7 +50,12 @@ public class InformationParts extends ActionParts {
 	private Integer passwordWarningAge;
 
 	/** パスワード警告メッセージ */
-	@MultiLang(itemKey = "passwordWarningMessage", itemGetter = "getPasswordWarningMessage", itemSetter = "setPasswordWarningMessage", multiLangGetter = "getLocalizedPasswordWarningMessageList", multiLangSetter = "setLocalizedPasswordWarningMessageList")
+	@MultiLang(
+			itemKey = "passwordWarningMessage",
+			itemGetter = "getPasswordWarningMessage",
+			itemSetter = "setPasswordWarningMessage",
+			multiLangGetter = "getLocalizedPasswordWarningMessageList",
+			multiLangSetter = "setLocalizedPasswordWarningMessageList")
 	private String passwordWarningMessage;
 
 	/** パスワード警告メッセージ多言語設定情報 */
@@ -61,11 +67,20 @@ public class InformationParts extends ActionParts {
 	/** パスワード警告マークスタイルクラス */
 	private String passwordWarnMarkStyleClass;
 
+	/** データの多言語化有無 */
+	private boolean enableDataLocalization;
+
 	/** HTML出力可否 */
 	private boolean enableHtmlTag;
 
 	/** リッチテキストエディタの利用 */
 	private boolean useRichtextEditor;
+
+	/** RichTextライブラリ */
+	private RichTextLibrary richTextLibrary;
+
+	/** リッチテキストエディタで表示モードの場合、リンク動作許可 */
+	private boolean allowRichTextEditorLinkAction;
 
 	/** リッチテキストエディタオプション */
 	private String richtextEditorOption;
@@ -80,7 +95,12 @@ public class InformationParts extends ActionParts {
 	 * タイトルを取得します。
 	 * @return タイトル
 	 */
-	@MultiLang(itemKey = "title", itemGetter = "getTitle", itemSetter = "setTitle", multiLangGetter = "getLocalizedTitleList", multiLangSetter = "setLocalizedTitleList")
+	@MultiLang(
+			itemKey = "title",
+			itemGetter = "getTitle",
+			itemSetter = "setTitle",
+			multiLangGetter = "getLocalizedTitleList",
+			multiLangSetter = "setLocalizedTitleList")
 	public String getTitle() {
 		return getParam("title");
 	}
@@ -126,7 +146,7 @@ public class InformationParts extends ActionParts {
 	 * @return アイコンタグ
 	 */
 	public String getIconTag() {
-	    return iconTag;
+		return iconTag;
 	}
 
 	/**
@@ -134,7 +154,7 @@ public class InformationParts extends ActionParts {
 	 * @param iconTag アイコンタグ
 	 */
 	public void setIconTag(String iconTag) {
-	    this.iconTag = iconTag;
+		this.iconTag = iconTag;
 	}
 
 	/**
@@ -157,7 +177,6 @@ public class InformationParts extends ActionParts {
 			setParam("dispRange", null);
 		}
 	}
-
 
 	/**
 	 * パスワード残日数の警告表示を取得します。
@@ -268,6 +287,22 @@ public class InformationParts extends ActionParts {
 	}
 
 	/**
+	 * データの多言語化有無を取得します。
+	 * @return データの多言語化有無
+	 */
+	public boolean isEnableDataLocalization() {
+		return enableDataLocalization;
+	}
+
+	/**
+	 * データの多言語化有無を設定します。
+	 * @param enableDataLocalization データの多言語化有無
+	*/
+	public void setEnableDataLocalization(boolean enableDataLocalization) {
+		this.enableDataLocalization = enableDataLocalization;
+	}
+
+	/**
 	 * HTML出力可否を取得します。
 	 * @return HTML出力可否
 	 */
@@ -297,6 +332,42 @@ public class InformationParts extends ActionParts {
 	 */
 	public void setUseRichtextEditor(boolean useRichtextEditor) {
 		this.useRichtextEditor = useRichtextEditor;
+	}
+
+	/**
+	 * RichTextライブラリを取得します。
+	 *
+	 * @return RichTextライブラリ
+	 */
+	public RichTextLibrary getRichTextLibrary() {
+		return richTextLibrary;
+	}
+
+	/**
+	 * RichTextライブラリを設定します。
+	 *
+	 * @param richTextLibrary RichTextライブラリ
+	 */
+	public void setRichTextLibrary(RichTextLibrary richTextLibrary) {
+		this.richTextLibrary = richTextLibrary;
+	}
+
+	/**
+	 * リッチテキストエディタで表示モードの場合、リンク動作許可を取得します。
+	 *
+	 * @return RickTextで表示モードの場合、リンク動作許可
+	 */
+	public boolean isAllowRichTextEditorLinkAction() {
+		return allowRichTextEditorLinkAction;
+	}
+
+	/**
+	 * リッチテキストエディタで表示モードの場合、リンク動作許可を設定します。
+	 *
+	 * @param allowRichTextEditorLinkAction リッチテキストエディタで表示モードの場合、リンク動作許可
+	 */
+	public void setAllowRichTextEditorLinkAction(boolean allowRichTextEditorLinkAction) {
+		this.allowRichTextEditorLinkAction = allowRichTextEditorLinkAction;
 	}
 
 	/**
@@ -336,7 +407,7 @@ public class InformationParts extends ActionParts {
 	 * @return 一覧の表示件数
 	 */
 	public Integer getNumberOfDisplay() {
-	    return numberOfDisplay;
+		return numberOfDisplay;
 	}
 
 	/**
@@ -344,7 +415,7 @@ public class InformationParts extends ActionParts {
 	 * @param numberOfDisplay 一覧の表示件数
 	 */
 	public void setNumberOfDisplay(Integer numberOfDisplay) {
-	    this.numberOfDisplay = numberOfDisplay;
+		this.numberOfDisplay = numberOfDisplay;
 	}
 
 }

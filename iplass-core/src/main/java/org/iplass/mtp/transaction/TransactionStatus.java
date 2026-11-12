@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,22 +25,22 @@ public enum TransactionStatus {
 	 * 現在のトランザクションが有効であることを示します
 	 */
 	ACTIVE,
-	
+
 	/**
 	 * 現在のトランザクションが無効であることを示します
 	 */
 	NONE,
-	
+
 	/**
 	 * 現在のトランザクションはcommitされたことを示します
 	 */
 	COMMITTED,
-	
+
 	/**
 	 * 現在のトランザクションはrollbackされたことを示します
 	 */
 	ROLLEDBACK,
-	
+
 	/**
 	 * 現在トランザクションが中断された状態であることを示します
 	 */

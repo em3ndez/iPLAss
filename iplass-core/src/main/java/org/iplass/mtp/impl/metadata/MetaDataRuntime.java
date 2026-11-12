@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,14 +21,13 @@
 package org.iplass.mtp.impl.metadata;
 
 public interface MetaDataRuntime {
-	
-	
+
 	public MetaData getMetaData();
-	
+
 	//TODO 持つべきメソッドは？
 	//instanceate()
 	//handle()<-汎用的過ぎる。。
-	
+
 	/**
 	 * 実行可能な状態かどうかをチェックする。
 	 * 実行不可の場合、MetaDataIllegalStateExceptionをスロー

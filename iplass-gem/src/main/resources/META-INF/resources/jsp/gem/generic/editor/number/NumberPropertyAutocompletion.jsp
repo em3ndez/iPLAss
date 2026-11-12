@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
 <%@ page import="org.iplass.mtp.util.StringUtil"%>
@@ -33,24 +33,22 @@ Integer multiplicity = (Integer) request.getAttribute(Constants.AUTOCOMPLETION_M
 if (multiplicity == null) multiplicity = 1;
 //呼び出し元は/common/Autocompletion.jsp、以降はWebApiの結果を反映する部分のJavascript、結果の変数はvalue
 if (Constants.VIEW_TYPE_DETAIL.equals(viewType)) {
-	// 詳細画面
+	//編集画面
 %>
-var multiplicity = <%=multiplicity%>;
-if (multiplicity == 1) {
-	if (value instanceof Array) {
-		value = value.length > 0 ? value[0] : "";
-	}
-} else {
-	if (value instanceof Array) {
-		if (value.length > multiplicity) {
-			value = value.slice(0, multiplicity);
-		}
-	} else {
-		value = [value];
-	}
-}
+const multiplicity = <%=multiplicity%>;
+const inputLength = $("[name='" + propName + "']").length;
+value = normalizedDetailAutoCompletionValue(value, multiplicity, inputLength, null);
 <%
-	if (editor.getDisplayType() == NumberDisplayType.TEXT) {
+	if (editor.getDisplayType() == NumberDisplayType.LABEL) {
+%>
+renderDetailAutoCompletionLabelTypeLabelFormat(value, multiplicity, propName);
+<%
+	} else if(editor.getDisplayType() == NumberDisplayType.HIDDEN) {
+%>
+renderDetailAutoCompletionHiddenType(value, multiplicity, propName);
+<% 
+	} else if (editor.getDisplayType() == NumberDisplayType.TEXT) {
+
 		if (multiplicity == 1) {
 %>
 $("[name='" + propName + "']").val(value);
@@ -60,7 +58,7 @@ $("[name='" + propName + "']").val(value);
 $("[name='" + propName + "']").prev().trigger("focus");
 <%
 			}
-		} else  {
+		} else {
 			//フィールドあるか、戻り値のサイズ、クリックして追加
 %>
 for (var i = 0; i < value.length; i++) {
@@ -89,16 +87,30 @@ if (value instanceof Array) {
 } else {
 	value = [value];
 }
+<%
+	if (!editor.isSearchInRange()) {
+		// 単一検索
+%>
 if (value.length > 0) {
 	$("[name='sc_" + propName + "']").val(value[0]);
 }
 <%
-	if (editor.isSearchInRange()) {
+	} else {
+		// 範囲検索
+		if (!editor.isHideSearchConditionFrom()) {
+%>
+if (value.length > 0) {
+	$("[name='sc_" + propName + "From']").val(value[0]);
+}
+<%
+		}
+		if (!editor.isHideSearchConditionTo()) {
 %>
 if (value.length > 1) {
 	$("[name='sc_" + propName + "To']").val(value[1]);
 }
 <%
+		}
 	}
 }
 %>

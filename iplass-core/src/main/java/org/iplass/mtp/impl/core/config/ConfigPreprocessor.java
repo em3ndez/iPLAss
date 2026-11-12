@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,11 +20,11 @@
 package org.iplass.mtp.impl.core.config;
 
 public interface ConfigPreprocessor {
-	
+
 	public default String preprocess(String xml, String filePath) {
 		return xml;
 	}
-	
+
 	public default ServiceDefinition preprocess(ServiceDefinition serviceDefinition) {
 		return serviceDefinition;
 	}

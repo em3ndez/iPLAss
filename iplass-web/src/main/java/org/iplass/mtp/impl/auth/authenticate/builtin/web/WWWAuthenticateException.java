@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -19,8 +19,8 @@
  */
 package org.iplass.mtp.impl.auth.authenticate.builtin.web;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 public class WWWAuthenticateException extends WebApplicationException {
 	private static final long serialVersionUID = -5100314518573818114L;
@@ -28,7 +28,7 @@ public class WWWAuthenticateException extends WebApplicationException {
 	public WWWAuthenticateException(String scheme, String realm, String errorDescription) {
 		super(errorDescription, buildResponse(scheme, realm, errorDescription));
 	}
-	
+
 	private static Response buildResponse(String scheme, String realm, String errorDescription) {
 		StringBuilder resMsg = new StringBuilder();
 		resMsg.append(scheme);
@@ -36,14 +36,19 @@ public class WWWAuthenticateException extends WebApplicationException {
 		if (realm == null) {
 			resMsg.append("realm=\"\"");
 		} else {
-			resMsg.append("realm=\"").append(realm).append("\"");
+			resMsg.append("realm=\"")
+					.append(realm)
+					.append("\"");
 		}
-		
+
 		if (errorDescription == null) {
 			errorDescription = "";
 		}
 
-		return Response.status(401).header("WWW-Authenticate", resMsg.toString()).entity(errorDescription).build();
+		return Response.status(401)
+				.header("WWW-Authenticate", resMsg.toString())
+				.entity(errorDescription)
+				.build();
 	}
 
 }

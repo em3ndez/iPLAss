@@ -1,19 +1,19 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
- * 
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
+ *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
@@ -27,6 +27,7 @@ import org.iplass.adminconsole.client.base.event.DataChangedEvent;
 import org.iplass.adminconsole.client.base.event.DataChangedHandler;
 import org.iplass.adminconsole.client.base.i18n.AdminClientMessageUtil;
 import org.iplass.adminconsole.client.base.tenant.TenantInfoHolder;
+import org.iplass.adminconsole.client.base.ui.widget.MtpListGrid;
 import org.iplass.adminconsole.client.base.util.SmartGWTUtil;
 import org.iplass.adminconsole.client.tools.data.permissionexplorer.RoleDS;
 import org.iplass.adminconsole.client.tools.ui.permissionexplorer.PermissionGrid;
@@ -46,7 +47,6 @@ import com.smartgwt.client.util.SC;
 import com.smartgwt.client.widgets.IButton;
 import com.smartgwt.client.widgets.events.ClickEvent;
 import com.smartgwt.client.widgets.events.ClickHandler;
-import com.smartgwt.client.widgets.grid.ListGrid;
 import com.smartgwt.client.widgets.grid.ListGridRecord;
 import com.smartgwt.client.widgets.grid.events.RecordDoubleClickEvent;
 import com.smartgwt.client.widgets.grid.events.RecordDoubleClickHandler;
@@ -113,7 +113,10 @@ public class RoleListPane extends PermissionListPane {
 		//更新対象データの取得
 		UpdateRoleInfo storeInfo = grid.getStoreInfo();
 
-		if (storeInfo.getStoreEntityList().isEmpty() && storeInfo.getRemoveOidList().isEmpty()) {
+		if (storeInfo.getStoreEntityList()
+				.isEmpty()
+				&& storeInfo.getRemoveOidList()
+						.isEmpty()) {
 			//更新対象データなし
 			SC.say(AdminClientMessageUtil.getString("ui_tools_permissionexplorer_PermissionListPane_notExistStoreData"));
 			return;
@@ -145,28 +148,19 @@ public class RoleListPane extends PermissionListPane {
 		//RoleListPaneでは不要(呼ばれない)
 	}
 
-	private class RoleListGrid extends ListGrid implements PermissionGrid {
+	private class RoleListGrid extends MtpListGrid implements PermissionGrid {
 
 		public RoleListGrid() {
 			setWidth100();
 			setHeight(1);
 
-			setShowAllColumns(true);	// 列を全て表示
-			setShowAllRecords(true);	// レコードを全て表示
-
+			//これを指定しないと表示が崩れる
 			setOverflow(Overflow.VISIBLE);
 			setBodyOverflow(Overflow.VISIBLE);
 
-			setLeaveScrollbarGap(false);	//falseで縦スクロールバー領域が自動表示制御される
-
-			setCanResizeFields(true);	//列幅変更可
-			setCanSort(false);			//ソート不可
-			setCanGroupBy(false);		//Group化不可
-			setCanPickFields(false);	//列の選択不可
-			setCanAutoFitFields(false);	//自動列幅調整不可
-
 			// レコード編集
 			addRecordDoubleClickHandler(new RecordDoubleClickHandler() {
+				@Override
 				public void onRecordDoubleClick(RecordDoubleClickEvent event) {
 					ListGridRecord record = event.getRecord();
 					editRole(record);
@@ -190,7 +184,7 @@ public class RoleListPane extends PermissionListPane {
 		public void refreshGrid() {
 			setEditState(false);
 
-			Criteria criteria = new Criteria("dummy", System.currentTimeMillis() + "");	//同じ条件だとDSに飛ばないので
+			Criteria criteria = new Criteria("dummy", System.currentTimeMillis() + ""); //同じ条件だとDSに飛ばないので
 			ds.fetchData(criteria, new DSCallback() {
 				@Override
 				public void execute(DSResponse dsResponse, Object data, DSRequest dsRequest) {
@@ -215,7 +209,7 @@ public class RoleListPane extends PermissionListPane {
 				return;
 			}
 
-			for (ListGridRecord record: records) {
+			for (ListGridRecord record : records) {
 				String status = record.getAttribute("status");
 				if (status != null && status.equals("I")) {
 					//追加データの削除は直接削除
@@ -271,7 +265,7 @@ public class RoleListPane extends PermissionListPane {
 
 			if (record != null) {
 				//編集モード
-				Entity editRole = (Entity)record.getAttributeAsObject("editEntity");
+				Entity editRole = (Entity) record.getAttributeAsObject("editEntity");
 				if (editRole != null) {
 					dialog.setEditRoleEntity(editRole);
 					dialog.show();
@@ -318,14 +312,14 @@ public class RoleListPane extends PermissionListPane {
 					removeOidList.add(record.getAttribute("oid"));
 				} else {
 					//更新データ(I or U)
-					storeEntityList.add((Entity)record.getAttributeAsObject("editEntity"));
+					storeEntityList.add((Entity) record.getAttributeAsObject("editEntity"));
 				}
 			}
 			return new UpdateRoleInfo(storeEntityList, removeOidList);
 		}
 
 		@Override
-	    protected String getBaseStyle(ListGridRecord record, int rowNum, int colNum) {
+		protected String getBaseStyle(ListGridRecord record, int rowNum, int colNum) {
 			// grid.setBaseStyleだとセルの高さが不安定になる為ここで指定。
 
 			String status = record.getAttribute("status");

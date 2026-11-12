@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,13 +21,12 @@ package org.iplass.mtp.auth.oauth.definition;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
-
 import org.iplass.mtp.auth.oauth.definition.consents.AlwaysConsentTypeDefinition;
 import org.iplass.mtp.auth.oauth.definition.consents.OnceConsentTypeDefinition;
 import org.iplass.mtp.auth.oauth.definition.consents.ScriptingConsentTypeDefinition;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
 
 /**
  * スコープ承認画面の表示有無を判断するための定義です。
@@ -36,10 +35,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  *
  */
 @XmlSeeAlso({
-	AlwaysConsentTypeDefinition.class,
-	OnceConsentTypeDefinition.class,
-	ScriptingConsentTypeDefinition.class})
-@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS)
+		AlwaysConsentTypeDefinition.class,
+		OnceConsentTypeDefinition.class,
+		ScriptingConsentTypeDefinition.class })
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 public abstract class ConsentTypeDefinition implements Serializable {
 	private static final long serialVersionUID = 4679081921898475535L;
 }

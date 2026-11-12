@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,7 +28,6 @@ import org.iplass.mtp.impl.i18n.I18nUtil;
 import org.iplass.mtp.impl.i18n.MetaLocalizedString;
 import org.iplass.mtp.impl.util.ObjectUtil;
 import org.iplass.mtp.message.MessageItem;
-
 
 /**
  * メッセージのメタ情報
@@ -68,7 +67,7 @@ public class MetaMessageItem implements Serializable {
 	 */
 	public void setValue(MessageItem messageItem) {
 		messageId = messageItem.getMessageId();
-		message =messageItem.getMessage();
+		message = messageItem.getMessage();
 		localizedMessageList = I18nUtil.toMeta(messageItem.getLocalizedMessageList());
 	}
 
@@ -77,7 +76,7 @@ public class MetaMessageItem implements Serializable {
 	 * @return メッセージ定義ID
 	 */
 	public String getMessageId() {
-	    return messageId;
+		return messageId;
 	}
 
 	/**
@@ -85,7 +84,7 @@ public class MetaMessageItem implements Serializable {
 	 * @param messageId メッセージ定義ID
 	 */
 	public void setMessageId(String messageId) {
-	    this.messageId = messageId;
+		this.messageId = messageId;
 	}
 
 	/**
@@ -108,7 +107,7 @@ public class MetaMessageItem implements Serializable {
 	 * 自身のメタ情報からメッセージ情報を作成する
 	 * @return ret メッセージ情報
 	 */
-	public MessageItem createMessageItem(){
+	public MessageItem createMessageItem() {
 		MessageItem ret = new MessageItem();
 		setMessageItem(ret);
 		return ret;

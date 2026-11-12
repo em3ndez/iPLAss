@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,8 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.iplass.mtp.command.RequestContext;
 import org.iplass.mtp.entity.Entity;
 import org.iplass.mtp.impl.core.ExecuteContext;
@@ -45,9 +43,12 @@ import org.iplass.mtp.impl.view.top.TopViewHandler;
 import org.iplass.mtp.util.DateUtil;
 import org.iplass.mtp.util.StringUtil;
 import org.iplass.mtp.view.generic.editor.DateTimePropertyEditor.TimeDispRange;
+import org.iplass.mtp.view.generic.editor.StringPropertyEditor.RichTextLibrary;
 import org.iplass.mtp.view.top.parts.InformationParts;
 import org.iplass.mtp.view.top.parts.TopViewParts;
 import org.iplass.mtp.web.template.TemplateUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * お知らせ一覧パーツ
@@ -97,11 +98,20 @@ public class MetaInformationParts extends MetaActionParts {
 	/** パスワード警告マークスタイルクラス */
 	private String passwordWarnMarkStyleClass;
 
+	/** データの多言語化有無 */
+	private boolean enableDataLocalization;
+
 	/** HTML出力可否 */
 	private boolean availableHtmlTag = false;
 
 	/** リッチテキストエディタの利用 */
 	private boolean useRichtextEditor;
+
+	/** RichTextライブラリ */
+	private RichTextLibrary richTextLibrary;
+
+	/** リッチテキストエディタで表示モードの場合、リンク動作許可 */
+	private boolean allowRichTextEditorLinkAction;
 
 	/** リッチテキストエディタオプション */
 	private String richtextEditorOption;
@@ -149,7 +159,7 @@ public class MetaInformationParts extends MetaActionParts {
 	 * @return アイコンタグ
 	 */
 	public String getIconTag() {
-	    return iconTag;
+		return iconTag;
 	}
 
 	/**
@@ -157,7 +167,7 @@ public class MetaInformationParts extends MetaActionParts {
 	 * @param iconTag アイコンタグ
 	 */
 	public void setIconTag(String iconTag) {
-	    this.iconTag = iconTag;
+		this.iconTag = iconTag;
 	}
 
 	/**
@@ -273,6 +283,22 @@ public class MetaInformationParts extends MetaActionParts {
 	}
 
 	/**
+	 * データの多言語化有無を取得します。
+	 * @return データの多言語化有無
+	 */
+	public boolean isEnableDataLocalization() {
+		return enableDataLocalization;
+	}
+
+	/**
+	 * データの多言語化有無を設定します。
+	 * @param enableDataLocalization データの多言語化有無
+	*/
+	public void setEnableDataLocalization(boolean enableDataLocalization) {
+		this.enableDataLocalization = enableDataLocalization;
+	}
+
+	/**
 	 * HTML出力可否を取得します。
 	 * @return HTML出力可否
 	 */
@@ -293,7 +319,7 @@ public class MetaInformationParts extends MetaActionParts {
 	 * @return 一覧の表示件数
 	 */
 	public Integer getNumberOfDisplay() {
-	    return numberOfDisplay;
+		return numberOfDisplay;
 	}
 
 	/**
@@ -301,7 +327,7 @@ public class MetaInformationParts extends MetaActionParts {
 	 * @param numberOfDisplay 一覧の表示件数
 	 */
 	public void setNumberOfDisplay(Integer numberOfDisplay) {
-	    this.numberOfDisplay = numberOfDisplay;
+		this.numberOfDisplay = numberOfDisplay;
 	}
 
 	/**
@@ -318,6 +344,42 @@ public class MetaInformationParts extends MetaActionParts {
 	 */
 	public void setUseRichtextEditor(boolean useRichtextEditor) {
 		this.useRichtextEditor = useRichtextEditor;
+	}
+
+	/**
+	 * RichTextライブラリを取得します。
+	 *
+	 * @return RichTextライブラリ
+	 */
+	public RichTextLibrary getRichTextLibrary() {
+		return richTextLibrary;
+	}
+
+	/**
+	 * RichTextライブラリを設定します。
+	 *
+	 * @param richTextLibrary RichTextライブラリ
+	 */
+	public void setRichTextLibrary(RichTextLibrary richTextLibrary) {
+		this.richTextLibrary = richTextLibrary;
+	}
+
+	/**
+	 * リッチテキストエディタで表示モードの場合、リンク動作許可を取得します。
+	 *
+	 * @return RickTextで表示モードの場合、リンク動作許可
+	 */
+	public boolean isAllowRichTextEditorLinkAction() {
+		return allowRichTextEditorLinkAction;
+	}
+
+	/**
+	 * リッチテキストエディタで表示モードの場合、リンク動作許可を設定します。
+	 *
+	 * @param allowRichTextEditorLinkAction リッチテキストエディタで表示モードの場合、リンク動作許可
+	 */
+	public void setAllowRichTextEditorLinkAction(boolean allowRichTextEditorLinkAction) {
+		this.allowRichTextEditorLinkAction = allowRichTextEditorLinkAction;
 	}
 
 	/**
@@ -354,7 +416,7 @@ public class MetaInformationParts extends MetaActionParts {
 
 	@Override
 	public void applyConfig(TopViewParts parts) {
-		InformationParts definition = (InformationParts)parts;
+		InformationParts definition = (InformationParts) parts;
 		fillFrom(definition);
 
 		title = definition.getTitle();
@@ -370,8 +432,11 @@ public class MetaInformationParts extends MetaActionParts {
 		localizedPasswordWarningMessageList = I18nUtil.toMeta(definition.getLocalizedPasswordWarningMessageList());
 		passwordWarnAreaStyleClass = definition.getPasswordWarnAreaStyleClass();
 		passwordWarnMarkStyleClass = definition.getPasswordWarnMarkStyleClass();
+		enableDataLocalization = definition.isEnableDataLocalization();
 		availableHtmlTag = definition.isEnableHtmlTag();
 		useRichtextEditor = definition.isUseRichtextEditor();
+		richTextLibrary = definition.getRichTextLibrary();
+		allowRichTextEditorLinkAction = definition.isAllowRichTextEditorLinkAction();
 		richtextEditorOption = definition.getRichtextEditorOption();
 		detailCustomStyle = definition.getDetailCustomStyle();
 		numberOfDisplay = definition.getNumberOfDisplay();
@@ -392,8 +457,11 @@ public class MetaInformationParts extends MetaActionParts {
 		parts.setLocalizedPasswordWarningMessageList(I18nUtil.toDef(localizedPasswordWarningMessageList));
 		parts.setPasswordWarnAreaStyleClass(passwordWarnAreaStyleClass);
 		parts.setPasswordWarnMarkStyleClass(passwordWarnMarkStyleClass);
+		parts.setEnableDataLocalization(enableDataLocalization);
 		parts.setEnableHtmlTag(availableHtmlTag);
 		parts.setUseRichtextEditor(useRichtextEditor);
+		parts.setRichTextLibrary(richTextLibrary);
+		parts.setAllowRichTextEditorLinkAction(allowRichTextEditorLinkAction);
 		parts.setRichtextEditorOption(richtextEditorOption);
 		parts.setDetailCustomStyle(detailCustomStyle);
 		parts.setNumberOfDisplay(numberOfDisplay);
@@ -426,11 +494,15 @@ public class MetaInformationParts extends MetaActionParts {
 		public InformationPartsHandler(MetaInformationParts meta, TopViewHandler topView) {
 			super(meta);
 			if (meta.detailCustomStyle != null) {
-				ScriptEngine scriptEngine = ExecuteContext.getCurrentContext().getTenantContext().getScriptEngine();
-				String templateName = SCRIPT_PREFIX_CUSTOM_STYLE + "_" + topView.getMetaData().getId()
-						+ GroovyTemplateCompiler.randomName().replace("-", "_");
+				ScriptEngine scriptEngine = ExecuteContext.getCurrentContext()
+						.getTenantContext()
+						.getScriptEngine();
+				String templateName = SCRIPT_PREFIX_CUSTOM_STYLE + "_" + topView.getMetaData()
+						.getId()
+						+ GroovyTemplateCompiler.randomName()
+								.replace("-", "_");
 				detailCustomStyle = GroovyTemplateCompiler.compile(
-						meta.detailCustomStyle, templateName, (GroovyScriptEngine)scriptEngine);
+						meta.detailCustomStyle, templateName, (GroovyScriptEngine) scriptEngine);
 			} else {
 				detailCustomStyle = null;
 			}
@@ -488,7 +560,8 @@ public class MetaInformationParts extends MetaActionParts {
 			String style = sw.toString();
 			if (StringUtil.isNotEmpty(style)) {
 				//先頭、末尾の空白、改行、タブを削除
-				style = StringUtil.removeLineFeedCode(StringUtil.stripToEmpty(style)).replaceAll("\t", "");
+				style = StringUtil.removeLineFeedCode(StringUtil.stripToEmpty(style))
+						.replaceAll("\t", "");
 			}
 
 			return style;

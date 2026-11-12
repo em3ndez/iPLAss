@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -45,8 +45,8 @@ import org.iplass.mtp.entity.query.SortSpec;
 import org.iplass.mtp.entity.query.SortSpec.SortType;
 import org.iplass.mtp.entity.query.condition.Condition;
 import org.iplass.mtp.entity.query.condition.expr.And;
-import org.iplass.mtp.entity.query.condition.predicate.ComparisonPredicate;
 import org.iplass.mtp.entity.query.condition.predicate.Equals;
+import org.iplass.mtp.util.StringUtil;
 import org.iplass.mtp.view.generic.EntityViewManager;
 import org.iplass.mtp.view.generic.editor.PropertyEditor;
 import org.iplass.mtp.view.generic.editor.ReferenceComboSetting;
@@ -56,18 +56,19 @@ import org.iplass.mtp.webapi.definition.MethodType;
 import org.iplass.mtp.webapi.definition.RequestType;
 
 /**
+ * 参照コンボ選択リスト取得処理
  *
  * @author lis3wg
  */
 @WebApi(
-		name=ReferenceComboCommand.WEBAPI_NAME,
-		accepts=RequestType.REST_JSON,
-		methods=MethodType.POST,
-		restJson=@RestJson(parameterName="param"),
-		results={"selName", "data"},
-		checkXRequestedWithHeader=true
-	)
-@CommandClass(name="gem/generic/refcombo/ReferenceComboCommand", displayName="参照コンボコマンド")
+		name = ReferenceComboCommand.WEBAPI_NAME,
+		accepts = RequestType.REST_JSON,
+		methods = MethodType.POST,
+		restJson = @RestJson(parameterName = "param"),
+		results = { "selName", "data" },
+		checkXRequestedWithHeader = true
+)
+@CommandClass(name = "gem/generic/refcombo/ReferenceComboCommand", displayName = "参照コンボ選択リスト取得")
 public final class ReferenceComboCommand implements Command, HasDisplayScriptBindings {
 
 	public static final String WEBAPI_NAME = "gem/generic/refcombo/referenceCombo";
@@ -80,9 +81,12 @@ public final class ReferenceComboCommand implements Command, HasDisplayScriptBin
 	 * コンストラクタ
 	 */
 	public ReferenceComboCommand() {
-		em = ManagerLocator.getInstance().getManager(EntityManager.class);
-		edm = ManagerLocator.getInstance().getManager(EntityDefinitionManager.class);
-		evm = ManagerLocator.getInstance().getManager(EntityViewManager.class);
+		em = ManagerLocator.getInstance()
+				.getManager(EntityManager.class);
+		edm = ManagerLocator.getInstance()
+				.getManager(EntityDefinitionManager.class);
+		evm = ManagerLocator.getInstance()
+				.getManager(EntityViewManager.class);
 	}
 
 	@Override
@@ -98,10 +102,14 @@ public final class ReferenceComboCommand implements Command, HasDisplayScriptBin
 		PropertyEditor editor = evm.getPropertyEditor(defName, viewType, viewName, propName, entity);
 		ReferencePropertyEditor rpe = null;
 		if (editor instanceof ReferencePropertyEditor) {
-			rpe = (ReferencePropertyEditor)editor;
+			rpe = (ReferencePropertyEditor) editor;
 		}
 
 		if (rpe != null) {
+			// NestTableの場合、Editorのプロパティ名は、参照先の名前になっているので
+			// NestTableも考慮してフルパスにする
+			rpe.setPropertyName(propName);
+
 			Map<String, List<SimpleEntity>> map = getData(rpe, request);
 
 			//map内は1件のはず
@@ -144,11 +152,14 @@ public final class ReferenceComboCommand implements Command, HasDisplayScriptBin
 			q.select(Entity.OID);
 			if (editor.getDisplayLabelItem() != null) {
 				// 表示ラベルとして扱うプロパティ
-				q.select().add(editor.getDisplayLabelItem());
+				q.select()
+						.add(editor.getDisplayLabelItem());
 			} else {
-				q.select().add(Entity.NAME);
+				q.select()
+						.add(Entity.NAME);
 			}
-			q.from(defName).where(new And(conditions));
+			q.from(defName)
+					.where(new And(conditions));
 
 			String sortItem = editor.getSortItem();
 			if (sortItem == null || sortItem.isEmpty()) {
@@ -186,7 +197,7 @@ public final class ReferenceComboCommand implements Command, HasDisplayScriptBin
 		return map;
 	}
 
-	private List<Condition> getMappedByData(String parentPropName, EntityDefinition ed, ReferenceComboSetting setting,
+	private List<Condition> getMappedByData(String childComboName, EntityDefinition ed, ReferenceComboSetting setting,
 			Map<String, List<SimpleEntity>> map, RequestContext request) {
 		List<Condition> conditions = new ArrayList<Condition>();
 		//参照先のEntity情報
@@ -195,43 +206,47 @@ public final class ReferenceComboCommand implements Command, HasDisplayScriptBin
 		EntityDefinition red = edm.get(rp.getObjectDefinitionName());
 
 		//コンボの値取得
-		String _propName = parentPropName + "." + propName;
-		String val = request.getParam(_propName);
+		String comboName = childComboName + "." + propName;
+		String val = request.getParam(comboName);
 
-		if (val == null || val.isEmpty()) {
+		if (StringUtil.isEmpty(val)) {
 			//コンボが未選択
 			ReferenceComboSetting parent = setting.getParent();
 
 			//親コンボが選択されてるか確認
 			if (parent != null && parent.getPropertyName() != null) {
 				//上位階層検索
-				conditions.addAll(getMappedByData(_propName, red, parent, map, request));
+				conditions.addAll(getMappedByData(comboName, red, parent, map, request));
 			}
 
 			//自身が最上位の場合か、親コンボが選択されてたら次は自身を選択させる
 			if (parent == null || !conditions.isEmpty()) {
 				//参照先のEntity検索
-				Query q = new Query();
-				q.select(Entity.OID);
+				Query query = new Query();
+				query.select(Entity.OID);
 				if (setting.getDisplayLabelItem() != null) {
 					// 表示ラベルとして扱うプロパティ
-					q.select().add(setting.getDisplayLabelItem());
+					query.select()
+							.add(setting.getDisplayLabelItem());
 				} else {
-					q.select().add(Entity.NAME);
+					query.select()
+							.add(Entity.NAME);
 				}
-				q.from(red.getName());
-				And and = new And();
-				and.setConditions(new ArrayList<Condition>());
+				query.from(red.getName());
+
+				List<Condition> condition = new ArrayList<Condition>();
 				if (setting.getCondition() != null) {
-					conditions.add(new PreparedQuery(setting.getCondition()).condition(null));
+					condition.add(new PreparedQuery(setting.getCondition()).condition(null));
 				}
+				// conditionsが空でない場合（親コンボが選択されている場合）条件を追加
 				if (!conditions.isEmpty()) {
-					//上位の条件があればプロパティ名直して追加
-					and.setConditions(conditions);
+					condition.addAll(conditions);
 				}
-				if (!and.getChildExpressions().isEmpty()) {
-					q.where(and);
+				if (!condition.isEmpty()) {
+					And and = new And(condition);
+					query.where(and);
 				}
+
 				String sortItem = setting.getSortItem();
 				if (sortItem == null || sortItem.isEmpty()) {
 					sortItem = Entity.OID;
@@ -242,10 +257,10 @@ public final class ReferenceComboCommand implements Command, HasDisplayScriptBin
 				} else {
 					sortType = SortType.DESC;
 				}
-				q.order(new SortSpec(sortItem, sortType));
+				query.order(new SortSpec(sortItem, sortType));
 
 				final List<SimpleEntity> list = new ArrayList<SimpleEntity>();
-				em.searchEntity(q, new Predicate<Entity>() {
+				em.searchEntity(query, new Predicate<Entity>() {
 
 					@Override
 					public boolean test(Entity dataModel) {
@@ -260,17 +275,11 @@ public final class ReferenceComboCommand implements Command, HasDisplayScriptBin
 					}
 				});
 
-				map.put(_propName, list);
+				map.put(comboName, list);
 			}
 		} else {
 			//選択済みの場合は下位のコンボの条件にする
-			for (Condition cond : conditions) {
-				if (cond instanceof ComparisonPredicate) {
-					ComparisonPredicate comp = (ComparisonPredicate) cond;
-					comp.setPropertyName(propName +  "." + comp.getPropertyName());
-				}
-			}
-			conditions.add(new Equals(propName + ".oid", val));
+			conditions.add(new Equals(propName + "." + Entity.OID, val));
 		}
 
 		return conditions;
@@ -279,6 +288,7 @@ public final class ReferenceComboCommand implements Command, HasDisplayScriptBin
 	class SimpleEntity {
 		private String oid;
 		private String name;
+
 		/**
 		 * コンストラクタ
 		 */
@@ -299,6 +309,7 @@ public final class ReferenceComboCommand implements Command, HasDisplayScriptBin
 		public String getOid() {
 			return oid;
 		}
+
 		/**
 		 * oidを設定します。
 		 * @param oid oid
@@ -306,6 +317,7 @@ public final class ReferenceComboCommand implements Command, HasDisplayScriptBin
 		public void setOid(String oid) {
 			this.oid = oid;
 		}
+
 		/**
 		 * nameを取得します。
 		 * @return name
@@ -313,6 +325,7 @@ public final class ReferenceComboCommand implements Command, HasDisplayScriptBin
 		public String getName() {
 			return name;
 		}
+
 		/**
 		 * nameを設定します。
 		 * @param name name

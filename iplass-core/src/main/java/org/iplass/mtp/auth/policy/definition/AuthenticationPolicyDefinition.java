@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,11 +22,11 @@ package org.iplass.mtp.auth.policy.definition;
 
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.iplass.adminconsole.annotation.MultiLang;
 import org.iplass.mtp.definition.Definition;
 import org.iplass.mtp.definition.LocalizedStringDefinition;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * 認証方式のポリシー定義。
@@ -40,7 +40,13 @@ public class AuthenticationPolicyDefinition implements Definition {
 	private static final long serialVersionUID = 1686825565380276912L;
 
 	private String name;
-	@MultiLang(itemNameGetter = "getName", itemKey = "displayName", itemGetter = "getDisplayName", itemSetter = "setDisplayName", multiLangGetter = "getLocalizedDisplayNameList", multiLangSetter = "setLocalizedDisplayNameList")
+	@MultiLang(
+			itemNameGetter = "getName",
+			itemKey = "displayName",
+			itemGetter = "getDisplayName",
+			itemSetter = "setDisplayName",
+			multiLangGetter = "getLocalizedDisplayNameList",
+			multiLangSetter = "setLocalizedDisplayNameList")
 	private String displayName;
 	private List<LocalizedStringDefinition> localizedDisplayNameList;
 	private String description;
@@ -51,22 +57,28 @@ public class AuthenticationPolicyDefinition implements Definition {
 	private boolean recordLastLoginDate = true;
 	private RememberMePolicyDefinition rememberMePolicy;
 	private List<String> authenticationProvider;
-	
-	/** ユーザ作成時、パスワード更新時にその情報を受け取る為のListener */
+	private List<String> openIdConnectDefinition;
+	private List<String> webAuthnDefinition;
+
+	/** ユーザー作成時、パスワード更新時にその情報を受け取る為のListener */
 	private List<AccountNotificationListenerDefinition> notificationListener;
 
+	@Override
 	public String getName() {
 		return name;
 	}
 
+	@Override
 	public void setName(String name) {
 		this.name = name;
 	}
 
+	@Override
 	public String getDisplayName() {
 		return displayName;
 	}
 
+	@Override
 	public void setDisplayName(String displayName) {
 		this.displayName = displayName;
 	}
@@ -80,10 +92,12 @@ public class AuthenticationPolicyDefinition implements Definition {
 		this.localizedDisplayNameList = localizedDisplayNameList;
 	}
 
+	@Override
 	public String getDescription() {
 		return description;
 	}
 
+	@Override
 	public void setDescription(String description) {
 		this.description = description;
 	}
@@ -172,7 +186,7 @@ public class AuthenticationPolicyDefinition implements Definition {
 	public void setAuthenticationProvider(List<String> authenticationProvider) {
 		this.authenticationProvider = authenticationProvider;
 	}
-	
+
 	/**
 	 * @see AccountNotificationListenerDefinition
 	 * @return
@@ -190,4 +204,19 @@ public class AuthenticationPolicyDefinition implements Definition {
 		this.notificationListener = notificationListener;
 	}
 
+	public List<String> getOpenIdConnectDefinition() {
+		return openIdConnectDefinition;
+	}
+
+	public void setOpenIdConnectDefinition(List<String> openIdConnectDefinition) {
+		this.openIdConnectDefinition = openIdConnectDefinition;
+	}
+
+	public List<String> getWebAuthnDefinition() {
+		return webAuthnDefinition;
+	}
+
+	public void setWebAuthnDefinition(List<String> webAuthnDefinition) {
+		this.webAuthnDefinition = webAuthnDefinition;
+	}
 }

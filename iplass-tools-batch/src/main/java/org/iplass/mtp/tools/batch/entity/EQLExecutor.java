@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,6 +20,9 @@
 
 package org.iplass.mtp.tools.batch.entity;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Scanner;
 
@@ -29,6 +32,7 @@ import org.iplass.mtp.impl.core.TenantContext;
 import org.iplass.mtp.impl.core.TenantContextService;
 import org.iplass.mtp.impl.tools.entity.EntityToolService;
 import org.iplass.mtp.spi.ServiceRegistry;
+import org.iplass.mtp.tools.batch.MtpBatchResourceDisposer;
 import org.iplass.mtp.tools.batch.MtpCuiBase;
 import org.iplass.mtp.util.StringUtil;
 import org.slf4j.Logger;
@@ -43,8 +47,10 @@ public class EQLExecutor extends MtpCuiBase {
 
 	private static final String SET_EQL_EXEC_MODE = "EQL_EXEC_MODE=";
 
-	private static TenantContextService tenantContextService = ServiceRegistry.getRegistry().getService(TenantContextService.class);
-	private static EntityToolService entityToolService = ServiceRegistry.getRegistry().getService(EntityToolService.class);
+	private static TenantContextService tenantContextService = ServiceRegistry.getRegistry()
+			.getService(TenantContextService.class);
+	private static EntityToolService entityToolService = ServiceRegistry.getRegistry()
+			.getService(EntityToolService.class);
 
 	/** テナントID */
 	private int tenantId = -1;
@@ -57,21 +63,26 @@ public class EQLExecutor extends MtpCuiBase {
 
 	/** 実行モード */
 	private ExecMode execMode = ExecMode.BATCH;
+
 	private enum ExecMode {
 		BATCH, INTERACT
 	}
 
 	/** EQL実行モード */
 	private EQLExecMode eqlExecMode = EQLExecMode.ONLY_EXEC;
+
 	private enum EQLExecMode {
-		ONLY_EXEC, ONLY_COUNT, SHOW_SEARCH_RESULT
+		ONLY_EXEC, ONLY_COUNT, SHOW_SEARCH_RESULT, CSV_EXPORT
 	}
 
-	/** ユーザID */
+	/** ユーザーID */
 	private String userId;
 
 	/** パスワード */
 	private String password;
+
+	/** 出力ファイル名 */
+	private String exportFile;
 
 	/**
 	 * コンストラクタ
@@ -80,9 +91,10 @@ public class EQLExecutor extends MtpCuiBase {
 	 * args[1]・・・tenantId
 	 * args[2]・・・isSearchAllVersion
 	 * args[3]・・・execMode["BATCH":バッチモード, "INTERACT":対話モード]
-	 * args[4]・・・eqlExecMode["ONLY_EXEC":実行のみ, "ONLY_COUNT":カウントのみ, "SHOW_SEARCH_RESULT":検索結果表示]
+	 * args[4]・・・eqlExecMode["ONLY_EXEC":実行のみ, "ONLY_COUNT":カウントのみ, "SHOW_SEARCH_RESULT":検索結果表示, "CSV_EXPORT":検索結果をCSV出力]
 	 * args[5]・・・userId
 	 * args[6]・・・password
+	 * args[7]・・・exportFile
 	 **/
 	public EQLExecutor(String... args) {
 		if (args == null || args.length < 2) {
@@ -110,6 +122,9 @@ public class EQLExecutor extends MtpCuiBase {
 		if (args.length > 6) {
 			password = args[6];
 		}
+		if (args.length > 7) {
+			exportFile = args[7];
+		}
 	}
 
 	public static void main(String... args) {
@@ -117,6 +132,9 @@ public class EQLExecutor extends MtpCuiBase {
 			new EQLExecutor(args).execute();
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			// リソース破棄
+			MtpBatchResourceDisposer.disposeResource();
 		}
 	}
 
@@ -145,6 +163,11 @@ public class EQLExecutor extends MtpCuiBase {
 		TenantContext tc = tenantContextService.getTenantContext(tenantId);
 		if (tc == null) {
 			logError(rs("EQLExecutor.notFoundTenant", tenantId));
+			return isSuccess();
+		}
+
+		if (EQLExecMode.CSV_EXPORT.equals(eqlExecMode) && StringUtil.isBlank(exportFile)) {
+			logError(rs("EQLExecutor.notSpecifiedExportFile"));
 			return isSuccess();
 		}
 
@@ -186,11 +209,25 @@ public class EQLExecutor extends MtpCuiBase {
 			}
 			break;
 		case SHOW_SEARCH_RESULT:
-			OutputStream out = new CloseShieldOutputStream(System.out);
+			OutputStream out = CloseShieldOutputStream.wrap(System.out);
 			if (StringUtil.isBlank(userId)) {
 				count = entityToolService.executeEQLWithAuth(out, System.getProperty("file.encoding"), eql, isSearchAllVersion);
 			} else {
 				count = entityToolService.executeEQLWithAuth(out, System.getProperty("file.encoding"), eql, isSearchAllVersion, userId, password);
+			}
+			break;
+		case CSV_EXPORT:
+			File outFile = new File(exportFile);
+			try {
+				if (StringUtil.isBlank(userId)) {
+					count = entityToolService.executeEQLWithAuth(new FileOutputStream(outFile), System.getProperty("file.encoding"), eql,
+							isSearchAllVersion);
+				} else {
+					count = entityToolService.executeEQLWithAuth(new FileOutputStream(outFile), System.getProperty("file.encoding"), eql,
+							isSearchAllVersion, userId, password);
+				}
+			} catch (IOException e) {
+				throw new RuntimeException(e);
 			}
 			break;
 		}
@@ -210,8 +247,10 @@ public class EQLExecutor extends MtpCuiBase {
 			while (true) {
 				System.out.print(isMultiLine ? "  -> " : "EQL> ");
 
-				String cmd = sc.nextLine().trim();
-				if (StringUtil.isBlank(cmd)) continue;
+				String cmd = sc.nextLine()
+						.trim();
+				if (StringUtil.isBlank(cmd))
+					continue;
 
 				if (!isMultiLine) {
 					if ("exit".equals(cmd.toLowerCase()) || "quit".equals(cmd.toLowerCase())) {
@@ -226,7 +265,8 @@ public class EQLExecutor extends MtpCuiBase {
 							} catch (Exception e) {
 								StringBuilder sbMode = new StringBuilder();
 								for (EQLExecMode eqlExecMode : EQLExecMode.values()) {
-									if (sbMode.length() > 0) sbMode.append("|");
+									if (sbMode.length() > 0)
+										sbMode.append("|");
 									sbMode.append(eqlExecMode.toString());
 								}
 								System.out.println("Usage: " + SET_EQL_EXEC_MODE + "[" + sbMode.toString() + "]");
@@ -252,7 +292,8 @@ public class EQLExecutor extends MtpCuiBase {
 					}
 					isMultiLine = false;
 				} else {
-					sb.append(cmd).append(' ');
+					sb.append(cmd)
+							.append(' ');
 					isMultiLine = true;
 				}
 			}

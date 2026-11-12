@@ -1,26 +1,26 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
- * 
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
+ *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
 package org.iplass.mtp.impl.web.fileupload;
 
-import static org.iplass.mtp.impl.web.WebResourceBundleUtil.resourceString;
+import static org.iplass.mtp.impl.web.WebResourceBundleUtil.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,39 +32,39 @@ import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import javax.servlet.ServletContext;
-
-import org.apache.commons.fileupload.util.Streams;
+import org.apache.commons.io.IOUtils;
 import org.iplass.mtp.ManagerLocator;
 import org.iplass.mtp.command.UploadFileHandle;
 import org.iplass.mtp.command.UploadFileSizeOverException;
 import org.iplass.mtp.entity.BinaryReference;
 import org.iplass.mtp.entity.EntityManager;
-import org.iplass.mtp.impl.util.UploadFileUtil;
 import org.iplass.mtp.impl.web.WebFrontendService;
 import org.iplass.mtp.impl.web.WebProcessRuntimeException;
 import org.iplass.mtp.spi.ServiceRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jakarta.servlet.ServletContext;
 
 public class UploadFileHandleImpl implements UploadFileHandle {
 
 	private static final Logger logger = LoggerFactory.getLogger(UploadFileHandleImpl.class);
-	private static WebFrontendService webFront = ServiceRegistry.getRegistry().getService(WebFrontendService.class);
+	private static WebFrontendService webFront = ServiceRegistry.getRegistry()
+			.getService(WebFrontendService.class);
 
-	public static UploadFileHandleImpl toUploadFileHandle(InputStream is, String fileName, String type, ServletContext servletContext, long maxSize) throws IOException {
+	public static UploadFileHandleImpl toUploadFileHandle(InputStream is, String fileName, String type, ServletContext servletContext, long maxSize)
+			throws IOException {
 		try {
 			UploadFileHandleImpl value = null;
-			
+
 			File tempDir = null;
 			if (webFront.getTempFileDir() == null) {
-				tempDir = (File) servletContext.getAttribute("javax.servlet.context.tempdir");
+				tempDir = (File) servletContext.getAttribute("jakarta.servlet.context.tempdir");
 			} else {
 				tempDir = new File(webFront.getTempFileDir());
 			}
-			
-	    	fileName = delPath(fileName);
+
+			fileName = delPath(fileName);
 			if (fileName != null && fileName.length() != 0) {
 				String ext = ".tmp";
 				File tempFile = null;
@@ -74,19 +74,21 @@ public class UploadFileHandleImpl implements UploadFileHandle {
 					try (FileOutputStream fos = new FileOutputStream(tempFile)) {
 						//TODO ここでサイズオーバーの場合ぶった切るか？後続のウイルスチェックするため、一旦全部読み込みか？
 						//後者の実装としとく。
-						size = Streams.copy(is, fos, true);
+						// Streams.copy(is, fos, true);
+						size = IOUtils.copyLarge(is, fos);
 					}
-					
+
 					// tempFileのウィルスチェック
 					FileScanner scanHandle = webFront.getUploadFileScanner();
 					if (scanHandle != null) {
 						scanHandle.scan(tempFile.getAbsolutePath());
-						
+
 						// ウィルスに感染していた場合はファイルを削除する設定になっている事が前提
 						if (!tempFile.exists()) {
 							throw new WebProcessRuntimeException(fileName + " is a file infected with the virus.");
 						}
 					}
+
 				} catch (RuntimeException | IOException e) {
 					if (tempFile != null) {
 						try {
@@ -98,10 +100,15 @@ public class UploadFileHandleImpl implements UploadFileHandle {
 					throw e;
 				}
 
+				// NOTE 一度ファイル保存しているため、ファイルをインターフェースとしている。ローカルにファイルを保存することを前提としている。
+				// ファイルからメディアタイプ（MIME Type）を取得
+				FileTypeDetector fileTypeDetector = webFront.getUploadFileTypeDetector();
+				String mediaType = fileTypeDetector.detect(tempFile, fileName, type);
+
 				if (maxSize != -1 && size > maxSize) {
-					value = new UploadFileHandleImpl(tempFile, fileName, type, size, true);
+					value = new UploadFileHandleImpl(tempFile, fileName, mediaType, size, true);
 				} else {
-					value = new UploadFileHandleImpl(tempFile, fileName, type, size, false);
+					value = new UploadFileHandleImpl(tempFile, fileName, mediaType, size, false);
 				}
 			}
 			return value;
@@ -117,7 +124,7 @@ public class UploadFileHandleImpl implements UploadFileHandle {
 			}
 		}
 	}
-	
+
 	private static String delPath(String fileName) {
 		if (fileName.contains("\\")) {
 			fileName = fileName.substring(fileName.lastIndexOf("\\") + 1);
@@ -138,7 +145,7 @@ public class UploadFileHandleImpl implements UploadFileHandle {
 	private long size;
 
 	private boolean isSizeOver;
-	
+
 	UploadFileHandleImpl(File tempFile, String fileName, String type, long size, boolean isSizeOver) {
 		this.tempFile = tempFile;
 		this.fileName = fileName;
@@ -165,15 +172,17 @@ public class UploadFileHandleImpl implements UploadFileHandle {
 
 		// マジックバイトチェックを実施
 		if (webFront.isExecMagicByteCheck()) {
-			UploadFileUtil.checkMagicByte(tempFile, type, fileName);
+			webFront.getMagicByteChecker()
+					.checkMagicByte(tempFile, type, fileName);
 		}
 
 		if (!tempFile.exists()) {
 			logger.warn("upload file is externally deleted. maybe contains virus. fileName:" + fileName);
 			return null;
 		}
-		
-		EntityManager em = ManagerLocator.getInstance().getManager(EntityManager.class);
+
+		EntityManager em = ManagerLocator.getInstance()
+				.getManager(EntityManager.class);
 		return em.createBinaryReference(tempFile, fileName, type);
 	}
 
@@ -190,13 +199,14 @@ public class UploadFileHandleImpl implements UploadFileHandle {
 
 		// マジックバイトチェックを実施
 		if (webFront.isExecMagicByteCheck()) {
-			UploadFileUtil.checkMagicByte(tempFile, type, fileName);
+			webFront.getMagicByteChecker()
+					.checkMagicByte(tempFile, type, fileName);
 		}
 
 		try {
 			return new FileInputStream(tempFile);
 		} catch (FileNotFoundException e) {
-			logger.warn("upload file is externally deleted. maybe contains virus." , e);
+			logger.warn("upload file is externally deleted. maybe contains virus.", e);
 			return null;
 		}
 	}
@@ -214,7 +224,8 @@ public class UploadFileHandleImpl implements UploadFileHandle {
 
 		// マジックバイトチェックを実施
 		if (webFront.isExecMagicByteCheck()) {
-			UploadFileUtil.checkMagicByte(tempFile, type, fileName);
+			webFront.getMagicByteChecker()
+					.checkMagicByte(tempFile, type, fileName);
 		}
 
 		try {
@@ -232,7 +243,8 @@ public class UploadFileHandleImpl implements UploadFileHandle {
 
 		// マジックバイトチェックを実施
 		if (webFront.isExecMagicByteCheck()) {
-			UploadFileUtil.checkMagicByte(tempFile, type, fileName);
+			webFront.getMagicByteChecker()
+					.checkMagicByte(tempFile, type, fileName);
 		}
 
 		try {
@@ -241,7 +253,7 @@ public class UploadFileHandleImpl implements UploadFileHandle {
 			throw new WebProcessRuntimeException(e);
 		}
 	}
-	
+
 	public void deleteTempFile() {
 		if (tempFile != null) {
 			try {
@@ -256,5 +268,4 @@ public class UploadFileHandleImpl implements UploadFileHandle {
 	public String toString() {
 		return fileName;
 	}
-
 }

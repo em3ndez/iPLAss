@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -63,12 +63,16 @@ public class ElementRuntime {
 
 		//ElementのRuntimeKEY
 		String elementRuntimeId = ELEMENT_GROOVYSCRIPT_PREFIX
-				+ "_" + entityView.getMetaData().getId()
-				+ "_" + GroovyTemplateCompiler.randomName().replace("-", "_");
+				+ "_" + entityView.getMetaData()
+						.getId()
+				+ "_" + GroovyTemplateCompiler.randomName()
+						.replace("-", "_");
 		metadata.setElementRuntimeId(elementRuntimeId);
 
 		if (StringUtil.isNotEmpty(metadata.getDisplayScript())) {
-			ScriptEngine scriptEngine = ExecuteContext.getCurrentContext().getTenantContext().getScriptEngine();
+			ScriptEngine scriptEngine = ExecuteContext.getCurrentContext()
+					.getTenantContext()
+					.getScriptEngine();
 			dispGroovyScript = scriptEngine.createScript(metadata.getDisplayScript(), elementRuntimeId);
 		}
 
@@ -96,9 +100,12 @@ public class ElementRuntime {
 		}
 
 		if (dispGroovyScript != null) {
-			UserBinding user = AuthContextHolder.getAuthContext().newUserBinding();
+			UserBinding user = AuthContextHolder.getAuthContext()
+					.newUserBinding();
 
-			ScriptEngine scriptEngine = ExecuteContext.getCurrentContext().getTenantContext().getScriptEngine();
+			ScriptEngine scriptEngine = ExecuteContext.getCurrentContext()
+					.getTenantContext()
+					.getScriptEngine();
 			ScriptContext sc = scriptEngine.newScriptContext();
 
 			sc.setAttribute(REQUEST_BINDING_NAME, RequestContextBinding.newRequestContextBinding());
@@ -107,7 +114,7 @@ public class ElementRuntime {
 			sc.setAttribute(OUTPUT_TYPE_BINDING_NAME, outputType);
 			sc.setAttribute(ENTITY_BINDING_NAME, entity);
 
-			boolean val = (Boolean)dispGroovyScript.eval(sc);
+			boolean val = (Boolean) dispGroovyScript.eval(sc);
 			return val;
 		}
 

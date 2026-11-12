@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,8 +28,10 @@ import org.iplass.adminconsole.client.metadata.ui.auth.property.AccountLockoutPo
 import org.iplass.adminconsole.client.metadata.ui.auth.property.AccountNotificationListenerSettingPane;
 import org.iplass.adminconsole.client.metadata.ui.auth.property.AuditLogSettingPane;
 import org.iplass.adminconsole.client.metadata.ui.auth.property.AuthenticationProviderSettingPane;
+import org.iplass.adminconsole.client.metadata.ui.auth.property.OpenIdConnectPolicySettingPane;
 import org.iplass.adminconsole.client.metadata.ui.auth.property.PasswordPolicySettingPane;
 import org.iplass.adminconsole.client.metadata.ui.auth.property.RememberMePolicySettingPane;
+import org.iplass.adminconsole.client.metadata.ui.auth.property.WebAuthnPolicySettingPane;
 
 public class AuthenticationPolicyAttributeControllerImpl implements AuthenticationPolicyAttributeController {
 
@@ -44,9 +46,10 @@ public class AuthenticationPolicyAttributeControllerImpl implements Authenticati
 		settingPaneList.add(new AuditLogSettingPane());
 		settingPaneList.add(new AccountNotificationListenerSettingPane());
 		settingPaneList.add(new AuthenticationProviderSettingPane());
+		settingPaneList.add(new OpenIdConnectPolicySettingPane());
+		settingPaneList.add(new WebAuthnPolicySettingPane());
 
 		return settingPaneList;
 	}
-
 
 }

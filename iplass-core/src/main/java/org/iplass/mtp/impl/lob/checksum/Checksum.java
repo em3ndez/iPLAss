@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,7 +30,10 @@ package org.iplass.mtp.impl.lob.checksum;
  */
 public interface Checksum {
 	public void update(int b);
+
 	public void update(byte[] b, int off, int len);
+
 	public String getValue();
+
 	public void reset();
 }

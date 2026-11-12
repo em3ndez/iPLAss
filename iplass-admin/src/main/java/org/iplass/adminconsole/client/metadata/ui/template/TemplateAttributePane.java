@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -70,7 +70,7 @@ public class TemplateAttributePane extends VLayout {
 		//入力部分
 		commonForm = new DynamicForm();
 		commonForm.setWidth100();
-		commonForm.setNumCols(5);	//間延びしないように最後に１つ余分に作成
+		commonForm.setNumCols(5); //間延びしないように最後に１つ余分に作成
 		commonForm.setColWidths(100, "*", 100, "*", "*");
 		commonForm.setMargin(5);
 
@@ -83,7 +83,7 @@ public class TemplateAttributePane extends VLayout {
 
 		typeForm = new DynamicForm();
 		typeForm.setWidth100();
-		typeForm.setNumCols(5);	//間延びしないように最後に１つ余分に作成
+		typeForm.setNumCols(5); //間延びしないように最後に１つ余分に作成
 		typeForm.setColWidths(100, "*", 100, "*", "*");
 		typeForm.setMargin(5);
 

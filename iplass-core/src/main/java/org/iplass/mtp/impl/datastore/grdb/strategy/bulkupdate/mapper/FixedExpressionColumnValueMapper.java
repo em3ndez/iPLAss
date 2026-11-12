@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,10 +28,10 @@ import org.iplass.mtp.impl.rdb.adapter.bulk.FixedExpressionColumnValue;
 import org.iplass.mtp.impl.rdb.adapter.bulk.FixedValueExpression;
 
 public class FixedExpressionColumnValueMapper implements ColumnValueMapper {
-	
+
 	private String colName;
 	private String valueExpression;
-	
+
 	public FixedExpressionColumnValueMapper(String colName, String valueExpression) {
 		this.colName = colName;
 		this.valueExpression = valueExpression;

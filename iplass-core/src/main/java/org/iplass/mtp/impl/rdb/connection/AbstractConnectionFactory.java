@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -41,9 +41,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-
+/**
+ * ConnectionFactory 抽象クラス
+ * 
+ * <p>
+ * ConnectionFactoryの基本的な機能実装を行います。
+ * </p>
+ * 
+ * @author SEKIGUCHI Naoya
+ *
+ */
 public abstract class AbstractConnectionFactory extends ConnectionFactory {
-	
+
 	public static final String CLIENT_INFO_THREAD_NAME = "thread";
 
 	private static final Logger logger = LoggerFactory.getLogger(AbstractConnectionFactory.class);
@@ -51,19 +60,24 @@ public abstract class AbstractConnectionFactory extends ConnectionFactory {
 	private boolean warnLogBefore;
 	private boolean countSqlExecution;
 	private TransactionIsolationLevel transactionIsolationLevel;
-	
+
 	private Map<String, Object> clientInfoMap;
 	private int clientInfoMaxLength;
+	/** ReadOnlyトランザクションの時に、コネクションを新規作成するかの判定フラグ */
+	private boolean isCreateConnectionIfReadOnlyTransaction;
 
 	private boolean isDefault;
 
+	@Override
 	public Connection getConnection() {
 		return getConnection(null);
 	}
 
+	@Override
 	public Connection getConnection(Function<Connection, Connection> afterGetPhysicalConnectionHandler) {
 		if (isDefault) {
-			TransactionService ts = ServiceRegistry.getRegistry().getService(TransactionService.class);
+			TransactionService ts = ServiceRegistry.getRegistry()
+					.getService(TransactionService.class);
 			int warnLogThreshold = getWarnLogThreshold();
 
 			TransactionManager tm = ts.getTransacitonManager();
@@ -75,13 +89,15 @@ public abstract class AbstractConnectionFactory extends ConnectionFactory {
 				if (t.getStatus() == TransactionStatus.ACTIVE) {
 					if (t.getCon() == null) {
 						try {
-							if (rh == null || rh.isInUse() || t.isReadOnly()) {
-								//ResourceHolder使ってない場合/既にResourceHolder利用されている場合/ReadOnlyの場合は物理Connection
+							if (rh == null || rh.isInUse() || (isCreateConnectionIfReadOnlyTransaction && t.isReadOnly())) {
+								// ResourceHolder使ってない場合/既にResourceHolder利用されている場合/ReadOnlyの場合に新規にコネクション作成するかつ、ReadOnlyの場合は物理Connection
 								t.setCon(new LocalTransactionConnectionWrapper(
-										getPhysicalConnection(afterGetPhysicalConnectionHandler), true, null, warnLogThreshold, warnLogBefore, countSqlExecution));
+										getPhysicalConnection(afterGetPhysicalConnectionHandler), true, null, warnLogThreshold, warnLogBefore,
+										countSqlExecution));
 							} else {
 								t.setCon(new LocalTransactionConnectionWrapper(
-										getHoldingConnection(rh, afterGetPhysicalConnectionHandler), true, rh, warnLogThreshold, warnLogBefore, countSqlExecution));
+										getHoldingConnection(rh, afterGetPhysicalConnectionHandler), true, rh, warnLogThreshold, warnLogBefore,
+										countSqlExecution));
 							}
 						} catch (SQLException e) {
 							throw new ConnectionException(e);
@@ -91,11 +107,13 @@ public abstract class AbstractConnectionFactory extends ConnectionFactory {
 				} else {
 					if (rh == null || rh.isInUse()) {
 						return new LocalTransactionConnectionWrapper(
-								getPhysicalConnection(afterGetPhysicalConnectionHandler), false, null, warnLogThreshold, warnLogBefore, countSqlExecution);
+								getPhysicalConnection(afterGetPhysicalConnectionHandler), false, null, warnLogThreshold, warnLogBefore,
+								countSqlExecution);
 					} else {
 						//未使用のResourceHolderのコネクション
 						return new LocalTransactionConnectionWrapper(
-								getHoldingConnection(rh, afterGetPhysicalConnectionHandler), false, rh, warnLogThreshold, warnLogBefore, countSqlExecution);
+								getHoldingConnection(rh, afterGetPhysicalConnectionHandler), false, rh, warnLogThreshold, warnLogBefore,
+								countSqlExecution);
 					}
 				}
 			}
@@ -125,11 +143,11 @@ public abstract class AbstractConnectionFactory extends ConnectionFactory {
 		setClientInfo(con);
 		return con;
 	}
-	
+
 	private void setClientInfo(Connection con) {
 		if (clientInfoMap != null && !clientInfoMap.isEmpty()) {
 			try {
-				for (Map.Entry<String, Object> e: clientInfoMap.entrySet()) {
+				for (Map.Entry<String, Object> e : clientInfoMap.entrySet()) {
 					CharSequence val = clientInfoValue(e.getValue());
 					con.setClientInfo(e.getKey(), substrClientInfoValue(val));
 				}
@@ -138,7 +156,7 @@ public abstract class AbstractConnectionFactory extends ConnectionFactory {
 			}
 		}
 	}
-	
+
 	private CharSequence clientInfoValue(Object name) {
 		if (name instanceof List) {
 			StringBuilder sb = new StringBuilder();
@@ -153,8 +171,9 @@ public abstract class AbstractConnectionFactory extends ConnectionFactory {
 		} else {
 			String n = (String) name;
 			if (CLIENT_INFO_THREAD_NAME.equals(n)) {
-				return Thread.currentThread().getName();
-			} else if ( n != null && !n.isEmpty()) {
+				return Thread.currentThread()
+						.getName();
+			} else if (n != null && !n.isEmpty()) {
 				String val = MDC.get(n);
 				if (val == null) {
 					val = "";
@@ -165,7 +184,7 @@ public abstract class AbstractConnectionFactory extends ConnectionFactory {
 			}
 		}
 	}
-	
+
 	private String substrClientInfoValue(CharSequence val) {
 		if (clientInfoMaxLength >= 0) {
 			if (val.length() > clientInfoMaxLength) {
@@ -183,7 +202,7 @@ public abstract class AbstractConnectionFactory extends ConnectionFactory {
 		initPhysicalConnection(con, afterGetPhysicalConnectionHandler);
 		return con;
 	}
-	
+
 	protected void initPhysicalConnection(Connection con, Function<Connection, Connection> afterGetPhysicalConnectionHandler) {
 		setClientInfo(con);
 		if (transactionIsolationLevel != null) {
@@ -200,6 +219,7 @@ public abstract class AbstractConnectionFactory extends ConnectionFactory {
 
 	protected abstract Connection getConnectionInternal();
 
+	@Override
 	public void init(Config config) {
 
 		String serviceName = config.getServiceName();
@@ -210,30 +230,37 @@ public abstract class AbstractConnectionFactory extends ConnectionFactory {
 		warnLogThreshold = config.getValue("warnLogThreshold", Integer.TYPE, 0);
 		warnLogBefore = config.getValue("warnLogBefore", Boolean.TYPE, true);
 		countSqlExecution = config.getValue("countSqlExecution", Boolean.TYPE, true);
-		
+
 		transactionIsolationLevel = config.getValue("transactionIsolationLevel", TransactionIsolationLevel.class);
-		
+
 		clientInfoMap = config.getValue("clientInfoMap", Map.class);
 		clientInfoMaxLength = config.getValue("clientInfoMaxLength", Integer.TYPE, -1);
-		
+
+		isCreateConnectionIfReadOnlyTransaction = config.getValue("isCreateConnectionIfReadOnlyTransaction", Boolean.TYPE,
+				isCreateConnectionIfReadOnlyTransactionDefaultValue());
 	}
 
+	@Override
 	public boolean isWarnLogBefore() {
 		return warnLogBefore;
 	}
 
+	@Override
 	public int getWarnLogThreshold() {
 		return warnLogThreshold;
 	}
 
+	@Override
 	public TransactionIsolationLevel getTransactionIsolationLevel() {
 		return transactionIsolationLevel;
 	}
-	
+
+	@Override
 	public boolean isCountSqlExecution() {
 		return countSqlExecution;
 	}
-	
+
+	@Override
 	public AtomicInteger getCounterOfSqlExecution() {
 		if (countSqlExecution) {
 			ExecuteContext ec = ExecuteContext.getCurrentContext();
@@ -248,4 +275,15 @@ public abstract class AbstractConnectionFactory extends ConnectionFactory {
 		}
 	}
 
+	/**
+	 * 読み取り専用トランザクションの場合に、新規にコネクションを作成するかのデフォルト設定値。
+	 * 新規にコネクションを作成する場合は、true を返却する。
+	 * 本メソッドは、{@link #init(Config)} でサービス初期化時に実行される。
+	 * 本クラスの派生サービスの初期値は false を指定する。
+	 * 
+	 * @return 新規にコネクションを作成する場合は true 
+	 */
+	protected boolean isCreateConnectionIfReadOnlyTransactionDefaultValue() {
+		return false;
+	}
 }

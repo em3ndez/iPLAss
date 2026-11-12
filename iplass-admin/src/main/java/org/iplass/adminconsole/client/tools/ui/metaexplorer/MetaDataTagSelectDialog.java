@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,6 +29,7 @@ import org.iplass.adminconsole.client.base.io.download.PostDownloadFrame;
 import org.iplass.adminconsole.client.base.tenant.TenantInfoHolder;
 import org.iplass.adminconsole.client.base.ui.widget.AbstractWindow;
 import org.iplass.adminconsole.client.base.ui.widget.GridActionImgButton;
+import org.iplass.adminconsole.client.base.ui.widget.MtpListGrid;
 import org.iplass.adminconsole.client.base.util.SmartGWTUtil;
 import org.iplass.adminconsole.client.tools.data.metaexplorer.MetaDataTagDS;
 import org.iplass.adminconsole.client.tools.data.metaexplorer.MetaDataTagDS.FIELD_NAME;
@@ -142,7 +143,7 @@ public class MetaDataTagSelectDialog extends AbstractWindow {
 		});
 		toolStrip.addButton(refreshButton);
 
-		grid = new ListGrid(){
+		grid = new MtpListGrid() {
 			@Override
 			protected Canvas createRecordComponent(final ListGridRecord record, Integer colNum) {
 				String fieldName = this.getFieldName(colNum);
@@ -183,18 +184,13 @@ public class MetaDataTagSelectDialog extends AbstractWindow {
 
 		grid.setWidth100();
 		grid.setHeight100();
-		grid.setShowAllRecords(true);
-		grid.setLeaveScrollbarGap(false);	//falseで縦スクロールバー領域が自動表示制御される
-
-		grid.setCanFreezeFields(false);
-		grid.setCanPickFields(false);
-		grid.setCanCollapseGroup(false);
-		grid.setCanGroupBy(false);
-		grid.setCanFreezeFields(false);
 
 		//CheckBox選択設定
 		grid.setSelectionType(SelectionStyle.SIMPLE);
 		grid.setSelectionAppearance(SelectionAppearance.CHECKBOX);
+
+		//ソートを許可
+		grid.setCanSort(true);
 
 		//この２つを指定することでcreateRecordComponentが有効
 		grid.setShowRecordComponents(true);
@@ -211,9 +207,12 @@ public class MetaDataTagSelectDialog extends AbstractWindow {
 
 			@Override
 			public void onRecordDoubleClick(RecordDoubleClickEvent event) {
-				String fileOid = event.getRecord().getAttribute(FIELD_NAME.OID.name());
-				String name = event.getRecord().getAttribute(FIELD_NAME.NAME.name());
-				Date createDate = event.getRecord().getAttributeAsDate(FIELD_NAME.CREATEDATE.name());
+				String fileOid = event.getRecord()
+						.getAttribute(FIELD_NAME.OID.name());
+				String name = event.getRecord()
+						.getAttribute(FIELD_NAME.NAME.name());
+				Date createDate = event.getRecord()
+						.getAttributeAsDate(FIELD_NAME.CREATEDATE.name());
 
 				handler.selected(fileOid, name, createDate);
 				destroy();
@@ -227,6 +226,7 @@ public class MetaDataTagSelectDialog extends AbstractWindow {
 
 		IButton cancelButton = new IButton("Cancel");
 		cancelButton.addClickHandler(new ClickHandler() {
+			@Override
 			public void onClick(ClickEvent event) {
 				destroy();
 			}
@@ -309,20 +309,20 @@ public class MetaDataTagSelectDialog extends AbstractWindow {
 	private void downloadXMLFile(String fileOid) {
 		PostDownloadFrame frame = new PostDownloadFrame();
 		frame.setAction(GWT.getModuleBaseURL() + ConfigDownloadProperty.ACTION_URL)
-			.addParameter(ConfigDownloadProperty.TENANT_ID, String.valueOf(TenantInfoHolder.getId()))
-			.addParameter(ConfigDownloadProperty.TARGET_MODE, TargetMode.TAG.name())
-			.addParameter(ConfigDownloadProperty.FILE_OID, fileOid)
-			.execute();
+				.addParameter(ConfigDownloadProperty.TENANT_ID, String.valueOf(TenantInfoHolder.getId()))
+				.addParameter(ConfigDownloadProperty.TARGET_MODE, TargetMode.TAG.name())
+				.addParameter(ConfigDownloadProperty.FILE_OID, fileOid)
+				.execute();
 	}
 
 	private void downloadNameList(String fileOid) {
 
 		PostDownloadFrame frame = new PostDownloadFrame();
 		frame.setAction(GWT.getModuleBaseURL() + NameListDownloadProperty.ACTION_URL)
-			.addParameter(NameListDownloadProperty.TENANT_ID, String.valueOf(TenantInfoHolder.getId()))
-			.addParameter(NameListDownloadProperty.TARGET_MODE, TargetMode.TAG.name())
-			.addParameter(NameListDownloadProperty.FILE_OID, fileOid)
-			.execute();
+				.addParameter(NameListDownloadProperty.TENANT_ID, String.valueOf(TenantInfoHolder.getId()))
+				.addParameter(NameListDownloadProperty.TARGET_MODE, TargetMode.TAG.name())
+				.addParameter(NameListDownloadProperty.FILE_OID, fileOid)
+				.execute();
 	}
 
 	private void refreshGrid() {

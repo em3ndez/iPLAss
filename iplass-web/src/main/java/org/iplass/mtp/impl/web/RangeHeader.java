@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,30 +23,33 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.io.input.BoundedInputStream;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 public class RangeHeader {
 	static final long UNSPEC = -1;
 	static final long NAN = -2;
-	
-	
+
 	public static RangeHeader getRangeHeader(WebRequestStack req, long contentSize) {
-		String rangeValue = req.getRequest().getHeader("Range");
+		String rangeValue = req.getRequest()
+				.getHeader("Range");
 		if (rangeValue != null) {
 			return new RangeHeader(rangeValue, contentSize);
 		} else {
 			return null;
 		}
 	}
-	
+
 	public static long writeResponseHeader(WebRequestStack req, RangeHeader range, long contentSize) {
-		req.getResponse().setHeader("Accept-Ranges", "bytes");
+		req.getResponse()
+				.setHeader("Accept-Ranges", "bytes");
 		if (range != null) {
 			if (range.valid) {
-				req.getResponse().setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
-				req.getResponse().setHeader("Content-Range", "bytes " + range.start + "-" + range.end + "/" + range.totalSize);
+				req.getResponse()
+						.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
+				req.getResponse()
+						.setHeader("Content-Range", "bytes " + range.start + "-" + range.end + "/" + range.totalSize);
 				return range.end - range.start + 1;
 			} else {
 //				//FIXME エラーでよいか？？マルチパート対応してない
@@ -56,11 +59,14 @@ public class RangeHeader {
 		}
 		return contentSize;
 	}
-	
+
 	public static void writeResponseBody(InputStream is, OutputStream os, RangeHeader range) throws IOException {
 		//Range指定の場合は、部分的な出力に
 		if (range != null && range.valid) {
-			is = new BoundedInputStream(is, range.end + 1);
+			is = BoundedInputStream.builder()
+					.setInputStream(is)
+					.setMaxCount(range.end + 1)
+					.get();;
 			is.skip(range.start);
 		}
 
@@ -74,13 +80,12 @@ public class RangeHeader {
 		}
 		os.flush();
 	}
-	
-	
+
 	public long start;
 	public long end;
 	public long totalSize;
 	public boolean valid;
-	
+
 	public RangeHeader(String value, long totalSize) {
 		this.totalSize = totalSize;
 		if (value != null) {
@@ -93,7 +98,7 @@ public class RangeHeader {
 				}
 			}
 		}
-		
+
 		if (start == NAN || end == NAN) {
 			valid = false;
 		} else {
@@ -110,7 +115,7 @@ public class RangeHeader {
 			}
 		}
 	}
-	
+
 	private long toLong(String val) {
 		if (val == null || val.length() == 0) {
 			return UNSPEC;

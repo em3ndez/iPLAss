@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,12 +27,13 @@ import org.iplass.mtp.entity.query.QueryException;
 import org.iplass.mtp.entity.query.Where;
 import org.iplass.mtp.entity.query.condition.Condition;
 import org.iplass.mtp.entity.query.value.ValueExpression;
+import org.iplass.mtp.entity.query.value.primary.ArrayValue;
+import org.iplass.mtp.entity.query.value.primary.EntityField;
 import org.iplass.mtp.entity.query.value.primary.Literal;
 import org.iplass.mtp.impl.parser.ParseException;
 import org.iplass.mtp.impl.query.QueryConstants;
 import org.iplass.mtp.impl.query.QueryServiceHolder;
 import org.iplass.mtp.impl.query.WhereSyntax;
-
 
 /**
  * Entityデータを一括更新する際の更新条件。
@@ -122,6 +123,21 @@ public class UpdateCondition {
 		return this;
 	}
 
+	/**
+	 * 指定のEntity属性（EntityField）を指定の値表現（ValueExpression）で更新するようにセット。
+	 * 
+	 * @param propertyName
+	 * @param value
+	 * @return
+	 */
+	public UpdateCondition value(EntityField propertyName, ValueExpression value) {
+		if (values == null) {
+			values = new ArrayList<>();
+		}
+		values.add(new UpdateValue(propertyName, value));
+		return this;
+	}
+
 	public Where where() {
 		if (where == null) {
 			where = new Where();
@@ -138,7 +154,9 @@ public class UpdateCondition {
 	public UpdateCondition where(String whereClause) {
 		String whereStr = QueryConstants.WHERE + " " + whereClause;
 		try {
-			where = QueryServiceHolder.getInstance().getQueryParser().parse(whereStr, WhereSyntax.class);
+			where = QueryServiceHolder.getInstance()
+					.getQueryParser()
+					.parse(whereStr, WhereSyntax.class);
 		} catch (ParseException e) {
 			throw new QueryException(e.getMessage(), e);
 		}
@@ -180,24 +198,31 @@ public class UpdateCondition {
 	public List<UpdateValue> getValues() {
 		return values;
 	}
+
 	public void setValues(List<UpdateValue> values) {
 		this.values = values;
 	}
+
 	public String getDefinitionName() {
 		return definitionName;
 	}
+
 	public void setDefinitionName(String definitionName) {
 		this.definitionName = definitionName;
 	}
+
 	public Where getWhere() {
 		return where;
 	}
+
 	public void setWhere(Where where) {
 		this.where = where;
 	}
+
 	public boolean isLockStrictly() {
 		return lockStrictly;
 	}
+
 	/**
 	 * 更新時に厳密にロック（oid順にソートしてロック取得）を取得する場合trueを設定。
 	 * デフォルトfalse。
@@ -209,7 +234,6 @@ public class UpdateCondition {
 		this.lockStrictly = lockStrictly;
 	}
 
-
 	/**
 	 * 一括更新時の更新項目を表すクラス。
 	 *
@@ -218,7 +242,7 @@ public class UpdateCondition {
 	 */
 	public static class UpdateValue {
 
-		private String entityField;
+		private EntityField propertyName;
 		private ValueExpression value;
 
 		public UpdateValue() {
@@ -232,9 +256,19 @@ public class UpdateCondition {
 		 * @param value 更新値
 		 */
 		public UpdateValue(String entityField, Object value) {
-			this.entityField = entityField;
+			this.propertyName = new EntityField(entityField);
 			if (value instanceof ValueExpression) {
 				this.value = (ValueExpression) value;
+			} else if (value instanceof Object[]) {
+				ArrayValue arrayValue = new ArrayValue();
+				for (Object v : (Object[]) value) {
+					if (v instanceof ValueExpression) {
+						arrayValue.add((ValueExpression) v);
+					} else {
+						arrayValue.add(new Literal(v));
+					}
+				}
+				this.value = arrayValue;
 			} else {
 				this.value = new Literal(value);
 			}
@@ -248,26 +282,76 @@ public class UpdateCondition {
 		 * @param value 更新値を表すValueExpression
 		 */
 		public UpdateValue(String entityField, ValueExpression value) {
-			this.entityField = entityField;
+			this.propertyName = new EntityField(entityField);
 			this.value = value;
 		}
 
+		/**
+		 * コンストラクタ。
+		 * 指定のEntity属性を指定の値表現（ValueExpression）で更新するように指定。
+		 *
+		 * @param propertyName 更新対象のEntity属性を表すEntityField
+		 * @param value 更新値を表すValueExpression
+		 */
+		public UpdateValue(EntityField propertyName, ValueExpression value) {
+			this.propertyName = propertyName;
+			this.value = value;
+		}
+
+		/**
+		 * 更新対象のEntity属性名を取得。
+		 *
+		 * @return
+		 */
 		public String getEntityField() {
-			return entityField;
+			if (propertyName == null) {
+				return null;
+			}
+			return propertyName.getPropertyName();
 		}
+
+		/**
+		 * 更新対象のEntity属性名をセット。
+		 * @param entityField
+		 */
 		public void setEntityField(String entityField) {
-			this.entityField = entityField;
+			if (this.propertyName == null) {
+				this.propertyName = new EntityField();
+			}
+			this.propertyName.setPropertyName(entityField);
 		}
+
+		/**
+		 * 更新対象のEntity属性を表すEntityFieldを取得。
+		 * 
+		 * @return
+		 */
+		public EntityField getPropertyName() {
+			return propertyName;
+		}
+
+		/**
+		 * 更新対象のEntity属性を表すEntityFieldをセット。
+		 * 
+		 * @param propertyName
+		 */
+		public void setPropertyName(EntityField propertyName) {
+			this.propertyName = propertyName;
+		}
+
 		public ValueExpression getValue() {
 			return value;
 		}
+
 		public void setValue(ValueExpression value) {
 			this.value = value;
 		}
 
 		public UpdateValue copy() {
 			UpdateValue copy = new UpdateValue();
-			copy.entityField = entityField;
+			if (propertyName != null) {
+				copy.propertyName = (EntityField) propertyName.copy();
+			}
 			if (value != null) {
 				copy.value = (ValueExpression) value.copy();
 			}
@@ -280,7 +364,7 @@ public class UpdateCondition {
 		UpdateCondition copy = new UpdateCondition();
 		if (values != null) {
 			copy.values = new ArrayList<>(values.size());
-			for (UpdateValue uv: values) {
+			for (UpdateValue uv : values) {
 				copy.values.add(uv.copy());
 			}
 		}
@@ -297,7 +381,8 @@ public class UpdateCondition {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("update ").append(definitionName);
+		sb.append("update ")
+				.append(definitionName);
 		sb.append(" set ");
 		if (values != null) {
 			for (int i = 0; i < values.size(); i++) {
@@ -305,11 +390,14 @@ public class UpdateCondition {
 					sb.append(",");
 				}
 				UpdateValue uv = values.get(i);
-				sb.append(uv.entityField).append("=").append(uv.value);
+				sb.append(uv.propertyName)
+						.append("=")
+						.append(uv.value);
 			}
 		}
 		if (where != null) {
-			sb.append(" ").append(where);
+			sb.append(" ")
+					.append(where);
 		}
 		return sb.toString();
 	}

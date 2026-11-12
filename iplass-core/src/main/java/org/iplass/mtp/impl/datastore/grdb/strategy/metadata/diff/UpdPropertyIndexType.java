@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,6 +23,7 @@ package org.iplass.mtp.impl.datastore.grdb.strategy.metadata.diff;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.iplass.mtp.impl.datastore.grdb.GRdbDataStore;
 import org.iplass.mtp.impl.datastore.grdb.MetaGRdbEntityStore;
 import org.iplass.mtp.impl.datastore.grdb.MetaGRdbMultiplePropertyStore;
 import org.iplass.mtp.impl.datastore.grdb.MetaGRdbPropertyStore;
@@ -33,33 +34,38 @@ import org.iplass.mtp.impl.entity.property.MetaPrimitiveProperty;
 import org.iplass.mtp.impl.rdb.adapter.BaseRdbTypeAdapter;
 import org.iplass.mtp.impl.rdb.adapter.RdbAdapter;
 
-
 public class UpdPropertyIndexType extends Diff {
 
 	private MetaPrimitiveProperty previousProperty;
 	private MetaPrimitiveProperty nextProperty;
 	private MetaEntity nextEntity;
+	private GRdbDataStore dataStore;
 
 	public UpdPropertyIndexType(MetaPrimitiveProperty previousProperty,
-			MetaPrimitiveProperty nextProperty, MetaEntity nextEntity) {
+			MetaPrimitiveProperty nextProperty, MetaEntity nextEntity, GRdbDataStore dataStore) {
 		this.previousProperty = previousProperty;
 		this.nextProperty = nextProperty;
 		this.nextEntity = nextEntity;
+		this.dataStore = dataStore;
 	}
 
 	@Override
 	public void applyToData(Statement stmt, RdbAdapter rdb, int tenantId) throws SQLException {
-		
+
 		if (needDataModify()) {
 			boolean doExecute = false;
+
+			String tableNamePostfixRuntime = dataStore.getTableNamePostfix(nextEntity.getName(),
+					((MetaGRdbEntityStore) nextEntity.getEntityStoreDefinition()).getTableNamePostfix());
 
 			//previousのIndexの削除
 			//今までの状態でIndexが残っている可能性もあるので、旧のIndexTypeにかかわらず削除は実施
 			if (previousProperty.getEntityStoreProperty() instanceof MetaGRdbPropertyStore) {
 				MetaGRdbPropertyStore propStore = (MetaGRdbPropertyStore) previousProperty.getEntityStoreProperty();
-				if(propStore.isExternalIndex()) {
+				if (propStore.isExternalIndex()) {
 					IndexDeleteSql delSql = rdb.getUpdateSqlCreator(IndexDeleteSql.class);
-					stmt.addBatch(delSql.deleteByColName(tenantId, nextEntity.getId(), ((MetaGRdbEntityStore) nextEntity.getEntityStoreDefinition()).getTableNamePostfix(), propStore.getPageNo(), propStore.getColumnName(), rdb.getRdbTypeAdapter(previousProperty.getType()), previousProperty.getIndexType(), rdb));
+					stmt.addBatch(delSql.deleteByColName(tenantId, nextEntity.getId(), tableNamePostfixRuntime, propStore.getPageNo(),
+							propStore.getColumnName(), rdb.getRdbTypeAdapter(previousProperty.getType()), previousProperty.getIndexType(), rdb));
 					doExecute = true;
 				}
 			}
@@ -67,14 +73,16 @@ public class UpdPropertyIndexType extends Diff {
 			//nextのIndexの生成
 			if (nextProperty.getEntityStoreProperty() instanceof MetaGRdbPropertyStore) {
 				MetaGRdbPropertyStore propStore = (MetaGRdbPropertyStore) nextProperty.getEntityStoreProperty();
-				if(propStore.isExternalIndex()) {
+				if (propStore.isExternalIndex()) {
 					BaseRdbTypeAdapter typeMapping = (BaseRdbTypeAdapter) rdb.getRdbTypeAdapter(nextProperty.getType());
 					//もし、このカラムが再利用カラムだったら、insertIndexするまえにdeleteIndex
 					//カラム数を拡張された場合は再利用カラムかどうか判断つかないので、一律事前に削除
 					IndexDeleteSql delSql = rdb.getUpdateSqlCreator(IndexDeleteSql.class);
-					stmt.addBatch(delSql.deleteByColName(tenantId, nextEntity.getId(), ((MetaGRdbEntityStore) nextEntity.getEntityStoreDefinition()).getTableNamePostfix(), propStore.getPageNo(), propStore.getColumnName(), typeMapping, nextProperty.getIndexType(), rdb));
+					stmt.addBatch(delSql.deleteByColName(tenantId, nextEntity.getId(), tableNamePostfixRuntime, propStore.getPageNo(),
+							propStore.getColumnName(), typeMapping, nextProperty.getIndexType(), rdb));
 					IndexInsertSql insSql = rdb.getUpdateSqlCreator(IndexInsertSql.class);
-					stmt.addBatch(insSql.insertAll(tenantId, nextEntity.getId(), ((MetaGRdbEntityStore) nextEntity.getEntityStoreDefinition()).getTableNamePostfix(), propStore.getPageNo(), propStore.getColumnName(), nextProperty.getIndexType(), typeMapping, rdb));
+					stmt.addBatch(insSql.insertAll(tenantId, nextEntity.getId(), tableNamePostfixRuntime, propStore.getPageNo(),
+							propStore.getColumnName(), nextProperty.getIndexType(), typeMapping, rdb));
 					doExecute = true;
 				}
 			}
@@ -97,12 +105,17 @@ public class UpdPropertyIndexType extends Diff {
 			return true;
 		}
 
-		if (!previousProperty.getType().isCompatibleTo(nextProperty.getType())) {
-			if (!(previousProperty.getType().isVirtual() && nextProperty.getType().isVirtual())) {
+		if (!previousProperty.getType()
+				.isCompatibleTo(nextProperty.getType())) {
+			if (!(previousProperty.getType()
+					.isVirtual()
+					&& nextProperty.getType()
+							.isVirtual())) {
 				return true;
 			}
 		}
-		if (!nextProperty.getType().isVirtual()) {
+		if (!nextProperty.getType()
+				.isVirtual()) {
 			if (nextProperty.getMultiplicity() != previousProperty.getMultiplicity()) {
 				return true;
 			}
@@ -113,7 +126,7 @@ public class UpdPropertyIndexType extends Diff {
 
 		return false;
 	}
-	
+
 	private boolean isExternalIndex(MetaPrimitiveProperty p) {
 		if (p.getEntityStoreProperty() instanceof MetaGRdbMultiplePropertyStore) {
 			return false;

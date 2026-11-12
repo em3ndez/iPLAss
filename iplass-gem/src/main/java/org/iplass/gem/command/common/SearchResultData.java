@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -77,12 +77,14 @@ public class SearchResultData {
 			return Collections.emptyList();
 		}
 
-		return rows.stream().map(row -> row.getResponse()).collect(Collectors.toList());
+		return rows.stream()
+				.map(row -> row.getResponse())
+				.collect(Collectors.toList());
 	}
 
 	@Override
 	public String toString() {
 		List<Map<String, String>> response = toResponse();
-		return response != null? response.toString() : null;
+		return response != null ? response.toString() : null;
 	}
 }

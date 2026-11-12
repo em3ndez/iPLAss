@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -94,7 +94,8 @@ public class MetaAutocompletionProperty implements MetaData, HasEntityProperty {
 		} else {
 			_id = convertId(property.getPropertyName(), EntityContext.getCurrentContext(), rootEntity);
 		}
-		if (_id == null) return;
+		if (_id == null)
+			return;
 
 		propertyId = _id;
 		nestProperty = property.isNestProperty();
@@ -108,7 +109,8 @@ public class MetaAutocompletionProperty implements MetaData, HasEntityProperty {
 		} else {
 			_name = convertName(propertyId, EntityContext.getCurrentContext(), rootEntity);
 		}
-		if (_name == null) return null;
+		if (_name == null)
+			return null;
 
 		AutocompletionProperty property = new AutocompletionProperty();
 		property.setPropertyName(_name);

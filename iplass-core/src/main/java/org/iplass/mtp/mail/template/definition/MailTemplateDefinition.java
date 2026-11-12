@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,9 +23,9 @@ package org.iplass.mtp.mail.template.definition;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.iplass.mtp.definition.Definition;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * メールテンプレート定義
@@ -147,7 +147,7 @@ public class MailTemplateDefinition implements Definition {
 	 * @return 表示名
 	 */
 	public String getDisplayName() {
-	    return displayName;
+		return displayName;
 	}
 
 	/**
@@ -155,7 +155,7 @@ public class MailTemplateDefinition implements Definition {
 	 * @param displayName 表示名
 	 */
 	public void setDisplayName(String displayName) {
-	    this.displayName = displayName;
+		this.displayName = displayName;
 	}
 
 	/**

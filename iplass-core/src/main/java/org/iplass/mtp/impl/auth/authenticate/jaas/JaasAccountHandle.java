@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -54,23 +54,27 @@ public class JaasAccountHandle implements AccountHandle {
 		this.loginContext = loginContext;
 		this.subject = loginContext.getSubject();
 		attributeMap = new HashMap<String, Object>();
-		for (Principal p: subject.getPrincipals()) {
+		for (Principal p : subject.getPrincipals()) {
 			if (p.getClass() == uniqueKeyPrincipalType) {
 				uniqueKey = p.getName();
 			}
-			Object prev = attributeMap.get(p.getClass().getName());
+			Object prev = attributeMap.get(p.getClass()
+					.getName());
 			if (prev == null) {
-				attributeMap.put(p.getClass().getName(), p.getName());
+				attributeMap.put(p.getClass()
+						.getName(), p.getName());
 			} else if (prev instanceof String) {
-				attributeMap.put(p.getClass().getName(), new String[]{(String) prev, p.getName()});
+				attributeMap.put(p.getClass()
+						.getName(), new String[] { (String) prev, p.getName() });
 			} else {
 				String[] prevArray = (String[]) prev;
 				String[] newArray = Arrays.copyOf(prevArray, prevArray.length + 1);
 				newArray[prevArray.length] = p.getName();
-				attributeMap.put(p.getClass().getName(), newArray);
+				attributeMap.put(p.getClass()
+						.getName(), newArray);
 			}
 		}
-		
+
 		if (uniqueKey == null) {
 			uniqueKey = id;
 		}
@@ -79,11 +83,11 @@ public class JaasAccountHandle implements AccountHandle {
 	public Subject getSubject() {
 		return subject;
 	}
-	
+
 	public LoginContext getLoginContext() {
 		return loginContext;
 	}
-	
+
 	@Override
 	public boolean isAccountLocked() {
 		return isAccountLocked;

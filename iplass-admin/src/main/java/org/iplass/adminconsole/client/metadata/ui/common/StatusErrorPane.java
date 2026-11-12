@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -87,7 +87,6 @@ public class StatusErrorPane extends HLayout {
 			Label title = new Label(AdminClientMessageUtil.getString("ui_metadata_common_StatusErrorPane_errComment"));
 			title.setHeight(20);
 			title.setWidth100();
-
 
 			Canvas msgContents = new Canvas();
 			msgContents.setHeight("*");

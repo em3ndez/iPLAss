@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,7 +23,7 @@ package org.iplass.mtp.auth;
 import org.iplass.mtp.entity.GenericEntity;
 
 /**
- * ユーザのランク（職位、会員種別など）を表す。
+ * ユーザーのランク（職位、会員種別など）を表す。
  * Entity定義上、mtp.auth.Rankで定義される。
  * 
  * 
@@ -32,11 +32,11 @@ import org.iplass.mtp.entity.GenericEntity;
  */
 public class Rank extends GenericEntity {
 	private static final long serialVersionUID = -5867931536450600419L;
-	
+
 	public static final String ENTITY_DEFINITION_NAME = "mtp.auth.Rank";
 	public static final String CODE = "code";
 	public static final String LEVEL = "level";
-	
+
 	public Rank() {
 		setDefinitionName(ENTITY_DEFINITION_NAME);
 	}

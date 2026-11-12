@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,9 +25,10 @@ import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.GregorianCalendar;
 
-import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.XmlValue;
 import javax.xml.datatype.XMLGregorianCalendar;
+
+import jakarta.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.XmlValue;
 
 /**
  *
@@ -37,7 +38,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  * @author K.Higuchi
  *
  */
-@XmlType(name="dateTime", namespace="http://www.w3.org/2001/XMLSchema")
+@XmlType(name = "dateTime", namespace = "http://www.w3.org/2001/XMLSchema")
 public class XmlDateTime {
 
 	public XmlDateTime() {
@@ -60,7 +61,9 @@ public class XmlDateTime {
 		GregorianCalendar cal = xmlCal.toGregorianCalendar();
 		Timestamp ts = new Timestamp(cal.getTimeInMillis());
 		if (xmlCal.getFractionalSecond() != null) {
-			ts.setNanos(xmlCal.getFractionalSecond().movePointRight(9).intValue());
+			ts.setNanos(xmlCal.getFractionalSecond()
+					.movePointRight(9)
+					.intValue());
 		}
 		return ts;
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,6 +35,8 @@ public class TenantAuthInfo extends TenantConfig {
 
 	/** Remember Me 利用有無*/
 	private boolean useRememberMe;
+	private boolean useWebAuthn;
+	private String webAuthnDefinitionName;
 
 	private List<String> userAdminRoles;
 
@@ -45,7 +47,7 @@ public class TenantAuthInfo extends TenantConfig {
 	}
 
 	/**
-	 * ユーザを管理可能とするロールを取得します。
+	 * ユーザーを管理可能とするロールを取得します。
 	 *
 	 * @return
 	 */
@@ -54,7 +56,7 @@ public class TenantAuthInfo extends TenantConfig {
 	}
 
 	/**
-	 * ユーザを管理可能（パスワードリセット、accountPlicyの設定、adminフラグの設定など）とするロールを指定します。
+	 * ユーザーを管理可能（パスワードリセット、accountPlicyの設定、adminフラグの設定など）とするロールを指定します。
 	 * adminフラグを更新不可としたい場合は、別途当該ロールにEntity権限を設定します。
 	 *
 	 * @param userAdminRoles
@@ -82,38 +84,89 @@ public class TenantAuthInfo extends TenantConfig {
 		this.useRememberMe = useRememberMe;
 	}
 
+	/**
+	 * WebAuthn（PassKey）を利用するか否かを取得します。
+	 * @return
+	 */
+	public boolean isUseWebAuthn() {
+		return useWebAuthn;
+	}
+
+	/**
+	 * WebAuthn（PassKey）を利用するか否かを設定します。
+	 * @param useWebAuthn
+	 */
+	public void setUseWebAuthn(boolean useWebAuthn) {
+		this.useWebAuthn = useWebAuthn;
+	}
+
+	/**
+	 * WebAuthnの定義名を取得します。
+	 * @return
+	 */
+	public String getWebAuthnDefinitionName() {
+		return webAuthnDefinitionName;
+	}
+
+	/**
+	 * WebAuthnの定義名を設定します。
+	 * @param webAuthnDefinitionName
+	 */
+	public void setWebAuthnDefinitionName(String webAuthnDefinitionName) {
+		this.webAuthnDefinitionName = webAuthnDefinitionName;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + (useRememberMe ? 1231 : 1237);
-		result = prime * result
-				+ ((userAdminRoles == null) ? 0 : userAdminRoles.hashCode());
+		result = prime * result + (useWebAuthn ? 1231 : 1237);
+		result = prime * result + ((userAdminRoles == null) ? 0 : userAdminRoles.hashCode());
+		result = prime * result + ((webAuthnDefinitionName == null) ? 0 : webAuthnDefinitionName.hashCode());
 		return result;
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		TenantAuthInfo other = (TenantAuthInfo) obj;
-		if (useRememberMe != other.useRememberMe)
+		if (useRememberMe != other.useRememberMe) {
 			return false;
+		}
+		if (useWebAuthn != other.useWebAuthn) {
+			return false;
+		}
 		if (userAdminRoles == null) {
-			if (other.userAdminRoles != null)
+			if (other.userAdminRoles != null) {
 				return false;
-		} else if (!userAdminRoles.equals(other.userAdminRoles))
+			}
+		} else if (!userAdminRoles.equals(other.userAdminRoles)) {
 			return false;
+		}
+		if (webAuthnDefinitionName == null) {
+			if (other.webAuthnDefinitionName != null) {
+				return false;
+			}
+		} else if (!webAuthnDefinitionName.equals(other.webAuthnDefinitionName)) {
+			return false;
+		}
 		return true;
 	}
 
 	@Override
 	public String toString() {
 		return "TenantAuthInfo [useRememberMe=" + useRememberMe
+				+ ", useWebAuthn=" + useWebAuthn
+				+ ", webAuthnDefinitionName=" + webAuthnDefinitionName
 				+ ", userAdminRoles=" + userAdminRoles + "]";
 	}
 

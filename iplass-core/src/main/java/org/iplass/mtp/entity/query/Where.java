@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -36,25 +36,27 @@ public class Where implements ASTNode {
 
 	public static Where newWhere(String where) {
 		try {
-			return QueryServiceHolder.getInstance().getQueryParser().parse(where, WhereSyntax.class);
+			return QueryServiceHolder.getInstance()
+					.getQueryParser()
+					.parse(where, WhereSyntax.class);
 		} catch (ParseException e) {
 			throw new QueryException(e.getMessage(), e);
 		}
 	}
-	
+
 	private Condition condition;
-	
+
 	public Where() {
 	}
-	
+
 	public Where(Condition condition) {
 		this.condition = condition;
 	}
-	
+
 	public void setCondition(Condition condition) {
 		this.condition = condition;
 	}
-	
+
 	public Condition getCondition() {
 		return condition;
 	}
@@ -100,6 +102,7 @@ public class Where implements ASTNode {
 			}
 		}
 	}
+
 	public ASTNode accept(ASTTransformer transformer) {
 		return transformer.visit(this);
 	}

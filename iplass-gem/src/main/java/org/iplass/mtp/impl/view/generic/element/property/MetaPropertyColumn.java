@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,9 +20,6 @@
 
 package org.iplass.mtp.impl.view.generic.element.property;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-
 import org.iplass.mtp.impl.entity.EntityContext;
 import org.iplass.mtp.impl.entity.EntityHandler;
 import org.iplass.mtp.impl.view.generic.editor.MetaPropertyEditor;
@@ -31,6 +28,9 @@ import org.iplass.mtp.view.generic.RequiredDisplayType;
 import org.iplass.mtp.view.generic.TextAlign;
 import org.iplass.mtp.view.generic.element.Element;
 import org.iplass.mtp.view.generic.element.property.PropertyColumn;
+
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
 
 /**
  * プロパティレイアウト情報のメタデータ
@@ -55,6 +55,12 @@ public class MetaPropertyColumn extends MetaPropertyLayout {
 	/** テキストの配置 */
 	private TextAlign textAlign;
 
+	/** ソートを許可 */
+	private boolean sortable = true;
+
+	/** 列を固定する */
+	private boolean frozen;
+
 	/** CSVの出力 */
 	private boolean outputCsv = true;
 
@@ -69,7 +75,7 @@ public class MetaPropertyColumn extends MetaPropertyLayout {
 	 * @return 列幅
 	 */
 	public int getWidth() {
-	    return width;
+		return width;
 	}
 
 	/**
@@ -77,7 +83,7 @@ public class MetaPropertyColumn extends MetaPropertyLayout {
 	 * @param width 列幅
 	 */
 	public void setWidth(int width) {
-	    this.width = width;
+		this.width = width;
 	}
 
 	/**
@@ -101,7 +107,7 @@ public class MetaPropertyColumn extends MetaPropertyLayout {
 	 * @return テキストの配置
 	 */
 	public TextAlign getTextAlign() {
-	    return textAlign;
+		return textAlign;
 	}
 
 	/**
@@ -109,7 +115,39 @@ public class MetaPropertyColumn extends MetaPropertyLayout {
 	 * @param textAlign テキストの配置
 	 */
 	public void setTextAlign(TextAlign textAlign) {
-	    this.textAlign = textAlign;
+		this.textAlign = textAlign;
+	}
+
+	/**
+	 * ソートを許可するかを取得します。
+	 * @return ソートを許可するか
+	 */
+	public boolean isSortable() {
+		return sortable;
+	}
+
+	/**
+	 * ソートを許可するかを設定します。
+	 * @param sortable ソートを許可するか
+	 */
+	public void setSortable(boolean sortable) {
+		this.sortable = sortable;
+	}
+
+	/**
+	 * 列を固定するかを取得します。
+	 * @return 列を固定するか
+	 */
+	public boolean isFrozen() {
+		return frozen;
+	}
+
+	/**
+	 * 列を固定するかを設定します。
+	 * @param frozen 列を固定するか
+	 */
+	public void setFrozen(boolean frozen) {
+		this.frozen = frozen;
 	}
 
 	/**
@@ -165,19 +203,22 @@ public class MetaPropertyColumn extends MetaPropertyLayout {
 		super.fillFrom(element, definitionId);
 		PropertyColumn p = (PropertyColumn) element;
 		width = p.getWidth();
-		nullOrderType =  p.getNullOrderType();
+		nullOrderType = p.getNullOrderType();
 		textAlign = p.getTextAlign();
+		sortable = p.isSortable();
+		frozen = p.isFrozen();
 		outputCsv = p.isOutputCsv();
 
-		if(p.getBulkUpdateEditor() != null) {
+		if (p.getBulkUpdateEditor() != null) {
 			MetaPropertyEditor editor = MetaPropertyEditor.createInstance(p.getBulkUpdateEditor());
 			EntityContext context = EntityContext.getCurrentContext();
 			EntityHandler entity = context.getHandlerById(definitionId);
 
-			fillCustomPropertyEditor(p.getBulkUpdateEditor(),p.getPropertyName(), context, entity);
+			fillCustomPropertyEditor(p.getBulkUpdateEditor(), p.getPropertyName(), context, entity);
 
 			if (editor != null) {
-				p.getBulkUpdateEditor().setPropertyName(p.getPropertyName());
+				p.getBulkUpdateEditor()
+						.setPropertyName(p.getPropertyName());
 				editor.applyConfig(p.getBulkUpdateEditor());
 				this.bulkUpdateEditor = editor;
 			}
@@ -205,6 +246,8 @@ public class MetaPropertyColumn extends MetaPropertyLayout {
 		p.setWidth(width);
 		p.setNullOrderType(nullOrderType);
 		p.setTextAlign(textAlign);
+		p.setSortable(sortable);
+		p.setFrozen(frozen);
 		p.setOutputCsv(outputCsv);
 		if (bulkUpdateEditor != null) {
 			p.setBulkUpdateEditor(bulkUpdateEditor.currentConfig(p.getPropertyName()));

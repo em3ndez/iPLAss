@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,7 +26,7 @@ import org.iplass.mtp.impl.properties.extend.BinaryType;
 import org.iplass.mtp.spi.Config;
 
 public class LobStoreMaintainer implements AdditionalStoreMaintainer {
-	
+
 	//FIXME longTextの場合を考慮してない？？
 
 	@Override

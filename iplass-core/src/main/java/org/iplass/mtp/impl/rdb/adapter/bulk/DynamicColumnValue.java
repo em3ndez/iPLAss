@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,25 +27,25 @@ import org.iplass.mtp.impl.rdb.adapter.RdbAdapter;
 public class DynamicColumnValue implements ColumnValue {
 	private String colName;
 	private RdbAdapter rdb;
-	
+
 	public DynamicColumnValue(String colName, RdbAdapter rdb) {
 		this.colName = colName;
 		this.rdb = rdb;
 	}
-	
+
 	@Override
 	public String colName() {
 		return colName;
 	}
-	
+
 	public void bindExpression(StringBuilder sb) {
 		sb.append("?");
 	}
-	
+
 	public void valueExpression(Object value, StringBuilder sb) {
 		sb.append(rdb.toSqlExp(value));
 	}
-	
+
 	public void setParameter(Object value, int index, PreparedStatement ps) throws SQLException {
 		rdb.setParameter(ps, index, value);
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -37,9 +37,9 @@ package org.iplass.mtp.web.template.report.definition;
  *
  */
 public class GroovyReportOutputLogicDefinition extends ReportOutputLogicDefinition {
-	
+
 	private static final long serialVersionUID = -6363313428336523812L;
-	
+
 	private String script;
 
 	public String getScript() {

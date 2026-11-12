@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -37,9 +37,14 @@ import java.util.Map;
 import org.iplass.mtp.entity.query.GroupBy.RollType;
 import org.iplass.mtp.entity.query.SortSpec.NullOrderingSpec;
 import org.iplass.mtp.entity.query.SortSpec.SortType;
-import org.iplass.mtp.entity.query.value.aggregate.Aggregate;
+import org.iplass.mtp.entity.query.value.aggregate.Avg;
+import org.iplass.mtp.entity.query.value.aggregate.Count;
+import org.iplass.mtp.entity.query.value.aggregate.Listagg;
+import org.iplass.mtp.entity.query.value.aggregate.Max;
+import org.iplass.mtp.entity.query.value.aggregate.Min;
 import org.iplass.mtp.entity.query.value.aggregate.StdDevPop;
 import org.iplass.mtp.entity.query.value.aggregate.StdDevSamp;
+import org.iplass.mtp.entity.query.value.aggregate.Sum;
 import org.iplass.mtp.entity.query.value.aggregate.VarPop;
 import org.iplass.mtp.entity.query.value.aggregate.VarSamp;
 import org.iplass.mtp.impl.i18n.I18nService;
@@ -54,8 +59,10 @@ import org.iplass.mtp.impl.rdb.adapter.bulk.BulkUpdateContext;
 import org.iplass.mtp.impl.rdb.adapter.bulk.OrOperatorBulkDeleteContext;
 import org.iplass.mtp.impl.rdb.adapter.bulk.PreparedBulkInsertContext;
 import org.iplass.mtp.impl.rdb.adapter.bulk.PreparedBulkUpdateContext;
+import org.iplass.mtp.impl.rdb.adapter.function.AggregateFunctionAdapter;
 import org.iplass.mtp.impl.rdb.adapter.function.DynamicTypedFunctionAdapter;
 import org.iplass.mtp.impl.rdb.adapter.function.StaticTypedFunctionAdapter;
+import org.iplass.mtp.impl.rdb.common.function.CountFunctionAdapter;
 import org.iplass.mtp.impl.rdb.common.function.CurrentDateFunctionAdapter;
 import org.iplass.mtp.impl.rdb.common.function.CurrentDateTimeFunctionAdapter;
 import org.iplass.mtp.impl.rdb.common.function.CurrentTimeFunctionAdapter;
@@ -64,6 +71,7 @@ import org.iplass.mtp.impl.rdb.sqlserver.function.SqlServerDateAddFunctionAdapte
 import org.iplass.mtp.impl.rdb.sqlserver.function.SqlServerDateDiffFunctionAdapter;
 import org.iplass.mtp.impl.rdb.sqlserver.function.SqlServerExtractDateFunctionAdapter;
 import org.iplass.mtp.impl.rdb.sqlserver.function.SqlServerInstrFunctionAdapter;
+import org.iplass.mtp.impl.rdb.sqlserver.function.SqlServerListaggFunctionAdapter;
 import org.iplass.mtp.impl.rdb.sqlserver.function.SqlServerModFunctionAdapter;
 import org.iplass.mtp.impl.rdb.sqlserver.function.SqlServerRoundFunctionAdapter;
 import org.iplass.mtp.impl.rdb.sqlserver.function.SqlServerSubstrFunctionAdapter;
@@ -72,7 +80,8 @@ import org.iplass.mtp.spi.ServiceRegistry;
 
 public class SqlServerRdbAdapter extends RdbAdapter {
 
-	private static final String[] optimizerHintBracket = {"OPTION (", ")"};
+	private static final String[] optimizerHintBracket = { "OPTION (", ")" };
+	private static final String[] tableHintBracket = { "WITH (", ")" };
 
 	private int lockTimeout = 0;
 	private String timestampFunction = "GETDATE()";
@@ -80,7 +89,7 @@ public class SqlServerRdbAdapter extends RdbAdapter {
 	private String monthsBetweenFunction = "DATEDIFF";
 	private boolean isUseSubQueryForIndexJoin = true;
 
-	private String optimizerHint = "FAST 100";
+	private String optimizerHint;
 
 	private boolean enableBindHint = false;
 	private boolean alwaysBind = false;
@@ -107,8 +116,8 @@ public class SqlServerRdbAdapter extends RdbAdapter {
 		addFunction(new StaticTypedFunctionAdapter("REPLACE", "REPLACE", String.class));
 		addFunction(new SqlServerModFunctionAdapter("MOD"));//dividend % divisor 作成してみた。
 		addFunction(new StaticTypedFunctionAdapter("SQRT", Double.class));
-		addFunction(new DynamicTypedFunctionAdapter("POWER", new int[]{0,1}));
-		addFunction(new DynamicTypedFunctionAdapter("ABS", new int[]{0}));
+		addFunction(new DynamicTypedFunctionAdapter("POWER", new int[] { 0, 1 }));
+		addFunction(new DynamicTypedFunctionAdapter("ABS", new int[] { 0 }));
 		addFunction(new StaticTypedFunctionAdapter("CEIL", "CEILING", Long.class));
 		addFunction(new StaticTypedFunctionAdapter("FLOOR", Long.class));
 		addFunction(new SqlServerRoundFunctionAdapter("ROUND"));
@@ -130,13 +139,36 @@ public class SqlServerRdbAdapter extends RdbAdapter {
 		addFunction(new CurrentDateTimeFunctionAdapter());
 		addFunction(new LocalTimeFunctionAdapter());
 
-		I18nService i18n = ServiceRegistry.getRegistry().getService(I18nService.class);
+		// 三角関数
+		addFunction(new StaticTypedFunctionAdapter("SIN", Double.class));
+		addFunction(new StaticTypedFunctionAdapter("COS", Double.class));
+		addFunction(new StaticTypedFunctionAdapter("TAN", Double.class));
+		addFunction(new StaticTypedFunctionAdapter("ASIN", Double.class));
+		addFunction(new StaticTypedFunctionAdapter("ACOS", Double.class));
+		addFunction(new StaticTypedFunctionAdapter("ATAN", Double.class));
+		addFunction(new StaticTypedFunctionAdapter("ATAN2", "ATN2", Double.class));
+
+		addAggregateFunction(Count.class, new CountFunctionAdapter());
+		addAggregateFunction(Sum.class, new AggregateFunctionAdapter<Sum>("SUM", null));
+		addAggregateFunction(Avg.class, new AggregateFunctionAdapter<Avg>("AVG", Double.class));
+		addAggregateFunction(Max.class, new AggregateFunctionAdapter<Max>("MAX", null));
+		addAggregateFunction(Min.class, new AggregateFunctionAdapter<Min>("MIN", null));
+		addAggregateFunction(StdDevPop.class, new AggregateFunctionAdapter<StdDevPop>("STDDEV_POP", "STDEVP", Double.class));
+		addAggregateFunction(StdDevSamp.class, new AggregateFunctionAdapter<StdDevSamp>("STDDEV_SAMP", "STDEV", Double.class));
+		addAggregateFunction(VarPop.class, new AggregateFunctionAdapter<VarPop>("VAR_POP", "VARP", Double.class));
+		addAggregateFunction(VarSamp.class, new AggregateFunctionAdapter<VarSamp>("VAR_SAMP", "VAR", Double.class));
+		addAggregateFunction(Listagg.class, new SqlServerListaggFunctionAdapter());
+
+		I18nService i18n = ServiceRegistry.getRegistry()
+				.getService(I18nService.class);
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
 		sdf.setTimeZone(i18n.getTimezone());
 
 		try {
-			dateMin = sdf.parse(DATE_MIN).getTime();
-			dateMax = sdf.parse(DATE_MAX).getTime();
+			dateMin = sdf.parse(DATE_MIN)
+					.getTime();
+			dateMax = sdf.parse(DATE_MAX)
+					.getTime();
 		} catch (ParseException e) {
 			throw new UnsupportedDataTypeException(e);
 		}
@@ -171,7 +203,7 @@ public class SqlServerRdbAdapter extends RdbAdapter {
 
 	@Override
 	public HintPlace getOptimizerHintPlace() {
-		return HintPlace.AFTER_SELECT;
+		return HintPlace.END_OF_SQL;
 	}
 
 	@Override
@@ -229,18 +261,21 @@ public class SqlServerRdbAdapter extends RdbAdapter {
 		}
 	}
 
+	@Override
 	public String toDateExpression(Date date) {
 		checkDateRange(date);
 		SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd");
 		return "CONVERT(DATE, '" + fmt.format(date) + "')";
 	}
 
+	@Override
 	public String toTimeExpression(Time time) {
 		checkDateRange(time);
 		SimpleDateFormat fmt = new SimpleDateFormat("HH:mm:ss");
 		return "CONVERT(DATETIME2, '1970-01-01 " + fmt.format(time) + "')";
 	}
 
+	@Override
 	public String toTimeStampExpression(Timestamp date) {
 		checkDateRange(date);
 		SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
@@ -250,25 +285,26 @@ public class SqlServerRdbAdapter extends RdbAdapter {
 		return "CONVERT(DATETIME2, '" + fmt.format(date) + "')";
 	}
 
+	@Override
 	public String systimestamp() {
 		return timestampFunction;
 	}
 
 	//テーブル構成に併せる
-	private static final String[] CAST_VARCHAR = {"CAST(", " AS NVARCHAR(4000))"};
-	private static final String[] CAST_BIGINT = {"CAST(", " AS BIGINT)"};
-	private static final String[] CAST_DECIMAL = {"CAST(", " AS NUMERIC(38))"};
-	private static final String[] CAST_DATE = {"CAST(CAST(", " AS DATETIME2) AS DATE)"};
-	private static final String[] CAST_DOUBLE = {"CAST(", " AS FLOAT)"};
-	private static final String[] CAST_TIME = {"CONVERT(DATETIME2, CONCAT('1970-01-01 ',FORMAT(CAST(", " AS DATETIME2),'HH:mm:ss')), 20)"};
-	private static final String[] CAST_TIMESTAMP = {"CAST(", " AS DATETIME2)"};
+	private static final String[] CAST_VARCHAR = { "CAST(", " AS NVARCHAR(4000))" };
+	private static final String[] CAST_BIGINT = { "CAST(", " AS BIGINT)" };
+	private static final String[] CAST_DECIMAL = { "CAST(", " AS NUMERIC(38))" };
+	private static final String[] CAST_DATE = { "CAST(CAST(", " AS DATETIME2) AS DATE)" };
+	private static final String[] CAST_DOUBLE = { "CAST(", " AS FLOAT)" };
+	private static final String[] CAST_TIME = { "CONVERT(DATETIME2, CONCAT('1970-01-01 ',FORMAT(CAST(", " AS DATETIME2),'HH:mm:ss')), 20)" };
+	private static final String[] CAST_TIMESTAMP = { "CAST(", " AS DATETIME2)" };
 
 	@Override
 	public String[] castExp(int sqlType, Integer lengthOrPrecision, Integer scale) {
 		switch (sqlType) {
 		case Types.VARCHAR:
 			if (lengthOrPrecision != null) {
-				return new String[]{"CAST(", " AS NVARCHAR(" + lengthOrPrecision + "))"};
+				return new String[] { "CAST(", " AS NVARCHAR(" + lengthOrPrecision + "))" };
 			} else {
 				return CAST_VARCHAR;
 			}
@@ -281,20 +317,20 @@ public class SqlServerRdbAdapter extends RdbAdapter {
 				} else {
 					if (scale < 0) {
 						//MySQLは、負のスケールを設定できないため、取り得る最大桁数を設定し、ROUND関数で切り捨てる。
-						return new String[]{"ROUND(CAST(",  " AS NUMERIC(38))," + scale + ")"};
+						return new String[] { "ROUND(CAST(", " AS NUMERIC(38))," + scale + ")" };
 					} else {
-						return new String[]{"CAST(", " AS NUMERIC(38," + scale + "))"};
+						return new String[] { "CAST(", " AS NUMERIC(38," + scale + "))" };
 					}
 				}
 			} else {
 				if (scale == null) {
-					return new String[]{"CAST(", " AS NUMERIC(" + lengthOrPrecision + ",0))"};
+					return new String[] { "CAST(", " AS NUMERIC(" + lengthOrPrecision + ",0))" };
 				} else {
 					if (scale < 0) {
 						//MySQLは、負のスケールを設定できないため、取り得る最大桁数を設定し、ROUND関数で切り捨てる。
-						return new String[]{"ROUND(CAST(",  " AS NUMERIC(" + lengthOrPrecision + -scale + ",0))," + scale + ")"};
+						return new String[] { "ROUND(CAST(", " AS NUMERIC(" + lengthOrPrecision + -scale + ",0))," + scale + ")" };
 					} else {
-						return new String[]{"CAST(",  " AS NUMERIC(" + lengthOrPrecision + "," + scale + "))"};
+						return new String[] { "CAST(", " AS NUMERIC(" + lengthOrPrecision + "," + scale + "))" };
 					}
 				}
 			}
@@ -322,6 +358,7 @@ public class SqlServerRdbAdapter extends RdbAdapter {
 		return super.cast(fromSqlType, toSqlType, valExpr, lengthOrPrecision, scale);
 	}
 
+	@Override
 	public MultiInsertContext createMultiInsertContext(Statement stmt) {
 		return new SqlServerMultiInsertContext(stmt);
 	}
@@ -399,8 +436,8 @@ public class SqlServerRdbAdapter extends RdbAdapter {
 	@Override
 	public Object[] toLimitSqlBindValue(int limitCount,
 			int offset) {
-		return new Integer[]{
-				Integer.valueOf(offset), Integer.valueOf(limitCount)};
+		return new Integer[] {
+				Integer.valueOf(offset), Integer.valueOf(limitCount) };
 	}
 
 	@Override
@@ -484,7 +521,7 @@ public class SqlServerRdbAdapter extends RdbAdapter {
 
 	@Override
 	public String likePattern(String str) {
-        return str;
+		return str;
 	}
 
 	@Override
@@ -520,7 +557,7 @@ public class SqlServerRdbAdapter extends RdbAdapter {
 				break;
 			}
 		}
-		sb.append(sortValue);	// FIXME サブクエリにOrder By指定するとエラー ← でもサブクエリかどうかなんてここでは判断できない
+		sb.append(sortValue); // FIXME サブクエリにOrder By指定するとエラー ← でもサブクエリかどうかなんてここでは判断できない
 		if (sortType != null) {
 			switch (sortType) {
 			case ASC:
@@ -541,16 +578,16 @@ public class SqlServerRdbAdapter extends RdbAdapter {
 
 		if (rdbTimeZone() == null) {
 			//CURRENT_TIMEZONE()は、SQL Serverでは未サポートなので、rdbTimeZone指定されている前提で
-			String[] ret = {"", ""};
+			String[] ret = { "", "" };
 			return ret;
 		} else {
 			return new String[] {
 					"",
 					" AT TIME ZONE '" + maptz(rdbTimeZone().getID()) + "' AT TIME ZONE '" + maptz(to) + "'"
-					};
+			};
 		}
 	}
-	
+
 	private String maptz(String timeZone) {
 		if (timeZoneMap == null) {
 			return timeZone;
@@ -600,7 +637,7 @@ public class SqlServerRdbAdapter extends RdbAdapter {
 		sb.append(tableName);
 		sb.append(" FROM ");
 		sb.append(baseTableName);
-		sb.append(" WHERE 1=2");	// レコードを作らないため
+		sb.append(" WHERE 1=2"); // レコードを作らないため
 		return sb.toString();
 	}
 
@@ -657,23 +694,6 @@ public class SqlServerRdbAdapter extends RdbAdapter {
 		return thresholdCountOfUsePrepareStatement;
 	}
 
-	@Override
-	public String aggregateFunctionName(Aggregate agg) {
-		if (agg instanceof StdDevPop) {
-			return "STDEVP";
-		}
-		if (agg instanceof StdDevSamp) {
-			return "STDEV";
-		}
-		if (agg instanceof VarPop) {
-			return "VARP";
-		}
-		if (agg instanceof VarSamp) {
-			return "VAR";
-		}
-		return super.aggregateFunctionName(agg);
-	}
-
 	public void setThresholdCountOfUsePrepareStatement(
 			int thresholdCountOfUsePrepareStatement) {
 		this.thresholdCountOfUsePrepareStatement = thresholdCountOfUsePrepareStatement;
@@ -702,7 +722,8 @@ public class SqlServerRdbAdapter extends RdbAdapter {
 	@Override
 	public ResultSet getTableNames(String tableNamePattern, Connection con) throws SQLException {
 		DatabaseMetaData dbMeta = con.getMetaData();
-		return dbMeta.getTables(null, dbMeta.getUserName().toUpperCase(), tableNamePattern, null);
+		return dbMeta.getTables(null, dbMeta.getUserName()
+				.toUpperCase(), tableNamePattern, null);
 	}
 
 	@Override
@@ -712,18 +733,17 @@ public class SqlServerRdbAdapter extends RdbAdapter {
 
 	@Override
 	public boolean isSupportOptimizerHint() {
-		// FIXME サブクエリに付かないようにする対応が必要
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean isSupportTableHint() {
-		return false;
+		return true;
 	}
 
 	@Override
 	public String[] getTableHintBracket() {
-		return null;
+		return tableHintBracket;
 	}
 
 	@Override
@@ -736,11 +756,12 @@ public class SqlServerRdbAdapter extends RdbAdapter {
 
 		// FIXME Select句やFrom句にWhere句が存在するサブクエリがあったらダメ
 
-		int idxWhere = sql.toUpperCase().indexOf("WHERE");
+		int idxWhere = sql.toUpperCase()
+				.indexOf("WHERE");
 		if (idxWhere > 0) {
 			// Where句あり
 			lockSql.append(sql.substring(0, idxWhere - 1) + " " + rowLockExpression() + " " + sql.substring(idxWhere, sql.length()));
-		} else if (idxWhere < 0){
+		} else if (idxWhere < 0) {
 			// Where句なし(エラーにした方がよい？)
 			lockSql.append(sql + " " + rowLockExpression());
 		} else {
@@ -765,7 +786,7 @@ public class SqlServerRdbAdapter extends RdbAdapter {
 	public String getDefaultOrderByForLimit() {
 		return " ORDER BY (SELECT NULL) ";
 	}
-	
+
 	public Map<String, String> getTimeZoneMap() {
 		return timeZoneMap;
 	}
@@ -808,7 +829,8 @@ public class SqlServerRdbAdapter extends RdbAdapter {
 		StringBuilder sb = new StringBuilder();
 
 		// LobID
-		sb.append(String.format("TRIM(SUBSTRING(c%d, 3, 16)) AS %s%s", colNo, colName, lobIdSuffix)).append(",");
+		sb.append(String.format("TRIM(SUBSTRING(c%d, 3, 16)) AS %s%s", colNo, colName, lobIdSuffix))
+				.append(",");
 		// Text
 		sb.append(String.format("RIGHT(c%d, LEN(c%d) - 21) AS %s", colNo, colNo, colName));
 
@@ -823,15 +845,30 @@ public class SqlServerRdbAdapter extends RdbAdapter {
 
 		// ビュー削除DDL
 		if (withDropView) {
-			sb.append("DROP VIEW ").append(viewName).append(lf);
-			sb.append("GO").append(lf).append(lf);
+			sb.append("DROP VIEW ")
+					.append(viewName)
+					.append(lf);
+			sb.append("GO")
+					.append(lf)
+					.append(lf);
 		}
 
 		// ビュー作成DDL
-		sb.append("CREATE VIEW ").append(viewName).append(" AS").append(lf);
-		sb.append(selectSql).append(lf);
-		sb.append("GO").append(lf).append(lf);
+		sb.append("CREATE VIEW ")
+				.append(viewName)
+				.append(" AS")
+				.append(lf);
+		sb.append(selectSql)
+				.append(lf);
+		sb.append("GO")
+				.append(lf)
+				.append(lf);
 
 		return sb.toString();
+	}
+
+	@Override
+	public boolean isRequireOrderByExpressionInSelectForDistinct() {
+		return true;
 	}
 }

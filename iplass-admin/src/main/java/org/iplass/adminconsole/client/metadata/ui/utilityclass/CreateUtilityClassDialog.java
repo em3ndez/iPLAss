@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -63,9 +63,14 @@ public class CreateUtilityClassDialog extends MetaDataCreateDialog {
 			definition.setDisplayName(saveInfo.getDisplayName());
 			definition.setDescription(saveInfo.getDescription());
 
-			if (saveInfo.getName().contains(".")) {
-				String packageName = saveInfo.getName().substring(0, saveInfo.getName().lastIndexOf("."));
-				String className = saveInfo.getName().substring(saveInfo.getName().lastIndexOf(".") + 1);
+			if (saveInfo.getName()
+					.contains(".")) {
+				String packageName = saveInfo.getName()
+						.substring(0, saveInfo.getName()
+								.lastIndexOf("."));
+				String className = saveInfo.getName()
+						.substring(saveInfo.getName()
+								.lastIndexOf(".") + 1);
 				String scriptValue = "package " + packageName + ";\n\nclass " + className + " {\n}";
 				definition.setScript(scriptValue);
 			} else {

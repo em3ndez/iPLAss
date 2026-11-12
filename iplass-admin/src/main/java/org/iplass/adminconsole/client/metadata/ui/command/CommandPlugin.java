@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -35,7 +35,6 @@ import org.iplass.mtp.command.definition.CommandDefinition;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.smartgwt.client.util.SC;
-
 
 public class CommandPlugin extends DefaultMetaDataPlugin {
 
@@ -103,23 +102,27 @@ public class CommandPlugin extends DefaultMetaDataPlugin {
 	@Override
 	protected void itemDelete(final MetaDataItemMenuTreeNode itemNode) {
 		MetaDataServiceAsync service = MetaDataServiceFactory.get();
-		service.deleteDefinition(TenantInfoHolder.getId(), CommandDefinition.class.getName(), itemNode.getDefName(), new AsyncCallback<AdminDefinitionModifyResult>() {
-			public void onFailure(Throwable caught) {
-				// 失敗時
-				SC.warn(AdminClientMessageUtil.getString("ui_metadata_command_CommandPluginManager_failedToDeleteCommand") + caught.getMessage());
-			}
-			public void onSuccess(AdminDefinitionModifyResult result) {
-				if (result.isSuccess()) {
-					SC.say(AdminClientMessageUtil.getString("ui_metadata_command_CommandPluginManager_completion"),
-							AdminClientMessageUtil.getString("ui_metadata_command_CommandPluginManager_deleteCommandComp"));
+		service.deleteDefinition(TenantInfoHolder.getId(), CommandDefinition.class.getName(), itemNode.getDefName(),
+				new AsyncCallback<AdminDefinitionModifyResult>() {
+					public void onFailure(Throwable caught) {
+						// 失敗時
+						SC.warn(AdminClientMessageUtil.getString("ui_metadata_command_CommandPluginManager_failedToDeleteCommand")
+								+ caught.getMessage());
+					}
 
-					refresh();
-					removeTab(itemNode);
-				} else {
-					SC.warn(AdminClientMessageUtil.getString("ui_metadata_command_CommandPluginManager_failedToDeleteCommand") + result.getMessage());
-				}
-			}
-		});
+					public void onSuccess(AdminDefinitionModifyResult result) {
+						if (result.isSuccess()) {
+							SC.say(AdminClientMessageUtil.getString("ui_metadata_command_CommandPluginManager_completion"),
+									AdminClientMessageUtil.getString("ui_metadata_command_CommandPluginManager_deleteCommandComp"));
+
+							refresh();
+							removeTab(itemNode);
+						} else {
+							SC.warn(AdminClientMessageUtil.getString("ui_metadata_command_CommandPluginManager_failedToDeleteCommand")
+									+ result.getMessage());
+						}
+					}
+				});
 	}
 
 	@Override
@@ -129,6 +132,6 @@ public class CommandPlugin extends DefaultMetaDataPlugin {
 
 	@Override
 	protected Class<?>[] workspaceContentsPaneClass() {
-		return new Class[]{CommandEditPane.class};
+		return new Class[] { CommandEditPane.class };
 	}
 }

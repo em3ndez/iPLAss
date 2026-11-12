@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,10 +27,10 @@ public class ColumnPosition implements Serializable, Comparable<ColumnPosition> 
 
 	private int pageNo;
 	private int columnNo;
-	
+
 	public ColumnPosition() {
 	}
-	
+
 	public ColumnPosition(int pageNo, int columnNo) {
 		super();
 		this.pageNo = pageNo;
@@ -40,16 +40,19 @@ public class ColumnPosition implements Serializable, Comparable<ColumnPosition> 
 	public int getPageNo() {
 		return pageNo;
 	}
+
 	public void setPageNo(int pageNo) {
 		this.pageNo = pageNo;
 	}
+
 	public int getColumnNo() {
 		return columnNo;
 	}
+
 	public void setColumnNo(int columnNo) {
 		this.columnNo = columnNo;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;

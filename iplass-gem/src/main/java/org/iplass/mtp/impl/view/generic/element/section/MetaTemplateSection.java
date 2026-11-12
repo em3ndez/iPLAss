@@ -1,30 +1,25 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
- * 
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
+ *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
 package org.iplass.mtp.impl.view.generic.element.section;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.iplass.mtp.impl.i18n.I18nUtil;
-import org.iplass.mtp.impl.i18n.MetaLocalizedString;
 import org.iplass.mtp.impl.util.ObjectUtil;
 import org.iplass.mtp.view.generic.element.Element;
 import org.iplass.mtp.view.generic.element.section.TemplateSection;
@@ -45,12 +40,6 @@ public class MetaTemplateSection extends MetaSection {
 	/** テンプレート名 */
 	private String templateName;
 
-	/** タイトル */
-	private String title;
-
-	/** id */
-	private String id;
-
 	/** リンクを表示するか */
 	private boolean showLink;
 
@@ -60,8 +49,8 @@ public class MetaTemplateSection extends MetaSection {
 	/** 詳細表示非表示設定 */
 	private boolean hideView;
 
-	/** 多言語設定情報 */
-	private List<MetaLocalizedString> localizedTitleList = new ArrayList<MetaLocalizedString>();
+	/** セクション内に配置した場合に枠線を表示 */
+	private boolean dispBorderInSection;
 
 	/**
 	 * テンプレート名を取得します。
@@ -80,43 +69,11 @@ public class MetaTemplateSection extends MetaSection {
 	}
 
 	/**
-	 * タイトルを取得します。
-	 * @return タイトル
-	 */
-	public String getTitle() {
-	    return title;
-	}
-
-	/**
-	 * タイトルを設定します。
-	 * @param title タイトル
-	 */
-	public void setTitle(String title) {
-	    this.title = title;
-	}
-
-	/**
-	 * idを取得します。
-	 * @return id
-	 */
-	public String getId() {
-	    return id;
-	}
-
-	/**
-	 * idを設定します。
-	 * @param id id
-	 */
-	public void setId(String id) {
-	    this.id = id;
-	}
-
-	/**
 	 * リンクを表示するかを取得します。
 	 * @return リンクを表示するか
 	 */
 	public boolean isShowLink() {
-	    return showLink;
+		return showLink;
 	}
 
 	/**
@@ -124,7 +81,7 @@ public class MetaTemplateSection extends MetaSection {
 	 * @param showLink リンクを表示するか
 	 */
 	public void setShowLink(boolean showLink) {
-	    this.showLink = showLink;
+		this.showLink = showLink;
 	}
 
 	/**
@@ -132,7 +89,7 @@ public class MetaTemplateSection extends MetaSection {
 	 * @return 詳細編集非表示設定
 	 */
 	public boolean isHideDetail() {
-	    return hideDetail;
+		return hideDetail;
 	}
 
 	/**
@@ -140,7 +97,7 @@ public class MetaTemplateSection extends MetaSection {
 	 * @param hideDetail 詳細編集非表示設定
 	 */
 	public void setHideDetail(boolean hideDetail) {
-	    this.hideDetail = hideDetail;
+		this.hideDetail = hideDetail;
 	}
 
 	/**
@@ -148,7 +105,7 @@ public class MetaTemplateSection extends MetaSection {
 	 * @return 詳細表示非表示設定
 	 */
 	public boolean isHideView() {
-	    return hideView;
+		return hideView;
 	}
 
 	/**
@@ -156,23 +113,23 @@ public class MetaTemplateSection extends MetaSection {
 	 * @param hideView 詳細表示非表示設定
 	 */
 	public void setHideView(boolean hideView) {
-	    this.hideView = hideView;
+		this.hideView = hideView;
 	}
 
 	/**
-	 * 多言語設定情報を取得します。
-	 * @return リスト
+	 * セクション内に配置した場合に枠線を表示を取得します。
+	 * @return セクション内に配置した場合に枠線を表示
 	 */
-	public List<MetaLocalizedString> getLocalizedTitleList() {
-		return localizedTitleList;
+	public boolean isDispBorderInSection() {
+		return dispBorderInSection;
 	}
 
 	/**
-	 * 多言語設定情報を設定します。
-	 * @param リスト
+	 * セクション内に配置した場合に枠線を表示を設定します。
+	 * @param dispBorderInSection セクション内に配置した場合に枠線を表示
 	 */
-	public void setLocalizedTitleList(List<MetaLocalizedString> localizedTitleList) {
-		this.localizedTitleList = localizedTitleList;
+	public void setDispBorderInSection(boolean dispBorderInSection) {
+		this.dispBorderInSection = dispBorderInSection;
 	}
 
 	@Override
@@ -186,14 +143,10 @@ public class MetaTemplateSection extends MetaSection {
 
 		TemplateSection section = (TemplateSection) element;
 		this.templateName = section.getTemplateName();
-		title = section.getTitle();
-		id = section.getId();
 		this.showLink = section.isShowLink();
 		this.hideDetail = section.isHideDetail();
 		this.hideView = section.isHideView();
-
-		// 言語毎の文字情報設定
-		localizedTitleList = I18nUtil.toMeta(section.getLocalizedTitleList());
+		this.dispBorderInSection = section.isDispBorderInSection();
 	}
 
 	@Override
@@ -202,12 +155,10 @@ public class MetaTemplateSection extends MetaSection {
 		super.fillTo(section, definitionId);
 
 		section.setTemplateName(templateName);
-		section.setTitle(title);
-		section.setId(id);
 		section.setShowLink(showLink);
 		section.setHideDetail(hideDetail);
 		section.setHideView(hideView);
-		section.setLocalizedTitleList(I18nUtil.toDef(localizedTitleList));
+		section.setDispBorderInSection(dispBorderInSection);
 
 		return section;
 	}

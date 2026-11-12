@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,6 +31,7 @@ import org.iplass.adminconsole.client.base.event.DataChangedHandler;
 import org.iplass.adminconsole.client.base.i18n.AdminClientMessageUtil;
 import org.iplass.adminconsole.client.base.rpc.AdminAsyncCallback;
 import org.iplass.adminconsole.client.base.tenant.TenantInfoHolder;
+import org.iplass.adminconsole.client.base.ui.widget.MtpListGrid;
 import org.iplass.adminconsole.client.base.ui.widget.MtpWidgetConstants;
 import org.iplass.adminconsole.client.base.ui.widget.ScriptEditorDialogHandler;
 import org.iplass.adminconsole.client.base.ui.widget.ScriptEditorDialogMode;
@@ -57,7 +58,6 @@ import com.smartgwt.client.widgets.events.ClickHandler;
 import com.smartgwt.client.widgets.form.DynamicForm;
 import com.smartgwt.client.widgets.form.fields.ButtonItem;
 import com.smartgwt.client.widgets.form.fields.DateTimeItem;
-import com.smartgwt.client.widgets.grid.ListGrid;
 import com.smartgwt.client.widgets.grid.ListGridField;
 import com.smartgwt.client.widgets.grid.ListGridRecord;
 import com.smartgwt.client.widgets.layout.HLayout;
@@ -95,7 +95,8 @@ public class LogExplorerConditionPane extends VLayout {
 		final ToolStripButton refreshButton = new ToolStripButton();
 		refreshButton.setIcon(MtpWidgetConstants.ICON_REFRESH);
 		refreshButton.setHoverWrap(false);
-		refreshButton.setTooltip(SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_tools_logexplorer_LogExplorerConditionPane_refreshConditionList")));
+		refreshButton.setTooltip(
+				SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_tools_logexplorer_LogExplorerConditionPane_refreshConditionList")));
 		refreshButton.addClickHandler(new ClickHandler() {
 
 			@Override
@@ -221,7 +222,7 @@ public class LogExplorerConditionPane extends VLayout {
 			service.applyLogConditions(TenantInfoHolder.getId(), conditions, new AdminAsyncCallback<String>() {
 
 				@Override
-				protected void beforeFailure(Throwable caught){
+				protected void beforeFailure(Throwable caught) {
 					SmartGWTUtil.hideProgress();
 				};
 
@@ -244,7 +245,7 @@ public class LogExplorerConditionPane extends VLayout {
 
 			LogConditionInfo info = null;
 			if (record != null) {
-				info = (LogConditionInfo)record.getAttributeAsObject(FIELD_NAME.VALUE_OBJECT.name());
+				info = (LogConditionInfo) record.getAttributeAsObject(FIELD_NAME.VALUE_OBJECT.name());
 			}
 			editPane.setCondition(info);
 		}
@@ -267,7 +268,7 @@ public class LogExplorerConditionPane extends VLayout {
 
 	}
 
-	private class LogConditionListGrid extends ListGrid {
+	private class LogConditionListGrid extends MtpListGrid {
 
 		private LogConditionDS ds;
 
@@ -275,16 +276,12 @@ public class LogExplorerConditionPane extends VLayout {
 
 			setWidth100();
 			setHeight100();
-			//setShowAllRecords(true);		//これをtrueにすると件数が多い場合に全て表示されない不具合発生
-			setLeaveScrollbarGap(false);	//falseで縦スクロールバー領域が自動表示制御される
-			setShowRowNumbers(true);		//行番号表示
 
-			setCanResizeFields(true);	//列幅変更可
-			setCanSort(false);			//ソート不可
-			setCanGroupBy(false);		//Group化不可
-			setCanPickFields(false);	//列の選択不可
-			setCanAutoFitFields(false);	//列幅の自動調整不可(崩れるので)
-			setCanDragSelectText(true);	//セルの値をドラッグで選択可能（コピー用）にする
+			//データ件数が多い場合を考慮し、false
+			setShowAllRecords(false);
+
+			//行番号表示
+			setShowRowNumbers(true);
 
 			refreshGrid();
 		}
@@ -322,7 +319,7 @@ public class LogExplorerConditionPane extends VLayout {
 		public List<LogConditionInfo> getEditConditions() {
 			List<LogConditionInfo> result = new ArrayList<>();
 			for (ListGridRecord record : getRecords()) {
-				result.add((LogConditionInfo)record.getAttributeAsObject(FIELD_NAME.VALUE_OBJECT.name()));
+				result.add((LogConditionInfo) record.getAttributeAsObject(FIELD_NAME.VALUE_OBJECT.name()));
 			}
 			return result.isEmpty() ? null : result;
 		}
@@ -362,12 +359,12 @@ public class LogExplorerConditionPane extends VLayout {
 			});
 			btnCancel = new IButton("Cancel");
 			btnCancel.setDisabled(true);
-			btnCancel.addClickHandler((event)-> {
+			btnCancel.addClickHandler((event) -> {
 				cancelCondition();
 			});
 			pnlHeader.setMembers(btnOK, btnCancel);
 
-			selLevel =  new MtpSelectItem();
+			selLevel = new MtpSelectItem();
 			selLevel.setTitle("Level");
 			LinkedHashMap<String, String> levelMap = new LinkedHashMap<>();
 			levelMap.put("TRACE", "TRACE");
@@ -394,7 +391,8 @@ public class LogExplorerConditionPane extends VLayout {
 			btnEditCondition.setStartRow(true);
 			btnEditCondition.setColSpan(3);
 			btnEditCondition.setAlign(Alignment.RIGHT);
-			btnEditCondition.setPrompt(SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_tools_logexplorer_LogExplorerConditionPane_dispEditDialogCondition")));
+			btnEditCondition.setPrompt(SmartGWTUtil
+					.getHoverString(AdminClientMessageUtil.getString("ui_tools_logexplorer_LogExplorerConditionPane_dispEditDialogCondition")));
 			btnEditCondition.addClickHandler((event) -> {
 				MetaDataUtil.showScriptEditDialog(ScriptEditorDialogMode.GROOVY_SCRIPT,
 						SmartGWTUtil.getStringValue(txaCondition),
@@ -407,6 +405,7 @@ public class LogExplorerConditionPane extends VLayout {
 							public void onSave(String text) {
 								txaCondition.setValue(text);
 							}
+
 							@Override
 							public void onCancel() {
 							}
@@ -441,7 +440,7 @@ public class LogExplorerConditionPane extends VLayout {
 
 			SectionStack stack = new SectionStack();
 			SectionStackSection section = new SectionStackSection("Condition Setting");
-			section.setCanCollapse(false);	//CLOSE不可
+			section.setCanCollapse(false); //CLOSE不可
 
 			section.addItem(layout);
 			stack.addSection(section);
@@ -544,6 +543,5 @@ public class LogExplorerConditionPane extends VLayout {
 		}
 
 	}
-
 
 }

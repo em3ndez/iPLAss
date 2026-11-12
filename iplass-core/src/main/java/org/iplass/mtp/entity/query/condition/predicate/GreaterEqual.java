@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -37,8 +37,7 @@ public class GreaterEqual extends ComparisonPredicate {
 
 	public GreaterEqual() {
 	}
-	
-	
+
 	public GreaterEqual(String propertyName, Object valueLiteral) {
 		super(propertyName, valueLiteral);
 	}
@@ -46,7 +45,6 @@ public class GreaterEqual extends ComparisonPredicate {
 	public GreaterEqual(ValueExpression property, ValueExpression value) {
 		super(property, value);
 	}
-
 
 	public void accept(ConditionVisitor visitor) {
 		if (visitor.visit(this)) {
@@ -60,14 +58,14 @@ public class GreaterEqual extends ComparisonPredicate {
 			}
 		}
 	}
-	
+
 	@Override
 	protected String getOpString() {
 		return ">=";
 	}
+
 	public ASTNode accept(ASTTransformer transformer) {
 		return transformer.visit(this);
 	}
 
-	
 }

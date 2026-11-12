@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,7 +22,7 @@ package org.iplass.mtp.web.actionmapping.definition;
 
 import org.iplass.mtp.definition.DefinitionModifyResult;
 
-public class ActionMappingDefinitionModifyResult extends DefinitionModifyResult{
+public class ActionMappingDefinitionModifyResult extends DefinitionModifyResult {
 
 	private static final long serialVersionUID = -602888911643019662L;
 

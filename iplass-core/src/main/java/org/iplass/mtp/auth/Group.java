@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,7 +25,7 @@ import org.iplass.mtp.entity.GenericEntity;
 /**
  * グループを表す。
  * Entity定義上、mtp.auth.Groupで定義される。
- * グループにはユーザを所属させることが可能。
+ * グループにはユーザーを所属させることが可能。
  * 
  * @author K.Higuchi
  *
@@ -37,42 +37,42 @@ public class Group extends GenericEntity {
 	public static final String CODE = "code";
 	public static final String PARENT = "parent";
 	public static final String CHILDREN = "children";
-	
+
 	public Group() {
 		setDefinitionName(DEFINITION_NAME);
 	}
-	
+
 	public Group(String oid, String code) {
 		setDefinitionName(DEFINITION_NAME);
 		setOid(oid);
 		setCode(code);
 	}
-	
+
 	public String getCode() {
 		return getValue(CODE);
 	}
-	
+
 	public void setCode(String code) {
 		setValue(CODE, code);
 	}
-	
+
 	public Group getParent() {
 		return getValue(PARENT);
 	}
-	
+
 	public void setParent(Group parent) {
 		setValue(PARENT, parent);
 	}
-	
+
 	public Group[] getChildren() {
 		Object g = getValue(CHILDREN);
 		if (g instanceof Group) {
-			return new Group[]{(Group) g};
+			return new Group[] { (Group) g };
 		} else {
 			return (Group[]) g;
 		}
 	}
-	
+
 	public void setChildren(Group[] children) {
 		setValue(CHILDREN, children);
 	}

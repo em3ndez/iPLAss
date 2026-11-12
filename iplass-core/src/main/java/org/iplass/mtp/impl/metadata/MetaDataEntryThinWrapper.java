@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,17 +20,16 @@
 
 package org.iplass.mtp.impl.metadata;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-
-@XmlRootElement(name="metaDataEntry")
+@XmlRootElement(name = "metaDataEntry")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class MetaDataEntryThinWrapper {
 
-	@XmlJavaTypeAdapter(value=ObjectXmlAdapter.class)
+	@XmlJavaTypeAdapter(value = ObjectXmlAdapter.class)
 	private RootMetaData metaData;
 
 	public MetaDataEntryThinWrapper() {

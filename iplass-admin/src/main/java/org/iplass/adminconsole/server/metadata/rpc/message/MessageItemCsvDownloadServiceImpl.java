@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,9 +24,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.iplass.adminconsole.server.base.io.download.AdminDownloadService;
 import org.iplass.adminconsole.server.base.io.download.DownloadRuntimeException;
 import org.iplass.adminconsole.server.base.io.download.DownloadUtil;
@@ -38,6 +35,9 @@ import org.iplass.mtp.message.MessageManager;
 import org.iplass.mtp.spi.ServiceRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class MessageItemCsvDownloadServiceImpl extends AdminDownloadService {
 
@@ -59,15 +59,16 @@ public class MessageItemCsvDownloadServiceImpl extends AdminDownloadService {
 
 	private void writeCsv(HttpServletResponse resp, String definitionName, String fileName) {
 
-		AdminAuditLoggingService aals = ServiceRegistry.getRegistry().getService(AdminAuditLoggingService.class);
+		AdminAuditLoggingService aals = ServiceRegistry.getRegistry()
+				.getService(AdminAuditLoggingService.class);
 		aals.logDownload("MessageItemCsvDownload", fileName, "name:" + fileName);
 
-		MessageManager mm = ManagerLocator.getInstance().getManager(MessageManager.class);
+		MessageManager mm = ManagerLocator.getInstance()
+				.getManager(MessageManager.class);
 		MessageCategory category = mm.get(definitionName);
 
-
 		//Writerの生成
-		try (MessageItemCsvWriter writer = new MessageItemCsvWriter(resp.getOutputStream())){
+		try (MessageItemCsvWriter writer = new MessageItemCsvWriter(resp.getOutputStream())) {
 
 			DownloadUtil.setCsvResponseHeader(resp, fileName);
 
@@ -76,7 +77,8 @@ public class MessageItemCsvDownloadServiceImpl extends AdminDownloadService {
 
 			if (category != null) {
 				if (category.getMessageItems() != null) {
-					for (MessageItem item : category.getMessageItems().values()) {
+					for (MessageItem item : category.getMessageItems()
+							.values()) {
 						writer.writeMessageItem(item);
 					}
 				}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -50,7 +50,9 @@ public class RoleContext {
 
 		if (roleConditionExp != null) {
 			roleCondition = new Script[roleConditionExp.length];
-			ScriptEngine se = ExecuteContext.getCurrentContext().getTenantContext().getScriptEngine();
+			ScriptEngine se = ExecuteContext.getCurrentContext()
+					.getTenantContext()
+					.getScriptEngine();
 			for (int i = 0; i < roleConditionExp.length; i++) {
 				try {
 					roleCondition[i] = se.createScript(roleConditionExp[i], SCRIPT_PREFIX + "_" + roleCode + "_" + i);
@@ -72,26 +74,28 @@ public class RoleContext {
 	// user.accountId='admin' && user.groupCode.any{it.matches('hoge.*')} && user.rank.level > 5
 	public boolean userInRole(AuthContextHolder userAuthContext) {
 
-		//admin（かつ、他テナントユーザでない）は全権限保持
+		//admin（かつ、他テナントユーザーでない）は全権限保持
 		UserBinding user = userAuthContext.newUserBinding(tenantAuthContext);
 		if (user.isGrantAllPermissions()) {
 			return true;
 		}
 
 		if (roleCondition != null) {
-			ScriptEngine se = ExecuteContext.getCurrentContext().getTenantContext().getScriptEngine();
+			ScriptEngine se = ExecuteContext.getCurrentContext()
+					.getTenantContext()
+					.getScriptEngine();
 			ScriptContext sc = se.newScriptContext();
 			sc.setAttribute("user", user);
 			sc.setAttribute("session", SessionBinding.newSessionBinding());
 			sc.setAttribute("request", RequestContextBinding.newRequestContextBinding());
 
-			for (Script s: roleCondition) {
+			for (Script s : roleCondition) {
 				if (s != null) {
 					Boolean ret;
 					try {
 						ret = (Boolean) s.eval(sc);
 					} catch (RuntimeException e) {
-						logger.error("can not eval condition expression. so return false:role=" + roleCode  + ":"+ e.getMessage(), e);
+						logger.error("can not eval condition expression. so return false:role=" + roleCode + ":" + e.getMessage(), e);
 						return false;
 					}
 					if (ret != null && ret.booleanValue()) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,29 +24,33 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.iplass.mtp.impl.web.WebRequestStack;
 import org.iplass.mtp.impl.web.WebResponseWrapper;
 
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 public class ResponseUtil {
 
-	public static String getIncludeJspContents(String includePath, Func beforeIncludeFunction, Func afterIncludeFunction) throws ServletException, IOException {
+	public static String getIncludeJspContents(String includePath, Func beforeIncludeFunction, Func afterIncludeFunction)
+			throws ServletException, IOException {
 		return getIncludeJspContents(includePath, beforeIncludeFunction, afterIncludeFunction, new StringWriter());
 	}
 
-	public static String getIncludeJspContents(String includePath, Func beforeFunction, Func afterFunction, Writer writer) throws ServletException, IOException {
+	public static String getIncludeJspContents(String includePath, Func beforeFunction, Func afterFunction, Writer writer)
+			throws ServletException, IOException {
 		WebRequestStack stack = WebRequestStack.getCurrent();
 		HttpServletRequest req = stack.getRequest();
 		WebResponseWrapper res = new WebResponseWrapper(stack.getResponse(), writer);
 
-		if (beforeFunction != null) beforeFunction.execute(req, res);
+		if (beforeFunction != null)
+			beforeFunction.execute(req, res);
 		RequestDispatcher dispatcher = req.getRequestDispatcher(includePath);
 		dispatcher.include(req, res);
-		if (afterFunction != null) afterFunction.execute(req, res);
+		if (afterFunction != null)
+			afterFunction.execute(req, res);
 		return res.toString();
 	}
 

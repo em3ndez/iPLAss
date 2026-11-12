@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -34,15 +34,18 @@ import org.iplass.mtp.web.template.report.definition.ReportType;
 public class MetaJxlsReportType extends MetaReportType {
 
 	private static final long serialVersionUID = 8399080514538892382L;
-	
+
 	private MetaJxlsReportOutputLogic reportOutputLogic;
-	
+
 	private MetaReportParamMap[] paramMap;
-	
+
 	private String passwordAttributeName;
-	
+
+	/** オーナーパスワードAttribute名 */
+	private String ownerPasswordAttributeName;
+
 	private String templateName;
-	
+
 	public MetaJxlsReportOutputLogic getReportOutputLogic() {
 		return reportOutputLogic;
 	}
@@ -50,7 +53,7 @@ public class MetaJxlsReportType extends MetaReportType {
 	public void setReportOutputLogic(MetaJxlsReportOutputLogic reportOutputLogic) {
 		this.reportOutputLogic = reportOutputLogic;
 	}
-	
+
 	public MetaReportParamMap[] getParamMap() {
 		return paramMap;
 	}
@@ -66,7 +69,15 @@ public class MetaJxlsReportType extends MetaReportType {
 	public void setPasswordAttributeName(String passwordAttributeName) {
 		this.passwordAttributeName = passwordAttributeName;
 	}
-	
+
+	public String getOwnerPasswordAttributeName() {
+		return ownerPasswordAttributeName;
+	}
+
+	public void setOwnerPasswordAttributeName(String ownerPasswordAttributeName) {
+		this.ownerPasswordAttributeName = ownerPasswordAttributeName;
+	}
+
 	public String getTemplateName() {
 		return templateName;
 	}
@@ -79,8 +90,8 @@ public class MetaJxlsReportType extends MetaReportType {
 	public void applyConfig(ReportType definition) {
 		JxlsReportType def = (JxlsReportType) definition;
 		fillFrom(def);
-		
-		if(def.getReportOutputLogicDefinition() != null) {
+
+		if (def.getReportOutputLogicDefinition() != null) {
 			ReportOutputLogicDefinition ed = def.getReportOutputLogicDefinition();
 			if (ed instanceof GroovyReportOutputLogicDefinition) {
 				MetaGroovyJxlsReportOutputLogic ms = new MetaGroovyJxlsReportOutputLogic();
@@ -94,7 +105,7 @@ public class MetaJxlsReportType extends MetaReportType {
 		} else {
 			reportOutputLogic = null;
 		}
-		
+
 		if (def.getParamMap() != null) {
 			paramMap = new MetaReportParamMap[def.getParamMap().length];
 			int i = 0;
@@ -107,6 +118,7 @@ public class MetaJxlsReportType extends MetaReportType {
 			paramMap = null;
 		}
 		passwordAttributeName = def.getPasswordAttributeName();
+		ownerPasswordAttributeName = def.getOwnerPasswordAttributeName();
 		templateName = def.getTemplateName();
 	}
 
@@ -114,14 +126,13 @@ public class MetaJxlsReportType extends MetaReportType {
 	public ReportType currentConfig() {
 		JxlsReportType definition = new JxlsReportType();
 		fillTo(definition);
-		
+
 		if (reportOutputLogic != null) {
 			definition.setReportOutputLogicDefinition(reportOutputLogic.currentConfig());
 		}
-		
+
 		if (paramMap != null) {
-			ReportParamMapDefinition[] paramMapDefinition = 
-					new ReportParamMapDefinition[paramMap.length];
+			ReportParamMapDefinition[] paramMapDefinition = new ReportParamMapDefinition[paramMap.length];
 			int i = 0;
 			for (MetaReportParamMap map : paramMap) {
 				paramMapDefinition[i] = map.currentConfig();
@@ -129,30 +140,31 @@ public class MetaJxlsReportType extends MetaReportType {
 			}
 			definition.setParamMap(paramMapDefinition);
 		}
-		
+
 		definition.setPasswordAttributeName(passwordAttributeName);
+		definition.setOwnerPasswordAttributeName(ownerPasswordAttributeName);
 		definition.setTemplateName(templateName);
 
 		return definition;
 	}
-	
+
 	@Override
 	public ReportTypeRuntime createRuntime() {
 		return new JxlsReportTypeRuntime();
 	}
-	
+
 	public class JxlsReportTypeRuntime extends ReportTypeRuntime {
-		
+
 		private JxlsCompiledScriptCacheStore cacheStore;
 		private JxlsReportOutputLogicRuntime outputLogicRuntime;
-		
+
 		public JxlsReportTypeRuntime() {
 			cacheStore = new JxlsCompiledScriptCacheStore(templateName);
 			if (reportOutputLogic != null) {
 				outputLogicRuntime = reportOutputLogic.createRuntime(getMetaData());
 			}
 		}
-		
+
 		@Override
 		public MetaJxlsReportType getMetaData() {
 			return MetaJxlsReportType.this;
@@ -160,18 +172,19 @@ public class MetaJxlsReportType extends MetaReportType {
 
 		@Override
 		public void setParam(ReportingOutputModel createOutputModel) {
-			JxlsReportingOutputModel model = (JxlsReportingOutputModel)createOutputModel;
-			if (reportOutputLogic !=null) {
+			JxlsReportingOutputModel model = (JxlsReportingOutputModel) createOutputModel;
+			if (reportOutputLogic != null) {
 				model.setLogicRuntime(outputLogicRuntime);
 			}
 			if (paramMap != null) {
 				model.setParamMap(paramMap);
 			}
 			model.setPasswordAttributeName(passwordAttributeName);
+			model.setOwnerPasswordAttributeName(ownerPasswordAttributeName);
 			model.setCacheStore(cacheStore);
 		}
 	}
-	
+
 	@Override
 	public MetaData copy() {
 		return ObjectUtil.deepCopy(this);

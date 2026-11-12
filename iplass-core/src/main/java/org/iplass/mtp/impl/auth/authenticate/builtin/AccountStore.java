@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,11 +23,12 @@ package org.iplass.mtp.impl.auth.authenticate.builtin;
 import java.sql.Timestamp;
 import java.util.List;
 
+import org.iplass.mtp.impl.auth.authenticate.AuthenticationProvider;
 import org.iplass.mtp.spi.Config;
 
 public interface AccountStore {
-	
-	public void inited(BuiltinAuthenticationProvider provider, Config config);
+
+	public void inited(AuthenticationProvider provider, Config config);
 
 	public void updateAccountLoginStatus(BuiltinAccount account);
 
@@ -42,17 +43,17 @@ public interface AccountStore {
 	public BuiltinAccount getAccount(int tenantId, String accountId);
 
 	public BuiltinAccount getAccountFromOid(int tenantId, String oid);
-	
+
 	public void addPasswordHistory(Password hi);
-	
+
 	public List<Password> getPasswordHistory(int tenantId, String accountId);
-	
+
 	public void deletePasswordHistory(int tenantId, String accountId);
-	
+
 	public void deletePasswordHistory(int tenantId, String accountId, Timestamp dateBefore);
-	
+
 	public void updatePasswordHistoryAccountId(int tenantId, String oldAccountId, String newAccountId);
 
 	public void resetLoginErrorCnt(BuiltinAccount account);
-	
+
 }

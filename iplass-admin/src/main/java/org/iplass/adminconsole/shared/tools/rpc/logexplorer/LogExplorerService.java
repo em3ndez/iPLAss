@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.iplass.adminconsole.shared.tools.dto.logexplorer.LogConditionInfo;
 import org.iplass.adminconsole.shared.tools.dto.logexplorer.LogFile;
+import org.iplass.adminconsole.shared.tools.dto.logexplorer.LogFileCondition;
 
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 import com.google.gwt.user.client.rpc.XsrfProtectedService;
@@ -34,9 +35,10 @@ import com.google.gwt.user.client.rpc.XsrfProtectedService;
 @RemoteServiceRelativePath("service/logexplorer")
 public interface LogExplorerService extends XsrfProtectedService {
 
-	public List<LogFile> getLogfileNames(final int tenantId);
+	public List<LogFile> getLogfileNames(final int tenantId, LogFileCondition logFileCondition);
 
 	public List<LogConditionInfo> getLogConditions(final int tenantId);
 
 	public String applyLogConditions(final int tenantId, final List<LogConditionInfo> logConditions);
+
 }

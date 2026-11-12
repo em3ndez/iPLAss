@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,7 +20,6 @@
 
 package org.iplass.mtp.tools.batch.tenant;
 
-
 import java.io.IOException;
 import java.io.Reader;
 import java.net.URISyntaxException;
@@ -39,12 +38,12 @@ import org.iplass.mtp.impl.tools.tenant.TenantToolService;
 import org.iplass.mtp.impl.tools.tenant.log.LogHandler;
 import org.iplass.mtp.impl.tools.tenant.rdb.TenantRdbConstants;
 import org.iplass.mtp.spi.ServiceRegistry;
+import org.iplass.mtp.tools.batch.MtpBatchResourceDisposer;
 import org.iplass.mtp.tools.batch.MtpCuiBase;
 import org.iplass.mtp.tools.gui.tenant.TenantManagerApp;
 import org.iplass.mtp.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 /**
  * テナント情報を管理するクラス。
@@ -57,12 +56,15 @@ public class TenantBatch extends MtpCuiBase {
 	public static final String KEY_CONFIG_FILE = "tenant.config";
 
 	/** 実行モード */
-	public enum TenantBatchExecMode {GUI, CREATE, DELETE, SHOW, SILENT};
+	public enum TenantBatchExecMode {
+		GUI, CREATE, DELETE, SHOW, SILENT
+	};
 
 	//実行モード
 	private TenantBatchExecMode execMode = TenantBatchExecMode.GUI;
 
-	private TenantToolService toolService = ServiceRegistry.getRegistry().getService(TenantToolService.class);
+	private TenantToolService toolService = ServiceRegistry.getRegistry()
+			.getService(TenantToolService.class);
 
 	/**
 	 * args[0]・・・execMode
@@ -76,6 +78,13 @@ public class TenantBatch extends MtpCuiBase {
 		} catch (Throwable e) {
 			e.printStackTrace();
 		} finally {
+			if (instance.getExecMode() == TenantBatchExecMode.GUI) {
+				MtpBatchResourceDisposer.addShutdownHookForDisposeResource(() -> {
+					// NOTE 個別の破棄処理が必要な場合は、ここに実装する。
+				});
+			} else {
+				MtpBatchResourceDisposer.disposeResource();
+			}
 		}
 	}
 
@@ -107,32 +116,32 @@ public class TenantBatch extends MtpCuiBase {
 		logEnvironment();
 
 		switch (getExecMode()) {
-		case GUI :
+		case GUI:
 			logInfo("■Start App");
 			logInfo("");
 
 			//Guiの場合はConsole出力を外す
 			switchLog(false, true);
 
-			TenantManagerApp.main(new String[]{getLanguage()});
+			TenantManagerApp.main(new String[] { getLanguage() });
 			return true;
-		case CREATE :
+		case CREATE:
 			logInfo("■Start Create Wizard");
 			logInfo("");
 
 			//Wizardの実行
 			return startCreateWizard();
-		case DELETE :
+		case DELETE:
 			logInfo("■Start Delete Wizard");
 			logInfo("");
 
 			//Wizardの実行
 			return startDeleteWizard();
-		case SHOW :
+		case SHOW:
 			showAllTenantList();
 			logInfo("");
 			return true;
-		case SILENT :
+		case SILENT:
 			logInfo("■Start Silent");
 			logInfo("");
 
@@ -140,7 +149,7 @@ public class TenantBatch extends MtpCuiBase {
 			switchLog(false, true);
 
 			return startSilent();
-		default :
+		default:
 			logError("unsupport execute mode : " + getExecMode());
 			return false;
 		}
@@ -242,7 +251,7 @@ public class TenantBatch extends MtpCuiBase {
 				logWarn(rs("TenantBatch.Create.Wizard.requiredAdminIdMsg"));
 				adminUserId = null;
 			}
-		} while(adminUserId == null);
+		} while (adminUserId == null);
 
 		//Admin PW
 		String adminPW = null;
@@ -254,7 +263,7 @@ public class TenantBatch extends MtpCuiBase {
 					logWarn(rs("TenantBatch.Create.Wizard.requiredAdminPWMsg"));
 					adminPW = null;
 				}
-			} while(adminPW == null);
+			} while (adminPW == null);
 
 			//Confirm Admin PW
 			String confirmAdminPW = null;
@@ -264,7 +273,7 @@ public class TenantBatch extends MtpCuiBase {
 					logWarn(rs("TenantBatch.Create.Wizard.requiredAdminPWMsg"));
 					confirmAdminPW = null;
 				}
-			} while(confirmAdminPW == null);
+			} while (confirmAdminPW == null);
 
 			if (!adminPW.equals(confirmAdminPW)) {
 				logWarn(rs("TenantBatch.Create.Wizard.unmatchAdminPWMsg"));
@@ -274,7 +283,7 @@ public class TenantBatch extends MtpCuiBase {
 				invalidateAdminPW = false;
 			}
 
-		} while(invalidateAdminPW);
+		} while (invalidateAdminPW);
 
 		TenantCreateParameter createParam = new TenantCreateParameter(tenantName, adminUserId, adminPW);
 		createParam.setTenantUrl(tenantUrl);
@@ -301,14 +310,15 @@ public class TenantBatch extends MtpCuiBase {
 			if (getConfigSetting().isPostgreSQL()) {
 				boolean invalidateSubPartitionSize = true;
 				do {
-					int subPartitionSize = readConsoleInteger(rs("TenantBatch.Create.Wizard.inputSubPartitionSizeMsg"), TenantRdbConstants.MAX_SUBPARTITION);
+					int subPartitionSize = readConsoleInteger(rs("TenantBatch.Create.Wizard.inputSubPartitionSizeMsg"),
+							TenantRdbConstants.MAX_SUBPARTITION);
 					if (subPartitionSize < TenantRdbConstants.MIN_SUBPARTITION) {
 						logWarn(rs("TenantBatch.Create.Wizard.invalidValueSubPartitionSizeMsg", TenantRdbConstants.MIN_SUBPARTITION));
 					} else {
 						createParam.setSubPartitionSize(subPartitionSize);
 						invalidateSubPartitionSize = false;
 					}
-				} while(invalidateSubPartitionSize);
+				} while (invalidateSubPartitionSize);
 			}
 		}
 

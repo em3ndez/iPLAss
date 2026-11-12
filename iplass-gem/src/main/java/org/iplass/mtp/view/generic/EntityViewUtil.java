@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,6 +29,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.iplass.gem.command.Constants;
+import org.iplass.gem.command.GemResourceBundleUtil;
+import org.iplass.mtp.ApplicationException;
 import org.iplass.mtp.ManagerLocator;
 import org.iplass.mtp.definition.LocalizedStringDefinition;
 import org.iplass.mtp.entity.Entity;
@@ -55,6 +58,7 @@ import org.iplass.mtp.entity.query.condition.predicate.In;
 import org.iplass.mtp.impl.core.ExecuteContext;
 import org.iplass.mtp.impl.view.generic.parser.Parser;
 import org.iplass.mtp.tenant.TenantI18nInfo;
+import org.iplass.mtp.util.CollectionUtil;
 import org.iplass.mtp.util.ResourceBundleUtil;
 import org.iplass.mtp.util.StringUtil;
 import org.iplass.mtp.view.generic.editor.BooleanPropertyEditor;
@@ -74,6 +78,7 @@ import org.iplass.mtp.view.generic.editor.TimestampPropertyEditor;
 import org.iplass.mtp.view.generic.editor.UserPropertyEditor;
 import org.iplass.mtp.view.generic.element.Element;
 import org.iplass.mtp.view.generic.element.VirtualPropertyItem;
+import org.iplass.mtp.view.generic.element.property.PropertyElement;
 import org.iplass.mtp.view.generic.element.section.DefaultSection;
 import org.iplass.mtp.view.generic.element.section.ReferenceSection;
 import org.iplass.mtp.view.generic.parser.Token;
@@ -113,13 +118,15 @@ public class EntityViewUtil {
 //		return null;
 		return getJspPath(element, "");
 	}
+
 	/**
 	 * エレメントのJSPファイルパスを取得します。
 	 * @param element エレメント
 	 * @return JSPファイルパス
 	 */
 	public static String getJspPath(Element element, String key) {
-		Jsps jsps = element.getClass().getAnnotation(Jsps.class);
+		Jsps jsps = element.getClass()
+				.getAnnotation(Jsps.class);
 		if (jsps != null) {
 			for (Jsp jsp : jsps.value()) {
 				if (key.equals(jsp.key())) {
@@ -127,7 +134,8 @@ public class EntityViewUtil {
 				}
 			}
 		}
-		Jsp jsp = element.getClass().getAnnotation(Jsp.class);
+		Jsp jsp = element.getClass()
+				.getAnnotation(Jsp.class);
 		if (jsp != null) {
 			return jsp.path();
 		}
@@ -154,7 +162,8 @@ public class EntityViewUtil {
 	 * @return JSPファイルパス
 	 */
 	public static String getJspPath(PropertyEditor editor, String key) {
-		Jsps jsps = editor.getClass().getAnnotation(Jsps.class);
+		Jsps jsps = editor.getClass()
+				.getAnnotation(Jsps.class);
 		if (jsps != null) {
 			for (Jsp jsp : jsps.value()) {
 				if (key.equals(jsp.key())) {
@@ -162,7 +171,8 @@ public class EntityViewUtil {
 				}
 			}
 		}
-		Jsp jsp = editor.getClass().getAnnotation(Jsp.class);
+		Jsp jsp = editor.getClass()
+				.getAnnotation(Jsp.class);
 		if (jsp != null) {
 			return jsp.path();
 		}
@@ -187,39 +197,46 @@ public class EntityViewUtil {
 		// ネストプロパティ名を取得します。
 		List<String> nestPropNames = collectNestPropertyNames(editor, prefix);
 		nestPropNames.stream()
-			.map(propName -> {
-				// ネストプロパティの検証エラーを取得します。
-				return Arrays.stream(errors)
-						.filter(err -> {
-							String name = err.getPropertyName();
-							if (name.equals(propName) || name.startsWith(propName + ".")) {
-								return true;
-							}
-							// 多重度が複数の場合、検証エラーメッセージにindex値が含む可能性があります。
-							// メターデータの定義のみからindex値が判断きないので、プロパティ名の文字列で始まるかで判断します。
-							int firstIndex = -1;
-							if (name.startsWith(propName + "[") && (firstIndex = name.indexOf("]", propName.length() + 1)) > -1) {
-								return firstIndex + 1 >= name.length() || name.charAt(firstIndex + 1) == '.';
-							}
-							return false;
-						})
-						.collect(Collectors.toList());
-			})
-			.flatMap(Collection::stream)
-			.forEach(err -> {
-				for (int i = 0; i < err.getErrorMessages().size(); i++) {
-					String errorMessage = err.getErrorMessages().get(i);
-					String errorCode = (i < err.getErrorCodes().size()) ? err.getErrorCodes().get(i) : "";
-					// 重複の検証エラーメッセージを除外します。
-					if ((errorCode.length() > 0 && error.getErrorCodes().contains(errorCode))
-							|| error.getErrorMessages().contains(errorMessage)) {
-						continue;
+				.map(propName -> {
+					// ネストプロパティの検証エラーを取得します。
+					return Arrays.stream(errors)
+							.filter(err -> {
+								String name = err.getPropertyName();
+								if (name.equals(propName) || name.startsWith(propName + ".")) {
+									return true;
+								}
+								// 多重度が複数の場合、検証エラーメッセージにindex値が含む可能性があります。
+								// メターデータの定義のみからindex値が判断きないので、プロパティ名の文字列で始まるかで判断します。
+								int firstIndex = -1;
+								if (name.startsWith(propName + "[") && (firstIndex = name.indexOf("]", propName.length() + 1)) > -1) {
+									return firstIndex + 1 >= name.length() || name.charAt(firstIndex + 1) == '.';
+								}
+								return false;
+							})
+							.collect(Collectors.toList());
+				})
+				.flatMap(Collection::stream)
+				.forEach(err -> {
+					for (int i = 0; i < err.getErrorMessages()
+							.size(); i++) {
+						String errorMessage = err.getErrorMessages()
+								.get(i);
+						String errorCode = (i < err.getErrorCodes()
+								.size()) ? err.getErrorCodes()
+										.get(i) : "";
+						// 重複の検証エラーメッセージを除外します。
+						if ((errorCode.length() > 0 && error.getErrorCodes()
+								.contains(errorCode))
+								|| error.getErrorMessages()
+										.contains(errorMessage)) {
+							continue;
+						}
+						error.addErrorMessage(errorMessage, errorCode);
 					}
-					error.addErrorMessage(errorMessage, errorCode);
-				}
-			});
+				});
 
-		return error.getErrorMessages().size() > 0 ? new ValidateError[] { error } : null;
+		return error.getErrorMessages()
+				.size() > 0 ? new ValidateError[] { error } : null;
 	}
 
 	/**
@@ -250,16 +267,21 @@ public class EntityViewUtil {
 
 		String editorLabel = editorValue.getLabel();
 
-		if (ExecuteContext.getCurrentContext().getCurrentTenant().getTenantConfig(TenantI18nInfo.class).isUseMultilingual()) {
+		if (ExecuteContext.getCurrentContext()
+				.getCurrentTenant()
+				.getTenantConfig(TenantI18nInfo.class)
+				.isUseMultilingual()) {
 			// テナントの多言語設定がONの場合
 
-			String lang = ExecuteContext.getCurrentContext().getLanguage();
+			String lang = ExecuteContext.getCurrentContext()
+					.getLanguage();
 
 			if (StringUtil.isBlank(editorLabel)) {
 				// viewのdefaultがブランクの場合はentityのラベルを返却
 				if (valueList != null) {
 					for (SelectValue selectValue : valueList) {
-						if (selectValue.getValue().equals(value)) {
+						if (selectValue.getValue()
+								.equals(value)) {
 							return getSelectPropertyLabel(localizedList, value, selectValue.getDisplayName());
 						}
 					}
@@ -280,8 +302,9 @@ public class EntityViewUtil {
 
 			if (StringUtil.isBlank(editorLabel)) {
 				if (valueList != null) {
-					for (SelectValue selectValue: valueList) {
-						if (selectValue.getValue().equals(value)) {
+					for (SelectValue selectValue : valueList) {
+						if (selectValue.getValue()
+								.equals(value)) {
 							return selectValue.getDisplayName();
 						}
 					}
@@ -294,18 +317,23 @@ public class EntityViewUtil {
 		return null;
 	}
 
-	public static String getSelectPropertyLabel(List<LocalizedSelectValueDefinition> localizedList, String value, String defaultLabel){
+	public static String getSelectPropertyLabel(List<LocalizedSelectValueDefinition> localizedList, String value, String defaultLabel) {
 		if (value == null) {
 			return null;
 		}
 
-		if (ExecuteContext.getCurrentContext().getCurrentTenant().getTenantConfig(TenantI18nInfo.class).isUseMultilingual()) {
+		if (ExecuteContext.getCurrentContext()
+				.getCurrentTenant()
+				.getTenantConfig(TenantI18nInfo.class)
+				.isUseMultilingual()) {
 			// テナントの多言語設定がONの場合
 			if (localizedList != null) {
-				String lang = ExecuteContext.getCurrentContext().getLanguage();
+				String lang = ExecuteContext.getCurrentContext()
+						.getLanguage();
 
 				for (LocalizedSelectValueDefinition tmpLsvd : localizedList) {
-					if (tmpLsvd.getLocaleName().equals(lang)) {
+					if (tmpLsvd.getLocaleName()
+							.equals(lang)) {
 						if (tmpLsvd.getSelectValueList() != null) {
 							for (SelectValue lsv : tmpLsvd.getSelectValueList()) {
 								if (value.equals(lsv.getValue())) {
@@ -341,12 +369,16 @@ public class EntityViewUtil {
 				for (SelectValue v : sp.getSelectValueList()) {
 					EditorValue ev = new EditorValue(v.getDisplayName(), v.getValue());
 					//多言語設定
-					if (ExecuteContext.getCurrentContext().getCurrentTenant().getTenantConfig(TenantI18nInfo.class).isUseMultilingual()) {
+					if (ExecuteContext.getCurrentContext()
+							.getCurrentTenant()
+							.getTenantConfig(TenantI18nInfo.class)
+							.isUseMultilingual()) {
 						if (StringUtil.isEmpty(lang)) {
 							//lang未指定の場合は全部
 							if (TemplateUtil.getEnableLanguages() != null) {
 								List<LocalizedStringDefinition> evlList = new ArrayList<LocalizedStringDefinition>();
-								for (String enableLang : TemplateUtil.getEnableLanguages().keySet()) {
+								for (String enableLang : TemplateUtil.getEnableLanguages()
+										.keySet()) {
 									SelectValue lsv = sp.getLocalizedSelectValue(v.getValue(), enableLang);
 									if (lsv != null) {
 										LocalizedStringDefinition lsd = new LocalizedStringDefinition();
@@ -392,12 +424,16 @@ public class EntityViewUtil {
 				for (SelectValue v : svd.getSelectValueList()) {
 					EditorValue ev = new EditorValue(v.getDisplayName(), v.getValue());
 					//多言語設定
-					if (ExecuteContext.getCurrentContext().getCurrentTenant().getTenantConfig(TenantI18nInfo.class).isUseMultilingual()) {
+					if (ExecuteContext.getCurrentContext()
+							.getCurrentTenant()
+							.getTenantConfig(TenantI18nInfo.class)
+							.isUseMultilingual()) {
 						if (StringUtil.isEmpty(lang)) {
 							//lang未指定の場合は全部
 							if (TemplateUtil.getEnableLanguages() != null) {
 								List<LocalizedStringDefinition> evlList = new ArrayList<LocalizedStringDefinition>();
-								for (String enableLang : TemplateUtil.getEnableLanguages().keySet()) {
+								for (String enableLang : TemplateUtil.getEnableLanguages()
+										.keySet()) {
 									SelectValue lsv = svd.getLocalizedSelectValue(v.getValue(), enableLang);
 									if (lsv != null) {
 										LocalizedStringDefinition lsd = new LocalizedStringDefinition();
@@ -428,15 +464,17 @@ public class EntityViewUtil {
 		return valueList;
 	}
 
-
-
 	public static String getStringPropertySelectTypeLabel(EditorValue editorValue) {
 		// StringPropertyEditor内でTypeをSelectにしているケース
 		// 単純にedtitorValue内の多言語が存在する場合だけ多言語情報を返却する
 
-		if (ExecuteContext.getCurrentContext().getCurrentTenant().getTenantConfig(TenantI18nInfo.class).isUseMultilingual()) {
+		if (ExecuteContext.getCurrentContext()
+				.getCurrentTenant()
+				.getTenantConfig(TenantI18nInfo.class)
+				.isUseMultilingual()) {
 			// テナントの多言語設定がONの場合
-			String lang = ExecuteContext.getCurrentContext().getLanguage();
+			String lang = ExecuteContext.getCurrentContext()
+					.getLanguage();
 
 			if (editorValue.getLocalizedLabelList() != null) {
 				for (LocalizedStringDefinition localizedStringDefinition : editorValue.getLocalizedLabelList()) {
@@ -477,7 +515,9 @@ public class EntityViewUtil {
 				throw new IllegalArgumentException("path is invalid:" + objPropName + " is not ObjectReferenceProperty of " + entity.getName());
 			}
 			ReferenceProperty refProp = (ReferenceProperty) property;
-			EntityDefinition refEntity = ManagerLocator.getInstance().getManager(EntityDefinitionManager.class).get(refProp.getObjectDefinitionName());
+			EntityDefinition refEntity = ManagerLocator.getInstance()
+					.getManager(EntityDefinitionManager.class)
+					.get(refProp.getObjectDefinitionName());
 			if (refEntity == null) {
 				throw new IllegalArgumentException(objPropName + "'s Entity is not defined.");
 			}
@@ -502,6 +542,123 @@ public class EntityViewUtil {
 	 * @return
 	 */
 	public static PropertyDefinition getPropertyDefinition(VirtualPropertyItem property) {
+		return getVirtualPropertyDefinition(property);
+	}
+
+	/**
+	 * ネストテーブルプロパティのプロパティ定義を取得
+	 * 
+	 * @param nestProperty ネストプロパティ
+	 * @param entityDefinition ネストテーブルのEntity定義
+	 * @return プロパティ定義
+	 */
+	public static PropertyDefinition getNestTablePropertyDefinition(NestProperty nestProperty, EntityDefinition entityDefinition) {
+		// プロパティ定義があればそれを使う
+		PropertyDefinition propertyDefinition = entityDefinition.getProperty(nestProperty.getPropertyName());
+		if (propertyDefinition != null) {
+			return propertyDefinition;
+		}
+
+		// プロパティ定義がない場合、仮想プロパティならプロパティ定義に変換する
+		if (nestProperty.isVirtual()) {
+			propertyDefinition = getVirtualPropertyDefinition(nestProperty);
+			if (propertyDefinition == null) {
+				// 変換できない場合は仮想プロパティに利用できないエディタを設定してるのでエラーにする
+				throw new ApplicationException(
+						GemResourceBundleUtil.resourceString("view.generic.EntityViewUtil.nestTableEditorErr", nestProperty.getPropertyName()));
+			}
+		}
+
+		return propertyDefinition;
+	}
+
+	/**
+	 * Editorに定義されたカスタムスタイル(表示、入力)を取得
+	 *
+	 * @param definitionName  Entity定義名
+	 * @param scriptKey       Form/Sectionに設定されたScriptKey(EntityViewにてこのKEYでTemplateをキャッシュ)
+	 * @param editorScriptKey Editorに設定されたScriptKey(Sectio単位のキャッシュにこのKEYでEditorのTemplateをキャッシュ)
+	 * @param entity          対象Entityデータ(検索条件、新規登録などの場合はnullあり)
+	 * @param propValue       対象Propertyデータ
+	 * @return
+	 */
+	public static String getCustomStyle(String definitionName, String scriptKey, String editorScriptKey, Entity entity, Object propValue) {
+		EntityViewManager evm = ManagerLocator.getInstance()
+				.getManager(EntityViewManager.class);
+		return evm.getCustomStyle(definitionName, scriptKey, editorScriptKey, entity, propValue);
+	}
+
+	/**
+	 * 指定のプロパティ名を持つ参照セクションの件数を取得します。
+	 * @param view 詳細画面定義
+	 * @param propName プロパティ名
+	 * @return 参照セクションの件数
+	 */
+	public static long referenceSectionCount(DetailFormView view, String propName) {
+		return getReferenceSectionList(new ArrayList<ReferenceSection>(), view.getSections()).stream()
+				.filter(e -> propName.equals(e.getPropertyName()))
+				.count();
+	}
+
+	public static List<ReferenceSection> getReferenceSectionList(List<ReferenceSection> sections, List<?> elem) {
+		for (Object e : elem) {
+			if (e instanceof DefaultSection) {
+				getReferenceSectionList(sections, ((DefaultSection) e).getElements());
+			} else if (e instanceof ReferenceSection) {
+				sections.add((ReferenceSection) e);
+			}
+		}
+		return sections;
+	}
+
+	public static List<Entity> sortByOrderProperty(List<Entity> entities, final String propertyName, boolean research) {
+		if (entities == null || entities.isEmpty())
+			return entities;
+
+		//表示順を検索
+		List<Entity> target = null;
+		if (research && isResearch(entities)) {
+			List<String> oidList = entities.stream()
+					.filter(e -> e.getOid() != null)
+					.map(e -> e.getOid())
+					.collect(Collectors.toList());
+			if (oidList.isEmpty()) {
+				target = entities;
+			} else {
+				List<Entity> newEntities = entities.stream()
+						.filter(e -> e.getOid() == null)
+						.collect(Collectors.toList());
+				Query query = new Query().select(Entity.OID, Entity.VERSION, propertyName)
+						.from(entities.get(0)
+								.getDefinitionName())
+						.where(new In(Entity.OID, oidList.toArray()));
+				target = ManagerLocator.getInstance()
+						.getManager(EntityManager.class)
+						.searchEntity(query)
+						.getList();
+				target.addAll(newEntities);
+			}
+		} else {
+			target = entities;
+		}
+
+		return sortByOrderProperty(target, propertyName);
+	}
+
+	public static List<Entity> sortByOrderProperty(List<Entity> entities, final String propertyName) {
+		if (entities == null || entities.isEmpty())
+			return entities;
+
+		//表示順でソート、表示順がnullの場合は後ろに
+		List<Entity> ret = entities.stream()
+				.map(e -> new SortInfo(e, propertyName))
+				.sorted(Comparator.comparing(SortInfo::getSortValue, Comparator.nullsLast(Comparator.naturalOrder())))
+				.map(s -> s.getEntity())
+				.collect(Collectors.toList());
+		return ret;
+	}
+
+	private static PropertyDefinition getVirtualPropertyDefinition(PropertyElement property) {
 		PropertyDefinition definition = null;
 		if (property.getEditor() instanceof BooleanPropertyEditor) {
 			BooleanProperty prop = new BooleanProperty(property.getPropertyName());
@@ -539,6 +696,11 @@ public class EntityViewUtil {
 			definition = prop;
 		}
 
+		// 仮想プロパティで利用できないエディタが設定されてる場合は変換対象外
+		if (definition == null) {
+			return null;
+		}
+
 		definition.setDisplayName(property.getDisplayLabel());
 		definition.setLocalizedDisplayNameList(property.getLocalizedDisplayLabelList());
 		definition.setMultiplicity(1);
@@ -546,93 +708,44 @@ public class EntityViewUtil {
 		return definition;
 	}
 
-	/**
-	 * Editorに定義されたカスタムスタイル(表示、入力)を取得
-	 *
-	 * @param definitionName  Entity定義名
-	 * @param scriptKey       Form/Sectionに設定されたScriptKey(EntityViewにてこのKEYでTemplateをキャッシュ)
-	 * @param editorScriptKey Editorに設定されたScriptKey(Sectio単位のキャッシュにこのKEYでEditorのTemplateをキャッシュ)
-	 * @param entity          対象Entityデータ(検索条件、新規登録などの場合はnullあり)
-	 * @param propValue       対象Propertyデータ
-	 * @return
-	 */
-	public static String getCustomStyle(String definitionName, String scriptKey, String editorScriptKey, Entity entity, Object propValue) {
-		EntityViewManager evm = ManagerLocator.getInstance().getManager(EntityViewManager.class);
-		return evm.getCustomStyle(definitionName, scriptKey, editorScriptKey, entity, propValue);
-	}
-
-	/**
-	 * 指定のプロパティ名を持つ参照セクションの件数を取得します。
-	 * @param view 詳細画面定義
-	 * @param propName プロパティ名
-	 * @return 参照セクションの件数
-	 */
-	public static long referenceSectionCount(DetailFormView view, String propName) {
-		return getReferenceSectionList(new ArrayList<ReferenceSection>(), view.getSections()).stream()
-				.filter(e -> propName.equals(e.getPropertyName()))
-				.count();
-	}
-
-	public static List<ReferenceSection> getReferenceSectionList(List<ReferenceSection> sections, List<?> elem) {
-		for (Object e : elem) {
-			if (e instanceof DefaultSection) {
-				getReferenceSectionList(sections, ((DefaultSection) e).getElements());
-			} else if (e instanceof ReferenceSection) {
-				sections.add((ReferenceSection) e);
-			}
-		}
-		return sections;
-	}
-
-	public static List<Entity> sortByOrderProperty(List<Entity> entities, final String propertyName, boolean research) {
-		if (entities == null || entities.isEmpty()) return entities;
-
-		//表示順を検索
-		List<Entity> target = null;
-		if (research) {
-			List<String> oidList = entities.stream().filter(e -> e.getOid() != null).map(e -> e.getOid()).collect(Collectors.toList());
-			if (oidList.isEmpty()) {
-				target = entities;
-			} else {
-				List<Entity> newEntities = entities.stream().filter(e -> e.getOid() == null).collect(Collectors.toList());
-				Query query = new Query().select(Entity.OID, Entity.VERSION, propertyName)
-						.from(entities.get(0).getDefinitionName())
-						.where(new In(Entity.OID, oidList.toArray()));
-				target = ManagerLocator.getInstance().getManager(EntityManager.class).searchEntity(query).getList();
-				target.addAll(newEntities);
-			}
-		} else {
-			target = entities;
+	private static boolean isResearch(List<Entity> entities) {
+		if (CollectionUtil.isEmpty(entities)) {
+			return false;
 		}
 
-		return sortByOrderProperty(target, propertyName);
-	}
+		// 1件目のEntityのREF_RELOADプロパティを確認し、検索を行うかどうかを判断する
+		// リストアイテムごとにREF_RELOADが設定されてたりされてなかったりすることはないので、1件目のEntityだけを確認する
+		Entity entity = entities.get(0);
+		Object value = entity.getValue(Constants.REF_RELOAD);
+		if (value == null) {
+			// REF_RELOADが設定されていない場合は、検索を行う
+			return true;
+		}
 
-	public static List<Entity> sortByOrderProperty(List<Entity> entities, final String propertyName) {
-		if (entities == null || entities.isEmpty()) return entities;
-
-		//表示順でソート、表示順がnullの場合は後ろに
-		List<Entity> ret = entities.stream().map(e -> new SortInfo(e, propertyName))
-				.sorted(Comparator.comparing(SortInfo::getSortValue, Comparator.nullsLast(Comparator.naturalOrder())))
-				.map(s -> s.getEntity()).collect(Collectors.toList());
-		return ret;
+		// 明示的にリロードフラグをfalseにしない限り検索を行う
+		return (value instanceof Boolean reload) ? reload : true;
 	}
 
 	private static class SortInfo {
 		private Entity entity;
 		private Integer sortValue;
+
 		public SortInfo(Entity entity, String propertyName) {
 			this.entity = entity;
 			this.sortValue = toInteger(entity.getValue(propertyName));
 		}
+
 		public Entity getEntity() {
 			return entity;
 		}
+
 		public Integer getSortValue() {
 			return sortValue;
 		}
+
 		private Integer toInteger(Object val) {
-			if (val == null) return null;
+			if (val == null)
+				return null;
 			if (val instanceof Integer) {
 				return (Integer) val;
 			} else if (val instanceof Long) {

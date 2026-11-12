@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -55,24 +55,31 @@ public class DefinitionSummary implements Serializable {
 	public String getPath() {
 		return path;
 	}
+
 	public void setPath(String path) {
 		this.path = path;
 	}
+
 	public String getName() {
 		return name;
 	}
+
 	public void setName(String name) {
 		this.name = name;
 	}
+
 	public String getDisplayName() {
 		return displayName;
 	}
+
 	public void setDisplayName(String displayName) {
 		this.displayName = displayName;
 	}
+
 	public String getDescription() {
 		return description;
 	}
+
 	public void setDescription(String description) {
 		this.description = description;
 	}

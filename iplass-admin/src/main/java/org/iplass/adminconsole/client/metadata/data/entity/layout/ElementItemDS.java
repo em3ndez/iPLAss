@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -48,7 +48,8 @@ public class ElementItemDS extends AbstractAdminDataSource {
 			dsList = new HashMap<String, ElementItemDS>();
 		}
 
-		if (viewType == null) throw new IllegalArgumentException("viewType is null.");
+		if (viewType == null)
+			throw new IllegalArgumentException("viewType is null.");
 
 		if (dsList.containsKey(viewType.name())) {
 			return dsList.get(viewType.name());

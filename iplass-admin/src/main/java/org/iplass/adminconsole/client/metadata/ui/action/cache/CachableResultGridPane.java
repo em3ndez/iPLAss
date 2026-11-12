@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -65,7 +65,7 @@ public class CachableResultGridPane extends VLayout {
 		grid = new CachableResultGrid();
 		grid.addRecordDoubleClickHandler(new RecordDoubleClickHandler() {
 			public void onRecordDoubleClick(RecordDoubleClickEvent event) {
-				editResult((ListGridRecord)event.getRecord());
+				editResult((ListGridRecord) event.getRecord());
 			}
 		});
 
@@ -99,7 +99,7 @@ public class CachableResultGridPane extends VLayout {
 			for (String result : results) {
 				records.add(createRecord(result, null));
 			}
-			grid.setData(records.toArray(new ListGridRecord[]{}));
+			grid.setData(records.toArray(new ListGridRecord[] {}));
 		}
 	}
 
@@ -182,14 +182,14 @@ public class CachableResultGridPane extends VLayout {
 			setWidth("50%");
 			setHeight(1);
 
-			setShowAllColumns(true);							//列を全て表示
-			setShowAllRecords(true);							//レコードを全て表示
-			setCanResizeFields(true);							//列幅変更可能
-			setCanSort(false);									//ソート不可
-			setCanPickFields(false);							//表示フィールドの選択不可
-			setCanGroupBy(false);								//GroupByの選択不可
-			setAutoFitWidthApproach(AutoFitWidthApproach.BOTH);	//AutoFit時にタイトルと値を参照
-			setLeaveScrollbarGap(false);						//縦スクロールバー自動表示制御
+			setShowAllColumns(true); //列を全て表示
+			setShowAllRecords(true); //レコードを全て表示
+			setCanResizeFields(true); //列幅変更可能
+			setCanSort(false); //ソート不可
+			setCanPickFields(false); //表示フィールドの選択不可
+			setCanGroupBy(false); //GroupByの選択不可
+			setAutoFitWidthApproach(AutoFitWidthApproach.BOTH); //AutoFit時にタイトルと値を参照
+			setLeaveScrollbarGap(false); //縦スクロールバー自動表示制御
 			setBodyOverflow(Overflow.VISIBLE);
 			setOverflow(Overflow.VISIBLE);
 

@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -20,5 +20,5 @@
 
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true" %>
 
-<link rel="stylesheet" href="${staticContentPath}/webjars/viewerjs/1.9.0/dist/viewer.min.css?cv=${apiVersion}" />
-<script src="${staticContentPath}/webjars/viewerjs/1.9.0/dist/viewer.min.js?cv=${apiVersion}"></script>
+<link rel="stylesheet" href="${staticContentPath}/webjars/viewerjs/1.11.1/dist/viewer.min.css?cv=${apiVersion}" />
+<script src="${staticContentPath}/webjars/viewerjs/1.11.1/dist/viewer.min.js?cv=${apiVersion}"></script>

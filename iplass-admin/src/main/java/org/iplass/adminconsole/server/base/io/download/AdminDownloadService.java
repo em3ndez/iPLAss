@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,13 +23,13 @@ package org.iplass.adminconsole.server.base.io.download;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.iplass.adminconsole.server.base.rpc.util.AuthUtil;
 import org.iplass.adminconsole.shared.metadata.dto.entity.EntityJavaMappingClassDownloadProperty;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Download用基底クラス
@@ -52,6 +52,14 @@ public abstract class AdminDownloadService extends HttpServlet {
 		download(req, resp);
 	}
 
+	@Override
+	protected void doGet(final HttpServletRequest req, final HttpServletResponse resp)
+			throws ServletException, IOException {
+		//エンコード指定
+		req.setCharacterEncoding(StandardCharsets.UTF_8.name());
+		download(req, resp);
+	}
+
 	/**
 	 * 権限チェックを実行したのち、{@link #doDownload(HttpServletRequest, HttpServletResponse, int)} を実行します。
 	 * 
@@ -63,7 +71,7 @@ public abstract class AdminDownloadService extends HttpServlet {
 		//パラメータの取得
 		final int tenantId = Integer.parseInt(req.getParameter(EntityJavaMappingClassDownloadProperty.TENANT_ID));
 
-		AuthUtil.authCheckAndInvoke(getServletContext(), req, resp, tenantId, ()-> {
+		AuthUtil.authCheckAndInvoke(getServletContext(), req, resp, tenantId, () -> {
 			doDownload(req, resp, tenantId);
 			return null;
 		});

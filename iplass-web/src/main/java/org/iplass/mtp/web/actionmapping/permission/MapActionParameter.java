@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,10 +30,10 @@ import java.util.Map;
  */
 public class MapActionParameter implements ActionParameter {
 	private Map<String, Object> map;
-	
+
 	public MapActionParameter() {
 	}
-	
+
 	public MapActionParameter(Map<String, Object> map) {
 		this.map = map;
 	}
@@ -45,7 +45,7 @@ public class MapActionParameter implements ActionParameter {
 		}
 		return map.get(name);
 	}
-	
+
 	public MapActionParameter put(String name, Object value) {
 		if (map == null) {
 			map = new HashMap<>();

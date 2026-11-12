@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -37,7 +37,7 @@ import org.iplass.mtp.command.CommandInvoker;
  *
  */
 public interface ResultHandler extends Serializable {
-	
+
 	public void handle(String commandResult);
 
 	public void handle(Throwable exception);

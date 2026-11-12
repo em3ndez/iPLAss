@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,18 +33,23 @@ public class LocalizedBinaryDefinition implements Serializable {
 	public String getLocaleName() {
 		return localeName;
 	}
+
 	public void setLocaleName(String localeName) {
 		this.localeName = localeName;
 	}
+
 	public String getFileName() {
 		return fileName;
 	}
+
 	public void setFileName(String fileName) {
 		this.fileName = fileName;
 	}
+
 	public byte[] getBinaryValue() {
 		return binaryValue;
 	}
+
 	public void setBinaryValue(byte[] binaryValue) {
 		this.binaryValue = binaryValue;
 	}

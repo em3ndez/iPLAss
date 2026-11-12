@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,10 +32,10 @@ import org.iplass.mtp.entity.definition.PropertyDefinitionType;
 public class IntegerProperty extends PropertyDefinition {
 	private static final long serialVersionUID = -2843588733088091905L;
 
-	public IntegerProperty(){
+	public IntegerProperty() {
 	}
-	
-	public IntegerProperty(String name){
+
+	public IntegerProperty(String name) {
 		setName(name);
 	}
 
@@ -43,12 +43,11 @@ public class IntegerProperty extends PropertyDefinition {
 	public Class<?> getJavaType() {
 		return Long.class;
 	}
-	
+
 	@Override
 	public PropertyDefinitionType getType() {
 		return PropertyDefinitionType.INTEGER;
 	}
-
 
 //	public IntegerProperty copy() {
 //		IntegerProperty copy = new IntegerProperty();

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,27 +22,27 @@ package org.iplass.mtp.entity.definition;
 import java.io.Serializable;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
-
 import org.iplass.mtp.entity.definition.l10n.EachInstanceDataLocalizationStrategy;
 import org.iplass.mtp.entity.definition.l10n.EachPropertyDataLocalizationStrategy;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
 
 /**
  * <p>Entityのデータを多言語対応する戦略の定義。</p>
  * <p>
  * 本設定を有効化することにより、
  * EQLでの検索時、登録、更新時に
- * 実行ユーザに紐づく形で、自動的に適切な言語のデータを取得、更新することが可能となる（それぞれの処理実行時にlocalizedオプションをtrueに指定した場合）。
+ * 実行ユーザーに紐づく形で、自動的に適切な言語のデータを取得、更新することが可能となる（それぞれの処理実行時にlocalizedオプションをtrueに指定した場合）。
  * </p>
  * 
  * @author K.Higuchi
  *
  */
-@XmlSeeAlso(value = {EachInstanceDataLocalizationStrategy.class,
-		EachPropertyDataLocalizationStrategy.class})
-@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS)
+@XmlSeeAlso(
+		value = { EachInstanceDataLocalizationStrategy.class,
+				EachPropertyDataLocalizationStrategy.class })
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 public class DataLocalizationStrategy implements Serializable {
 	private static final long serialVersionUID = -7453476741431507201L;
 

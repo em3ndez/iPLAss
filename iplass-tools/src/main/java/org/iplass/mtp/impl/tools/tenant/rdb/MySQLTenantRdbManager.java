@@ -1,19 +1,19 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
- * 
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
+ *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.iplass.mtp.impl.rdb.SqlExecuter;
 import org.iplass.mtp.impl.rdb.adapter.RdbAdapter;
@@ -44,19 +45,19 @@ public class MySQLTenantRdbManager extends DefaultTenantRdbManager {
 
 	private static Logger logger = LoggerFactory.getLogger(MySQLTenantRdbManager.class);
 
-	private static final String MYSQL_EXIST_TABLE_SQL = "select count(*) from information_schema.tables where table_name = ?";
-	private static final String MYSQL_EXIST_TABLE_SQL_WITH_SCHEMA = "select count(*) from information_schema.tables where table_schema = ? and table_name = ?";
+	private static final String MYSQL_EXIST_TABLE_SQL = "select count(*) from information_schema.tables where lower(table_name) = lower(?)";
+	private static final String MYSQL_EXIST_TABLE_SQL_WITH_SCHEMA = "select count(*) from information_schema.tables where table_schema = ? and lower(table_name) = lower(?)";
 
-	private static final String MYSQL_MAX_PARTITION_SQL = "select partition_name from information_schema.partitions where table_name = ? order by length(partition_name) desc , partition_name desc";
-	private static final String MYSQL_MAX_PARTITION_SQL_WITH_SCHEMA = "select partition_name from information_schema.partitions where table_schema = ? and table_name = ? order by length(partition_name) desc , partition_name desc";
+	private static final String MYSQL_MAX_PARTITION_SQL = "select partition_name from information_schema.partitions where lower(table_name) = lower(?) order by length(partition_name) desc , partition_name desc";
+	private static final String MYSQL_MAX_PARTITION_SQL_WITH_SCHEMA = "select partition_name from information_schema.partitions where table_schema = ? and lower(table_name) = lower(?) order by length(partition_name) desc , partition_name desc";
 
-	private static final String MYSQL_EXIST_PARTITION_SQL = "select count(*) from information_schema.partitions where table_name = ? and partition_name = ?";
-	private static final String MYSQL_EXIST_PARTITION_SQL_WITH_SCHEMA = "select count(*) from information_schema.partitions where table_schema = ? and table_name = ? and partition_name = ?";
+	private static final String MYSQL_EXIST_PARTITION_SQL = "select count(*) from information_schema.partitions where lower(table_name) = lower(?) and lower(partition_name) = lower(?)";
+	private static final String MYSQL_EXIST_PARTITION_SQL_WITH_SCHEMA = "select count(*) from information_schema.partitions where table_schema = ? and lower(table_name) = lower(?) and lower(partition_name) = lower(?)";
 
 	private RdbAdapter adapter;
 
-	public MySQLTenantRdbManager(RdbAdapter adapter) {
-		super(adapter);
+	public MySQLTenantRdbManager(RdbAdapter adapter, TenantRdbManagerParameter parameter) {
+		super(adapter, parameter);
 		this.adapter = adapter;
 	}
 
@@ -70,45 +71,55 @@ public class MySQLTenantRdbManager extends DefaultTenantRdbManager {
 
 		return Transaction.required(t -> {
 
-				List<PartitionInfo> ret = new ArrayList<PartitionInfo>();
+			List<PartitionInfo> ret = new ArrayList<PartitionInfo>();
 
-				for (String tableName : getTableList()) {
-					if (isStorageSpaceTable(tableName)) {
-						//StorageSpaceの場合、Postfix分Loop
-						for (String postfix : getStorageSpacePostfix(true)) {
-							String storageSpaceTableName = tableName + postfix;
-							//除外対象テーブルチェック
-							if (!isPartitionTargetTable(storageSpaceTableName)) {
-								continue;
-							}
-
-							//テーブル存在チェック
-							if (!isExistsTable(storageSpaceTableName, true)) {
-								continue;
-							}
-
-							//作られているPartitionの最大値を取得
-							PartitionInfo info = getTablePartitionInfo(storageSpaceTableName);
-							ret.add(info);
-						}
-					} else {
+			for (String tableName : getTableList()) {
+				if (isStorageSpaceTable(tableName)) {
+					//StorageSpaceの場合、Postfix分Loop
+					for (String postfix : getStorageSpacePostfix(true)) {
+						String storageSpaceTableName = tableName + postfix;
 						//除外対象テーブルチェック
-						if (!isPartitionTargetTable(tableName)) {
+						if (!isPartitionTargetTable(storageSpaceTableName)) {
 							continue;
 						}
 
 						//テーブル存在チェック
-						if (!isExistsTable(tableName, false)) {
+						if (!isExistsTable(storageSpaceTableName, true)) {
 							continue;
 						}
 
 						//作られているPartitionの最大値を取得
-						PartitionInfo info = getTablePartitionInfo(tableName);
+						PartitionInfo info = getTablePartitionInfo(storageSpaceTableName);
+						if (null == info) {
+							// Partitionが存在しない場合は、次のテーブルを確認
+							continue;
+						}
+
 						ret.add(info);
 					}
-				}
+				} else {
+					//除外対象テーブルチェック
+					if (!isPartitionTargetTable(tableName)) {
+						continue;
+					}
 
-				return ret;
+					//テーブル存在チェック
+					if (!isExistsTable(tableName, false)) {
+						continue;
+					}
+
+					//作られているPartitionの最大値を取得
+					PartitionInfo info = getTablePartitionInfo(tableName);
+					if (null == info) {
+						// Partitionが存在しない場合は、次のテーブルを確認
+						continue;
+					}
+
+					ret.add(info);
+				}
+			}
+
+			return ret;
 		});
 
 	}
@@ -124,7 +135,8 @@ public class MySQLTenantRdbManager extends DefaultTenantRdbManager {
 
 				//Partitionの存在チェック
 				PreparedStatement ps = null;
-				String databaseName = adapter.getConnection().getCatalog();
+				String databaseName = adapter.getConnection()
+						.getCatalog();
 				if (StringUtil.isEmpty(databaseName)) {
 					ps = getPreparedStatement(MYSQL_MAX_PARTITION_SQL);
 					ps.setString(1, tableName);
@@ -138,9 +150,18 @@ public class MySQLTenantRdbManager extends DefaultTenantRdbManager {
 				int maxTenantId = -1;
 				Set<String> partitionNames = new TreeSet<>();
 				try {
-					if(rs.next()) {
+					if (rs.next()) {
 						//先頭のpartition_nameがテナントの最大
 						String max_partition_name = rs.getString(1);
+
+						if (null == max_partition_name) {
+							// パーティション名が null （パーティションが存在しない）の場合は、警告ログを出力。
+							// パーティションが存在しない為、情報としては null 返却する。
+							logger.warn("Table '{}' has no partitions. Please check service-config settings or table creation DDL.",
+									tableName);
+							return null;
+						}
+
 						partitionNames.add(max_partition_name);
 
 						//partition_nameからテナントIDを取得
@@ -150,7 +171,7 @@ public class MySQLTenantRdbManager extends DefaultTenantRdbManager {
 							logger.warn("cant parse the partition name:" + max_partition_name);
 						}
 					}
-					while(rs.next()) {
+					while (rs.next()) {
 						partitionNames.add(rs.getString(1));
 					}
 
@@ -171,9 +192,9 @@ public class MySQLTenantRdbManager extends DefaultTenantRdbManager {
 
 		boolean isSuccess = Transaction.requiresNew(t -> {
 
-				doCreatePartition(param, logHandler);
+			doCreatePartition(param, logHandler);
 
-				return true;
+			return true;
 		});
 
 		return isSuccess;
@@ -192,19 +213,22 @@ public class MySQLTenantRdbManager extends DefaultTenantRdbManager {
 		}
 	}
 
-	private void createTablePartition(final PartitionCreateParameter param, final PartitionInfo partitionInfo, final List<TenantInfo> storeTenantList, final LogHandler logHandler) {
+	private void createTablePartition(final PartitionCreateParameter param, final PartitionInfo partitionInfo, final List<TenantInfo> storeTenantList,
+			final LogHandler logHandler) {
 
 		if (partitionInfo.getMaxTenantId() >= param.getTenantId()) {
 			//既にPartitionは存在しているのでなにもしない
 			//もし実際には存在しない場合でも途中に作ることはしない
-			logHandler.info(getPartitionResourceMessage(param.getLoggerLanguage(), "skipPartitionMsg", partitionInfo.getMaxTenantId(), partitionInfo.getTableName()));
+			logHandler.info(getPartitionResourceMessage(param.getLoggerLanguage(), "skipPartitionMsg", partitionInfo.getMaxTenantId(),
+					partitionInfo.getTableName()));
 			return;
 		}
 
 		//存在する最大テナントIDを取得
 		int maxTenantId = 0;
 		if (!storeTenantList.isEmpty()) {
-			maxTenantId = storeTenantList.get(storeTenantList.size() - 1).getId();
+			maxTenantId = storeTenantList.get(storeTenantList.size() - 1)
+					.getId();
 		}
 
 		//Partitionの最大テナントIDを取得
@@ -230,7 +254,8 @@ public class MySQLTenantRdbManager extends DefaultTenantRdbManager {
 				if (maxPartitionId >= tenantId) {
 					//削除時にパーティションを削除せずに残っている場合など
 					//途中には作れないのでスキップ
-					logHandler.info(getPartitionResourceMessage(param.getLoggerLanguage(), "skipPartitionMsg", partitionInfo.getMaxTenantId(), partitionInfo.getTableName()));
+					logHandler.info(getPartitionResourceMessage(param.getLoggerLanguage(), "skipPartitionMsg", partitionInfo.getMaxTenantId(),
+							partitionInfo.getTableName()));
 					continue;
 				}
 				addTenantIdList.add(tenantId);
@@ -242,7 +267,8 @@ public class MySQLTenantRdbManager extends DefaultTenantRdbManager {
 		}
 	}
 
-	private void executeTableCreatePartition(final PartitionCreateParameter param, final String tableName, final int tenantId, final LogHandler logHandler) {
+	private void executeTableCreatePartition(final PartitionCreateParameter param, final String tableName, final int tenantId,
+			final LogHandler logHandler) {
 
 		String partitionName = tableName + "_" + tenantId;
 
@@ -253,20 +279,20 @@ public class MySQLTenantRdbManager extends DefaultTenantRdbManager {
 
 		//Partitionの作成を別Transactionで実行
 		Transaction.requiresNew(t -> {
-				SqlExecuter<Void> exec = new SqlExecuter<Void>() {
-					@Override
-					public Void logic() throws SQLException {
-						PreparedStatement ps = getPreparedStatement(sql.toString());
+			SqlExecuter<Void> exec = new SqlExecuter<Void>() {
+				@Override
+				public Void logic() throws SQLException {
+					PreparedStatement ps = getPreparedStatement(sql.toString());
 
-						ps.executeUpdate();
+					ps.executeUpdate();
 
-						logHandler.info(getPartitionResourceMessage(param.getLoggerLanguage(), "createdPartitionMsg", partitionName));
+					logHandler.info(getPartitionResourceMessage(param.getLoggerLanguage(), "createdPartitionMsg", partitionName));
 
-						return null;
-					}
-				};
-				exec.execute(adapter, true);
-				return null;
+					return null;
+				}
+			};
+			exec.execute(adapter, true);
+			return null;
 		});
 	}
 
@@ -275,9 +301,9 @@ public class MySQLTenantRdbManager extends DefaultTenantRdbManager {
 
 		boolean isSuccess = Transaction.requiresNew(t -> {
 
-				doDropPartition(param, logHandler);
+			doDropPartition(param, logHandler);
 
-				return true;
+			return true;
 		});
 
 		return isSuccess;
@@ -308,27 +334,27 @@ public class MySQLTenantRdbManager extends DefaultTenantRdbManager {
 
 			//PartitionのDrop
 			Transaction.requiresNew(t -> {
-					String sql = "alter table " + tableName + " drop partition " + partitionName;
+				String sql = "alter table " + tableName + " drop partition " + partitionName;
 
-					SqlExecuter<Void> exec = new SqlExecuter<Void>() {
-						@Override
-						public Void logic() throws SQLException {
+				SqlExecuter<Void> exec = new SqlExecuter<Void>() {
+					@Override
+					public Void logic() throws SQLException {
 
-							//PartitionのDrop
-							PreparedStatement ps = getPreparedStatement(sql);
+						//PartitionのDrop
+						PreparedStatement ps = getPreparedStatement(sql);
 
-							ps.executeUpdate();
+						ps.executeUpdate();
 
-							logHandler.info(getPartitionResourceMessage(param.getLoggerLanguage(), "droppedPartitionMsg", partitionName));
+						logHandler.info(getPartitionResourceMessage(param.getLoggerLanguage(), "droppedPartitionMsg", partitionName));
 
-							return null;
-						}
-					};
-					try {
-						exec.execute(adapter, true);
-					} catch (Exception e) {
-						logHandler.warn("partition cant dropped ...:" + sql, e);
+						return null;
 					}
+				};
+				try {
+					exec.execute(adapter, true);
+				} catch (Exception e) {
+					logHandler.warn("partition cant dropped ...:" + sql, e);
+				}
 			});
 
 		} else {
@@ -346,7 +372,8 @@ public class MySQLTenantRdbManager extends DefaultTenantRdbManager {
 
 				//Partitionの存在チェック
 				PreparedStatement ps = null;
-				String databaseName = adapter.getConnection().getCatalog();
+				String databaseName = adapter.getConnection()
+						.getCatalog();
 				if (StringUtil.isEmpty(databaseName)) {
 					ps = getPreparedStatement(MYSQL_EXIST_PARTITION_SQL);
 					ps.setString(1, tableName);
@@ -361,7 +388,7 @@ public class MySQLTenantRdbManager extends DefaultTenantRdbManager {
 				ResultSet rs = ps.executeQuery();
 				int count = 0;
 				try {
-					if(rs.next()) {
+					if (rs.next()) {
 						count = rs.getInt(1);
 					}
 				} finally {
@@ -383,7 +410,8 @@ public class MySQLTenantRdbManager extends DefaultTenantRdbManager {
 		SqlExecuter<Boolean> exec = null;
 		String databaseName = null;
 		try {
-			databaseName = adapter.getConnection().getCatalog();
+			databaseName = adapter.getConnection()
+					.getCatalog();
 		} catch (SQLException e) {
 		}
 		if (StringUtil.isEmpty(databaseName)) {
@@ -411,7 +439,7 @@ public class MySQLTenantRdbManager extends DefaultTenantRdbManager {
 				ResultSet rs = ps.executeQuery();
 				int count = 0;
 				try {
-					if(rs.next()) {
+					if (rs.next()) {
 						count = rs.getInt(1);
 					}
 				} finally {
@@ -429,4 +457,85 @@ public class MySQLTenantRdbManager extends DefaultTenantRdbManager {
 		return ToolsResourceBundleUtil.resourceString(lang, "tenant.partition." + suffix, args);
 	}
 
+	@Override
+	protected SqlExecuter<Integer> getTenantRecordDeleteExecuter(int tenantId, String tableName, String deletionUnitColumns,
+			int deleteRows) {
+		return new SqlExecuter<Integer>() {
+			@Override
+			public Integer logic() throws SQLException {
+				String sql = "delete from " + tableName + " where tenant_id = ? limit ?";
+				PreparedStatement ps = getPreparedStatement(sql);
+				ps.setInt(1, tenantId);
+				ps.setInt(2, deleteRows);
+
+				return ps.executeUpdate();
+			}
+		};
+	}
+
+	@Override
+	protected String[] getTableList() {
+		return UppercaseConstants.TABLE_LIST;
+	}
+
+	@Override
+	protected boolean isStorageSpaceTable(String tableName) {
+		return UppercaseConstants.STORAGE_SPACE_TABLE.contains(tableName);
+	}
+
+	@Override
+	protected boolean isPartitionTargetTable(String tableName) {
+		// 除外対象テーブルチェック
+		return !UppercaseConstants.EXCLUDE_PARTITION_TABLE.contains(tableName);
+	}
+
+	@Override
+	protected boolean isSubPartitionTargetTable(String tableName) {
+		// 除外対象テーブルチェック
+		return !UppercaseConstants.EXCLUDE_SUB_PARTITION_TABLE.contains(tableName);
+	}
+
+	@Override
+	protected boolean isExistsTable(final String tableName, final boolean isStorageSpace) {
+		if (isStorageSpace) {
+			// StorageSpaceの場合は、動的にテーブル名が変わるので無条件で存在チェックを行う
+			return isExistsTable(tableName);
+		} else {
+			// 存在チェック対象テーブルチェック
+			if (UppercaseConstants.CHECK_EXIST_TABLE.contains(tableName)) {
+				return isExistsTable(tableName);
+			}
+		}
+
+		// 存在チェック対象以外は、true
+		return true;
+	}
+
+	/**
+	 * テナント RDB 固定値（大文字）
+	 *
+	 * <p>
+	 * {@link org.iplass.mtp.impl.tools.tenant.rdb.TenantRdbConstants} のテーブル定義名を大文字に変換したクラス。
+	 * </p>
+	 *
+	 * @see org.iplass.mtp.impl.tools.tenant.rdb.TenantRdbConstants
+	 * @author SEKIGUCHI Naoya
+	 */
+	private static final class UppercaseConstants {
+		private static final String[] TABLE_LIST = String.join(",", TenantRdbConstants.TABLE_LIST)
+				.toUpperCase()
+				.split(",");
+		private static final Set<String> STORAGE_SPACE_TABLE = TenantRdbConstants.STORAGE_SPACE_TABLE.stream()
+				.map(s -> s.toUpperCase())
+				.collect(Collectors.toSet());
+		public static final Set<String> EXCLUDE_PARTITION_TABLE = TenantRdbConstants.EXCLUDE_PARTITION_TABLE.stream()
+				.map(s -> s.toUpperCase())
+				.collect(Collectors.toSet());
+		public static final Set<String> EXCLUDE_SUB_PARTITION_TABLE = TenantRdbConstants.EXCLUDE_SUB_PARTITION_TABLE.stream()
+				.map(s -> s.toUpperCase())
+				.collect(Collectors.toSet());
+		public static final Set<String> CHECK_EXIST_TABLE = TenantRdbConstants.CHECK_EXIST_TABLE.stream()
+				.map(s -> s.toUpperCase())
+				.collect(Collectors.toSet());
+	}
 }

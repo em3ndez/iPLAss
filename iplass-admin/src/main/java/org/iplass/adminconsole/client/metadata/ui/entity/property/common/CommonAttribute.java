@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -113,7 +113,7 @@ public class CommonAttribute implements PropertyAttribute {
 		VersionControlType versionType = entity.getVersionControlType();
 		//UniqueIndexでかつEntityがバージョンコントロールされている場合は、PropertyのcanEditをfalseに設定
 		if ((property.getIndexType() == IndexType.UNIQUE
-					|| property.getIndexType() == IndexType.UNIQUE_WITHOUT_NULL)
+				|| property.getIndexType() == IndexType.UNIQUE_WITHOUT_NULL)
 				&& (versionType != null && VersionControlType.NONE != versionType)) {
 			property.setUpdatable(false);
 		} else {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,10 +20,10 @@
 
 package org.iplass.mtp.webapi.definition;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.iplass.mtp.command.definition.config.CommandConfig;
 import org.iplass.mtp.definition.Definition;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class WebApiDefinition implements Definition {
@@ -36,7 +36,7 @@ public class WebApiDefinition implements Definition {
 	private String name;
 	private String displayName;
 	private String description;
-	
+
 	/**
 	 * WebAPIキャッシュ指定。
 	 * 未指定の場合はキャッシュをしない。
@@ -55,9 +55,9 @@ public class WebApiDefinition implements Definition {
 	private WebApiParamMapDefinition[] webApiParamMap;
 
 	/** このWebApiで処理されるCommandを特権（セキュリティ制約を受けない）にて処理するかどうか。デフォルトはfalse。 */
-	private boolean isPrivilaged;
+	private boolean isPrivileged;
 
-	/** このWebApiの呼び出しをセキュリティ設定によらず呼び出し可能にする場合は、trueを設定。 isPrivilagedとの違いは、Entityの操作などにおいては、セキュリティ制約を受ける。デフォルトはfalse。*/
+	/** このWebApiの呼び出しをセキュリティ設定によらず呼び出し可能にする場合は、trueを設定。 isPrivilegedとの違いは、Entityの操作などにおいては、セキュリティ制約を受ける。デフォルトはfalse。*/
 	private boolean isPublicWebApi;
 
 	/** XMLHttpRequestがセットされていることを確認するか。 */
@@ -65,8 +65,16 @@ public class WebApiDefinition implements Definition {
 
 	/**
 	 * Commandの実行結果と、表示処理の対応の定義。
+	 * @deprecated {@link #responseResults} を使用してください。本設定項目は、{@link WebApiResultAttribute}の配列を設定するように変更されました。本フィールドは大きなバージョンアップで削除する予定です。
 	 */
+	// since = "4.0.11", forRemoval = true
+	@Deprecated
 	private String[] results;
+
+	/**
+	 * WebAPIレスポンスの結果の属性
+	 */
+	private WebApiResultAttribute[] responseResults;
 
 	/**
 	 * WebApiの受付種別。
@@ -84,14 +92,29 @@ public class WebApiDefinition implements Definition {
 	private String restJsonParameterName;
 
 	/**
-	 * REST JSON受付時のパラメータタイプ（クラスパス）
+	 * REST JSON受付時のパラメータタイプ（クラス名）
 	 */
 	private String restJsonParameterType;
+
+	/**
+	 * REST JSON 受付可能な Conetnt-Type
+	 */
+	private String[] restJsonAcceptableConetntTypes;
 
 	/**
 	 * REST XML受付時のパラメータ名
 	 */
 	private String restXmlParameterName;
+
+	/**
+	 * REST XML受付時のパラメータタイプ（クラス名）
+	 */
+	private String restXmlParameterType;
+
+	/**
+	 * REST XML 受付可能な Conetnt-Type
+	 */
+	private String[] restXmlAcceptableConetntTypes;
 
 	/** Tokenチェックの実行設定。
 	 * 未指定可(Tokenチェックは実行されない)。
@@ -112,13 +135,26 @@ public class WebApiDefinition implements Definition {
 	private StateType state = StateType.STATEFUL;
 
 	private boolean supportBearerToken;
-	
+
 	private String[] oauthScopes;
 
 	private String[] allowRequestContentTypes;
 
 	private Long maxRequestBodySize;
 	private Long maxFileSize;
+
+	/** スタブレスポンスを返却するか */
+	private boolean returnStubResponse;
+	/** スタブデフォルトコンテンツ */
+	private String stubDefaultConetnt;
+	/** スタブコンテンツ */
+	private WebApiStubContent[] stubContents;
+	/** OpenAPI バージョン */
+	private String openApiVersion;
+	/** OpenAPI ファイルタイプ */
+	private String openApiFileType;
+	/** OpenAPI 定義 */
+	private String openApi;
 
 	public Long getMaxFileSize() {
 		return maxFileSize;
@@ -128,7 +164,7 @@ public class WebApiDefinition implements Definition {
 	 * multipart/form-data時のアップロードファイルの最大サイズ。-1の場合は無制限。
 	 * １つのファイルに対する最大サイズなので、複数のファイルの合計サイズを制限したい場合は、
 	 * maxRequestBodySizeを設定します。
-	 * 
+	 *
 	 * @param maxFileSize
 	 */
 	public void setMaxFileSize(Long maxFileSize) {
@@ -141,7 +177,7 @@ public class WebApiDefinition implements Definition {
 
 	/**
 	 * リクエストボディの最大サイズ。-1の場合は無制限。
-	 * 
+	 *
 	 * @param maxRequestBodySize
 	 */
 	public void setMaxRequestBodySize(Long maxRequestBodySize) {
@@ -159,13 +195,13 @@ public class WebApiDefinition implements Definition {
 	 * accepts指定によりJSON形式の処理が有効化されている場合において、
 	 * allowRequestContentTypesに"application/json"が含まれない場合は、
 	 * JSON形式によるリクエストは処理されません。
-	 * 
+	 *
 	 * @param allowRequestContentTypes
 	 */
 	public void setAllowRequestContentTypes(String[] allowRequestContentTypes) {
 		this.allowRequestContentTypes = allowRequestContentTypes;
 	}
-	
+
 	public String[] getOauthScopes() {
 		return oauthScopes;
 	}
@@ -173,7 +209,7 @@ public class WebApiDefinition implements Definition {
 	public void setOauthScopes(String[] oauthScopes) {
 		this.oauthScopes = oauthScopes;
 	}
-	
+
 	public boolean isSupportBearerToken() {
 		return supportBearerToken;
 	}
@@ -260,12 +296,52 @@ public class WebApiDefinition implements Definition {
 		this.restJsonParameterName = restJsonParameterName;
 	}
 
+	/**
+	 * REST JSON として受付可能な Content-Type を取得します。
+	 * @return Content-Type 配列
+	 */
+	public String[] getRestJsonAcceptableContentTypes() {
+		return restJsonAcceptableConetntTypes;
+	}
+
+	/**
+	 * REST JSON として受付可能な Content-Type を設定します。
+	 * @param acceptableContentTypes Content-Type 配列
+	 */
+	public void setRestJsonAcceptableContentTypes(String[] acceptableContentTypes) {
+		this.restJsonAcceptableConetntTypes = acceptableContentTypes;
+	}
+
 	public String getRestXmlParameterName() {
 		return restXmlParameterName;
 	}
 
 	public void setRestXmlParameterName(String restXmlParameterName) {
 		this.restXmlParameterName = restXmlParameterName;
+	}
+
+	public String getRestXmlParameterType() {
+		return restXmlParameterType;
+	}
+
+	public void setRestXmlParameterType(String restXmlParameterType) {
+		this.restXmlParameterType = restXmlParameterType;
+	}
+
+	/**
+	 * REST XML として受付可能な Content-Type を取得します。
+	 * @return Content-Type 配列
+	 */
+	public String[] getRestXmlAcceptableContentTypes() {
+		return restXmlAcceptableConetntTypes;
+	}
+
+	/**
+	 * REST XML として受付可能な Content-Type を設定します。
+	 * @param acceptableContentTypes Content-Type 配列
+	 */
+	public void setRestXmlAcceptableContentTypes(String[] acceptableContentTypes) {
+		this.restXmlAcceptableConetntTypes = acceptableContentTypes;
 	}
 
 	public RequestType[] getAccepts() {
@@ -287,6 +363,7 @@ public class WebApiDefinition implements Definition {
 	/**
 	 * @return name
 	 */
+	@Override
 	public String getName() {
 		return name;
 	}
@@ -295,6 +372,7 @@ public class WebApiDefinition implements Definition {
 	 * @param name
 	 *            セットする name
 	 */
+	@Override
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -302,6 +380,7 @@ public class WebApiDefinition implements Definition {
 	/**
 	 * @return displayName
 	 */
+	@Override
 	public String getDisplayName() {
 		return displayName;
 	}
@@ -310,6 +389,7 @@ public class WebApiDefinition implements Definition {
 	 * @param displayName
 	 *            セットする displayName
 	 */
+	@Override
 	public void setDisplayName(String displayName) {
 		this.displayName = displayName;
 	}
@@ -317,6 +397,7 @@ public class WebApiDefinition implements Definition {
 	/**
 	 * @return description
 	 */
+	@Override
 	public String getDescription() {
 		return description;
 	}
@@ -325,6 +406,7 @@ public class WebApiDefinition implements Definition {
 	 * @param description
 	 *            セットする description
 	 */
+	@Override
 	public void setDescription(String description) {
 		this.description = description;
 	}
@@ -341,7 +423,7 @@ public class WebApiDefinition implements Definition {
 	 * WebAPIキャッシュ指定（Cache-Controlヘッダの制御）。
 	 * 未指定の場合はキャッシュをしない。
 	 * ブラウザ種別によらず、キャッシュを有効化するためには、合わせてCacheControlMaxAgeの設定も必要。
-	 * 
+	 *
 	 * @see #setCacheControlMaxAge(long)
 	 * @param cacheControlType
 	 */
@@ -362,7 +444,7 @@ public class WebApiDefinition implements Definition {
 	 * WebAPIキャッシュのmax-age（秒）を指定。
 	 * デフォルト値は-1でこの場合はmax-ageは未指定となる。<br>
 	 * <b>注意：max-age未指定の場合、FF、Chromeでは実際はキャッシュが利用されない</b>
-	 * 
+	 *
 	 * @param cacheControlMaxAge
 	 */
 	public void setCacheControlMaxAge(long cacheControlMaxAge) {
@@ -401,7 +483,10 @@ public class WebApiDefinition implements Definition {
 
 	/**
 	 * @return result
+	 * @deprecated {@link #getResponseResults()} を使用してください。本メソッドは大きなバージョンアップで削除する予定です。
 	 */
+	// since = "4.0.11", forRemoval = true
+	@Deprecated
 	public String[] getResults() {
 		return results;
 	}
@@ -409,9 +494,28 @@ public class WebApiDefinition implements Definition {
 	/**
 	 * @param result
 	 *            セットする result
+	 * @deprecated {@link #setResponseResults(WebApiResultAttribute[])} を使用してください。本メソッドは大きなバージョンアップで削除する予定です。
 	 */
+	// since = "4.0.11", forRemoval = true
+	@Deprecated
 	public void setResults(String[] results) {
 		this.results = results;
+	}
+
+	/**
+	 * WebApiレスポンスの結果の属性を取得します。
+	 * @return WebApiレスポンスの結果の属性
+	 */
+	public WebApiResultAttribute[] getResponseResults() {
+		return responseResults;
+	}
+
+	/**
+	 * WebApiレスポンスの結果の属性を設定します。
+	 * @param responseResults WebApiレスポンスの結果の属性
+	 */
+	public void setResponseResults(WebApiResultAttribute[] responseResults) {
+		this.responseResults = responseResults;
 	}
 
 	public boolean isPublicWebApi() {
@@ -420,7 +524,7 @@ public class WebApiDefinition implements Definition {
 
 	/**
 	 * このWebApiの呼び出しをセキュリティ設定によらず呼び出し可能にする場合は、trueを設定します。
-	 * isPrivilagedとの違いは、Entityの操作などにおいては、セキュリティ制約を受けます。
+	 * isPrivilegedとの違いは、Entityの操作などにおいては、セキュリティ制約を受けます。
 	 * デフォルトはfalseです。
 	 *
 	 * @param isPublicWebApi
@@ -432,17 +536,37 @@ public class WebApiDefinition implements Definition {
 	/**
 	 *
 	 * @return
+	 * @deprecated {@link #isPrivileged()} を使用してください。
 	 */
+	@Deprecated
 	public boolean isPrivilaged() {
-		return isPrivilaged;
+		return isPrivileged;
 	}
 
 	/**
 	 *
-	 * @param isPrivilaged
+	 * @param isPrivileged
+	 * @deprecated {@link #setPrivileged(boolean)} を使用してください。
 	 */
-	public void setPrivilaged(boolean isPrivilaged) {
-		this.isPrivilaged = isPrivilaged;
+	@Deprecated
+	public void setPrivilaged(boolean isPrivileged) {
+		this.isPrivileged = isPrivileged;
+	}
+
+	/**
+	 *
+	 * @return
+	 */
+	public boolean isPrivileged() {
+		return isPrivileged;
+	}
+
+	/**
+	 *
+	 * @param isPrivileged
+	 */
+	public void setPrivileged(boolean isPrivileged) {
+		this.isPrivileged = isPrivileged;
 	}
 
 	/**
@@ -459,5 +583,115 @@ public class WebApiDefinition implements Definition {
 	 */
 	public void setCheckXRequestedWithHeader(boolean isCheckXRequestedWithHeader) {
 		this.isCheckXRequestedWithHeader = isCheckXRequestedWithHeader;
+	}
+
+	/**
+	 * スタブレスポンスを返却するかを取得します。
+	 * @return スタブレスポンスを返却する場合は true を返却
+	 */
+	public boolean isReturnStubResponse() {
+		return returnStubResponse;
+	}
+
+	/**
+	 * スタブレスポンスを返却するかを設定します。
+	 * @param returnStubResponse スタブレスポンスを返却する場合は true を設定
+	 */
+	public void setReturnStubResponse(boolean returnStubResponse) {
+		this.returnStubResponse = returnStubResponse;
+	}
+
+	/**
+	 * スタブデフォルトコンテンツを取得します。
+	 * <p>
+	 * {@link #getStubContents()} に対応するコンテンツが設定されていない場合のデフォルト返却値です。
+	 * </p>
+	 * @return スタブデフォルトコンテンツ
+	 */
+	public String getStubDefaultContent() {
+		return stubDefaultConetnt;
+	}
+
+	/**
+	 * スタブデフォルトコンテンツを設定します。
+	 * <p>
+	 * {@link #getStubContents()} に対応するコンテンツが設定されていない場合のデフォルト返却値です。
+	 * </p>
+	 * @param stubDefaultConetnt スタブデフォルトコンテンツ
+	 */
+	public void setStubDefaultContent(String stubDefaultConetnt) {
+		this.stubDefaultConetnt = stubDefaultConetnt;
+	}
+
+	/**
+	 * スタブコンテンツを取得します。
+	 * @return スタブコンテンツ配列
+	 */
+	public WebApiStubContent[] getStubContents() {
+		return stubContents;
+	}
+
+	/**
+	 * スタブコンテンツを設定します。
+	 * @param stubContents スタブコンテンツ配列
+	 */
+	public void setStubContents(WebApiStubContent[] stubContents) {
+		this.stubContents = stubContents;
+	}
+
+	/**
+	 * OpenAPIのバージョンを取得します。
+	 * @return OpenAPIのバージョン
+	 */
+	public String getOpenApiVersion() {
+		return openApiVersion;
+	}
+
+	/**
+	 * OpenAPIのバージョンを設定します。
+	 * <p>
+	 * 3.0, 3.1 などマイナーバージョンまで記載します。
+	 * OpenAPI バージョンに記載できる内容は {@link org.iplass.mtp.webapi.definition.openapi.OpenApiVersion} を参照してください。
+	 * </p>
+	 * @param openApiVersion OpenAPIのバージョン
+	 */
+	public void setOpenApiVersion(String openApiVersion) {
+		this.openApiVersion = openApiVersion;
+	}
+
+	/**
+	 * OpenAPIのファイルタイプを取得します。
+	 * @return OpenAPIのファイルタイプ
+	 */
+	public String getOpenApiFileType() {
+		return openApiFileType;
+	}
+
+	/**
+	 * OpenAPIのファイルタイプを設定します。
+	 * <p>
+	 * OpenAPI のフォーマットは、JSON または YAML です。
+	 * 設定できる内容は、 {@link org.iplass.mtp.webapi.definition.openapi.OpenApiFileType} を参照してください。
+	 * </p>
+	 * @param openApiFileType OpenAPIのファイルタイプ
+	 */
+	public void setOpenApiFileType(String openApiFileType) {
+		this.openApiFileType = openApiFileType;
+	}
+
+	/**
+	 * OpenAPI定義を取得します。
+	 * @return OpenAPI定義
+	 */
+	public String getOpenApi() {
+		return openApi;
+	}
+
+	/**
+	 * OpenAPI定義を設定します。
+	 * @param openApi OpenAPI定義
+	 */
+	public void setOpenApi(String openApi) {
+		this.openApi = openApi;
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,7 +23,7 @@ package org.iplass.mtp.impl.cache.store.event;
 import org.iplass.mtp.impl.cache.store.CacheEntry;
 
 public final class CacheRemoveEvent extends CacheEvent {
-	
+
 	private final CacheEntry entry;
 
 	public CacheRemoveEvent(CacheEntry entry) {

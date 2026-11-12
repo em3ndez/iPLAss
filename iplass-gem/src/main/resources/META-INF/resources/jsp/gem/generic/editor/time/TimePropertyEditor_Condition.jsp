@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,9 +18,9 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
-
 <%@ page import="java.sql.Time"%>
 <%@ page import="java.text.*" %>
 <%@ page import="java.util.List" %>
@@ -184,10 +184,13 @@
 <%
 		}
 
-		if (!hideFrom && !hideTo) {
+		if (!editor.isSingleDayCondition()) {
+			if ((!editor.isHideSearchConditionFrom() && !editor.isHideSearchConditionTo())
+					|| !editor.isHideSearchConditionRangeSymbol()) {
 %>
-&nbsp;～&nbsp;
+<span class="range-symbol">&nbsp;${m:rs('mtp-gem-messages', 'generic.editor.common.rangeSymbol')}&nbsp;</span>
 <%
+			}
 		}
 
 		editor.setPropertyName(Constants.SEARCH_COND_PREFIX + propName + "To");
@@ -238,10 +241,12 @@
 		request.removeAttribute(Constants.EDITOR_PICKER_DEFAULT_SEC);
 		editor.setPropertyName(propName);
 
-		if (required) {
 %>
 <script type="text/javascript">
 $(function() {
+<%
+		if (required) {
+%>
 	<%-- common.js --%>
 	addNormalValidator(function() {
 		var fromVal = $(":hidden[name='" + es("<%=StringUtil.escapeJavaScript(Constants.SEARCH_COND_PREFIX + propName + "From")%>") + "']").val();
@@ -253,10 +258,44 @@ $(function() {
 		}
 		return true;
 	});
+<%
+		}
+		//フォーマットチェック
+		if ((editor.getDisplayType() != DateTimeDisplayType.LABEL) && (isUseTimePicker)) {
+%>
+	<%-- common.js --%>
+	addNormalValidator(function() {
+		var $from = $("#time_" + es("<%=StringUtil.escapeJavaScript(propName + "0")%>"));
+		var fromVal = $from.val();
+		var timeFormat = $from.attr("data-timeformat");
+		var fixedmin = $from.attr("data-fixedmin");
+		var fixedsec = $from.attr("data-fixedsec");
+		if (typeof fromVal !== "undefined" && fromVal !== null && fromVal !== "") {
+			try {
+				validateTimePicker(fromVal, timeFormat, fixedmin, fixedsec);
+			} catch (e) {
+				alert(messageFormat(scriptContext.gem.locale.common.timeFormatErrorMsg, "<%=StringUtil.escapeJavaScript(displayLabel)%>", timeFormat))
+				return false;
+			}
+		}
+		var $to = $("#time_" + es("<%=StringUtil.escapeJavaScript(propName + "1")%>"));
+		var toVal = $to.val();
+		if (typeof toVal !== "undefined" && toVal !== null && toVal !== "") {
+			try {
+				validateTimePicker(toVal, timeFormat, fixedmin, fixedsec);
+			} catch (e) {
+				alert(messageFormat(scriptContext.gem.locale.common.timeFormatErrorMsg, "<%=StringUtil.escapeJavaScript(displayLabel)%>", timeFormat))
+				return false;
+			}
+		}
+		return true;
+	});
+<%
+		}
+%>
 });
 </script>
 <%
-		}
 	} else {
 		//HIDDEN
 

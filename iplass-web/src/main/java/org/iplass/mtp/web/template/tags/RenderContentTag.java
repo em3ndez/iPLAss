@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,12 +21,12 @@ package org.iplass.mtp.web.template.tags;
 
 import java.io.IOException;
 
-import javax.servlet.ServletException;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.PageContext;
-import javax.servlet.jsp.tagext.SimpleTagSupport;
-
 import org.iplass.mtp.web.template.TemplateUtil;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.PageContext;
+import jakarta.servlet.jsp.tagext.SimpleTagSupport;
 
 /**
  * <p>
@@ -57,7 +57,7 @@ import org.iplass.mtp.web.template.TemplateUtil;
  *
  */
 public class RenderContentTag extends SimpleTagSupport {
-	
+
 	@Override
 	public void doTag() throws JspException, IOException {
 		try {

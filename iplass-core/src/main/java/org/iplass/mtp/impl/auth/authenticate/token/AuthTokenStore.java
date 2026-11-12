@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,11 +26,17 @@ import java.util.List;
 public interface AuthTokenStore {
 
 	public AuthToken getBySeries(int tenantId, String type, String series);
+
 	public List<AuthToken> getByOwner(int tenantId, String type, String ownerId);
+
 	public void create(AuthToken token);
+
 	public void update(AuthToken newToken, AuthToken currentToken);
+
 	public void delete(int tenantId, String type, String ownerId);
+
 	public void deleteBySeries(int tenantId, String type, String series);
+
 	public void deleteByDate(int tenantId, String type, Timestamp ts);
 
 }

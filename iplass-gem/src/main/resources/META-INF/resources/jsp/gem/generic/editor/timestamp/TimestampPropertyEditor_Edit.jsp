@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 <%@ page import="java.sql.Timestamp" %>
@@ -85,18 +85,80 @@
 		}
 		return false;
 	}
+	/**
+	 * 文字列をサニタイズする
+	 *
+	 * @param value 対象文字列
+	 * @return サニタイズ後の文字列
+	 */
+	String sanitize(String value) {
+		return StringUtil.escapeHtml(StringUtil.escapeJavaScript(value));
+	}
+	/**
+	 * ノードに設定する属性キー・バリューを取得する。
+	 * バリューの値はサニタイズする。
+	 *
+	 * @param key 属性キー
+	 * @param configValue 設定値
+	 * @return 属性文字列 （${key}="${configValue}"）。設定値が空の場合は空文字を返却。
+	 */
+	String getAttribute(String key, String configValue) {
+		if (null == configValue || "".equals(configValue)) {
+			return "";
+		}
+		return key + "=\"" + sanitize(configValue) + "\"";
+	}
+	/**
+	 * 入力フィールドの属性情報を取得する。
+	 * 設定対象の属性値は以下の通り。
+	 * <ul>
+	 * <li>リスト説明 ⇒ 属性キー: 属性値の内容説明
+	 * <li>data-min-date: TimestampPropertyEditor#getMinDate() の設定値</li>
+	 * <li>data-min-date-function: TimestampPropertyEditor#isMinDateFunction() で判断。 data-min-date の値が function として実行される場合 true が設定される</li>
+	 * <li>data-max-date: TimestampPropertyEditor#getMaxDate() の設定値</li>
+	 * <li>data-max-date-function: TimestampPropertyEditor#isMaxDateFunction() で判断。data-max-date の値が function として実行される場合 true が設定される</li>
+	 * <li>readonly: TimestampPropertyEditor#isRestrictDirectEditing() が true の場合にキーを指定</li>
+	 * </ul>
+	 *
+	 * @param editor TimestampPropertyEditor インスタンス
+	 * @return 入力フィールドの属性情報
+	 */
+	String getInputAttrs(TimestampPropertyEditor editor) {
+		StringBuilder attrs = new StringBuilder("");
+		attrs
+			// getMinDate() で設定が存在していれば data-min-date 属性を設定する
+			.append(getAttribute("data-min-date", editor.getMinDate()))
+			.append(" ")
+			// isMinDateFunction が true の場合は、 data-min-date-function="true" を付与する
+			.append(editor.isMinDateFunction() ? "data-min-date-function=\"true\"" : "")
+			.append(" ")
+			// getMaxDate() で設定が存在していれば data-max-date 属性を設定する
+			.append(getAttribute("data-max-date", editor.getMaxDate()))
+			.append(" ")
+			// isMaxDateFunction が true の場合は、 data-max-date-function="true" を付与する
+			.append(editor.isMaxDateFunction() ? "data-max-date-function=\"true\"" : "")
+			.append(" ")
+			// isRestrictDirectEditing が true の場合は、 readonly 属性を付与する
+			.append(editor.isRestrictDirectEditing() ? "readonly" : "");
+		return attrs.toString();
+	}
 %>
 <%
 	TimestampPropertyEditor editor = (TimestampPropertyEditor) request.getAttribute(Constants.EDITOR_EDITOR);
 
 	Entity entity = request.getAttribute(Constants.ENTITY_DATA) instanceof Entity ? (Entity) request.getAttribute(Constants.ENTITY_DATA) : null;
 	Object propValue = request.getAttribute(Constants.EDITOR_PROP_VALUE);
+	String displayLabel = (String) request.getAttribute(Constants.EDITOR_DISPLAY_LABEL);
 
 	String defName = (String)request.getAttribute(Constants.DEF_NAME);
 	String rootDefName = (String)request.getAttribute(Constants.ROOT_DEF_NAME);
 	PropertyDefinition pd = (PropertyDefinition) request.getAttribute(Constants.EDITOR_PROPERTY_DEFINITION);
 	String scriptKey = (String)request.getAttribute(Constants.SECTION_SCRIPT_KEY);
 	String execType = (String) request.getAttribute(Constants.EXEC_TYPE);
+	Boolean nestDummyRow = (Boolean) request.getAttribute(Constants.EDITOR_REF_NEST_DUMMY_ROW);
+	if (nestDummyRow == null) {
+		nestDummyRow = false;
+	}
 
 	Boolean isVirtual = (Boolean) request.getAttribute(Constants.IS_VIRTUAL);
 	if (isVirtual == null) isVirtual = false;
@@ -142,8 +204,11 @@
 		request.setAttribute(Constants.AUTOCOMPLETION_SCRIPT_PATH, "/jsp/gem/generic/editor/timestamp/TimestampPropertyAutocompletion.jsp");
 	}
 
+	// 入力フィールドの属性値を取得する
+	String inputAttributes = getInputAttrs(editor);
+
 	//タイプ毎に出力内容かえる
-	if (editor.getDisplayType() != DateTimeDisplayType.LABEL 
+	if (editor.getDisplayType() != DateTimeDisplayType.LABEL
 			&& editor.getDisplayType() != DateTimeDisplayType.HIDDEN && updatable) {
 
 		boolean isMultiple = pd.getMultiplicity() != 1;
@@ -166,6 +231,11 @@
 function <%=toggleAddBtnFunc%>(){
 	var display = $("#<%=StringUtil.escapeJavaScript(ulId)%> li:not(:hidden)").length < <%=pd.getMultiplicity()%>;
 	$("#id_addBtn_<c:out value="<%=propName %>" />").toggle(display);
+
+	var $parent = $("#<%=StringUtil.escapeJavaScript(ulId)%>").closest(".property-data");
+	if ($(".validate-error", $parent).length === 0) {
+		$(".format-error", $parent).remove();
+	}
 }
 </script>
 <%
@@ -198,9 +268,10 @@ function <%=toggleAddBtnFunc%>(){
 				}
 
 %>
-<input type="text" class="inpbr" style="<c:out value="<%=customStyle%>"/>" data-showWeekday=<%=editor.isShowWeekday()%>
+<input type="text" class="inpbr" style="<c:out value="<%=customStyle%>"/>" data-showWeekday=<%=editor.isShowWeekday()%> data-suppress-alert="true"
 	data-stepmin="<c:out value="<%=minInterval %>"/>" data-timeformat="<c:out value="<%=sbFormat.toString() %>"/>"
-	data-fixedMin="<c:out value="<%=defaultMin%>"/>" data-fixedSec="<c:out value="<%=defaultSec%>"/>" data-fixedMSec="000"/>
+	data-fixedMin="<c:out value="<%=defaultMin%>"/>" data-fixedSec="<c:out value="<%=defaultSec%>"/>" data-fixedMSec="000"
+	<%= inputAttributes %> />
 <input type="hidden" />
 <input type="button" value="${m:rs('mtp-gem-messages', 'generic.editor.timestamp.TimestampPropertyEditor_Edit.delete')}" class="gr-btn-02 del-btn" />
 </li>
@@ -234,13 +305,38 @@ function <%=toggleAddBtnFunc%>(){
 <input type="button" id="id_addBtn_<c:out value="<%=propName %>"/>" value="${m:rs('mtp-gem-messages', 'generic.editor.timestamp.TimestampPropertyEditor_Edit.add')}" class="gr-btn-02 add-btn" style="<%=addBtnStyle%>"
 	onclick="addTimestampPickerItem('<%=StringUtil.escapeJavaScript(ulId)%>', <%=pd.getMultiplicity() + 1 %>, '<%=StringUtil.escapeJavaScript(dummyRowId)%>', '<%=StringUtil.escapeJavaScript(propName)%>', 'id_count_<%=StringUtil.escapeJavaScript(propName)%>', <%=toggleAddBtnFunc%>, <%=toggleAddBtnFunc%>)" />
 <input type="hidden" id="id_count_<c:out value="<%=propName %>"/>" value="<c:out value="<%=length %>"/>" />
+<script>
+$(function() {
+	<%-- common.js --%>
+	addEditValidator(function() {
+		var $input = $("#" + es("<%=ulId%>") + " li :text");
+		for (var i = 0; i < $input.length; i++) {
+			var $_input = $($input.get(i));
+			var val = $_input.val();
+			var dateFormat = dateUtil.getInputDateFormat();
+			var timeFormat = $_input.attr("data-timeformat");
+			var fixedmin = $_input.attr("data-fixedmin");
+			var fixedsec = $_input.attr("data-fixedsec");
+			if (typeof val !== "undefined" && val !== null && val !== "") {
+				try {
+					validateTimestampPicker(val, dateFormat, timeFormat, fixedmin, fixedsec);
+				} catch (e) {
+					alert(messageFormat(scriptContext.gem.locale.common.timestampFormatErrorMsg, "<%=StringUtil.escapeJavaScript(displayLabel)%>", dateFormat + " " + timeFormat))
+					return false;
+				}
+			}
+		}
+		return true;
+	});
+});
+</script>
 
 <%
 			} else {
 %>
 <ul id="<c:out value="<%=ulId %>"/>" class="mb05">
 <li id="<c:out value="<%=dummyRowId %>"/>" class="list-add picker-list timestampselect-field" style="display: none;">
-<input type="text" class="inpbr" style="<c:out value="<%=customStyle%>"/>" data-showButtonPanel="<%=!editor.isHideButtonPanel()%>" data-showWeekday=<%=editor.isShowWeekday()%> />
+<input type="text" class="inpbr" style="<c:out value="<%=customStyle%>"/>" data-showButtonPanel="<%=!editor.isHideButtonPanel()%>" data-showWeekday=<%=editor.isShowWeekday()%> data-suppress-alert="true" <%= inputAttributes %> />
 <%
 				if (TimeDispRange.isDispHour(editor.getDispRange())) {
 				//時間を表示
@@ -345,6 +441,26 @@ function <%=toggleAddBtnFunc%>(){
 <input type="button" id="id_addBtn_<c:out value="<%=propName %>"/>" value="${m:rs('mtp-gem-messages', 'generic.editor.timestamp.TimestampPropertyEditor_Edit.add')}" class="gr-btn-02 add-btn" style="<%=addBtnStyle%>"
 	onclick="addTimestampSelectItem('<%=StringUtil.escapeJavaScript(ulId)%>', <%=pd.getMultiplicity() + 1 %>, '<%=StringUtil.escapeJavaScript(dummyRowId)%>', '<%=StringUtil.escapeJavaScript(propName)%>', 'id_count_<%=StringUtil.escapeJavaScript(propName)%>', <%=toggleAddBtnFunc%>, <%=toggleAddBtnFunc%>)" />
 <input type="hidden" id="id_count_<c:out value="<%=propName %>"/>" value="<c:out value="<%=length %>"/>" />
+<script>
+$(function() {
+	<%-- common.js --%>
+	addEditValidator(function() {
+		var $input = $("#" + es("<%=ulId%>") + " li :text");
+		for (var i = 0; i < $input.length; i++) {
+			var val = $($input.get(i)).val();
+			if (typeof val !== "undefined" && val != null && val !== "") {
+				try {
+					validateDate(val, dateUtil.getInputDateFormat(), "");
+				} catch (e) {
+					alert(messageFormat(scriptContext.gem.locale.common.dateFormatErrorMsg, "<%=StringUtil.escapeJavaScript(displayLabel)%>", dateUtil.getInputDateFormat()))
+					return false;
+				}
+			}
+		}
+		return true;
+	});
+});
+</script>
 <%
 
 			}
@@ -362,19 +478,68 @@ function <%=toggleAddBtnFunc%>(){
 <jsp:include page="TimestampTimepicker.jsp"></jsp:include>
 </span>
 <%
+				if (!nestDummyRow) {
+					//NestTableダミー行は出力しない＆コピー時はコピー処理側から追加
+%>
+<script>
+$(function() {
+	<%-- common.js --%>
+	addEditValidator(function() {
+		var $input = $("#datetime_" + es("<%=StringUtil.escapeJavaScript(propName)%>"));
+		var val = $input.val();
+		var dateFormat = dateUtil.getInputDateFormat();
+		var timeFormat = $input.attr("data-timeformat");
+		var fixedmin = $input.attr("data-fixedmin");
+		var fixedsec = $input.attr("data-fixedsec");
+		if (typeof val !== "undefined" && val !== null && val !== "") {
+			try {
+				validateTimestampPicker(val, dateFormat, timeFormat, fixedmin, fixedsec);
+			} catch (e) {
+				alert(messageFormat(scriptContext.gem.locale.common.timestampFormatErrorMsg, "<%=StringUtil.escapeJavaScript(displayLabel)%>", dateFormat + " " + timeFormat))
+				return false;
+			}
+		}
+		return true;
+	});
+});
+</script>
+<%
+				}
 			} else {
 %>
 <span class="timestampselect-field">
 <jsp:include page="Timestamp.jsp"></jsp:include>
 </span>
 <%
+				if (!nestDummyRow) {
+					//NestTableダミー行は出力しない＆コピー時はコピー処理側から追加
+%>
+<script>
+$(function() {
+	<%-- common.js --%>
+	addEditValidator(function() {
+		var val = $("#d_" + es("<%=StringUtil.escapeJavaScript(propName)%>")).val();
+		if (typeof val !== "undefined" && val != null && val !== "") {
+			try {
+				validateDate(val, dateUtil.getInputDateFormat(), "");
+			} catch (e) {
+				alert(messageFormat(scriptContext.gem.locale.common.dateFormatErrorMsg, "<%=StringUtil.escapeJavaScript(displayLabel)%>", dateUtil.getInputDateFormat()))
+				return false;
+			}
+		}
+		return true;
+	});
+});
+</script>
+<%
 				}
+			}
 			request.removeAttribute(Constants.EDITOR_PICKER_PROP_NAME);
 			request.removeAttribute(Constants.EDITOR_PICKER_PROP_VALUE);
 		}
 	} else {
 		//LABELかHIDDENか更新不可
-		
+
 		if (editor.getDisplayType() != DateTimeDisplayType.HIDDEN) {
 			request.setAttribute(Constants.OUTPUT_HIDDEN, true);
 		}

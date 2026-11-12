@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -65,7 +65,8 @@ public class MetaRequiresAtLeastOneFieldValidator extends MetaViewValidator {
 			for (MetaPropertyValidationCondition meta : propertyList) {
 				PropertyValidationCondition condition = meta.currentConfig(definitionId);
 				if (condition != null) {
-					validator.getPropertyList().add(condition);
+					validator.getPropertyList()
+							.add(condition);
 				}
 			}
 		}

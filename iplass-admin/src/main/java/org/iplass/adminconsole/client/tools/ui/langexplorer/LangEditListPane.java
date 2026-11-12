@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,7 +27,9 @@ import java.util.Map;
 
 import org.iplass.adminconsole.client.base.event.DataChangedEvent;
 import org.iplass.adminconsole.client.base.event.DataChangedHandler;
+import org.iplass.adminconsole.client.base.screen.ScreenModuleBasedUIFactoryHolder;
 import org.iplass.adminconsole.client.base.tenant.TenantInfoHolder;
+import org.iplass.adminconsole.client.base.ui.widget.MtpListGrid;
 import org.iplass.adminconsole.shared.base.dto.i18n.MultiLangFieldInfo;
 import org.iplass.adminconsole.shared.metadata.rpc.MetaDataServiceAsync;
 import org.iplass.adminconsole.shared.metadata.rpc.MetaDataServiceFactory;
@@ -62,7 +64,8 @@ public class LangEditListPane extends VLayout {
 	/** メタデータサービス */
 	private final MetaDataServiceAsync service = MetaDataServiceFactory.get();
 
-	private LangExplorerSettingController controller = GWT.create(LangExplorerSettingController.class);
+	private LangExplorerSettingController controller = ScreenModuleBasedUIFactoryHolder.getFactory()
+			.createLangExplorerSettingController();
 
 	public LangEditListPane() {
 
@@ -104,14 +107,15 @@ public class LangEditListPane extends VLayout {
 	 * @param langEditListPane
 	 * @param path
 	 */
-	public void createGrid(Map<String, List<LocalizedStringDefinition>> localizedStringMap, String definitionClassName, String definitionName, String path) {
+	public void createGrid(Map<String, List<LocalizedStringDefinition>> localizedStringMap, String definitionClassName, String definitionName,
+			String path) {
 		//古いグリッド削除
 		if (sectionStack.getMember(0) != null) {
 			sectionStack.removeChild(sectionStack.getMember(0));
 		}
 
 		//グリッド作成
-		ListGrid listGrid = new ListGrid();
+		ListGrid listGrid = new MtpListGrid();
 
 		listGrid.setCanEdit(true);
 		listGrid.setEditEvent(ListGridEditEvent.DOUBLECLICK);
@@ -126,16 +130,16 @@ public class LangEditListPane extends VLayout {
 		listGridFields[1] = defaultLang;
 
 		int enableCnt = 2;
-		for(Map.Entry<String, String> entry : enableLanguages.entrySet()) {
+		for (Map.Entry<String, String> entry : enableLanguages.entrySet()) {
 			listGridFields[enableCnt] = new ListGridField(entry.getKey(), entry.getValue());
-			enableCnt ++;
+			enableCnt++;
 		}
 
 		listGrid.setFields(listGridFields);
 
 		ListGridRecord[] records = new ListGridRecord[localizedStringMap.size()];
 		int cnt = 0;
-		for(Map.Entry<String, List<LocalizedStringDefinition>> entry : localizedStringMap.entrySet()) {
+		for (Map.Entry<String, List<LocalizedStringDefinition>> entry : localizedStringMap.entrySet()) {
 			ListGridRecord record = new ListGridRecord();
 
 			record.setAttribute(ITEM_KEY_NAME, entry.getKey());
@@ -145,7 +149,7 @@ public class LangEditListPane extends VLayout {
 			}
 
 			records[cnt] = record;
-			cnt ++;
+			cnt++;
 		}
 
 		listGrid.setData(records);
@@ -169,7 +173,7 @@ public class LangEditListPane extends VLayout {
 	 * @return
 	 */
 	public Map<String, MultiLangFieldInfo> createUpdateInfo() {
-		Canvas[] temp =  sectionStack.getMembers();
+		Canvas[] temp = sectionStack.getMembers();
 		ListGrid grid = (ListGrid) temp[1];
 		ListGridRecord[] records = grid.getRecords();
 
@@ -182,9 +186,10 @@ public class LangEditListPane extends VLayout {
 			multiLangFieldInfo.setDefaultString(record.getAttribute(DEFAULT_KEY_NAME));
 
 			List<LocalizedStringDefinition> localizedDisplayNameList = new ArrayList<LocalizedStringDefinition>();
-			for(Map.Entry<String, String> entry : this.enableLanguages.entrySet()) {
+			for (Map.Entry<String, String> entry : this.enableLanguages.entrySet()) {
 				String multiLang = record.getAttribute(entry.getKey());
-				if (multiLang == null || multiLang.isEmpty()) continue;//未設定の場合は多言語定義作らない
+				if (multiLang == null || multiLang.isEmpty())
+					continue;//未設定の場合は多言語定義作らない
 
 				LocalizedStringDefinition localizedDefinition = new LocalizedStringDefinition();
 				localizedDefinition.setLocaleName(entry.getKey());
@@ -230,6 +235,7 @@ public class LangEditListPane extends VLayout {
 
 			IButton save = new IButton("Save");
 			save.addClickHandler(new com.smartgwt.client.widgets.events.ClickHandler() {
+				@Override
 				public void onClick(com.smartgwt.client.widgets.events.ClickEvent event) {
 					controller.updateMultiLangInfo(parent, definitionClassName, definitionName, path);
 				}
@@ -237,6 +243,7 @@ public class LangEditListPane extends VLayout {
 
 			IButton cancel = new IButton("Cancel");
 			cancel.addClickHandler(new com.smartgwt.client.widgets.events.ClickHandler() {
+				@Override
 				public void onClick(com.smartgwt.client.widgets.events.ClickEvent event) {
 					controller.displayMultiLangInfo(parent, definitionClassName, definitionName, path);
 				}
@@ -244,6 +251,7 @@ public class LangEditListPane extends VLayout {
 
 			IButton export = new IButton("Export");
 			export.addClickHandler(new com.smartgwt.client.widgets.events.ClickHandler() {
+				@Override
 				public void onClick(com.smartgwt.client.widgets.events.ClickEvent event) {
 					controller.exportMultiLangInfo(path, definitionName);
 				}
@@ -251,6 +259,7 @@ public class LangEditListPane extends VLayout {
 
 			IButton importButton = new IButton("Import");
 			importButton.addClickHandler(new com.smartgwt.client.widgets.events.ClickHandler() {
+				@Override
 				public void onClick(com.smartgwt.client.widgets.events.ClickEvent event) {
 					LangCsvUploadDialog dialog = new LangCsvUploadDialog(OutputMode.SINGLE, definitionName, path);
 					dialog.addDialogCloseHandler(new DataChangedHandler() {

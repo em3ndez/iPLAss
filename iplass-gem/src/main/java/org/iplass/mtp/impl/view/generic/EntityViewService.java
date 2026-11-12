@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,6 +24,8 @@ import org.iplass.mtp.ManagerLocator;
 import org.iplass.mtp.definition.TypedDefinitionManager;
 import org.iplass.mtp.impl.definition.AbstractTypedMetaDataService;
 import org.iplass.mtp.impl.definition.DefinitionMetaDataTypeMap;
+import org.iplass.mtp.impl.definition.DefinitionNameChecker;
+import org.iplass.mtp.impl.entity.EntityDefinitionNameChecker;
 import org.iplass.mtp.spi.Config;
 import org.iplass.mtp.spi.Service;
 import org.iplass.mtp.view.generic.EntityView;
@@ -42,17 +44,27 @@ public class EntityViewService extends AbstractTypedMetaDataService<MetaEntityVi
 		public TypeMap() {
 			super(getFixedPath(), MetaEntityView.class, EntityView.class);
 		}
+
 		@Override
 		public TypedDefinitionManager<EntityView> typedDefinitionManager() {
-			return ManagerLocator.getInstance().getManager(EntityViewManager.class);
+			return ManagerLocator.getInstance()
+					.getManager(EntityViewManager.class);
 		}
+
 		@Override
 		public String toPath(String defName) {
 			return pathPrefix + defName.replace('.', '/');
 		}
+
 		@Override
 		public String toDefName(String path) {
-			return path.substring(pathPrefix.length()).replace("/", ".");
+			return path.substring(pathPrefix.length())
+					.replace("/", ".");
+		}
+
+		@Override
+		protected DefinitionNameChecker createDefinitionNameChecker() {
+			return new EntityDefinitionNameChecker();
 		}
 	}
 

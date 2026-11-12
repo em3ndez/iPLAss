@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -124,6 +124,14 @@ public interface FulltextSearchService extends Service {
 	 */
 	List<String> fulltextSearchOidList(String defName, String keyword);
 
+	/**
+	 * 全文検索を実行し、対象Entity毎の検索結果OIDリストのMapを返す。 
+	 *
+	 * @param defNames Entity定義名のリスト
+	 * @param keyword キーワード
+	 * @return 対象Entity毎の検索結果OIDリストのMap
+	 */
+	Map<String, List<String>> fulltextSearchOidList(List<String> defNames, String keyword);
 
 	//TODO 現状Luceneの場合、FulltextSearchResultはoidのみ
 	/**
@@ -136,6 +144,7 @@ public interface FulltextSearchService extends Service {
 	List<FulltextSearchResult> execFulltextSearch(String defName, String keyword);
 
 	void initTenantContext(TenantContext tenantContext);
+
 	void destroyTenantContext(TenantContext tenantContext);
 
 }

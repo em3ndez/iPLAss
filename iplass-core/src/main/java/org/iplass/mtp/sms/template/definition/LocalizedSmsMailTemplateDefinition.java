@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,16 +32,19 @@ public class LocalizedSmsMailTemplateDefinition implements Serializable {
 	private static final long serialVersionUID = -2445661578175133957L;
 	private String localeName;
 	private PlainTextBodyPart message;
-	
+
 	public String getLocaleName() {
 		return localeName;
 	}
+
 	public void setLocaleName(String localeName) {
 		this.localeName = localeName;
 	}
+
 	public PlainTextBodyPart getMessage() {
 		return message;
 	}
+
 	public void setMessage(PlainTextBodyPart message) {
 		this.message = message;
 	}

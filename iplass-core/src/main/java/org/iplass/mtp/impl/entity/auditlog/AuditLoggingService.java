@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -41,16 +41,24 @@ public interface AuditLoggingService extends Service {
 	public static final String ACTION_COUNT_QUERY = "countQuery";
 	public static final String ACTION_BULK_UPDATE = "bulkUpdate";
 
-
 	public void logQuery(Query query, boolean isCount);
+
 	public void logInsert(Entity entity);
+
 	public boolean isLogBeforeEntity(String definitionName);
+
 	public void logUpdate(Entity beforeEntity, Entity entity, UpdateOption option);
+
 	public void logUpdateAll(UpdateCondition cond);
+
 	public void logDelete(Entity entity, DeleteOption option);
+
 	public void logDeleteAll(DeleteCondition cond);
+
 	public void logPurge(Long rbid);
+
 	public void logRestore(String oid, String defName, Long rbid);
+
 	public void logBulkUpdate(String defName);
 
 }

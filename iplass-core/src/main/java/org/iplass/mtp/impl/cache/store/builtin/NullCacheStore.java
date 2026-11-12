@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,9 +20,10 @@
 
 package org.iplass.mtp.impl.cache.store.builtin;
 
-
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.iplass.mtp.impl.cache.store.CacheEntry;
 import org.iplass.mtp.impl.cache.store.CacheStore;
@@ -65,6 +66,16 @@ public class NullCacheStore implements CacheStore {
 	@Override
 	public CacheEntry putIfAbsent(CacheEntry entry) {
 		return null;
+	}
+
+	@Override
+	public CacheEntry computeIfAbsent(Object key, Function<Object, CacheEntry> mappingFunction) {
+		return mappingFunction.apply(key);
+	}
+
+	@Override
+	public CacheEntry compute(Object key, BiFunction<Object, CacheEntry, CacheEntry> remappingFunction) {
+		return remappingFunction.apply(key, null);
 	}
 
 	@Override
@@ -119,7 +130,7 @@ public class NullCacheStore implements CacheStore {
 	public List<CacheEntry> removeByIndex(int indexKey, Object indexValue) {
 		return Collections.emptyList();
 	}
-	
+
 	@Override
 	public int getSize() {
 		return 0;
@@ -138,7 +149,7 @@ public class NullCacheStore implements CacheStore {
 
 	@Override
 	public void destroy() {
-		
+
 	}
 
 	@Override

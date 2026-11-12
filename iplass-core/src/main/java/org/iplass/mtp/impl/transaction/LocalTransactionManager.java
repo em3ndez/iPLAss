@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,15 +27,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class LocalTransactionManager implements TransactionManager {
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(LocalTransactionManager.class);
-	
+
 	static ThreadLocal<LocalTransaction> transaction = new ThreadLocal<LocalTransaction>();
-	
+
 	public Transaction newTransaction() {
 		return newTransaction(false);
 	}
-	
+
 	public Transaction currentTransaction() {
 		Transaction t = transaction.get();
 		if (t == null) {
@@ -44,7 +44,7 @@ public class LocalTransactionManager implements TransactionManager {
 			return t;
 		}
 	}
-	
+
 	public void checkAndClean() {
 		for (LocalTransaction t = transaction.get(); t != null; t = transaction.get()) {
 			if (t.getStatus() == TransactionStatus.ACTIVE) {
@@ -68,7 +68,7 @@ public class LocalTransactionManager implements TransactionManager {
 	public Transaction newTransaction(boolean readOnly) {
 		return createTran(readOnly, false);
 	}
-	
+
 	protected Transaction createTran(boolean readOnly, boolean noTransaction) {
 		LocalTransaction current = transaction.get();
 		LocalTransaction newT = new LocalTransaction(readOnly, current, noTransaction);
@@ -85,5 +85,5 @@ public class LocalTransactionManager implements TransactionManager {
 	public void resume(Transaction t) {
 		((LocalTransaction) t).close();
 	}
-	
+
 }

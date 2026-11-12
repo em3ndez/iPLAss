@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -45,7 +45,7 @@ public class ScriptingConsentTypeDefinition extends ConsentTypeDefinition {
 	private static final long serialVersionUID = 7944630447487359180L;
 
 	private String script;
-	
+
 	public String getScript() {
 		return script;
 	}

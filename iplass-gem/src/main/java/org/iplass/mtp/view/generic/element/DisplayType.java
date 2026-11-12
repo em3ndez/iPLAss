@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,7 +20,7 @@
 
 package org.iplass.mtp.view.generic.element;
 
-import javax.xml.bind.annotation.XmlEnumValue;
+import jakarta.xml.bind.annotation.XmlEnumValue;
 
 /**
  * 表示タイプ
@@ -28,11 +28,15 @@ import javax.xml.bind.annotation.XmlEnumValue;
  */
 public enum DisplayType {
 	/** 詳細編集 */
-	@XmlEnumValue("Detail")DETAIL,
+	@XmlEnumValue("Detail")
+	DETAIL,
 	/** 詳細表示 */
-	@XmlEnumValue("View")VIEW,
+	@XmlEnumValue("View")
+	VIEW,
 	/** 詳細編集,詳細表示 */
-	@XmlEnumValue("Both")BOTH,
+	@XmlEnumValue("Both")
+	BOTH,
 	/** カスタム */
-	@XmlEnumValue("Custom")CUSTOM
+	@XmlEnumValue("Custom")
+	CUSTOM
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,8 +30,7 @@ public enum EditorTheme {
 	SOLARIZED_DARK("solarized_dark", "Solarized Dark"),
 	TEXTMATE("textmate", "Textmate"),
 	TERMINAL("terminal", "Terminal"),
-	XCODE("xcode", "XCode")
-	;
+	XCODE("xcode", "XCode");
 
 	private final String themeName;
 	private final String text;
@@ -57,7 +56,8 @@ public enum EditorTheme {
 
 	public static EditorTheme themeNameOf(String themeName) {
 		for (EditorTheme theme : values()) {
-			if (theme.getThemeName().equals(themeName.toLowerCase())) {
+			if (theme.getThemeName()
+					.equals(themeName.toLowerCase())) {
 				return theme;
 			}
 		}

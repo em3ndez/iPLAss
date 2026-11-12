@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,7 +30,7 @@ import org.iplass.mtp.Manager;
  *
  */
 public interface PushNotificationManager extends Manager {
-	
+
 	/**
 	 * 指定のテンプレートを利用した形でPushNotificationのインスタンスを生成する。
 	 * 
@@ -39,7 +39,7 @@ public interface PushNotificationManager extends Manager {
 	 * @return
 	 */
 	public PushNotification createNotification(String tmplDefName, Map<String, Object> bindings);
-	
+
 	/**
 	 * プッシュ通知する。
 	 * 

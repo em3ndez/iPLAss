@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,8 +20,6 @@
 
 package org.iplass.mtp.impl.view.generic.editor;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
-
 import org.iplass.mtp.view.generic.editor.DateRangePropertyEditor;
 import org.iplass.mtp.view.generic.editor.JoinPropertyEditor;
 import org.iplass.mtp.view.generic.editor.NumericRangePropertyEditor;
@@ -29,7 +27,10 @@ import org.iplass.mtp.view.generic.editor.PropertyEditor;
 import org.iplass.mtp.view.generic.editor.TemplatePropertyEditor;
 import org.iplass.mtp.view.generic.editor.UserPropertyEditor;
 
-@XmlSeeAlso( {MetaDateRangePropertyEditor.class, MetaNumericRangePropertyEditor.class, MetaJoinPropertyEditor.class, MetaTemplatePropertyEditor.class, MetaUserPropertyEditor.class})
+import jakarta.xml.bind.annotation.XmlSeeAlso;
+
+@XmlSeeAlso({ MetaDateRangePropertyEditor.class, MetaNumericRangePropertyEditor.class, MetaJoinPropertyEditor.class, MetaTemplatePropertyEditor.class,
+		MetaUserPropertyEditor.class })
 public abstract class MetaCustomPropertyEditor extends MetaPropertyEditor {
 
 	/** SerialVersionUID */

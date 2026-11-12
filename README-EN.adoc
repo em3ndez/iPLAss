@@ -34,19 +34,19 @@ Also, jar is published at Maven Central with groupId : org.iplass.
 
 example when using gradle：
 
- implementation 'org.iplass:iplass-gem:3.1.12'
+ implementation 'org.iplass:iplass-gem:4.1.0'
 
 example when using  maven：
 
  <dependency>
    <groupId>org.iplass</groupId>
    <artifactId>iplass-gem</artifactId>
-   <version>3.1.12</version>
+   <version>4.1.0</version>
    <type>pom</type>
  </dependency>
 
-NOTE: JakartaEE8 (Servlet/JSP/JSTL/EL/JAX-RS/BeanValidation/CommonAnnotations/JavaMail/JAXB/JAF) Runtime environment is required.
-Please refer to the build.gradle file from https://github.com/ISID/iplass-skeleton[skeleton-proect].
+NOTE: JakartaEE10 (Servlet/JSP/JSTL/EL/JAX-RS/BeanValidation/CommonAnnotations/JavaMail/JAXB/JAF) Runtime environment is required.
+Please refer to the build.gradle file from https://github.com/dentsusoken/iplass-skeleton[skeleton-proect].
 
 The modules are explained and listed below.
 
@@ -85,22 +85,45 @@ The module supports infinispan to achieve cachestorage and the communication bet
 Redis addon module. +
 Supports Redis for cachestorage.
 
+### iplass-googlecloud
+An addon module for using Google Cloud services. +
+Push notifications can be sent via FCM.
+
 ## Related repositories
 
-* https://github.com/ISID/iplass-skeleton
-* https://github.com/ISID/iplass-sample-app
-* https://github.com/ISID/iplass-sample-app-vuejs
-* https://github.com/ISID/iplass-eclipse
+* https://github.com/dentsusoken/iplass-skeleton
+* https://github.com/dentsusoken/iplass-sample-app
+* https://github.com/dentsusoken/iplass-sample-app-vuejs
+* https://github.com/dentsusoken/iplass-sample-app-km
+* https://github.com/dentsusoken/iplass-sample-claude
+* https://github.com/dentsusoken/iplass-gradle-plugin
+* https://github.com/dentsusoken/iPLAss-docs
+* https://github.com/iplass
 
 ## Branches
 
 ### master
-The master branch contains the source code of the latest stable version, which is regarded as version 3.1.x.
+The master branch contains the source code of the latest stable version, which is regarded as version 4.1.x.
+
+NOTE: It is Java21 / JakartaEE10 based.
+
+### 4.0.x
+4.0.x branch contains the source code of the previous stable version.
+
+NOTE: It is Java21 / JakartaEE10 based.
+
+### 3.2.x
+3.2.x branch contains the source code of the old stable version.
+
+NOTE: It is (Java8 | Java11) / JakartaEE8(JavaEE8) based.
+
+### 3.1.x
+3.1.x branch contains the source code of the old stable version.
 
 NOTE: It is (Java8 | Java11) / JakartaEE8(JavaEE8) based.
 
 ### 3.0.x
-3.0.x branch contains the source code of the previous stable version.
+3.0.x branch contains the source code of the old stable version.
 
 NOTE: It is (Java8 | Java11) / JavaEE7 based.
 
@@ -119,4 +142,4 @@ https://www.gnu.org/licenses/agpl.html[AGPL-3.0]
 
 If you would like to get the business liscense, please contact us by the following link.
 
-https://www.isid.co.jp/solution/iPLAss.html
+https://itsol.dentsusoken.com/iplass/

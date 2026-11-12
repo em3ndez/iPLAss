@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,7 +33,7 @@ import org.iplass.mtp.entity.EntityRuntimeException;
 import org.iplass.mtp.entity.bulkupdate.BulkUpdateEntity.UpdateMethod;
 import org.iplass.mtp.entity.definition.EntityDefinition;
 import org.iplass.mtp.entity.definition.EntityDefinitionManager;
-import org.iplass.mtp.impl.entity.csv.EntityCsvReader;
+import org.iplass.mtp.impl.entity.fileport.EntityCsvReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,8 +110,7 @@ public class CSVFormattedEntityStream implements BulkUpdatable {
 	/**
 	 * 制御フラグ、マージ(追加更新)を示す値。
 	 */
-	public static final String CTRL_MERGE = EntityCsvReader.CTRL_MERGE;;
-
+	public static final String CTRL_MERGE = EntityCsvReader.CTRL_MERGE;
 
 	private String definitionName;
 	private List<String> updateProperties;
@@ -200,7 +199,8 @@ public class CSVFormattedEntityStream implements BulkUpdatable {
 			throw new EntityRuntimeException("concurrent iterate not supported on CSVFormattedEntityStream.");
 		}
 
-		EntityDefinitionManager edm = ManagerLocator.getInstance().getManager(EntityDefinitionManager.class);
+		EntityDefinitionManager edm = ManagerLocator.getInstance()
+				.getManager(EntityDefinitionManager.class);
 		EntityDefinition def = edm.get(definitionName);
 		if (def == null) {
 			throw new EntityRuntimeException(definitionName + " definition not found.");
@@ -250,7 +250,6 @@ public class CSVFormattedEntityStream implements BulkUpdatable {
 	public void setEnableAuditPropertySpecification(boolean enableAuditPropertySpecification) {
 		this.enableAuditPropertySpecification = enableAuditPropertySpecification;
 	}
-
 
 	private class It implements Iterator<BulkUpdateEntity> {
 

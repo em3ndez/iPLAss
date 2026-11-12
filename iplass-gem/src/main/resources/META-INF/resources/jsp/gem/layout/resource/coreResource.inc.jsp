@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -47,6 +47,10 @@ scriptContext = {};
 document.scriptContext = scriptContext;
 scriptContext.gem = {};
 scriptContext.gem.showPulldownPleaseSelectLabel = <%=ViewUtil.isShowPulldownPleaseSelectLabel()%>;
+scriptContext.gem.referenceModal = {
+	width: <%=ViewUtil.getReferenceModalWidth() %>,
+	height: <%=ViewUtil.getReferenceModalHeight() %>
+};
 dType="/gem";
 </script>
 
@@ -57,15 +61,17 @@ dType="/gem";
 scriptContext.locale.showPulldownPleaseSelectLabel = <%=ViewUtil.isShowPulldownPleaseSelectLabel()%>;
 </script>
 
-<script src="${staticContentPath}/webjars/jquery/3.5.1/jquery.min.js?cv=${apiVersion}"></script>
-<script src="${staticContentPath}/webjars/jquery-ui/1.12.1/jquery-ui.min.js?cv=${apiVersion}"></script>
+<script src="${staticContentPath}/webjars/jquery/3.7.1/jquery.min.js?cv=${apiVersion}"></script>
+<script>$.uiBackCompat = false;</script>
+<script src="${staticContentPath}/webjars/jquery-ui/1.13.3/dist/jquery-ui.min.js?cv=${apiVersion}"></script>
 <script src="${staticContentPath}/scripts/gem/functions.js?cv=${apiVersion}"></script>
 <script src="${staticContentPath}/scripts/gem/common.js?cv=${apiVersion}"></script>
 <script src="${staticContentPath}/scripts/gem/webapi.js?cv=${apiVersion}"></script>
 <script src="${staticContentPath}/scripts/gem/plugin/fixHeight.js?cv=${apiVersion}"></script>
-<script src="${staticContentPath}/webjars/momentjs/2.24.0/min/moment-with-locales.min.js?cv=${apiVersion}"></script>
+<script src="${staticContentPath}/scripts/gem/module/searchresult/frozenColumns.js?cv=${apiVersion}"></script>
+<script src="${staticContentPath}/webjars/moment/2.31.0/min/moment-with-locales.min.js?cv=${apiVersion}"></script>
 <script src="${staticContentPath}/webjars/font-awesome/5.13.1/js/all.min.js?cv=${apiVersion}"></script>
 
-<link rel="stylesheet" href="${staticContentPath}/webjars/jquery-ui/1.12.1/themes/base/jquery-ui.min.css?cv=${apiVersion}" />
+<link rel="stylesheet" href="${staticContentPath}/webjars/jquery-ui/1.13.3/dist/themes/base/jquery-ui.min.css?cv=${apiVersion}" />
 
 <%@include file="./datepickerResource.inc.jsp" %> 

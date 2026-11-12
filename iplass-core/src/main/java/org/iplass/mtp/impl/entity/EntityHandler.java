@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -56,6 +56,8 @@ import org.iplass.mtp.entity.definition.IndexType;
 import org.iplass.mtp.entity.definition.VersionControlType;
 import org.iplass.mtp.entity.definition.properties.ReferenceType;
 import org.iplass.mtp.entity.interceptor.InvocationType;
+import org.iplass.mtp.entity.query.AsOf;
+import org.iplass.mtp.entity.query.AsOf.AsOfSpec;
 import org.iplass.mtp.entity.query.OrderBy;
 import org.iplass.mtp.entity.query.Query;
 import org.iplass.mtp.entity.query.SortSpec;
@@ -105,7 +107,6 @@ import org.iplass.mtp.impl.util.CoreResourceBundleUtil;
 import org.iplass.mtp.spi.ServiceRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 /**
  * データモデルの特定の型の管理を扱うクラス。
@@ -160,18 +161,22 @@ public class EntityHandler extends BaseMetaDataRuntime {
 			eventListenerHandlers = new ArrayList<>();
 			localizedStringMap = new HashMap<>();
 
-			dataStore = ServiceRegistry.getRegistry().getService(StoreService.class).getDataStore();
+			dataStore = ServiceRegistry.getRegistry()
+					.getService(StoreService.class)
+					.getDataStore();
 
 			MetaEntityStore mes = metaData.getEntityStoreDefinition();
 			if (mes != null) {
-				if (!mes.getClass().equals(dataStore.getEntityStoreType())) {
-					throw new IllegalStateException("missmatch dataStore type in config:" + dataStore.getEntityStoreType() + " and metadata(" + metaData.getName() + "):" + mes.getClass());
+				if (!mes.getClass()
+						.equals(dataStore.getEntityStoreType())) {
+					throw new IllegalStateException("missmatch dataStore type in config:" + dataStore.getEntityStoreType() + " and metadata("
+							+ metaData.getName() + "):" + mes.getClass());
 				}
 				entityStoreRuntime = mes.createRuntime(this);
 			}
 
 			if (metaData.getDeclaredPropertyList() != null) {
-				for (MetaProperty pDef: metaData.getDeclaredPropertyList()) {
+				for (MetaProperty pDef : metaData.getDeclaredPropertyList()) {
 					PropertyHandler pHandler = pDef.createRuntime(metaData);
 					propertyHandlers.add(pHandler);
 					propertyHandlerMap.put(pDef.getName(), pHandler);
@@ -180,18 +185,20 @@ public class EntityHandler extends BaseMetaDataRuntime {
 				}
 			}
 
-			if (metaData.getId().equals(ROOT_ENTITY_ID)) {
+			if (metaData.getId()
+					.equals(ROOT_ENTITY_ID)) {
 				isRoot = true;
 			}
 
 			if (metaData.getEventListenerList() != null) {
-				for (MetaEventListener e: metaData.getEventListenerList()) {
+				for (MetaEventListener e : metaData.getEventListenerList()) {
 					eventListenerHandlers.add(e.createRuntime(metaData));
 				}
 			}
 
 			if (metaData.getMapping() != null) {
-				mappingClass = classForName(metaData.getMapping().getMappingClass());
+				mappingClass = classForName(metaData.getMapping()
+						.getMappingClass());
 			}
 
 			if (metaData.getLocalizedDisplayNameList() != null) {
@@ -201,10 +208,12 @@ public class EntityHandler extends BaseMetaDataRuntime {
 			}
 
 			if (metaData.getDataLocalizationStrategy() != null) {
-				dataLocalizationStrategyRuntime = metaData.getDataLocalizationStrategy().createDataLocalizationStrategyRuntime(this);
+				dataLocalizationStrategyRuntime = metaData.getDataLocalizationStrategy()
+						.createDataLocalizationStrategyRuntime(this);
 			}
 
-			service = ServiceRegistry.getRegistry().getService(EntityService.class);
+			service = ServiceRegistry.getRegistry()
+					.getService(EntityService.class);
 		} catch (RuntimeException e) {
 			setIllegalStateException(e);
 		}
@@ -216,7 +225,7 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		try {
 			c = (Class<? extends Entity>) Class.forName(className);
 			if (!Entity.class.isAssignableFrom(c)) {
-				log.error("Illegal definition on " + metaData.getName() + ". Entity Mapping Class:" +  className + " must implements Entity interface.");
+				log.error("Illegal definition on " + metaData.getName() + ". Entity Mapping Class:" + className + " must implements Entity interface.");
 			}
 		} catch (ClassNotFoundException e) {
 			log.error("MappingClass:" + className + " Not Found on " + metaData.getName());
@@ -240,7 +249,8 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		if (!metaDataConfig.isSharable()) {
 			return false;
 		}
-		MetaDataEntry ent = MetaDataContext.getContext().getMetaDataEntryById(getMetaData().getId());
+		MetaDataEntry ent = MetaDataContext.getContext()
+				.getMetaDataEntryById(getMetaData().getId());
 		if (ent.getRepositryType() == RepositoryType.SHARED) {
 			return true;
 		} else {
@@ -253,7 +263,8 @@ public class EntityHandler extends BaseMetaDataRuntime {
 			return false;
 		}
 
-		MetaDataEntry ent = MetaDataContext.getContext().getMetaDataEntryById(getMetaData().getId());
+		MetaDataEntry ent = MetaDataContext.getContext()
+				.getMetaDataEntryById(getMetaData().getId());
 		if (ent.getRepositryType() == RepositoryType.SHARED) {
 			return true;
 		} else {
@@ -303,6 +314,7 @@ public class EntityHandler extends BaseMetaDataRuntime {
 	public EntityService getService() {
 		return service;
 	}
+
 	public List<EventListenerRuntime> getEventListenerHandlers() {
 		return eventListenerHandlers;
 	}
@@ -361,7 +373,6 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		return superHandler;
 	}
 
-
 	public PropertyHandler getProperty(String propName,
 			EntityContext context) {
 		checkState();
@@ -392,7 +403,7 @@ public class EntityHandler extends BaseMetaDataRuntime {
 			ReferencePropertyHandler refProp = (ReferencePropertyHandler) prop;
 			EntityHandler refHandler = refProp.getReferenceEntityHandler(context);
 			if (refHandler == null) {
-				throw new EntityRuntimeException(objPropName +  "'s Entity is not defined.");//TODO 例外クラスの検討
+				throw new EntityRuntimeException(objPropName + "'s Entity is not defined.");//TODO 例外クラスの検討
 			}
 			return refHandler.getPropertyCascade(subPropPath, context);
 
@@ -415,9 +426,11 @@ public class EntityHandler extends BaseMetaDataRuntime {
 				propList.addAll(parentPropList);
 			}
 		}
-		for (PropertyHandler ph: getDeclaredPropertyList()) {
+		for (PropertyHandler ph : getDeclaredPropertyList()) {
 			if (ph instanceof PrimitivePropertyHandler
-					&& type.isAssignableFrom(((PrimitivePropertyHandler) ph).getMetaData().getType().getClass())) {
+					&& type.isAssignableFrom(((PrimitivePropertyHandler) ph).getMetaData()
+							.getType()
+							.getClass())) {
 				if (propList == null) {
 					propList = new ArrayList<>();
 				}
@@ -445,11 +458,15 @@ public class EntityHandler extends BaseMetaDataRuntime {
 				propList.addAll(parentPropList);
 			}
 		}
-		for (PropertyHandler ph: getDeclaredPropertyList()) {
+		for (PropertyHandler ph : getDeclaredPropertyList()) {
 			if (ph instanceof PrimitivePropertyHandler
-					&& !((PrimitivePropertyHandler) ph).getMetaData().getType().isVirtual()
-					&& ((PrimitivePropertyHandler) ph).getMetaData().getIndexType() != null
-					&& ((PrimitivePropertyHandler) ph).getMetaData().getIndexType() != IndexType.NON_INDEXED) {
+					&& !((PrimitivePropertyHandler) ph).getMetaData()
+							.getType()
+							.isVirtual()
+					&& ((PrimitivePropertyHandler) ph).getMetaData()
+							.getIndexType() != null
+					&& ((PrimitivePropertyHandler) ph).getMetaData()
+							.getIndexType() != IndexType.NON_INDEXED) {
 				if (propList == null) {
 					propList = new ArrayList<>();
 				}
@@ -477,11 +494,12 @@ public class EntityHandler extends BaseMetaDataRuntime {
 				propList.addAll(parentPropList);
 			}
 		}
-		for (PropertyHandler ph: getDeclaredPropertyList()) {
+		for (PropertyHandler ph : getDeclaredPropertyList()) {
 			if (ph instanceof ReferencePropertyHandler) {
 				ReferencePropertyHandler rph = (ReferencePropertyHandler) ph;
 				if (type == null
-						|| type == rph.getMetaData().getReferenceType()) {
+						|| type == rph.getMetaData()
+								.getReferenceType()) {
 					if (propList == null) {
 						propList = new ArrayList<>();
 					}
@@ -510,10 +528,11 @@ public class EntityHandler extends BaseMetaDataRuntime {
 				propList.addAll(parentPropList);
 			}
 		}
-		for (PropertyHandler ph: getDeclaredPropertyList()) {
+		for (PropertyHandler ph : getDeclaredPropertyList()) {
 			if (ph instanceof ReferencePropertyHandler) {
 				ReferencePropertyHandler rph = (ReferencePropertyHandler) ph;
-				if (!withoutMappedBy || rph.getMetaData().getMappedByPropertyMetaDataId() == null) {
+				if (!withoutMappedBy || rph.getMetaData()
+						.getMappedByPropertyMetaDataId() == null) {
 					if (propList == null) {
 						propList = new ArrayList<>();
 					}
@@ -563,11 +582,12 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		}
 
 		if (propertyHandlers != null) {
-			for (PropertyHandler propertyHandler: propertyHandlers) {
+			for (PropertyHandler propertyHandler : propertyHandlers) {
 				if (updateValue == null
 						|| updateValue.contains(propertyHandler.getName())) {
 					ValidationContext vc = new ValidationContext(model, propertyHandler.getName());
-					if (propertyHandler.getName().equals(Entity.NAME)) {
+					if (propertyHandler.getName()
+							.equals(Entity.NAME)) {
 						//nameの場合、自動で設定する場合は、必須チェックしない
 						if (!isNamePropSpecify) {
 							propertyHandler.normalize(vc);
@@ -590,12 +610,15 @@ public class EntityHandler extends BaseMetaDataRuntime {
 	}
 
 	private void checkLimitOfReferences(Entity e, ReferencePropertyHandler rh, EntityContext entityContext) {
-		if (rh.getMetaData().getMappedByPropertyMetaDataId() == null
-				&& rh.getMetaData().getMultiplicity() != 1) {
+		if (rh.getMetaData()
+				.getMappedByPropertyMetaDataId() == null
+				&& rh.getMetaData()
+						.getMultiplicity() != 1) {
 			Entity[] refList = (Entity[]) e.getValue(rh.getName());
 			if (refList != null) {
 				if (refList.length > service.getLimitOfReferences()) {
-					throw new EntityRuntimeException("reference count is over the " + service.getLimitOfReferences() + " limit. EntityDefinition:" + e.getDefinitionName() + ", ReferenceName:" + rh.getName());
+					throw new EntityRuntimeException("reference count is over the " + service.getLimitOfReferences() + " limit. EntityDefinition:"
+							+ e.getDefinitionName() + ", ReferenceName:" + rh.getName());
 				}
 			}
 		}
@@ -605,7 +628,7 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		checkState();
 
 		//参照数のチェック
-		for (PropertyHandler ph: getDeclaredPropertyList()) {
+		for (PropertyHandler ph : getDeclaredPropertyList()) {
 			if (ph instanceof ReferencePropertyHandler) {
 				checkLimitOfReferences(entity, (ReferencePropertyHandler) ph, entityContext);
 			}
@@ -632,11 +655,6 @@ public class EntityHandler extends BaseMetaDataRuntime {
 
 		ExecuteContext mtfContext = ExecuteContext.getCurrentContext();
 		EntityContext entityContext = EntityContext.getCurrentContext();
-		
-		//validationされない場合、このタイミングでnormalize
-		if (!option.isWithValidation()) {
-			nomalizeInternal(entity, null, entityContext);
-		}
 
 		Entity copyEntity = ((GenericEntity) entity).copy();
 
@@ -668,29 +686,34 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		List<PropertyHandler> pList = getPropertyListByPropertyType(AutoNumberType.class, entityContext);
 		if (option.isRegenerateAutoNumber()) {
 			//自動採番するためnullセット
-			for (PropertyHandler ph: pList) {
+			for (PropertyHandler ph : pList) {
 				copyEntity.setValue(ph.getName(), null);
 			}
 		}
 
 		//バージョンコントロール種別毎の追加処理
-		service.getVersionController(this).normalizeForInsert(copyEntity, option, entityContext);
+		service.getVersionController(this)
+				.normalizeForInsert(copyEntity, option, entityContext);
 
 		//参照先のバージョンのチェック＆セット
-		for (PropertyHandler ph: getDeclaredPropertyList()) {
+		for (PropertyHandler ph : getDeclaredPropertyList()) {
 			if (ph instanceof ReferencePropertyHandler
-					&& ((ReferencePropertyHandler) ph).getMetaData().getMappedByPropertyMetaDataId() == null) {
+					&& ((ReferencePropertyHandler) ph).getMetaData()
+							.getMappedByPropertyMetaDataId() == null) {
 				if (copyEntity.getValue(ph.getName()) != null) {
 					ReferencePropertyHandler rph = (ReferencePropertyHandler) ph;
-					if (rph.getMetaData().getMultiplicity() != 1) {
+					if (rph.getMetaData()
+							.getMultiplicity() != 1) {
 						copyEntity.setValue(rph.getName(),
-								service.getVersionController(rph.getReferenceEntityHandler(entityContext)).normalizeRefEntity((Entity[]) copyEntity.getValue(rph.getName()), rph, entityContext));
+								service.getVersionController(rph.getReferenceEntityHandler(entityContext))
+										.normalizeRefEntity((Entity[]) copyEntity.getValue(rph.getName()), rph, entityContext));
 					} else {
 						Entity[] holder = new Entity[1];
 						holder[0] = (Entity) copyEntity.getValue(rph.getName());
 						if (holder[0] != null) {
 							copyEntity.setValue(rph.getName(),
-									service.getVersionController(rph.getReferenceEntityHandler(entityContext)).normalizeRefEntity(holder, rph, entityContext)[0]);
+									service.getVersionController(rph.getReferenceEntityHandler(entityContext))
+											.normalizeRefEntity(holder, rph, entityContext)[0]);
 						}
 					}
 				}
@@ -705,7 +728,7 @@ public class EntityHandler extends BaseMetaDataRuntime {
 
 		//auto numberを通知
 		if (pList != null) {
-			for (PropertyHandler ph: pList) {
+			for (PropertyHandler ph : pList) {
 				entity.setValue(ph.getName(), copyEntity.getValue(ph.getName()));
 			}
 		}
@@ -716,17 +739,23 @@ public class EntityHandler extends BaseMetaDataRuntime {
 	//WapperTypeの変換前の状態で取得するためのメソッド
 	private Entity getEntityWithPropList(String oid, Long version, List<PropertyHandler> pList, EntityContext entityContext) {
 		Query q = new Query();
-		q.select().add(Entity.OID);
-		for (PropertyHandler p: pList) {
+		q.select()
+				.add(Entity.OID);
+		for (PropertyHandler p : pList) {
 			if (p instanceof PrimitivePropertyHandler) {
-				q.select().add(p.getName());
+				q.select()
+						.add(p.getName());
 			}
 		}
 
-		if (q.getSelect() != null && q.getSelect().getSelectValues() != null && q.getSelect().getSelectValues().size() != 0) {
+		if (q.getSelect() != null && q.getSelect()
+				.getSelectValues() != null && q.getSelect()
+						.getSelectValues()
+						.size() != 0) {
 			q.from(getMetaData().getName());
 			q.where(new And(new Equals(Entity.OID, oid), new Equals(Entity.VERSION, version)));
-			q.select().addHint(new FetchSizeHint(1));
+			q.select()
+					.addHint(new FetchSizeHint(1));
 			SearchResultIterator it = getStrategy().search(entityContext, q, this);
 			try {
 				if (it.next()) {
@@ -744,18 +773,22 @@ public class EntityHandler extends BaseMetaDataRuntime {
 	}
 
 	private String toName(Object val, PrimitivePropertyHandler pph) {
-		PropertyType type = pph.getMetaData().getType();
+		PropertyType type = pph.getMetaData()
+				.getType();
 		if (type instanceof SelectType) {
 			SelectType st = (SelectType) type;
 			List<Value> stvList = st.runtimeValues();
 			if (stvList != null) {
-				for (Value vDef: stvList) {
-					if (vDef.getValue().equals(((SelectValue) val).getValue())) {
+				for (Value vDef : stvList) {
+					if (vDef.getValue()
+							.equals(((SelectValue) val).getValue())) {
 						//多言語対応
-						String lang = ExecuteContext.getCurrentContext().getLanguage();
+						String lang = ExecuteContext.getCurrentContext()
+								.getLanguage();
 						if (lang != null && vDef.getLocalizedDisplayNameList() != null) {
-							for (MetaLocalizedString mls: vDef.getLocalizedDisplayNameList()) {
-								if (mls.getLocaleName().equals(lang)) {
+							for (MetaLocalizedString mls : vDef.getLocalizedDisplayNameList()) {
+								if (mls.getLocaleName()
+										.equals(lang)) {
 									return mls.getStringValue();
 								}
 							}
@@ -770,14 +803,19 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		}
 	}
 
-	void nomalizeInternal(Entity entity, List<String> targetProperties, EntityContext entityContext) {
+	public void normalize(Entity entity, List<String> targetProperties) {
+		checkState();
+		normalizeInternal(entity, targetProperties, EntityContext.getCurrentContext());
+	}
+
+	void normalizeInternal(Entity entity, List<String> targetProperties, EntityContext entityContext) {
 		EntityHandler superHandler = getSuperDataModelHandler(entityContext);
 		if (superHandler != null) {
-			superHandler.nomalizeInternal(entity, targetProperties, entityContext);
+			superHandler.normalizeInternal(entity, targetProperties, entityContext);
 		}
 
 		if (propertyHandlers != null) {
-			for (PropertyHandler propertyHandler: propertyHandlers) {
+			for (PropertyHandler propertyHandler : propertyHandlers) {
 				if (targetProperties == null
 						|| targetProperties.contains(propertyHandler.getName())) {
 					ValidationContext vc = new ValidationContext(entity, propertyHandler.getName());
@@ -786,34 +824,41 @@ public class EntityHandler extends BaseMetaDataRuntime {
 			}
 		}
 	}
-	
-	void preprocessInsertDirect(Entity entity,  EntityContext entityContext, List<PropertyHandler> complexWrapperTypePropList) {
+
+	void preprocessInsertDirect(Entity entity, EntityContext entityContext, List<PropertyHandler> complexWrapperTypePropList) {
 		//AutoNumberTypeが、name,oidに利用されている場合、このタイミングで採番
 		String oid = entity.getOid();
 		if (oid == null) {
-			if (getMetaData().getOidPropertyId() == null || getMetaData().getOidPropertyId().size() == 0) {
+			if (getMetaData().getOidPropertyId() == null || getMetaData().getOidPropertyId()
+					.size() == 0) {
 				oid = getStrategy().newOid(entityContext, this);
 				entity.setOid(oid);
 			} else {
 				//oidに生成されたidをセット
 				StringBuilder sb = new StringBuilder();
-				for (int i = 0; i < getMetaData().getOidPropertyId().size(); i++) {
+				for (int i = 0; i < getMetaData().getOidPropertyId()
+						.size(); i++) {
 					if (i != 0) {
 						sb.append("-");
 					}
-					PrimitivePropertyHandler pph = (PrimitivePropertyHandler) getDeclaredPropertyById(getMetaData().getOidPropertyId().get(i));
+					PrimitivePropertyHandler pph = (PrimitivePropertyHandler) getDeclaredPropertyById(getMetaData().getOidPropertyId()
+							.get(i));
 					Object oidVal = entity.getValue(pph.getName());
 					if (oidVal == null) {
 						//special logic for AutoNumber,,
-						if (pph.getMetaData().getType() instanceof AutoNumberType) {
-							AutoNumberType autoNum = (AutoNumberType) pph.getMetaData().getType();
+						if (pph.getMetaData()
+								.getType() instanceof AutoNumberType) {
+							AutoNumberType autoNum = (AutoNumberType) pph.getMetaData()
+									.getType();
 							oidVal = autoNum.toStoreTypeValue(null, null, pph, this, null, entity.getVersion(), entity);
 							entity.setValue(pph.getName(), oidVal);
 						} else {
 							throw new EntityRuntimeException(pph.getName() + " must not null.");
 						}
 					}
-					String oidValStr = pph.getMetaData().getType().toString(oidVal);
+					String oidValStr = pph.getMetaData()
+							.getType()
+							.toString(oidVal);
 					service.checkValidOidPattern(oidValStr);
 					sb.append(oidValStr);
 				}
@@ -828,8 +873,10 @@ public class EntityHandler extends BaseMetaDataRuntime {
 			Object nameVal = entity.getValue(pph.getName());
 			//special logic for AutoNumber,,
 			if (nameVal == null) {
-				if (pph.getMetaData().getType() instanceof AutoNumberType) {
-					AutoNumberType autoNum = (AutoNumberType) pph.getMetaData().getType();
+				if (pph.getMetaData()
+						.getType() instanceof AutoNumberType) {
+					AutoNumberType autoNum = (AutoNumberType) pph.getMetaData()
+							.getType();
 					nameVal = autoNum.toStoreTypeValue(null, null, pph, this, null, entity.getVersion(), entity);
 					entity.setValue(pph.getName(), nameVal);
 				} else {
@@ -843,11 +890,13 @@ public class EntityHandler extends BaseMetaDataRuntime {
 			entity.setVersion(Long.valueOf(0));
 		}
 		//WrapperTypeの事前変換
-		for (PropertyHandler ph: complexWrapperTypePropList) {
-			ComplexWrapperType type = (ComplexWrapperType) ((PrimitivePropertyHandler) ph).getMetaData().getType();
+		for (PropertyHandler ph : complexWrapperTypePropList) {
+			ComplexWrapperType type = (ComplexWrapperType) ((PrimitivePropertyHandler) ph).getMetaData()
+					.getType();
 			Object val = entity.getValue(ph.getName());
 			if (val == null
-					|| ph.getMetaData().getMultiplicity() == 1) {
+					|| ph.getMetaData()
+							.getMultiplicity() == 1) {
 				entity.setValue(ph.getName(), type.toStoreTypeValue(val, null, ph, this, entity.getOid(), entity.getVersion(), entity));
 			} else {
 				Object[] newArrayVal = (Object[]) Array.newInstance(type.storeType(), ((Object[]) val).length);
@@ -868,7 +917,8 @@ public class EntityHandler extends BaseMetaDataRuntime {
 	 * @param checkPrevExists
 	 * @return 確実に既存Entityが存在する場合true、存在するか否か不明な場合false
 	 */
-	boolean preprocessUpdateDirect(Entity entity, UpdateOption option, EntityContext entityContext, List<PropertyHandler> complexWrapperTypePropList, boolean checkPrevExists) {
+	boolean preprocessUpdateDirect(Entity entity, UpdateOption option, EntityContext entityContext, List<PropertyHandler> complexWrapperTypePropList,
+			boolean checkPrevExists) {
 
 		boolean prevExists = false;
 
@@ -881,9 +931,10 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		if (option != null) {
 			//TODO できれば、copyEntityからも、updateしない値は取り除いておいた方が無難か
 			List<PropertyHandler> updatePropList = new ArrayList<>();
-			for (String pName: option.getUpdateProperties()) {
-				for (PropertyHandler ph: complexWrapperTypePropList) {
-					if (ph.getName().equals(pName)) {
+			for (String pName : option.getUpdateProperties()) {
+				for (PropertyHandler ph : complexWrapperTypePropList) {
+					if (ph.getName()
+							.equals(pName)) {
 						updatePropList.add(ph);
 					}
 				}
@@ -891,14 +942,14 @@ public class EntityHandler extends BaseMetaDataRuntime {
 			complexWrapperTypePropList = updatePropList;
 		}
 
-
 		//更新前のLobの保存状況を取得
 		if (complexWrapperTypePropList.size() > 0) {
 
 			//更新前のEntityが必要かチェック
 			boolean needPrevEntity = false;
-			for (PropertyHandler ph: complexWrapperTypePropList) {
-				ComplexWrapperType type = (ComplexWrapperType) ((PrimitivePropertyHandler) ph).getMetaData().getType();
+			for (PropertyHandler ph : complexWrapperTypePropList) {
+				ComplexWrapperType type = (ComplexWrapperType) ((PrimitivePropertyHandler) ph).getMetaData()
+						.getType();
 				needPrevEntity = needPrevEntity || type.isNeedPrevStoreTypeValueOnToStoreTypeValue();
 			}
 
@@ -906,19 +957,22 @@ public class EntityHandler extends BaseMetaDataRuntime {
 			if (needPrevEntity) {
 				beforeUpdateEntity = getEntityWithPropList(entity.getOid(), entity.getVersion(), complexWrapperTypePropList, entityContext);
 				if (beforeUpdateEntity == null && checkPrevExists) {
-					throw new EntityConcurrentUpdateException(resourceString("impl.core.EntityHandler.alreadyOperated", getMetaData().getDisplayName()));
+					throw new EntityConcurrentUpdateException(
+							resourceString("impl.core.EntityHandler.alreadyOperated", getMetaData().getDisplayName()));
 				}
 				prevExists = beforeUpdateEntity != null;
 			}
 
-			for (PropertyHandler ph: complexWrapperTypePropList) {
-				ComplexWrapperType type = (ComplexWrapperType) ((PrimitivePropertyHandler) ph).getMetaData().getType();
+			for (PropertyHandler ph : complexWrapperTypePropList) {
+				ComplexWrapperType type = (ComplexWrapperType) ((PrimitivePropertyHandler) ph).getMetaData()
+						.getType();
 				Object val = entity.getValue(ph.getName());
 				Object beforeVal = null;
 				if (beforeUpdateEntity != null && type.isNeedPrevStoreTypeValueOnToStoreTypeValue()) {
 					beforeVal = beforeUpdateEntity.getValue(ph.getName());
 				}
-				if (ph.getMetaData().getMultiplicity() == 1) {
+				if (ph.getMetaData()
+						.getMultiplicity() == 1) {
 					entity.setValue(ph.getName(), type.toStoreTypeValue(val, beforeVal, ph, this, entity.getOid(), entity.getVersion(), entity));
 				} else {//FIXME ロジックみなおし！！！！
 					int count = 0;
@@ -955,14 +1009,17 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		if (getMetaData().getNamePropertyId() != null) {
 			PrimitivePropertyHandler pph = (PrimitivePropertyHandler) getDeclaredPropertyById(getMetaData().getNamePropertyId());
 			if (option == null ||
-					option.getUpdateProperties() != null && option.getUpdateProperties().contains(pph.getName())) {
+					option.getUpdateProperties() != null && option.getUpdateProperties()
+							.contains(pph.getName())) {
 				Object val = entity.getValue(pph.getName());
 				if (val == null) {
 					throw new EntityRuntimeException(pph.getName() + " must not null.");
 				}
 				entity.setName(toName(val, pph));
-				if (option != null && !option.getUpdateProperties().contains(Entity.NAME)) {
-					option.getUpdateProperties().add(Entity.NAME);
+				if (option != null && !option.getUpdateProperties()
+						.contains(Entity.NAME)) {
+					option.getUpdateProperties()
+							.add(Entity.NAME);
 				}
 			}
 		}
@@ -978,9 +1035,10 @@ public class EntityHandler extends BaseMetaDataRuntime {
 			throw new NullPointerException("oid is null");
 		}
 		//参照数のチェック
-		for (PropertyHandler ph: getDeclaredPropertyList()) {
+		for (PropertyHandler ph : getDeclaredPropertyList()) {
 			if (ph instanceof ReferencePropertyHandler
-					&& option.getUpdateProperties().contains(ph.getName())) {
+					&& option.getUpdateProperties()
+							.contains(ph.getName())) {
 				checkLimitOfReferences(entity, (ReferencePropertyHandler) ph, entityContext);
 			}
 		}
@@ -1000,32 +1058,35 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		ExecuteContext context = ExecuteContext.getCurrentContext();
 		EntityContext entityContext = EntityContext.getCurrentContext();
 
-
 		//5.メタデータの定義に従い、データを保存。
 		//6.オブジェクトIDをリターン
-		
-		//validationされない場合、このタイミングでnormalize
-		if (!option.isWithValidation()) {
-			nomalizeInternal(entity, option.getUpdateProperties(), entityContext);
-		}
 
 		//更新可能項目かどうかチェック
-		for (String propName: option.getUpdateProperties()) {
+		for (String propName : option.getUpdateProperties()) {
 			PropertyHandler ph = getProperty(propName, entityContext);
 			if (ph == null) {
 				throw new EntityRuntimeException(propName + " is not defined on " + getMetaData().getName());
 			}
 			if (ph instanceof ReferencePropertyHandler
-					&& ((ReferencePropertyHandler) ph).getMetaData().getMappedByPropertyMetaDataId() != null) {
-				throw new EntityApplicationException(resourceString("impl.core.EntityHandler.notChange", getProperty(propName, entityContext).getMetaData().getDisplayName()));
+					&& ((ReferencePropertyHandler) ph).getMetaData()
+							.getMappedByPropertyMetaDataId() != null) {
+				throw new EntityApplicationException(
+						resourceString("impl.core.EntityHandler.notChange", getProperty(propName, entityContext).getMetaData()
+								.getDisplayName()));
 			}
-			if (ph instanceof PrimitivePropertyHandler && ((MetaPrimitiveProperty) ph.getMetaData()).getType().isVirtual()) {
-				throw new EntityApplicationException(resourceString("impl.core.EntityHandler.notChange", getProperty(propName, entityContext).getMetaData().getDisplayName()));
+			if (ph instanceof PrimitivePropertyHandler && ((MetaPrimitiveProperty) ph.getMetaData()).getType()
+					.isVirtual()) {
+				throw new EntityApplicationException(
+						resourceString("impl.core.EntityHandler.notChange", getProperty(propName, entityContext).getMetaData()
+								.getDisplayName()));
 			}
 
 			if (option.isWithValidation()) {
-				if (!ph.getMetaData().isUpdatable()) {
-					throw new EntityApplicationException(resourceString("impl.core.EntityHandler.notChange", getProperty(propName, entityContext).getMetaData().getDisplayName()));
+				if (!ph.getMetaData()
+						.isUpdatable()) {
+					throw new EntityApplicationException(
+							resourceString("impl.core.EntityHandler.notChange", getProperty(propName, entityContext).getMetaData()
+									.getDisplayName()));
 				}
 			} else {
 				//withValidation=falseの場合は、キー項目、audit項目のみ更新不可
@@ -1033,7 +1094,9 @@ public class EntityHandler extends BaseMetaDataRuntime {
 					if (propName.equals(Entity.OID) || propName.equals(Entity.VERSION)
 							|| propName.equals(Entity.UPDATE_BY) || propName.equals(Entity.UPDATE_DATE)
 							|| propName.equals(Entity.CREATE_BY) || propName.equals(Entity.CREATE_DATE)) {
-						throw new EntityApplicationException(resourceString("impl.core.EntityHandler.notChange", getProperty(propName, entityContext).getMetaData().getDisplayName()));
+						throw new EntityApplicationException(
+								resourceString("impl.core.EntityHandler.notChange", getProperty(propName, entityContext).getMetaData()
+										.getDisplayName()));
 					}
 				}
 			}
@@ -1045,13 +1108,15 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		List<ReferencePropertyHandler> cascadeDelTarget = cascadeDeleteTarget(option, entityContext);
 		if (option.isCheckLockedByUser() || cascadeDelTarget != null) {
 			if (cascadeDelTarget == null) {
-				beforeEntity = new EntityLoadInvocationImpl(entity.getOid(), entity.getVersion(), new LoadOption(false, false), false, service.getInterceptors(), this).proceed();
+				beforeEntity = new EntityLoadInvocationImpl(entity.getOid(), entity.getVersion(), new LoadOption(false, false), false,
+						service.getInterceptors(), this).proceed();
 			} else {
 				List<String> refs = new ArrayList<>(cascadeDelTarget.size());
-				for (ReferencePropertyHandler rph: cascadeDelTarget) {
+				for (ReferencePropertyHandler rph : cascadeDelTarget) {
 					refs.add(rph.getName());
 				}
-				beforeEntity = new EntityLoadInvocationImpl(entity.getOid(), entity.getVersion(), new LoadOption(refs), false, service.getInterceptors(), this).proceed();
+				beforeEntity = new EntityLoadInvocationImpl(entity.getOid(), entity.getVersion(), new LoadOption(refs), false,
+						service.getInterceptors(), this).proceed();
 			}
 			if (beforeEntity == null) {
 				//FIXME すべてが無効データの場合の考慮が必要
@@ -1059,7 +1124,7 @@ public class EntityHandler extends BaseMetaDataRuntime {
 			}
 		}
 
-		//当該ユーザがロックしているもの、もしくは他ユーザにロックされていないことを確認
+		//当該ユーザーがロックしているもの、もしくは他ユーザーにロックされていないことを確認
 		String lockedByUser = null;
 		if (option.isCheckLockedByUser()) {
 			//oid単位でロックがされる前提で、、
@@ -1075,8 +1140,10 @@ public class EntityHandler extends BaseMetaDataRuntime {
 
 		//システム項目をセット
 		//TODO これをセットする場所を再検討
-		if (!option.getUpdateProperties().contains(Entity.UPDATE_BY)) {
-			option.getUpdateProperties().add(Entity.UPDATE_BY);
+		if (!option.getUpdateProperties()
+				.contains(Entity.UPDATE_BY)) {
+			option.getUpdateProperties()
+					.add(Entity.UPDATE_BY);
 		}
 		copyEntity.setUpdateBy(context.getClientId());
 		if (copyEntity.getState() == null) {
@@ -1088,40 +1155,49 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		}
 
 		//参照先のバージョンのチェック＆セット
-		for (String propName: option.getUpdateProperties()) {
+		for (String propName : option.getUpdateProperties()) {
 			PropertyHandler ph = getProperty(propName, entityContext);
 			if (ph instanceof ReferencePropertyHandler
-					&& ((ReferencePropertyHandler) ph).getMetaData().getMappedByPropertyMetaDataId() == null) {
+					&& ((ReferencePropertyHandler) ph).getMetaData()
+							.getMappedByPropertyMetaDataId() == null) {
 				ReferencePropertyHandler rph = (ReferencePropertyHandler) ph;
-				if (rph.getMetaData().getMultiplicity() != 1) {
+				if (rph.getMetaData()
+						.getMultiplicity() != 1) {
 					copyEntity.setValue(rph.getName(),
-							service.getVersionController(rph.getReferenceEntityHandler(entityContext)).normalizeRefEntity((Entity[]) copyEntity.getValue(rph.getName()), rph, entityContext));
+							service.getVersionController(rph.getReferenceEntityHandler(entityContext))
+									.normalizeRefEntity((Entity[]) copyEntity.getValue(rph.getName()), rph, entityContext));
 				} else {
 					Entity[] holder = new Entity[1];
 					holder[0] = (Entity) copyEntity.getValue(rph.getName());
 					if (holder[0] != null) {
 						copyEntity.setValue(rph.getName(),
-								service.getVersionController(rph.getReferenceEntityHandler(entityContext)).normalizeRefEntity(holder, rph, entityContext)[0]);
+								service.getVersionController(rph.getReferenceEntityHandler(entityContext))
+										.normalizeRefEntity(holder, rph, entityContext)[0]);
 					}
 				}
 			}
 		}
 
 		//バージョン制御別の処理
-		service.getVersionController(this).update(copyEntity, option, this, entityContext);
+		service.getVersionController(this)
+				.update(copyEntity, option, this, entityContext);
 
 		//COMPOSITIONの参照Entityのカスケードデリート
 		if (cascadeDelTarget != null) {
 			DeleteOption cascadeDelOption = new DeleteOption(false);
 			cascadeDelOption.setPurge(option.isPurgeCompositionedEntity());
-			for (ReferencePropertyHandler rph: cascadeDelTarget) {
-				if (rph.getMetaData().getReferenceType() == ReferenceType.COMPOSITION) {
+			for (ReferencePropertyHandler rph : cascadeDelTarget) {
+				if (rph.getMetaData()
+						.getReferenceType() == ReferenceType.COMPOSITION) {
 					EntityHandler reh = rph.getReferenceEntityHandler(entityContext);
 					Object beforeVal = beforeEntity.getValue(rph.getName());
 					if (beforeVal != null) {
 						Entity[] delEntities = null;
-						if (rph.getMetaData().getMultiplicity() != 1) {
-							delEntities = service.getVersionController(reh).getCascadeDeleteTargetForUpdate((Entity[]) copyEntity.getValue(rph.getName()), (Entity[]) beforeVal, rph, beforeEntity, this, entityContext);
+						if (rph.getMetaData()
+								.getMultiplicity() != 1) {
+							delEntities = service.getVersionController(reh)
+									.getCascadeDeleteTargetForUpdate((Entity[]) copyEntity.getValue(rph.getName()), (Entity[]) beforeVal, rph,
+											beforeEntity, this, entityContext);
 						} else {
 							Entity[] holder = new Entity[1];
 							holder[0] = (Entity) copyEntity.getValue(rph.getName());
@@ -1130,16 +1206,16 @@ public class EntityHandler extends BaseMetaDataRuntime {
 							}
 							Entity[] beforeHolder = new Entity[1];
 							beforeHolder[0] = (Entity) beforeVal;
-							delEntities = service.getVersionController(reh).getCascadeDeleteTargetForUpdate(holder, beforeHolder, rph, beforeEntity, this, entityContext);
+							delEntities = service.getVersionController(reh)
+									.getCascadeDeleteTargetForUpdate(holder, beforeHolder, rph, beforeEntity, this, entityContext);
 						}
 						if (delEntities != null) {
-							for (Entity val: delEntities) {
+							for (Entity val : delEntities) {
 								//カスケードデリート先のEventLisnterなどのInterceptorを呼び出したいので
-								EntityDeleteInvocationImpl deleteInvocation =
-									new EntityDeleteInvocationImpl(val,
-											cascadeDelOption,
-											service.getInterceptors(),
-											reh);
+								EntityDeleteInvocationImpl deleteInvocation = new EntityDeleteInvocationImpl(val,
+										cascadeDelOption,
+										service.getInterceptors(),
+										reh);
 								deleteInvocation.proceed();
 							}
 						}
@@ -1154,12 +1230,14 @@ public class EntityHandler extends BaseMetaDataRuntime {
 
 	private List<ReferencePropertyHandler> cascadeDeleteTarget(UpdateOption option, EntityContext entityContext) {
 		List<ReferencePropertyHandler> ret = null;
-		for (String propName: option.getUpdateProperties()) {
+		for (String propName : option.getUpdateProperties()) {
 			PropertyHandler ph = getProperty(propName, entityContext);
 			if (ph instanceof ReferencePropertyHandler
-					&& ((ReferencePropertyHandler) ph).getMetaData().getMappedByPropertyMetaDataId() == null) {
+					&& ((ReferencePropertyHandler) ph).getMetaData()
+							.getMappedByPropertyMetaDataId() == null) {
 				ReferencePropertyHandler rph = (ReferencePropertyHandler) ph;
-				if (rph.getMetaData().getReferenceType() == ReferenceType.COMPOSITION) {
+				if (rph.getMetaData()
+						.getReferenceType() == ReferenceType.COMPOSITION) {
 					if (ret == null) {
 						ret = new LinkedList<>();
 					}
@@ -1187,7 +1265,6 @@ public class EntityHandler extends BaseMetaDataRuntime {
 					}
 				}, rbid);
 
-
 		if (oid[0] == null) {
 			throw new EntityConcurrentUpdateException(resourceString("impl.core.EntityHandler.alreadyRestored"));
 		}
@@ -1199,8 +1276,9 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		List<PropertyHandler> wrapperPropList = getPropertyListByPropertyType(ComplexWrapperType.class, entityContext);
 		if (wrapperPropList.size() > 0) {
 			HashSet<Class<? extends ComplexWrapperType>> called = new HashSet<>();
-			for (PropertyHandler ph: wrapperPropList) {
-				ComplexWrapperType type = (ComplexWrapperType) ((PrimitivePropertyHandler) ph).getMetaData().getType();
+			for (PropertyHandler ph : wrapperPropList) {
+				ComplexWrapperType type = (ComplexWrapperType) ((PrimitivePropertyHandler) ph).getMetaData()
+						.getType();
 				if (!called.contains(type.getClass())) {
 					type.notifyAfterPurge(this, rbid);
 					called.add(type.getClass());
@@ -1225,7 +1303,6 @@ public class EntityHandler extends BaseMetaDataRuntime {
 					}
 				}, rbid);
 
-
 		if (oid[0] == null) {
 			throw new EntityConcurrentUpdateException(resourceString("impl.core.EntityHandler.alreadyRestored"));
 		}
@@ -1237,8 +1314,9 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		List<PropertyHandler> wrapperPropList = getPropertyListByPropertyType(ComplexWrapperType.class, entityContext);
 		if (wrapperPropList.size() > 0) {
 			HashSet<Class<? extends ComplexWrapperType>> called = new HashSet<>();
-			for (PropertyHandler ph: wrapperPropList) {
-				ComplexWrapperType type = (ComplexWrapperType) ((PrimitivePropertyHandler) ph).getMetaData().getType();
+			for (PropertyHandler ph : wrapperPropList) {
+				ComplexWrapperType type = (ComplexWrapperType) ((PrimitivePropertyHandler) ph).getMetaData()
+						.getType();
 				if (!called.contains(type.getClass())) {
 					type.notifyAfterRestore(this, rbid);
 					called.add(type.getClass());
@@ -1285,6 +1363,10 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		ExecuteContext execContext = ExecuteContext.getCurrentContext();
 		EntityContext entityContext = EntityContext.getCurrentContext();
 
+		if (option.getTargetVersion() == DeleteTargetVersion.SPECIFIC && !option.isPurge()) {
+			throw new EntityRuntimeException("Version-specified option is only supported when the purge option is true.");
+		}
+
 		boolean isLocked = getStrategy().lock(entityContext, this, entity.getOid());
 		if (!isLocked) {
 			//既に存在しないoid
@@ -1295,10 +1377,11 @@ public class EntityHandler extends BaseMetaDataRuntime {
 			}
 		}
 
-		//当該ユーザがロックしているもの、もしくは他ユーザにロックされていないことを確認
+		//当該ユーザーがロックしているもの、もしくは他ユーザーにロックされていないことを確認
 		//oid単位でロックがされる前提で、、
 		//TODO ReferencePropertyはカスケードデリート対象のみをロードする形に
-		Entity beforeEntity = new EntityLoadInvocationImpl(entity.getOid(), entity.getVersion(), new LoadOption(true, false), false, service.getInterceptors(), this).proceed();
+		Entity beforeEntity = new EntityLoadInvocationImpl(entity.getOid(), entity.getVersion(), new LoadOption(true, false), false,
+				service.getInterceptors(), this).proceed();
 		if (beforeEntity == null) {
 			//FIXME すべてが無効データの場合の考慮が必要
 			throw new EntityConcurrentUpdateException(resourceString("impl.core.EntityHandler.alreadyOperated", getMetaData().getDisplayName()));
@@ -1318,14 +1401,17 @@ public class EntityHandler extends BaseMetaDataRuntime {
 
 		Map<String, Set<String>> cascadeDelMap = new HashMap<>();
 		if (refPropList.size() > 0) {
-			for (ReferencePropertyHandler rph: refPropList) {
+			for (ReferencePropertyHandler rph : refPropList) {
 				EntityHandler refEh = rph.getReferenceEntityHandler(entityContext);
-				String[] cascadeOids = service.getVersionController(refEh).getCascadeDeleteTarget(entity, this, rph, entityContext);
+				String[] cascadeOids = service.getVersionController(refEh)
+						.getCascadeDeleteTarget(entity, this, rph, entityContext);
 				if (cascadeOids != null) {
-					Set<String> oids = cascadeDelMap.get(refEh.getMetaData().getName());
+					Set<String> oids = cascadeDelMap.get(refEh.getMetaData()
+							.getName());
 					if (oids == null) {
 						oids = new HashSet<>();
-						cascadeDelMap.put(refEh.getMetaData().getName(), oids);
+						cascadeDelMap.put(refEh.getMetaData()
+								.getName(), oids);
 					}
 					oids.addAll(Arrays.asList(cascadeOids));
 				}
@@ -1343,16 +1429,16 @@ public class EntityHandler extends BaseMetaDataRuntime {
 			DeleteOption cascadeDelOption = new DeleteOption(false);
 			cascadeDelOption.setPurge(option.isPurge());
 
-			for (Map.Entry<String, Set<String>> oidsEntry: cascadeDelMap.entrySet()) {
-				if (oidsEntry.getValue().size() > 0) {
-					for (String oid: oidsEntry.getValue()) {
+			for (Map.Entry<String, Set<String>> oidsEntry : cascadeDelMap.entrySet()) {
+				if (oidsEntry.getValue()
+						.size() > 0) {
+					for (String oid : oidsEntry.getValue()) {
 						Entity val = new GenericEntity(oidsEntry.getKey(), oid, null);
 						//カスケードデリート先のEventLisnterなどのInterceptorを呼び出したいので
-						EntityDeleteInvocationImpl deleteInvocation =
-							new EntityDeleteInvocationImpl(val,
-									cascadeDelOption,
-									service.getInterceptors(),
-									entityContext.getHandlerByName(oidsEntry.getKey()));
+						EntityDeleteInvocationImpl deleteInvocation = new EntityDeleteInvocationImpl(val,
+								cascadeDelOption,
+								service.getInterceptors(),
+								entityContext.getHandlerByName(oidsEntry.getKey()));
 						deleteInvocation.proceed();
 					}
 				}
@@ -1364,8 +1450,9 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		Entity beforeDeleteEntity = null;
 		//更新前のEntityが必要かチェック
 		boolean needPrevEntity = false;
-		for (PropertyHandler ph: complexWrapperTypePropList) {
-			ComplexWrapperType type = (ComplexWrapperType) ((PrimitivePropertyHandler) ph).getMetaData().getType();
+		for (PropertyHandler ph : complexWrapperTypePropList) {
+			ComplexWrapperType type = (ComplexWrapperType) ((PrimitivePropertyHandler) ph).getMetaData()
+					.getType();
 			needPrevEntity = needPrevEntity || type.isNeedPrevStoreTypeValueOnToStoreTypeValue();
 		}
 
@@ -1379,12 +1466,14 @@ public class EntityHandler extends BaseMetaDataRuntime {
 	void postporcessDeleteDirect(Entity beforeDeleteEntity, EntityContext entityContext, List<PropertyHandler> complexWrapperTypePropList, Long rbid) {
 		//WrapperTypeへの削除通知
 		if (complexWrapperTypePropList.size() > 0) {
-			for (PropertyHandler ph: complexWrapperTypePropList) {
-				ComplexWrapperType type = (ComplexWrapperType) ((PrimitivePropertyHandler) ph).getMetaData().getType();
+			for (PropertyHandler ph : complexWrapperTypePropList) {
+				ComplexWrapperType type = (ComplexWrapperType) ((PrimitivePropertyHandler) ph).getMetaData()
+						.getType();
 
 				if (beforeDeleteEntity != null) {
 					Object val = beforeDeleteEntity.getValue(ph.getName());
-					if (val == null || ph.getMetaData().getMultiplicity() == 1) {
+					if (val == null || ph.getMetaData()
+							.getMultiplicity() == 1) {
 						type.notifyAfterDelete(val, ph, this, beforeDeleteEntity.getOid(), rbid);
 					} else {
 						Object[] arrayVal = (Object[]) val;
@@ -1402,19 +1491,20 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		checkState();
 
 		//TODO 複数バージョン分ループしている。効率はよくない。そのうち、パフォーマンス対策が必要になるか、、
-		DeleteTarget[] delTarget = service.getVersionController(this).getDeleteTarget(entity, option, this, entityContext);
+		DeleteTarget[] delTarget = service.getVersionController(this)
+				.getDeleteTarget(entity, option, this, entityContext);
 
 		Long rbid = null;
 		if (delTarget != null && delTarget.length != 0) {
 			//ごみ箱に保存
-			if(!option.isPurge()) {
+			if (!option.isPurge()) {
 				rbid = getStrategy().copyToRecycleBin(entityContext, this, entity.getOid(), entity.getUpdateBy());
 			}
 		}
 
 		List<PropertyHandler> complexWrapperTypePropList = getPropertyListByPropertyType(ComplexWrapperType.class, entityContext);
 
-		for (DeleteTarget dt: delTarget) {
+		for (DeleteTarget dt : delTarget) {
 			Entity delEntity = new GenericEntity(getMetaData().getName());
 			delEntity.setOid(dt.oid);
 			delEntity.setVersion(dt.version);
@@ -1463,26 +1553,35 @@ public class EntityHandler extends BaseMetaDataRuntime {
 
 		Query searchCond = new Query();
 		searchCond.from(getMetaData().getName());
-		for (PropertyHandler p: getPropertyList(entityContext)) {
+		for (PropertyHandler p : getPropertyList(entityContext)) {
 			//LoadOptionで、loadPropertiesが指定されている場合は、そのpropertyのみ取得
 			if (p instanceof ReferencePropertyHandler) {
 				ReferencePropertyHandler rp = (ReferencePropertyHandler) p;
 				//optionにより、参照先をロードするかを決定
 				if (option == null
-						|| (option.getLoadReferences() != null && option.getLoadReferences().contains(p.getName()))
+						|| (option.getLoadReferences() != null && option.getLoadReferences()
+								.contains(p.getName()))
 						|| option.getLoadReferences() == null
-						&& option.isWithReference()
-						&& (rp.getMetaData().getMappedByPropertyMetaDataId() == null
-							|| option.isWithMappedByReference())) {
+								&& option.isWithReference()
+								&& (rp.getMetaData()
+										.getMappedByPropertyMetaDataId() == null
+										|| option.isWithMappedByReference())) {
 					//check reference valid
-					if (rp.getReferenceEntityHandler(entityContext) != null) {
-						if (rp.getMetaData().getMultiplicity() != 1) {
+					EntityHandler refEh = rp.getReferenceEntityHandler(entityContext);
+					if (refEh != null) {
+						if (rp.getMetaData()
+								.getMultiplicity() != 1) {
 							refList.add((ReferencePropertyHandler) p);
 						} else {
 							refSingle.add(p.getName());
 							select.add(rp.getName() + "." + Entity.OID);
 							select.add(rp.getName() + "." + Entity.NAME);
 							select.add(rp.getName() + "." + Entity.VERSION);
+
+							//versioned=trueの場合、参照先もバージョン管理されている場合は、保存時点で取得する
+							if (option != null && option.isVersioned() && refEh.isVersioned()) {
+								searchCond.refer(rp.getName(), new AsOf(AsOfSpec.UPDATE_TIME));
+							}
 						}
 					}
 				}
@@ -1500,10 +1599,25 @@ public class EntityHandler extends BaseMetaDataRuntime {
 					new Equals(Entity.VERSION, version)));
 		}
 
-		searchCond.select().addHint(new FetchSizeHint(1));
+		searchCond.select()
+				.addHint(new FetchSizeHint(1));
+
+		if (option != null && option.isVersioned()) {
+			//バージョン管理されていないEntity、もしくはバージョン管理されていてかつversionまで指定の際に有効
+			if (!isVersioned()) {
+				searchCond.versioned();
+			} else {
+				if (version != null) {
+					searchCond.versioned();
+				} else {
+					log.warn(
+							"LoadOption.versioned=true specified, but since the Entity to be load is itself versioned, this flag will be enabled if the version of the load target is also specified.");
+				}
+			}
+		}
 
 		//インナークラスとの受け渡し用
-		final Entity[] result = new Entity[]{null};
+		final Entity[] result = new Entity[] { null };
 		//セキュリティロジックを通したいので、Invocation経由でQuery呼び出し
 		new EntityQueryInvocationImpl(searchCond, new SearchOption().unnotifyListeners(), new Predicate<Entity>() {
 			@Override
@@ -1511,13 +1625,15 @@ public class EntityHandler extends BaseMetaDataRuntime {
 				if (result[0] == null) {
 					result[0] = val;
 					if (refList.size() != 0) {
-						for (ReferencePropertyHandler refProp: refList) {
-							setLoadRef(val, refProp, mtfContext, entityContext);
+						for (ReferencePropertyHandler refProp : refList) {
+							setLoadRef(val, refProp, mtfContext, entityContext, searchCond.isVersioned());
 						}
 					}
 					return true;
 				} else {
-					log.warn("The multiplicity of the reference property is defined to be 1, but in fact, multiple references are associated with Entity:" + getMetaData().getName() + "(oid=" + val.getOid() + ")");
+					log.warn(
+							"The multiplicity of the reference property is defined to be 1, but in fact, multiple references are associated with Entity:"
+									+ getMetaData().getName() + "(oid=" + val.getOid() + ")");
 					return false;
 				}
 			}
@@ -1527,8 +1643,7 @@ public class EntityHandler extends BaseMetaDataRuntime {
 	}
 
 	private void setLoadRef(final Entity e, final ReferencePropertyHandler refProp,
-			final ExecuteContext mtfContext, final EntityContext entityContext) {
-
+			final ExecuteContext mtfContext, final EntityContext entityContext, final boolean versioned) {
 
 		Query searchCond = new Query();
 		searchCond.from(getMetaData().getName());
@@ -1549,13 +1664,22 @@ public class EntityHandler extends BaseMetaDataRuntime {
 //			}
 //		}
 		searchCond.where(whereCond);
-		if (refProp.getMetaData().getOrderBy() != null && refProp.getMetaData().getOrderBy().size() > 0) {
+
+		EntityHandler refEH = refProp.getReferenceEntityHandler(entityContext);
+
+		if (refProp.getMetaData()
+				.getOrderBy() != null
+				&& refProp.getMetaData()
+						.getOrderBy()
+						.size() > 0) {
 			//TODO 事前にパース可能か？
 			OrderBy q = new OrderBy();
-			for (ReferenceSortSpec rss: refProp.getMetaData().getOrderBy()) {
-				PropertyHandler ph = refProp.getReferenceEntityHandler(entityContext).getPropertyById(rss.getSortPropertyMetaDataId(), entityContext);
+			for (ReferenceSortSpec rss : refProp.getMetaData()
+					.getOrderBy()) {
+				PropertyHandler ph = refEH.getPropertyById(rss.getSortPropertyMetaDataId(), entityContext);
 				if (ph != null && !(ph instanceof ReferencePropertyHandler)) {
-					searchCond.getSelect().add(refProp.getName() + "." + ph.getName());
+					searchCond.getSelect()
+							.add(refProp.getName() + "." + ph.getName());
 					if (rss.getSortType() == ReferenceSortSpec.SortType.DESC) {
 						q.add(new SortSpec(refProp.getName() + "." + ph.getName(), SortType.DESC));
 					} else {
@@ -1563,11 +1687,16 @@ public class EntityHandler extends BaseMetaDataRuntime {
 					}
 				}
 			}
-			if (q.getSortSpecList() != null && q.getSortSpecList().size() > 0) {
+			if (q.getSortSpecList() != null && q.getSortSpecList()
+					.size() > 0) {
 				searchCond.setOrderBy(q);
 			}
 		}
-//		searchCond.setVersiond(true);
+		if (refEH.isVersioned() && versioned) {
+			searchCond.versioned();
+			//versioned=trueの場合、参照先もバージョン管理されている場合は、保存時点で取得する
+			searchCond.refer(refProp.getName(), new AsOf(AsOfSpec.UPDATE_TIME));
+		}
 
 		final ArrayList<Entity> refList = new ArrayList<>();
 		//セキュリティロジックを通したいので、Invocation経由でQuery
@@ -1576,7 +1705,7 @@ public class EntityHandler extends BaseMetaDataRuntime {
 			public boolean test(Object[] val) {
 				//1件もない場合、参照間はOUTER JOINなので、1件だけnullの値が返ってくる。。。。
 				if (val[0] != null) {
-					Entity refEntity = refProp.getReferenceEntityHandler(entityContext).newInstance();
+					Entity refEntity = refEH.newInstance();
 					refEntity.setValue(Entity.OID, val[0]);
 					refEntity.setValue(Entity.VERSION, val[1]);
 					refEntity.setValue(Entity.NAME, val[2]);
@@ -1586,12 +1715,13 @@ public class EntityHandler extends BaseMetaDataRuntime {
 			}
 		}, InvocationType.SEARCH, service.getInterceptors(), this).proceed();
 		if (refList.size() != 0) {
-			e.setValue(refProp.getName(), refList.toArray(refProp.getReferenceEntityHandler(entityContext).newArrayInstance(refList.size())));
+			e.setValue(refProp.getName(), refList.toArray(refEH.newArrayInstance(refList.size())));
 		}
 	}
 
 	private VirtualPropertyAdapter createExtendPropertyAdapter(Query cond, EntityContext entityContext) {
-		return service.getExtendPropertyAdapterFactory().create(cond, entityContext, this);
+		return service.getExtendPropertyAdapterFactory()
+				.create(cond, entityContext, this);
 	}
 
 	public void search(Query cond, EntityStreamSearchHandler<Object[]> streamSearchHandler, Predicate<Object[]> callback) {
@@ -1600,7 +1730,7 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		EntityContext entityContext = EntityContext.getCurrentContext();
 
 		//バージョン制御用にクエリー変換
-		if (!cond.isVersiond()) {
+		if (!cond.isVersioned()) {
 			cond = (Query) new VersionedQueryNormalizer(service.getVersionController(this), this, entityContext, null).visit(cond);
 			if (log.isDebugEnabled()) {
 				log.debug("translate to versioned query:" + cond);
@@ -1619,7 +1749,8 @@ public class EntityHandler extends BaseMetaDataRuntime {
 
 				while (vpa.next()) {
 
-					List<ValueExpression> select = cond.getSelect().getSelectValues();
+					List<ValueExpression> select = cond.getSelect()
+							.getSelectValues();
 					Object[] row = new Object[select.size()];
 					for (int i = 0; i < row.length; i++) {
 						row[i] = vpa.getValue(i);
@@ -1641,7 +1772,8 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		}
 	}
 
-	public void searchEntity(Query query, boolean structuredEntity, EntityStreamSearchHandler<Entity> streamSearchHandler, Predicate<Entity> searchCallback) {
+	public void searchEntity(Query query, boolean structuredEntity, EntityStreamSearchHandler<Entity> streamSearchHandler,
+			Predicate<Entity> searchCallback) {
 		checkState();
 
 		ExecuteContext mtfContext = ExecuteContext.getCurrentContext();
@@ -1655,7 +1787,7 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		EntityContext entityContext = EntityContext.getCurrentContext();
 
 		//バージョン制御用にクエリー変換
-		if (!query.isVersiond()) {
+		if (!query.isVersioned()) {
 			query = (Query) new VersionedQueryNormalizer(service.getVersionController(this), this, entityContext, null).visit(query);
 			if (log.isDebugEnabled()) {
 				log.debug("translate to versioned query:" + query);
@@ -1666,10 +1798,11 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		return getStrategy().count(entityContext, vpa.getTransformedQuery());
 	}
 
-	private void searchEntity(Query cond, boolean structuredEntity, ExecuteContext mtfContext, EntityContext entityContext, EntityStreamSearchHandler<Entity> streamSearchHandler, Predicate<Entity> callback) {
+	private void searchEntity(Query cond, boolean structuredEntity, ExecuteContext mtfContext, EntityContext entityContext,
+			EntityStreamSearchHandler<Entity> streamSearchHandler, Predicate<Entity> callback) {
 
 		//バージョン制御用にクエリー変換
-		if (!cond.isVersiond()) {
+		if (!cond.isVersioned()) {
 			cond = (Query) new VersionedQueryNormalizer(service.getVersionController(this), this, entityContext, null).visit(cond);
 			if (log.isDebugEnabled()) {
 				log.debug("translate to versioned query:" + cond);
@@ -1687,16 +1820,21 @@ public class EntityHandler extends BaseMetaDataRuntime {
 				vpa.setIterator(getStrategy().search(entityContext, vpa.getTransformedQuery(), this));
 
 				EntityHandler handler = null;
-				if (getMetaData().getName().equals(cond.getFrom().getEntityName())) {
+				if (getMetaData().getName()
+						.equals(cond.getFrom()
+								.getEntityName())) {
 					handler = this;
 				} else {
-					handler = entityContext.getHandlerByName(cond.getFrom().getEntityName());
+					handler = entityContext.getHandlerByName(cond.getFrom()
+							.getEntityName());
 				}
 
 				if (structuredEntity) {
-					EntityBuilder builder = new EntityBuilder(this, entityContext, cond.getSelect().getSelectValues());
+					EntityBuilder builder = new EntityBuilder(this, entityContext, cond.getSelect()
+							.getSelectValues());
 					while (vpa.next()) {
-						List<ValueExpression> select = cond.getSelect().getSelectValues();
+						List<ValueExpression> select = cond.getSelect()
+								.getSelectValues();
 						Object[] row = new Object[select.size()];
 						for (int i = 0; i < row.length; i++) {
 							row[i] = vpa.getValue(i);
@@ -1705,7 +1843,7 @@ public class EntityHandler extends BaseMetaDataRuntime {
 						builder.handle(row, null);
 					}
 					builder.finished();
-					for (Entity entity: builder.getCollection()) {
+					for (Entity entity : builder.getCollection()) {
 						if (!callback.test(entity)) {
 							break;
 						}
@@ -1765,13 +1903,16 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		return strategy;
 	}
 
-
 	static Entity getAsEntity(EntityHandler eh, SearchResultIterator it, Query query) {
 
 		Entity model = eh.newInstance();
 
-		for (int i = 0; i < query.getSelect().getSelectValues().size(); i++) {
-			ValueExpression propName = query.getSelect().getSelectValues().get(i);
+		for (int i = 0; i < query.getSelect()
+				.getSelectValues()
+				.size(); i++) {
+			ValueExpression propName = query.getSelect()
+					.getSelectValues()
+					.get(i);
 			if (propName instanceof EntityField) {
 				EntityField ef = (EntityField) propName;
 				model.setValue(ef.getPropertyName(), it.getValue(i));
@@ -1787,40 +1928,58 @@ public class EntityHandler extends BaseMetaDataRuntime {
 		EntityContext entityContext = EntityContext.getCurrentContext();
 		//定義上、参照、又はLOBへの参照を持っている場合は、一括更新対象外とする。
 
-		for (UpdateValue uv: cond.getValues()) {
+		for (UpdateValue uv : cond.getValues()) {
 			PropertyHandler ph = getProperty(uv.getEntityField(), entityContext);
 			if (ph instanceof PrimitivePropertyHandler) {
 				//更新可能項目かどうかチェック
 				if (cond.isCheckUpdatable()) {
-					if (((PrimitivePropertyHandler) ph).getMetaData().getType() instanceof ComplexWrapperType) {
+					if (((PrimitivePropertyHandler) ph).getMetaData()
+							.getType() instanceof ComplexWrapperType) {
 						throw new EntityRuntimeException("can not updateAll because not support of Reference type or LOB type or AutoNumber type");
 					}
 					if (getMetaData().getNamePropertyId() != null &&
-							ph.getName().equals(getMetaData().getNamePropertyId())) {
+							ph.getName()
+									.equals(getMetaData().getNamePropertyId())) {
 						throw new EntityRuntimeException("can not updateAll because not support of nameProperty-ed property");
 					}
-					if (ph instanceof PrimitivePropertyHandler && ((MetaPrimitiveProperty) ph.getMetaData()).getType().isVirtual()) {
+					if (ph instanceof PrimitivePropertyHandler && ((MetaPrimitiveProperty) ph.getMetaData()).getType()
+							.isVirtual()) {
 						throw new EntityRuntimeException("can not updateAll because not support of Expression Type");
 					}
-					if (!ph.getMetaData().isUpdatable()) {
-						throw new EntityApplicationException(resourceString("impl.core.EntityHandler.notChange", ph.getMetaData().getDisplayName()));
+					if (!ph.getMetaData()
+							.isUpdatable()) {
+						throw new EntityApplicationException(resourceString("impl.core.EntityHandler.notChange", ph.getMetaData()
+								.getDisplayName()));
 					}
 				} else {
-					if (((PrimitivePropertyHandler) ph).getMetaData().getType() instanceof ComplexWrapperType
-							&& !(((PrimitivePropertyHandler) ph).getMetaData().getType() instanceof AutoNumberType)) {
+					if (((PrimitivePropertyHandler) ph).getMetaData()
+							.getType() instanceof ComplexWrapperType
+							&& !(((PrimitivePropertyHandler) ph).getMetaData()
+									.getType() instanceof AutoNumberType)) {
 						//AutoNumはOK
 						throw new EntityRuntimeException("can not updateAll because not support of Reference type or LOB type");
 					}
-					if (ph instanceof PrimitivePropertyHandler && ((MetaPrimitiveProperty) ph.getMetaData()).getType().isVirtual()) {
+					if (ph instanceof PrimitivePropertyHandler && ((MetaPrimitiveProperty) ph.getMetaData()).getType()
+							.isVirtual()) {
 						throw new EntityRuntimeException("can not updateAll because not support of Expression Type");
 					}
 
 					//checkUpdatable=falseの場合は、キー項目、audit項目のみ更新不可
-					if (ph.getName().equals(Entity.OID) || ph.getName().equals(Entity.VERSION)
-						|| ph.getName().equals(Entity.UPDATE_BY) || ph.getName().equals(Entity.UPDATE_DATE)
-						|| ph.getName().equals(Entity.CREATE_BY) || ph.getName().equals(Entity.CREATE_DATE)) {
+					if (ph.getName()
+							.equals(Entity.OID)
+							|| ph.getName()
+									.equals(Entity.VERSION)
+							|| ph.getName()
+									.equals(Entity.UPDATE_BY)
+							|| ph.getName()
+									.equals(Entity.UPDATE_DATE)
+							|| ph.getName()
+									.equals(Entity.CREATE_BY)
+							|| ph.getName()
+									.equals(Entity.CREATE_DATE)) {
 
-						throw new EntityApplicationException(resourceString("impl.core.EntityHandler.notChange", ph.getMetaData().getDisplayName()));
+						throw new EntityApplicationException(resourceString("impl.core.EntityHandler.notChange", ph.getMetaData()
+								.getDisplayName()));
 					}
 				}
 
@@ -1829,7 +1988,8 @@ public class EntityHandler extends BaseMetaDataRuntime {
 			}
 		}
 
-		VirtualPropertyAdapter vpa = service.getExtendPropertyAdapterFactory().create(cond, entityContext, this);
+		VirtualPropertyAdapter vpa = service.getExtendPropertyAdapterFactory()
+				.create(cond, entityContext, this);
 
 		return getStrategy().updateAll(vpa.getTransformedUpdateCondition(), entityContext, this, context.getClientId());
 	}
@@ -1841,13 +2001,15 @@ public class EntityHandler extends BaseMetaDataRuntime {
 
 		//定義上、カスケードデリート、又はLOBへの参照を持っている場合は、一括削除対象外とする。
 		List<PropertyHandler> pList = getPropertyList(entityContext);
-		for (PropertyHandler ph: pList) {
+		for (PropertyHandler ph : pList) {
 			if (ph instanceof PrimitivePropertyHandler) {
-				PropertyType pType = ((PrimitivePropertyHandler) ph).getMetaData().getType();
+				PropertyType pType = ((PrimitivePropertyHandler) ph).getMetaData()
+						.getType();
 				if (pType instanceof BinaryType || pType instanceof LongTextType) {
 					return false;
 				}
-			} else if (((ReferencePropertyHandler) ph).getMetaData().getReferenceType() == ReferenceType.COMPOSITION) {
+			} else if (((ReferencePropertyHandler) ph).getMetaData()
+					.getReferenceType() == ReferenceType.COMPOSITION) {
 				return false;
 			}
 		}
@@ -1866,7 +2028,8 @@ public class EntityHandler extends BaseMetaDataRuntime {
 			throw new EntityRuntimeException("can not deleteAll because not support of COMPOSITION type or LOB type");
 		}
 
-		VirtualPropertyAdapter vpa = service.getExtendPropertyAdapterFactory().create(cond, entityContext, this);
+		VirtualPropertyAdapter vpa = service.getExtendPropertyAdapterFactory()
+				.create(cond, entityContext, this);
 
 		return getStrategy().deleteAll(vpa.getTransformedDeleteCondition(), entityContext, this, context.getClientId());
 	}
@@ -1884,7 +2047,7 @@ public class EntityHandler extends BaseMetaDataRuntime {
 					.from(getMetaData().getName())
 					.where(new Equals(Entity.OID, oid))
 					.versioned(true);
-			final boolean[] res = new boolean[]{true};
+			final boolean[] res = new boolean[] { true };
 			search(q, null, new Predicate<Object[]>() {
 				@Override
 				public boolean test(Object[] dataModel) {
@@ -1927,7 +2090,7 @@ public class EntityHandler extends BaseMetaDataRuntime {
 					.from(getMetaData().getName())
 					.where(new Equals(Entity.OID, oid))
 					.versioned(true);
-			final boolean[] res = new boolean[]{true};
+			final boolean[] res = new boolean[] { true };
 			search(q, null, new Predicate<Object[]>() {
 				@Override
 				public boolean test(Object[] dataModel) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -90,7 +90,8 @@ public class MetaReferenceTreeViewItem extends MetaEntityTreeViewItem {
 	public void applyConfig(TreeViewItem item, EntityHandler parent) {
 		if (!(item instanceof ReferenceTreeViewItem)) {
 			throw new IllegalArgumentException(
-					"type is not ReferenceTreeViewItem. value is" + item.getClass().getName());
+					"type is not ReferenceTreeViewItem. value is" + item.getClass()
+							.getName());
 		}
 		super.fillFrom(item);
 		ReferenceTreeViewItem rItem = (ReferenceTreeViewItem) item;

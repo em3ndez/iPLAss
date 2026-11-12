@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -54,7 +54,7 @@ public interface TypedDefinitionManager<D extends Definition> extends Manager {
 		}
 
 		ArrayList<String> ret = new ArrayList<>(nameList.size());
-		for (DefinitionSummary n: nameList) {
+		for (DefinitionSummary n : nameList) {
 			ret.add(n.getName());
 		}
 		return ret;

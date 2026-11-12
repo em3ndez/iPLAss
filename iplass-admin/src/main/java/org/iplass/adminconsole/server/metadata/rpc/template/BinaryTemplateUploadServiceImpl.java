@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,12 +27,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.io.FilenameUtils;
 import org.iplass.adminconsole.server.base.i18n.AdminResourceBundleUtil;
 import org.iplass.adminconsole.server.base.io.upload.AdminUploadAction;
+import org.iplass.adminconsole.server.base.io.upload.MultipartRequestParameter;
+import org.iplass.adminconsole.server.base.io.upload.UploadActionException;
 import org.iplass.adminconsole.server.base.io.upload.UploadResponseInfo;
 import org.iplass.adminconsole.server.base.io.upload.UploadRuntimeException;
 import org.iplass.adminconsole.server.base.io.upload.UploadUtil;
@@ -53,7 +52,7 @@ import org.iplass.mtp.web.template.definition.TemplateDefinitionModifyResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import gwtupload.server.exceptions.UploadActionException;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class BinaryTemplateUploadServiceImpl extends AdminUploadAction {
 
@@ -61,55 +60,50 @@ public class BinaryTemplateUploadServiceImpl extends AdminUploadAction {
 
 	private static final Logger logger = LoggerFactory.getLogger(BinaryTemplateUploadServiceImpl.class);
 
-	/* (非 Javadoc)
-	 * @see gwtupload.server.UploadAction#executeAction(javax.servlet.http.HttpServletRequest, java.util.List)
-	 */
 	@Override
 	public String executeAction(final HttpServletRequest request,
-			final List<FileItem> sessionFiles) throws UploadActionException, MetaVersionCheckException {
+			final List<MultipartRequestParameter> sessionFiles) throws UploadActionException, MetaVersionCheckException {
 
 		final BinaryTemplateUploadResponseInfo result = new BinaryTemplateUploadResponseInfo();
-		final HashMap<String,Object> args = new HashMap<String,Object>();
+		final HashMap<String, Object> args = new HashMap<String, Object>();
 		try {
 			//リクエスト情報の取得
 			readRequest(request, sessionFiles, args);
 
-			//セッションからファイルを削除
-		    super.removeSessionFileItems(request);
-
-		    //リクエスト情報の検証
+			//リクエスト情報の検証
 			validateRequest(args);
 
 			//テナントIDの取得
-			final int tenantId = Integer.parseInt((String)args.get(BinaryTemplateUploadProperty.TENANT_ID));
-			final String defName = (String)args.get(BinaryTemplateUploadProperty.DEF_NAME);
+			final int tenantId = Integer.parseInt((String) args.get(BinaryTemplateUploadProperty.TENANT_ID));
+			final String defName = (String) args.get(BinaryTemplateUploadProperty.DEF_NAME);
 
-			final int currentVersion = Integer.parseInt((String)args.get(BinaryTemplateUploadProperty.VERSION));
-			final boolean checkVersion = Boolean.parseBoolean((String)args.get(BinaryTemplateUploadProperty.CHECK_VERSION));
+			final int currentVersion = Integer.parseInt((String) args.get(BinaryTemplateUploadProperty.VERSION));
+			final boolean checkVersion = Boolean.parseBoolean((String) args.get(BinaryTemplateUploadProperty.CHECK_VERSION));
 
 			//ここでトランザクションを開始
-			DefinitionModifyResult ret = AuthUtil.authCheckAndInvoke(getServletContext(), request, null, tenantId, new AuthUtil.Callable<DefinitionModifyResult>() {
+			DefinitionModifyResult ret = AuthUtil.authCheckAndInvoke(getServletContext(), request, null, tenantId,
+					new AuthUtil.Callable<DefinitionModifyResult>() {
 
-				@Override
-				public DefinitionModifyResult call() {
+						@Override
+						public DefinitionModifyResult call() {
 
-					DefinitionModifyResult result = null;
-					try {
-						// バージョンの最新チェック
-						MetaDataVersionCheckUtil.versionCheck(checkVersion, BinaryTemplateDefinition.class, defName, currentVersion);
+							DefinitionModifyResult result = null;
+							try {
+								// バージョンの最新チェック
+								MetaDataVersionCheckUtil.versionCheck(checkVersion, BinaryTemplateDefinition.class, defName, currentVersion);
 
-						//Definition生成
-						BinaryTemplateDefinition definition = convertDefinition(args);
+								//Definition生成
+								BinaryTemplateDefinition definition = convertDefinition(args);
 
-						//更新
-						result = update(definition);
-					} catch (Throwable e) {
-						logger.error(e.getMessage(), e);
-						result = new TemplateDefinitionModifyResult(false, e.getMessage());
-					}
-					return result;
-				}
-			});
+								//更新
+								result = update(definition);
+							} catch (Throwable e) {
+								logger.error(e.getMessage(), e);
+								result = new TemplateDefinitionModifyResult(false, e.getMessage());
+							}
+							return result;
+						}
+					});
 
 			//ステータスの書き込み
 			if (ret.isSuccess()) {
@@ -125,7 +119,7 @@ public class BinaryTemplateUploadServiceImpl extends AdminUploadAction {
 			//Tempファイルを削除
 			for (Object arg : args.values()) {
 				if (arg instanceof File) {
-					File file = (File)arg;
+					File file = (File) arg;
 					if (!file.delete()) {
 						logger.warn("Fail to delete temporary resource:" + file.getPath());
 					}
@@ -134,23 +128,23 @@ public class BinaryTemplateUploadServiceImpl extends AdminUploadAction {
 		}
 
 		//ResultをJSON形式に変換
-	    try {
+		try {
 			return UploadUtil.toJsonResponse(result);
 		} catch (UploadRuntimeException e) {
 			throw new UploadActionException(e);
 		}
 	}
 
-	private void readRequest(final HttpServletRequest request, List<FileItem> sessionFiles, HashMap<String,Object> args) {
+	private void readRequest(final HttpServletRequest request, List<MultipartRequestParameter> sessionFiles, HashMap<String, Object> args) {
 
 		//リクエスト情報の取得
 		try {
 
 			Map<String, LocaleInfo> localeMap = new LinkedHashMap<String, LocaleInfo>();
 
-			for (FileItem item : sessionFiles) {
+			for (MultipartRequestParameter item : sessionFiles) {
 				if (item.isFormField()) {
-			    	//File以外のもの
+					//File以外のもの
 					String[] names = splitLocaleFieldName(item.getFieldName());
 					String fieldName = names[0];
 					if (names[1] != null) {
@@ -169,7 +163,7 @@ public class BinaryTemplateUploadServiceImpl extends AdminUploadAction {
 					} else {
 						//通常データ
 						String strValue = UploadUtil.getValueAsString(item);
-				        args.put(item.getFieldName(), strValue);
+						args.put(item.getFieldName(), strValue);
 					}
 
 				} else {
@@ -217,16 +211,16 @@ public class BinaryTemplateUploadServiceImpl extends AdminUploadAction {
 		}
 	}
 
-	private void validateRequest(HashMap<String,Object> args) {
+	private void validateRequest(HashMap<String, Object> args) {
 		if (args.get(BinaryTemplateUploadProperty.TENANT_ID) == null) {
 			throw new UploadRuntimeException(resourceString("canNotGetTenantInfo"));
 		}
 		if (args.get(BinaryTemplateUploadProperty.DEF_NAME) == null) {
 			throw new UploadRuntimeException(resourceString("canNotGetUpdateTarget"));
 		}
-//		if (args.get(BinaryTemplateUploadProperty.UPLOAD_FILE) == null) {
-//			throw new UploadRuntimeException(getRS("canNotGetImportFile"));
-//		}
+		//		if (args.get(BinaryTemplateUploadProperty.UPLOAD_FILE) == null) {
+		//			throw new UploadRuntimeException(getRS("canNotGetImportFile"));
+		//		}
 	}
 
 	private String[] splitLocaleFieldName(String fieldName) {
@@ -245,10 +239,11 @@ public class BinaryTemplateUploadServiceImpl extends AdminUploadAction {
 		return ret;
 	}
 
-	private BinaryTemplateDefinition convertDefinition(HashMap<String,Object> args) {
+	private BinaryTemplateDefinition convertDefinition(HashMap<String, Object> args) {
 
-		TemplateDefinitionManager tdm = ManagerLocator.getInstance().getManager(TemplateDefinitionManager.class);
-		TemplateDefinition oldTemplate = tdm.get((String)args.get(BinaryTemplateUploadProperty.DEF_NAME));
+		TemplateDefinitionManager tdm = ManagerLocator.getInstance()
+				.getManager(TemplateDefinitionManager.class);
+		TemplateDefinition oldTemplate = tdm.get((String) args.get(BinaryTemplateUploadProperty.DEF_NAME));
 
 		BinaryTemplateDefinition definition;
 		List<LocalizedBinaryDefinition> oldLocaleList = null;
@@ -261,30 +256,30 @@ public class BinaryTemplateUploadServiceImpl extends AdminUploadAction {
 			oldLocaleList = definition.getLocalizedBinaryList();
 		}
 
-		definition.setName((String)args.get(BinaryTemplateUploadProperty.DEF_NAME));
-		definition.setDisplayName((String)args.get(BinaryTemplateUploadProperty.DISPLAY_NAME));
-		definition.setDescription((String)args.get(BinaryTemplateUploadProperty.DESCRIPTION));
+		definition.setName((String) args.get(BinaryTemplateUploadProperty.DEF_NAME));
+		definition.setDisplayName((String) args.get(BinaryTemplateUploadProperty.DISPLAY_NAME));
+		definition.setDescription((String) args.get(BinaryTemplateUploadProperty.DESCRIPTION));
 
-		String contentType = (String)args.get(BinaryTemplateUploadProperty.CONTENT_TYPE);
-		File binaryFile = (File)args.get(BinaryTemplateUploadProperty.UPLOAD_FILE);
+		String contentType = (String) args.get(BinaryTemplateUploadProperty.CONTENT_TYPE);
+		File binaryFile = (File) args.get(BinaryTemplateUploadProperty.UPLOAD_FILE);
 		if (StringUtil.isNotEmpty(contentType)) {
 			definition.setContentType(contentType);
-		} else if (binaryFile != null){
+		} else if (binaryFile != null) {
 			//未指定の場合は、アップロードファイルから設定
-			definition.setContentType((String)args.get(BinaryTemplateUploadProperty.FILE_CONTENT_TYPE));
+			definition.setContentType((String) args.get(BinaryTemplateUploadProperty.FILE_CONTENT_TYPE));
 		}
 		//ファイルがアップロードされている場合は置き換え
 		if (binaryFile != null) {
 			definition.setBinary(convertFileToByte(binaryFile));
-			definition.setFileName((String)args.get(BinaryTemplateUploadProperty.UPLOAD_FILE_NAME));
+			definition.setFileName((String) args.get(BinaryTemplateUploadProperty.UPLOAD_FILE_NAME));
 		}
 
 		List<LocalizedBinaryDefinition> newLocaleList = null;
 		@SuppressWarnings("unchecked")
-		Map<String, LocaleInfo> localeMap = (Map<String, LocaleInfo>)args.get(BinaryTemplateUploadProperty.LOCALE_PREFIX);
+		Map<String, LocaleInfo> localeMap = (Map<String, LocaleInfo>) args.get(BinaryTemplateUploadProperty.LOCALE_PREFIX);
 		if (localeMap != null && !localeMap.isEmpty()) {
 			newLocaleList = new ArrayList<LocalizedBinaryDefinition>();
-			for(LocaleInfo value : localeMap.values()) {
+			for (LocaleInfo value : localeMap.values()) {
 				LocalizedBinaryDefinition localeDef = null;
 				if (StringUtil.isEmpty(value.storedLocale)) {
 					//新規追加
@@ -293,7 +288,8 @@ public class BinaryTemplateUploadServiceImpl extends AdminUploadAction {
 					//更新
 					if (oldLocaleList != null) {
 						for (LocalizedBinaryDefinition old : oldLocaleList) {
-							if (old.getLocaleName().equals(value.storedLocale)) {
+							if (old.getLocaleName()
+									.equals(value.storedLocale)) {
 								localeDef = old;
 								break;
 							}
@@ -312,7 +308,7 @@ public class BinaryTemplateUploadServiceImpl extends AdminUploadAction {
 				localeDef.setLocaleName(value.newLocale);
 				if (value.file != null) {
 					localeDef.setBinaryValue(convertFileToByte(value.file));
-					localeDef.setFileName((String)value.values.get(BinaryTemplateUploadProperty.UPLOAD_FILE_NAME));
+					localeDef.setFileName((String) value.values.get(BinaryTemplateUploadProperty.UPLOAD_FILE_NAME));
 				}
 				newLocaleList.add(localeDef);
 			}
@@ -323,8 +319,10 @@ public class BinaryTemplateUploadServiceImpl extends AdminUploadAction {
 	}
 
 	private DefinitionModifyResult update(BinaryTemplateDefinition definition) {
-		TemplateDefinitionManager tdm = ManagerLocator.getInstance().getManager(TemplateDefinitionManager.class);
-		MetaDataAuditLogger.getLogger().logMetadata(MetaDataAction.UPDATE, BinaryTemplateDefinition.class.getName(), "name:" + definition.getName());
+		TemplateDefinitionManager tdm = ManagerLocator.getInstance()
+				.getManager(TemplateDefinitionManager.class);
+		MetaDataAuditLogger.getLogger()
+				.logMetadata(MetaDataAction.UPDATE, BinaryTemplateDefinition.class.getName(), "name:" + definition.getName());
 		return tdm.update(definition);
 	}
 
@@ -342,7 +340,7 @@ public class BinaryTemplateUploadServiceImpl extends AdminUploadAction {
 		private String newLocale;
 		private String storedLocale;
 		private File file;
-		private HashMap<String,Object> values = new HashMap<String, Object>();
+		private HashMap<String, Object> values = new HashMap<String, Object>();
 
 		public LocaleInfo(String locale) {
 			this.newLocale = locale;

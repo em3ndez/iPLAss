@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -84,7 +84,8 @@ public class MetaFieldReferenceSingleItem extends MetaFieldCanvasItem {
 
 			@Override
 			public void onChange(ChangeEvent event) {
-				if (event.getOldValue().equals(event.getValue())) {
+				if (event.getOldValue()
+						.equals(event.getValue())) {
 					// 変更されてなかったらキャンセル
 					event.cancel();
 				}
@@ -153,7 +154,9 @@ public class MetaFieldReferenceSingleItem extends MetaFieldCanvasItem {
 
 				// 編集ダイアログ表示
 				final MetaFieldSettingDialog dialog = pane.createSubDialog(
-						refValue.getClass().getName(), (Refrectable) refValue, info);
+						refValue.getClass()
+								.getName(),
+						(Refrectable) refValue, info);
 
 				dialog.setOkHandler(new MetaFieldUpdateHandler() {
 
@@ -185,7 +188,8 @@ public class MetaFieldReferenceSingleItem extends MetaFieldCanvasItem {
 		buttonPane.setMembers(btnEdit);
 
 		Serializable value = pane.getValue(info.getName());
-		final String className = value != null ? value.getClass().getName() : "";
+		final String className = value != null ? value.getClass()
+				.getName() : "";
 		typeItem.setValue(className);
 
 		container.addMember(form);

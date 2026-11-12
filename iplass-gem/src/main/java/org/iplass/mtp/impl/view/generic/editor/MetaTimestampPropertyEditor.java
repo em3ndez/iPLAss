@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -39,6 +39,7 @@ import org.iplass.mtp.view.generic.editor.TimestampPropertyEditor;
 /**
  * 日時型プロパティエディタのメタデータ
  * @author lis3wg
+ * @author SEKIGUCHI Naoya
  */
 public class MetaTimestampPropertyEditor extends MetaDateTimePropertyEditor {
 
@@ -66,6 +67,21 @@ public class MetaTimestampPropertyEditor extends MetaDateTimePropertyEditor {
 
 	/** 曜日を表示 */
 	private boolean showWeekday;
+
+	/** 最小日付 */
+	private String minDate;
+
+	/** 最小日付の設定値をファンクション実行する */
+	private boolean minDateFunction;
+
+	/** 最大日付 */
+	private String maxDate;
+
+	/** 最大日付の設定値をファンクション実行する */
+	private boolean maxDateFunction;
+
+	/** テキストフィールドへの直接入力を制限する */
+	private boolean restrictDirectEditing;
 
 	/**
 	 * 時間の表示範囲を取得します。
@@ -104,7 +120,7 @@ public class MetaTimestampPropertyEditor extends MetaDateTimePropertyEditor {
 	 * @return 現在日付設定ボタン表示可否
 	 */
 	public boolean isHideButtonPanel() {
-	    return hideButtonPanel;
+		return hideButtonPanel;
 	}
 
 	/**
@@ -112,7 +128,7 @@ public class MetaTimestampPropertyEditor extends MetaDateTimePropertyEditor {
 	 * @param hideButtonPanel 現在日付設定ボタン表示可否
 	 */
 	public void setHideButtonPanel(boolean hideButtonPanel) {
-	    this.hideButtonPanel = hideButtonPanel;
+		this.hideButtonPanel = hideButtonPanel;
 	}
 
 	/**
@@ -120,7 +136,7 @@ public class MetaTimestampPropertyEditor extends MetaDateTimePropertyEditor {
 	 * @return 時間のデフォルト値補完を行わない
 	 */
 	public boolean isNotFillTime() {
-	    return notFillTime;
+		return notFillTime;
 	}
 
 	/**
@@ -128,7 +144,7 @@ public class MetaTimestampPropertyEditor extends MetaDateTimePropertyEditor {
 	 * @param notFillTime 時間のデフォルト値補完を行わない
 	 */
 	public void setNotFillTime(boolean notFillTime) {
-	    this.notFillTime = notFillTime;
+		this.notFillTime = notFillTime;
 	}
 
 	/**
@@ -161,6 +177,87 @@ public class MetaTimestampPropertyEditor extends MetaDateTimePropertyEditor {
 		this.showWeekday = showWeekday;
 	}
 
+	/**
+	 * 最小日付を取得する
+	 * @return 最小日付
+	 */
+	public String getMinDate() {
+		return minDate;
+	}
+
+	/**
+	 * 最小日付を設定する
+	 * @param minDate 最小日付
+	 */
+	public void setMinDate(String minDate) {
+		this.minDate = minDate;
+	}
+
+	/**
+	 * 最小日付の設定値を JS ファンクション実行するパラメータを取得する
+	 * @return ファンクション実行するか（true: ファンクション実行する、false: 設定値を利用する）
+	 */
+	public boolean isMinDateFunction() {
+		return minDateFunction;
+	}
+
+	/**
+	 * 最小日付の設定値を JS ファンクション実行するパラメータを設定する
+	 * @param minDateFunction ファンクション実行するか
+	 */
+	public void setMinDateFunction(boolean minDateFunction) {
+		this.minDateFunction = minDateFunction;
+	}
+
+	/**
+	 * 最大日付を取得する
+	 * @return 最大日付
+	 */
+	public String getMaxDate() {
+		return maxDate;
+	}
+
+	/**
+	 * 最大日付を設定する
+	 * @param maxDate 最大日付
+	 */
+	public void setMaxDate(String maxDate) {
+		this.maxDate = maxDate;
+	}
+
+	/**
+	 * 最大日付の設定値を JS ファンクション実行するパラメータを取得する
+	 * @return ファンクション実行するか（true: ファンクション実行する、false: 設定値を利用する）
+	 */
+	public boolean isMaxDateFunction() {
+		return maxDateFunction;
+	}
+
+	/**
+	 * 最大日付の設定値を JS ファンクション実行するパラメータを設定する
+	 * @param maxDateFunction ファンクション実行するか
+	 */
+	public void setMaxDateFunction(boolean maxDateFunction) {
+		this.maxDateFunction = maxDateFunction;
+	}
+
+	/**
+	 * テキストフィールドへの直接入力を制限する値を取得する
+	 * @return テキストフィールドへの直接入力を制限する（true: 直接入力不可能、false: 直接入力可能）
+	 */
+	public boolean isRestrictDirectEditing() {
+		return restrictDirectEditing;
+	}
+
+	/**
+	 * テキストフィールドへの直接入力を制限する値を設定する
+	 * @param restrictDirectEditing テキストフィールドへの直接入力を制限する
+	 * @see {@link #isRestrictDirectEditing()}
+	 */
+	public void setRestrictDirectEditing(boolean restrictDirectEditing) {
+		this.restrictDirectEditing = restrictDirectEditing;
+	}
+
 	@Override
 	public void applyConfig(PropertyEditor editor) {
 		super.fillFrom(editor);
@@ -172,6 +269,11 @@ public class MetaTimestampPropertyEditor extends MetaDateTimePropertyEditor {
 		this.notFillTime = pe.isNotFillTime();
 		this.useDatetimePicker = pe.isUseDatetimePicker();
 		this.showWeekday = pe.isShowWeekday();
+		this.minDate = pe.getMinDate();
+		this.minDateFunction = pe.isMinDateFunction();
+		this.maxDate = pe.getMaxDate();
+		this.maxDateFunction = pe.isMaxDateFunction();
+		this.restrictDirectEditing = pe.isRestrictDirectEditing();
 	}
 
 	@Override
@@ -185,6 +287,12 @@ public class MetaTimestampPropertyEditor extends MetaDateTimePropertyEditor {
 		editor.setNotFillTime(this.notFillTime);
 		editor.setUseDatetimePicker(this.useDatetimePicker);
 		editor.setShowWeekday(this.showWeekday);
+		editor.setMinDate(minDate);
+		editor.setMinDateFunction(minDateFunction);
+		editor.setMaxDate(maxDate);
+		editor.setMaxDateFunction(maxDateFunction);
+		editor.setRestrictDirectEditing(restrictDirectEditing);
+
 		return editor;
 	}
 
@@ -206,7 +314,7 @@ public class MetaTimestampPropertyEditor extends MetaDateTimePropertyEditor {
 					return true;
 				}
 				if (pd instanceof ExpressionProperty) {
-					ExpressionProperty ep = (ExpressionProperty)pd;
+					ExpressionProperty ep = (ExpressionProperty) pd;
 					if (ep.getResultType() == PropertyDefinitionType.DATETIME) {
 						return true;
 					}

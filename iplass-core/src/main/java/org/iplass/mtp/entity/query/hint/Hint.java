@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -41,7 +41,8 @@ public abstract class Hint implements ASTNode {
 	 * @return
 	 */
 	public static List<Hint> externalHint(String key) {
-		return QueryServiceHolder.getInstance().getExternalHint(key);
+		return QueryServiceHolder.getInstance()
+				.getExternalHint(key);
 	}
 
 	public abstract void accept(HintVisitor visitor);

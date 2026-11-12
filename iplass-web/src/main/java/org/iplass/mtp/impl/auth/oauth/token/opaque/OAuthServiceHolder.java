@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,18 +29,21 @@ import org.iplass.mtp.impl.auth.oauth.OAuthClientService;
 import org.iplass.mtp.spi.ServiceRegistry;
 
 class OAuthServiceHolder {
-	static OAuthClientService client = ServiceRegistry.getRegistry().getService(OAuthClientService.class);
-	static OAuthAuthorizationService authorization = ServiceRegistry.getRegistry().getService(OAuthAuthorizationService.class);
-	
+	static OAuthClientService client = ServiceRegistry.getRegistry()
+			.getService(OAuthClientService.class);
+	static OAuthAuthorizationService authorization = ServiceRegistry.getRegistry()
+			.getService(OAuthAuthorizationService.class);
+
 	static UserEntityResolver userEntityResolver;
 	static {
-		AuthService as = ServiceRegistry.getRegistry().getService(AuthService.class);
-		for (AuthenticationProvider ap: as.getAuthenticationProviders()) {
+		AuthService as = ServiceRegistry.getRegistry()
+				.getService(AuthService.class);
+		for (AuthenticationProvider ap : as.getAuthenticationProviders()) {
 			if (ap instanceof AccessTokenAuthenticationProvider) {
 				userEntityResolver = ((AccessTokenUserEntityResolver) ap.getUserEntityResolver()).getActual();
 				break;
 			}
 		}
 	}
-	
+
 }

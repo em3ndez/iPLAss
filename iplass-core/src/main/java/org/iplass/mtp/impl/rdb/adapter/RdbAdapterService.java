@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,33 +28,32 @@ import org.iplass.mtp.spi.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class RdbAdapterService implements Service {
 	private static Logger logger = LoggerFactory.getLogger(RdbAdapterService.class);
-	
+
 	private RdbAdapter adapter;
 	private Map<String, RdbAdapter> adapterMap;
 
 	public RdbAdapter getRdbAdapter() {
 		return adapter;
 	}
-	
+
 	public RdbAdapter getRdbAdapter(String name) {
 		if (name == null) {
 			return adapter;
 		}
 		return adapterMap.get(name);
 	}
-	
+
 	public void destroy() {
 		adapter = null;
 		adapterMap = null;
 	}
-	
+
 	public void init(Config config) {
 		adapterMap = new HashMap<>();
 		if (config.getNames() != null) {
-			for (String name: config.getNames()) {
+			for (String name : config.getNames()) {
 				if (name.equals("adapter")) {
 					adapter = (RdbAdapter) config.getBean("adapter");
 				} else {

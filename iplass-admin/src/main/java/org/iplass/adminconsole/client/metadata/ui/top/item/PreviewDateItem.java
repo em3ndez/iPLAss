@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,8 +29,6 @@ import org.iplass.adminconsole.client.base.util.SmartGWTUtil;
 import org.iplass.adminconsole.client.metadata.ui.top.PartsOperationHandler;
 import org.iplass.mtp.view.top.parts.PreviewDateParts;
 
-import com.smartgwt.client.types.HeaderControls;
-import com.smartgwt.client.widgets.HeaderControl;
 import com.smartgwt.client.widgets.IButton;
 import com.smartgwt.client.widgets.events.ClickEvent;
 import com.smartgwt.client.widgets.events.ClickHandler;
@@ -51,20 +49,17 @@ public class PreviewDateItem extends PartsItem {
 		this.controler = controler;
 		setTitle("Preview Date");
 		setBackgroundColor("#909090");
-
-		setHeaderControls(HeaderControls.HEADER_LABEL, new HeaderControl(HeaderControl.SETTINGS, new ClickHandler() {
-
-			@Override
-			public void onClick(ClickEvent event) {
-				PreviewDatePartsItemSettingDialog dialog = new PreviewDatePartsItemSettingDialog();
-				dialog.show();
-			}
-		}), HeaderControls.CLOSE_BUTTON);
 	}
 
 	@Override
 	public PreviewDateParts getParts() {
 		return parts;
+	}
+
+	@Override
+	protected void onOpen() {
+		PreviewDatePartsItemSettingDialog dialog = new PreviewDatePartsItemSettingDialog();
+		dialog.show();
 	}
 
 	@Override
@@ -111,7 +106,7 @@ public class PreviewDateItem extends PartsItem {
 			save.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent event) {
-					if (form.validate()){
+					if (form.validate()) {
 						//入力情報をパーツに
 						parts.setTitle(SmartGWTUtil.getStringValue(txtTitle));
 						parts.setLocalizedTitleList(txtTitle.getLocalizedList());

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,10 +22,10 @@ package org.iplass.mtp.impl.view.generic.parser;
 
 import java.io.IOException;
 
-import javax.servlet.ServletException;
-import javax.servlet.jsp.PageContext;
-
 import org.iplass.mtp.view.generic.parser.Token;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.jsp.PageContext;
 
 public class StringToken implements Token {
 
@@ -38,7 +38,8 @@ public class StringToken implements Token {
 	@Override
 	public void printOut(PageContext page) throws ServletException, IOException {
 		if (token != null) {
-			page.getOut().write(token);
+			page.getOut()
+					.write(token);
 		}
 	}
 

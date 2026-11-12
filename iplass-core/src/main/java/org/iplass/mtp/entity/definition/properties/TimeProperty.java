@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,7 +25,6 @@ import java.sql.Time;
 import org.iplass.mtp.entity.definition.PropertyDefinition;
 import org.iplass.mtp.entity.definition.PropertyDefinitionType;
 
-
 /**
  * 時間を表すプロパティ定義。
  * 
@@ -41,7 +40,7 @@ public class TimeProperty extends PropertyDefinition {
 	public TimeProperty(String name) {
 		setName(name);
 	}
-	
+
 	@Override
 	public Class<?> getJavaType() {
 		return Time.class;
@@ -51,7 +50,7 @@ public class TimeProperty extends PropertyDefinition {
 	public PropertyDefinitionType getType() {
 		return PropertyDefinitionType.TIME;
 	}
-	
+
 //	public TimeProperty copy() {
 //		TimeProperty copy = new TimeProperty();
 //		copyTo(copy);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -36,7 +36,6 @@ import org.apache.tika.parser.txt.TXTParser;
  * </p>
  */
 public class BinaryTextParser extends AbstractBinaryReferenceParser {
-
 
 	private static Set<MediaType> customTypes;
 

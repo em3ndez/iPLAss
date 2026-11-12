@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright 2014 DENTSU SOKEN INC. All Rights Reserved.
  */
 
 package org.iplass.mtp.tools.batch.cleaner;
@@ -12,6 +12,7 @@ import org.iplass.mtp.impl.core.ExecuteContext;
 import org.iplass.mtp.impl.core.TenantContextService;
 import org.iplass.mtp.impl.tools.tenant.TenantInfo;
 import org.iplass.mtp.spi.ServiceRegistry;
+import org.iplass.mtp.tools.batch.MtpBatchResourceDisposer;
 import org.iplass.mtp.tools.batch.MtpSilentBatch;
 import org.iplass.mtp.transaction.Transaction;
 import org.iplass.mtp.util.StringUtil;
@@ -25,8 +26,10 @@ public class AuthProviderCleaner extends MtpSilentBatch {
 
 	private static Logger logger = LoggerFactory.getLogger(AuthProviderCleaner.class);
 
-	private static TenantContextService tenantContextService = ServiceRegistry.getRegistry().getService(TenantContextService.class);
-	private static AuthService authService = ServiceRegistry.getRegistry().getService(AuthService.class);
+	private static TenantContextService tenantContextService = ServiceRegistry.getRegistry()
+			.getService(TenantContextService.class);
+	private static AuthService authService = ServiceRegistry.getRegistry()
+			.getService(AuthService.class);
 
 	private int tenantId;
 
@@ -45,16 +48,22 @@ public class AuthProviderCleaner extends MtpSilentBatch {
 		if (args != null && args.length > 0 && StringUtil.isNotEmpty(args[0])) {
 			tenantId = Integer.parseInt(args[0]);
 		}
-		if (tenantId >= 0) {
-			(new AuthProviderCleaner(tenantId)).clean();
-		} else {
-			//全テナントを対象
-			List<TenantInfo> tenants = getValidTenantInfoList();
-			if (tenants != null) {
-				for (TenantInfo t: tenants) {
-					(new AuthProviderCleaner(t.getId())).clean();
+
+		try {
+			if (tenantId >= 0) {
+				(new AuthProviderCleaner(tenantId)).clean();
+			} else {
+				//全テナントを対象
+				List<TenantInfo> tenants = getValidTenantInfoList();
+				if (tenants != null) {
+					for (TenantInfo t : tenants) {
+						(new AuthProviderCleaner(t.getId())).clean();
+					}
 				}
 			}
+		} finally {
+			// リソース破棄
+			MtpBatchResourceDisposer.disposeResource();
 		}
 	}
 
@@ -86,11 +95,11 @@ public class AuthProviderCleaner extends MtpSilentBatch {
 
 				AuthenticationProvider[] aps = authService.getAuthenticationProviders();
 				if (aps != null) {
-					for (AuthenticationProvider ap: aps) {
+					for (AuthenticationProvider ap : aps) {
 						final AuthenticationProvider apFinal = ap;
 						Transaction.required(t -> {
-								apFinal.cleanupData();
-								return null;
+							apFinal.cleanupData();
+							return null;
 						});
 					}
 				}
@@ -112,13 +121,12 @@ public class AuthProviderCleaner extends MtpSilentBatch {
 		logInfo("");
 	}
 
-
 	/**
 	 * tenantIdを取得します。
 	 * @return tenantId
 	 */
 	public int getTenantId() {
-	    return tenantId;
+		return tenantId;
 	}
 
 	/**
@@ -126,7 +134,7 @@ public class AuthProviderCleaner extends MtpSilentBatch {
 	 * @param tenantId tenantId
 	 */
 	public void setTenantId(int tenantId) {
-	    this.tenantId = tenantId;
+		this.tenantId = tenantId;
 	}
 
 	@Override

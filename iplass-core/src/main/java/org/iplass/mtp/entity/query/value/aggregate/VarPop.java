@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -37,11 +37,11 @@ public class VarPop extends Aggregate {
 
 	public VarPop() {
 	}
-	
+
 	public VarPop(String propertyName) {
 		setValue(new EntityField(propertyName));
 	}
-	
+
 	public VarPop(ValueExpression value) {
 		setValue(value);
 	}

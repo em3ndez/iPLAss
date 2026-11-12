@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,7 +28,7 @@ package org.iplass.mtp.entity.interceptor;
  *
  */
 public interface EntityInterceptor {
-	
+
 	/**
 	 * 各Entity操作（登録、更新、、、）によって、
 	 * 各EntityInvocationのサブクラスのインスタンスを引数に呼び出される。
@@ -37,5 +37,5 @@ public interface EntityInterceptor {
 	 * @return
 	 */
 	public Object intercept(EntityInvocation<?> invocation);
-	
+
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -38,20 +38,28 @@ import org.iplass.mtp.spi.ServiceRegistry;
 public abstract class AuthorizationContextHandler {
 
 	public abstract Class<? extends Permission>[] permissionType();
+
 	protected abstract String cacheNamespace();
+
 	protected abstract AuthorizationContextCacheLogic newAuthorizeContextCacheLogic(TenantAuthorizeContext tac);
+
 	protected abstract AuthorizationContext defaultAuthorizationContext(String contextName, TenantAuthorizeContext tac);
+
 	protected abstract String toMetaDataPath(String contextName);
+
 	protected abstract String contextName(Permission permission);
-	
+
 	public CacheController<String, BuiltinAuthorizationContext> initCache(TenantAuthorizeContext tac) {
-		CacheService cs = ServiceRegistry.getRegistry().getService(CacheService.class);
-		return new CacheController<>(cs.getCache(cacheNamespace() + "/" + tac.getTenantContext().getTenantId()), false, 0, newAuthorizeContextCacheLogic(tac), true, true);
+		CacheService cs = ServiceRegistry.getRegistry()
+				.getService(CacheService.class);
+		return new CacheController<>(cs.getCache(cacheNamespace() + "/" + tac.getTenantContext()
+				.getTenantId()), false, 0, newAuthorizeContextCacheLogic(tac), true, true);
 	}
-	
+
 	public boolean useSharedPermission(Permission permission) {
 		String metaDataPath = toMetaDataPath(contextName(permission));
-		MetaDataEntry ent = MetaDataContext.getContext().getMetaDataEntry(metaDataPath);
+		MetaDataEntry ent = MetaDataContext.getContext()
+				.getMetaDataEntry(metaDataPath);
 		if (ent == null) {
 			return false;
 		}
@@ -67,15 +75,19 @@ public abstract class AuthorizationContextHandler {
 	}
 
 	public BuiltinAuthorizationContext get(String contextName, TenantAuthorizeContext tac) {
-		if (ExecuteContext.getCurrentContext().getClientTenantId() != tac.getTenantContext().getTenantId()) {
+		if (ExecuteContext.getCurrentContext()
+				.getClientTenantId() != tac.getTenantContext()
+						.getTenantId()) {
 			return ExecuteContext.executeAs(tac.getTenantContext(), () -> {
-				return tac.getContextCache(this.getClass()).get(contextName);
+				return tac.getContextCache(this.getClass())
+						.get(contextName);
 			});
 		} else {
-			return tac.getContextCache(this.getClass()).get(contextName);
+			return tac.getContextCache(this.getClass())
+					.get(contextName);
 		}
 	}
-	
+
 	public AuthorizationContext getOrDefault(String contextName, TenantAuthorizeContext tac) {
 		AuthorizationContext ret = get(contextName, tac);
 		if (ret == null) {
@@ -86,7 +98,9 @@ public abstract class AuthorizationContextHandler {
 
 	public void notifyUpdate(final String contextName, TenantAuthorizeContext tac) {
 		CacheController<String, BuiltinAuthorizationContext> cache = tac.getContextCache(this.getClass());
-		if (ExecuteContext.getCurrentContext().getClientTenantId() != tac.getTenantContext().getTenantId()) {
+		if (ExecuteContext.getCurrentContext()
+				.getClientTenantId() != tac.getTenantContext()
+						.getTenantId()) {
 			ExecuteContext.executeAs(tac.getTenantContext(), () -> {
 				BuiltinAuthorizationContext context = newAuthorizeContextCacheLogic(tac).load(contextName);
 				if (context == null) {

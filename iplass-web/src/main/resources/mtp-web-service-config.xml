@@ -11,6 +11,8 @@
 		<property name="org.iplass.mtp.auth.oauth.definition.OAuthAuthorizationDefinitionManager" value="org.iplass.mtp.impl.auth.oauth.OAuthAuthorizationDefinitionManagerImpl" />
 		<property name="org.iplass.mtp.auth.oauth.definition.OAuthClientDefinitionManager" value="org.iplass.mtp.impl.auth.oauth.OAuthClientDefinitionManagerImpl" />
 		<property name="org.iplass.mtp.auth.oauth.definition.OAuthResourceServerDefinitionManager" value="org.iplass.mtp.impl.auth.oauth.OAuthResourceServerDefinitionManagerImpl" />
+		<property name="org.iplass.mtp.auth.oidc.definition.OpenIdConnectDefinitionManager" value="org.iplass.mtp.impl.auth.authenticate.oidc.OpenIdConnectDefinitionManagerImpl" />
+		<property name="org.iplass.mtp.auth.webauthn.definition.WebAuthnDefinitionManager" value="org.iplass.mtp.impl.auth.authenticate.webauthn.WebAuthnDefinitionManagerImpl" />
 	</service>
 
 	<!-- MetaData JAXB configuration -->
@@ -23,6 +25,9 @@
 	<service>
 		<interface>org.iplass.mtp.impl.metadata.MetaDataRepository</interface>
 		<property name="annotatedClass" value="org.iplass.mtp.impl.webapi.command.MetaDataRefs" additional="true" />
+		<property name="annotatedClass" value="org.iplass.mtp.impl.auth.oauth.command.MetaDataRefs" additional="true" />
+		<property name="annotatedClass" value="org.iplass.mtp.impl.auth.authenticate.oidc.command.MetaDataRefs" additional="true" />
+		<property name="annotatedClass" value="org.iplass.mtp.impl.auth.authenticate.webauthn.command.MetaDataRefs" additional="true" />
 		<property name="resourcePath" value="/mtp-web-metadata.xml" additional="true" />
 
 		<!-- shared MetaData config -->
@@ -36,6 +41,19 @@
 		</property>
  	</service>
 
+	<!-- Template Service configuration -->
+	<service>
+		<interface>org.iplass.mtp.impl.web.template.TemplateService</interface>
+		<class>org.iplass.mtp.impl.web.template.TemplateService</class>
+		<property name="templateClassMap" additional="true">
+			<property name="org.iplass.mtp.web.template.definition.GroovyTemplateDefinition" value="org.iplass.mtp.impl.web.template.MetaGroovyTemplate" />
+			<property name="org.iplass.mtp.web.template.definition.HtmlTemplateDefinition" value="org.iplass.mtp.impl.web.template.MetaHtmlTemplate" />
+			<property name="org.iplass.mtp.web.template.definition.JspTemplateDefinition" value="org.iplass.mtp.impl.web.template.MetaJspTemplate" />
+			<property name="org.iplass.mtp.web.template.definition.BinaryTemplateDefinition" value="org.iplass.mtp.impl.web.template.MetaBinaryTemplate" />
+			<property name="org.iplass.mtp.web.template.report.definition.ReportTemplateDefinition" value="org.iplass.mtp.impl.web.template.report.MetaReportTemplate" />
+		</property>
+	</service>
+
 	<!-- Definition Service -->
 	<service>
 		<interface>org.iplass.mtp.impl.definition.DefinitionService</interface>
@@ -47,6 +65,8 @@
 		<property name="typeMap" value="org.iplass.mtp.impl.auth.oauth.OAuthAuthorizationService$TypeMap" additional="true" />
 		<property name="typeMap" value="org.iplass.mtp.impl.auth.oauth.OAuthClientService$TypeMap" additional="true" />
 		<property name="typeMap" value="org.iplass.mtp.impl.auth.oauth.OAuthResourceServerService$TypeMap" additional="true" />
+		<property name="typeMap" value="org.iplass.mtp.impl.auth.authenticate.oidc.OpenIdConnectService$TypeMap" additional="true" />
+		<property name="typeMap" value="org.iplass.mtp.impl.auth.authenticate.webauthn.WebAuthnService$TypeMap" additional="true" />
 	</service>
 
 	<!-- Tenant関連 -->
@@ -72,37 +92,21 @@
 	<!-- 認証関連 -->
 	<service>
 		<interface>org.iplass.mtp.impl.auth.AuthService</interface>
-		<property name="authenticationProvider" class="org.iplass.mtp.impl.auth.authenticate.rememberme.RememberMeTokenAuthenticationProvider"  inherit="false">
+
+		<bean name="defaultBuiltinAuthenticationProvider">
+			<property name="autoLoginHandler" class="org.iplass.mtp.impl.auth.authenticate.builtin.web.IdPasswordAutoLoginHandler" />
+		</bean>
+		<bean name="defaultBuiltinAuthenticationProviderWithRememberMeToken" class="org.iplass.mtp.impl.auth.authenticate.rememberme.RememberMeTokenAuthenticationProvider">
 			<property name="deleteTokenOnFailure" value="true" />
 			<property name="clientStore" class="org.iplass.mtp.impl.auth.authenticate.token.web.AuthTokenCookieStore">
 				<property name="cookieName" value="iprmtkn" />
 			</property>
-
-			<property name="authenticationProvider" class="org.iplass.mtp.impl.auth.authenticate.builtin.BuiltinAuthenticationProvider">
-	 			<property name="updatable" value="true" />
-	 			<property name="providerName" value="default" />
-
-	 			<!-- if load custom reference property at login, set userEntityResolver.eagerLoadReferenceProperty -->
-	 			<!--
-	 			<property name="userEntityResolver" class="org.iplass.mtp.impl.auth.authenticate.DefaultUserEntityResolver">
-		 			<property name="eagerLoadReferenceProperty" value="rank" />
-		 			<property name="eagerLoadReferenceProperty" value="groups" />
-		 			<property name="eagerLoadReferenceProperty" value="yourCustomReference" />
-	 			</property>
-	 			 -->
-
-				<property name="passwordHashSettings">
-					<property name="version" value="1" />
-					<property name="passwordHashAlgorithm" value="SHA-256" />
-					<property name="systemSalt" value="iPLAssSystemSalt" />
-					<property name="stretchCount" value="1000" />
-				</property>
-				
-				<property name="autoLoginHandler" class="org.iplass.mtp.impl.auth.authenticate.builtin.web.IdPasswordAutoLoginHandler" />
-			</property>
-		</property>
-
-		<property name="authenticationProvider" class="org.iplass.mtp.impl.auth.oauth.AccessTokenAuthenticationProvider" inherit="false">
+			<property name="authenticationProvider" ref="defaultBuiltinAuthenticationProvider" />
+		</bean>
+		<bean name="oidcAuthenticationProvider" class="org.iplass.mtp.impl.auth.authenticate.oidc.OIDCAuthenticationProvider">
+			<property name="providerName" value="oidc" />
+		</bean>
+		<bean name="accessTokenAuthenticationProvider" class="org.iplass.mtp.impl.auth.oauth.AccessTokenAuthenticationProvider">
 			<property name="providerName" value="oauthAccessToken" />
 			<property name="credentialTypeForTrust" value="org.iplass.mtp.auth.login.IdPasswordCredential" />
 			<property name="accountHandleClassForTrust" value="org.iplass.mtp.impl.auth.authenticate.builtin.BuiltinAccountHandle" />
@@ -111,24 +115,39 @@
 				<property name="rejectAmbiguousRequest" value="true" />
 			</property>
 			
- 			<!-- if load custom reference property at login, set userEntityResolver.eagerLoadReferenceProperty -->
- 			<!--
+			<!-- if load custom reference property at login, set userEntityResolver.eagerLoadReferenceProperty -->
+			<!--
  			<property name="userEntityResolver" class="org.iplass.mtp.impl.auth.authenticate.DefaultUserEntityResolver">
 	 			<property name="eagerLoadReferenceProperty" value="rank" />
 	 			<property name="eagerLoadReferenceProperty" value="groups" />
 	 			<property name="eagerLoadReferenceProperty" value="yourCustomReference" />
  			</property>
  			 -->
-		</property>
-
-		<property name="authenticationProvider" class="org.iplass.mtp.impl.auth.authenticate.simpletoken.SimpleAuthTokenAuthenticationProvider" inherit="false">
+		</bean>
+		<bean name="simpleAuthTokenAuthenticationProvider" class="org.iplass.mtp.impl.auth.authenticate.simpletoken.SimpleAuthTokenAuthenticationProvider">
 			<property name="providerName" value="simpleAuthToken" />
 			<property name="credentialTypeForTrust" value="org.iplass.mtp.auth.login.IdPasswordCredential" />
 			<property name="accountHandleClassForTrust" value="org.iplass.mtp.impl.auth.authenticate.builtin.BuiltinAccountHandle" />
 			<property name="autoLoginHandler" class="org.iplass.mtp.impl.auth.authenticate.token.web.BearerTokenAutoLoginHandler">
 				<property name="authTokenType" value="SAT" />
 			</property>
-		</property>
+		</bean>
+		<bean name="webAuthnAuthenticationProvider" class="org.iplass.mtp.impl.auth.authenticate.webauthn.WebAuthnAuthenticationProvider">
+			<property name="providerName" value="webAuthn" />
+		</bean>
+		<bean name="webAuthnAuthenticationProviderWithRememberMeToken" class="org.iplass.mtp.impl.auth.authenticate.rememberme.RememberMeTokenAuthenticationProvider">
+			<property name="deleteTokenOnFailure" value="true" />
+			<property name="clientStore" class="org.iplass.mtp.impl.auth.authenticate.token.web.AuthTokenCookieStore">
+				<property name="cookieName" value="iprmtkn" />
+			</property>
+			<property name="authenticationProvider" ref="webAuthnAuthenticationProvider" />
+		</bean>
+
+		<property name="authenticationProvider" ref="defaultBuiltinAuthenticationProviderWithRememberMeToken" />
+		<property name="authenticationProvider" ref="oidcAuthenticationProvider" />
+		<property name="authenticationProvider" ref="accessTokenAuthenticationProvider" />
+		<property name="authenticationProvider" ref="simpleAuthTokenAuthenticationProvider" />
+		<property name="authenticationProvider" ref="webAuthnAuthenticationProviderWithRememberMeToken" />
 
 		<property name="authorizationProvider" class="org.iplass.mtp.impl.auth.authorize.builtin.BuiltinAuthorizationProvider">
 			<property name="authorizationContextHandler" class="org.iplass.mtp.impl.auth.authorize.builtin.action.ActionAuthContextHandler" additional="true" />
@@ -171,6 +190,16 @@
 				<property name="hashAlgorithm" value="SHA-256" />
 			</property>
 		</property>
+		<property name="handler" class="org.iplass.mtp.impl.auth.authenticate.oidc.ClientSecretHandler" additional="true" >
+			<property name="type" value="OIDCCS" />
+			<property name="store" value="default" />
+		</property>
+		<property name="handler" class="org.iplass.mtp.impl.auth.authenticate.webauthn.store.CredentialRecordHandler" additional="true" >
+			<property name="type" value="WAC" />
+			<property name="store" value="default" />
+			<property name="hashAlgorithm" value="SHA-512" />
+			<property name="seriesMaxLength" value="256" />
+		</property>
 	</service>
 	<service>
 		<interface>org.iplass.mtp.impl.util.random.SecureRandomService</interface>
@@ -185,6 +214,11 @@
 			<property name="useStrongSecureRandom" value="false" />
 		</property>
 		<property name="clientSecretGenerator">
+			<property name="numBitsOfSecureRandomToken" value="256" />
+			<property name="radixOfSecureRandomToken" value="64" />
+			<property name="useStrongSecureRandom" value="false" />
+		</property>
+		<property name="codeVerifierGenerator">
 			<property name="numBitsOfSecureRandomToken" value="256" />
 			<property name="radixOfSecureRandomToken" value="64" />
 			<property name="useStrongSecureRandom" value="false" />
@@ -205,7 +239,7 @@
 		
 		<property name="jwtProcessor" class="org.iplass.mtp.impl.auth.oauth.jwt.JjwtProcesor" />
 		
-		<!-- if OpenID Connect enabled, configure keyStore that uses for sign to ID Token as JWT -->
+		<!-- if OpenID Connect(as OP) enabled, configure keyStore that uses for sign to ID Token as JWT -->
 		<!--
 		<property name="jwtKeyStore" class="org.iplass.mtp.impl.auth.oauth.jwt.SimpleJwtKeyStore">
 			<property name="keyStoreType" value="PKCS12" />
@@ -230,6 +264,48 @@
 	<service>
 		<interface>org.iplass.mtp.impl.auth.oauth.OAuthResourceServerService</interface>
 	</service>
+	<service>
+		<interface>org.iplass.mtp.impl.auth.authenticate.oidc.OpenIdConnectService</interface>
+		<!-- httpClientConfig must be properly configured. -->
+		<!-- 
+		<property name="httpClientConfig" class="org.iplass.mtp.impl.http.HttpClientConfig">
+			<property name="proxyHost" value="[set proxyHost if needed]" />
+			<property name="proxyPort" value="[set proxyPort if needed]" />
+			<property name="poolingMaxTotal" value="[set poolingMaxTotal if needed]" />
+			<property name="poolingDefaultMaxPerRoute" value="[set poolingDefaultMaxPerRoute if needed]" />
+			<property name="poolingTimeToLive" value="[set poolingTimeToLive if needed]" />
+		</property>
+		 -->
+	</service>
+	<service>
+		<interface>org.iplass.mtp.impl.auth.authenticate.webauthn.WebAuthnService</interface>
+		<property name="signatureAlgorithms" value="EdDSA" />
+		<property name="signatureAlgorithms" value="ES512" />
+		<property name="signatureAlgorithms" value="ES384" />
+		<property name="signatureAlgorithms" value="ES256" />
+		<property name="signatureAlgorithms" value="RS512" />
+		<property name="signatureAlgorithms" value="RS384" />
+		<property name="signatureAlgorithms" value="RS256" />
+		<!-- 
+		<property name="signatureAlgorithms" value="RS1" />
+		 -->
+		<property name="optionsTimeoutMinutes" value="5" />
+		
+		<property name="userHandleSupplier" class="org.iplass.mtp.impl.auth.authenticate.webauthn.userhandle.HashingUserHandleSupplier">
+			<property name="algorithm" value="SHA-256" />
+			<!-- TODO change salt for each environment for better security measure-->
+			<property name="salt" value="iPLAss#3137a783-6141-44d3-b908-81861c0a3ff5" />
+		</property>
+		
+		<property name="metadataStatementRepository" class="org.iplass.mtp.impl.auth.authenticate.webauthn.CacheableMetadataStatementRepository">
+			<!-- configure metadataBLOBFilePath and individualMetadataStatementFilePath if needed -->
+			<!-- 
+			<property name="metadataBLOBFilePath" value="[path/to/metadataBLOBFile]" />
+			<property name="individualMetadataStatementFilePath" value="[path/to/individualMetadataStatementFilePath1]" />
+			<property name="individualMetadataStatementFilePath" value="[path/to/individualMetadataStatementFilePath2]" />
+			 -->
+		</property>
+	</service>
 
 	<!-- Web関連 -->
 	<service>
@@ -243,7 +319,7 @@
 		<!-- static contents -->
 		<property name="excludePath" value="(/errorhtml/.*)|(/images/.*)|(/scripts/.*)|(/styles/.*)|(/favicon.ico)|(/webjars/.*)" />
 		<!-- servlet implementation -->
-		<property name="excludePath" value="(/checkStatus)|(/cmcs)" />
+		<property name="excludePath" value="(/checkStatus)|(/warmupStatus)|(/cmcs)" />
 
 		<!-- WebAPI(REST)のpathの定義 -->
 		<property name="restPath" value="/api/" />
@@ -257,7 +333,7 @@
 		<!--
 		<property name="loginUrlSelector" class="org.iplass.gem.GemLoginUrlSelector" />
 		-->
-		<!-- テンポラリファイル格納パス 未指定時は「javax.servlet.context.tempdir」を使用 -->
+		<!-- テンポラリファイル格納パス 未指定時は「jakarta.servlet.context.tempdir」を使用 -->
 		<!--
 		<property name="tempFileDir" value="/tmp" />
 		-->
@@ -273,6 +349,7 @@
 			<property name="contentDispositionTypeName" value="*" />
 			<property name="unescapeCharacter" value="-._~" />
 			<property name="defaultContentDispositionTypeName" value="ATTACHMENT" />
+			<property name="useBothFilenameAttributes" value="false" />
 		</property>
 		<!-- IE11 -->
 		<!-- IE11の場合、INLINEではブランクをエスケープしない -->
@@ -280,6 +357,7 @@
 			<property name="userAgentKey" value="Trident" />
 			<property name="contentDispositionTypeName" value="INLINE" />
 			<property name="unescapeCharacter" value="-._~ " />
+			<property name="useBothFilenameAttributes" value="false" />
 			<!--
 			<property name="defaultContentDispositionTypeName" value="" />
 			 -->
@@ -305,8 +383,138 @@
 		</property>
 		 -->
 
-		<!-- MagicByteCheck実行 -->
+		<!--
+		FileUpload機能用の Tika アダプタ。
+		
+		TikaFileTypeDetector、TikaMagicByteChecker でインスタンスを共有することを想定。
+		tikaConfigXml を指定しない場合は、apache tika のデフォルト設定で動作します。 
+		-->
+		<!--
+		<bean name="tikaAdapter" class="org.iplass.mtp.impl.web.fileupload.FileUploadTikaAdapterImpl">
+			<property name="tikaConfigXml" value="/tika-config.xml" />
+		</bean>
+		-->
+
+		<!-- ファイルタイプ（MIME Type・メディアタイプ）検出機能 -->
+		<!-- デフォルト。未指定の場合も以下のインスタンスが設定される -->
+		<!-- 
+		<property name="uploadFileTypeDetector" class="org.iplass.mtp.impl.web.fileupload.DefaultFileTypeDetector" />
+		-->
+		<!-- 
+		Apache Tika を利用したファイルタイプ（MIME Type・メディアタイプ）検出機能。bean tikaAdapter を有効化すること。
+		検出したメディアタイプを置き換える場合は、 substitutionMediaType に name = 置換元、 value = 置換先 のメディアタイプを設定する。
+		-->
+		<!--
+		<property name="uploadFileTypeDetector" class="org.iplass.mtp.impl.web.fileupload.TikaFileTypeDetector">
+			<property name="fileUploadTikaAdapter" ref="tikaAdapter" />
+			<property name="substitutionMediaType">
+				<property name="fromMediaType" value="toMediaType" /> 
+			</property>
+		</property>
+		-->
+
+		<!-- MagicByteCheck実行するか -->
 		<property name="isExecMagicByteCheck" value="true" />
+		<!-- MagicByteCheck実行 -->
+		<property name="magicByteChecker" class="org.iplass.mtp.impl.web.fileupload.DefaultMagicByteChecker" >
+			<property name="magicByteRule" >
+				<property name="mimeType" >
+					<property name="pattern" value="image/gif" />
+				</property>
+				<property name="magicByte" value="474946383761" />
+				<property name="magicByte" value="474946383961" />
+			</property>
+			<property name="magicByteRule" >
+				<property name="mimeType" >
+					<property name="pattern" value="image/bmp" />
+				</property>
+				<property name="magicByte" value="424d" />
+			</property>
+			<property name="magicByteRule" >
+				<property name="mimeType" >
+					<property name="pattern" value="image/jpeg" />
+				</property>
+				<property name="magicByte" value="ffd8" />
+			</property>
+			<property name="magicByteRule" >
+				<property name="mimeType" >
+					<property name="pattern" value="image/png" />
+				</property>
+				<property name="magicByte" value="89504e470d0a1a0a" />
+			</property>
+			<property name="magicByteRule" >
+				<property name="mimeType" >
+					<property name="pattern" value="application/x-shockwave-flash" />
+				</property>
+				<property name="magicByte" value="465753" />
+				<property name="magicByte" value="435753" />
+			</property>
+			<property name="magicByteRule" >
+				<property name="mimeType" >
+					<property name="pattern" value="application/pdf" />
+				</property>
+				<property name="magicByte" value="25504446" />
+			</property>
+			<property name="magicByteRule" >
+				<property name="mimeType" >
+					<property name="useRegex" value="true" />
+					<property name="pattern" value="^application/vnd[.]ms-.*|^application/msword.*" />
+				</property>
+				<property name="extension" class="org.iplass.mtp.impl.web.fileupload.MagicByteRuleCondition" >
+					<property name="pattern" value="csv" />
+				</property>
+			</property>
+			<property name="magicByteRule" >
+				<property name="mimeType" >
+					<property name="useRegex" value="true" />
+					<property name="pattern" value="^application/vnd[.]ms-.*|^application/msword.*" />
+				</property>
+				<property name="magicByte" value="504b030414000600" />
+				<property name="magicByte" value="d0cf11e0a1b11ae1" />
+				<property name="magicByte" value="7b5c72746631" />
+			</property>
+			<property name="magicByteRule" >
+				<property name="extension" >
+					<property name="pattern" value="xls" />
+				</property>
+				<property name="magicByte" value="d0cf11e0a1b11ae1" />
+			</property>
+			<property name="magicByteRule" >
+				<property name="mimeType" >
+					<property name="useRegex" value="true" />
+					<property name="pattern" value="^application/vnd[.]openxmlformats-officedocument.*" />
+				</property>
+				<property name="magicByte" value="504b030414000600" />
+				<property name="magicByte" value="d0cf11e0a1b11ae1" />
+				<property name="magicByte" value="504b030414000808" />
+				<property name="magicByte" value="504B03040A000000" />
+				<property name="magicByte" value="504B030414000000" />
+				<property name="magicByte" value="504b03042d000800" />
+			</property>
+		</property>
+
+		<!--
+		Apache Tika を利用した MagicByteCheck 処理。bean tikaAdapter を有効化する。
+		本チェック機能を利用する場合は、MimeType検出とMagicByteチェック処理を Tika を利用することを推奨する。
+		MimeType検出機能で tika を利用する為には property uploadFileTypeDetector を TikaFileTypeDetector に変更する。
+		-->
+		<!--
+		<property name="magicByteChecker" class="org.iplass.mtp.impl.web.fileupload.TikaMagicByteChecker" >
+			<property name="fileUploadTikaAdapter" ref="tikaAdapter" />
+			<property name="checkExtension" value="true" />
+			<property name="readMagicLength" value="65536" />
+			<property name="throwExceptionIfMimeTypeIsNull" value="false" />
+			<property name="throwExceptionIfFileCannotRead" value="false" />
+			<property name="substitutionMediaType">
+				<property name="application/vnd.apple.keynote.13" value="application/vnd.apple.keynote" />
+			</property>
+		</property>
+		-->
+
+		<!-- マルチパートリクエストのパラメータ最大数 未指定時はデフォルト値（10000）を適用 -->
+		<!-- 
+		<property name="maxMultipartParameterCount" value="10000" />
+		 -->
 	</service>
 
 	<!-- Entity関連 -->
@@ -327,6 +535,13 @@
 		<interface>org.iplass.mtp.impl.command.InterceptorService</interface>
 		<class>org.iplass.mtp.impl.command.InterceptorService</class>
 
+		<bean name="webApiLoggingInterceptor" class="org.iplass.mtp.impl.webapi.interceptors.LoggingInterceptor">
+			<!-- Set custom configuration if needed. -->
+			<!-- 
+			<property name="logParamName" value="defName" />
+			 -->
+		</bean>
+
 		<property name="web" class="org.iplass.mtp.impl.command.interceptors.LoggingInterceptor" />
 		<property name="web" class="org.iplass.mtp.impl.command.interceptors.TransactionInterceptor" />
 		<property name="web" class="org.iplass.mtp.impl.web.interceptors.TokenInterceptor" />
@@ -334,7 +549,7 @@
 		<property name="webApi" class="org.iplass.mtp.impl.webapi.interceptors.InitialInterceptor" />
 		<property name="webApi" class="org.iplass.mtp.impl.webapi.interceptors.AuthInterceptor" />
 		<property name="webApi" class="org.iplass.mtp.impl.webapi.interceptors.OAuthScopeInterceptor" />
-		<property name="webApi" class="org.iplass.mtp.impl.webapi.interceptors.LoggingInterceptor" />
+		<property name="webApi" ref="webApiLoggingInterceptor" />
 		<property name="webApi" class="org.iplass.mtp.impl.command.interceptors.TransactionInterceptor" />
 		<property name="webApi" class="org.iplass.mtp.impl.webapi.interceptors.TokenInterceptor" />
 	</service>
@@ -356,7 +571,20 @@
 		<property name="repotingEngine" class="org.iplass.mtp.impl.report.JxlsReportingEngine">
 			<property name="supportFiles" value="XLS_JXLS"/>
 			<property name="supportFiles" value="XLSX_JXLS"/>
+			<property name="supportFiles" value="XLSX_SXSSF_JXLS"/>
+			<property name="supportFiles" value="PDF_JXLS"/>
 		</property>
+	</service>
+
+	<!-- PDF変換サービス（JXLS帳票のPDF出力で利用。実装は class 定義の書き換えで差し替え可能） -->
+	<service>
+		<interface>org.iplass.mtp.impl.report.converter.PdfConversionService</interface>
+		<class>org.iplass.mtp.impl.report.converter.GotenbergPdfConversionService</class>
+		<property name="baseUrl" value="http://localhost:3000"/>
+		<property name="connectTimeoutSeconds" value="5"/>
+		<property name="requestTimeoutSeconds" value="60"/>
+		<property name="maxRetries" value="0"/>
+		<property name="retryIntervalMillis" value="1000"/>
 	</service>
 
 	<!-- WebApi Service -->
@@ -364,6 +592,15 @@
 		<interface>org.iplass.mtp.impl.webapi.WebApiService</interface>
 		<property name="enableDefinitionApi" value="false" />
 		<property name="enableBinaryApi" value="false" />
+		<!-- スタブレスポンスを有効にする場合は enableStubResponse プロパティに true を設定する -->
+		<property name="enableStubResponse" value="false" />
+		<property name="writeEncodedFilenameInBinaryApi" value="false" />
+		<property name="unescapeFilenameCharacterInBinaryApi" value="-._~" />
+
+		<!-- バイナリファイルアップロード受け入れ可能な MIME Type パターン。正規表現を指定する。 -->
+		<!--
+		<property name="acceptMimeTypesPatternInBinaryApi" value="^(image/.*|application/pdf|text/csv)$" />
+		-->
 
 		<property name="xRequestedWithMap">
 			<property name="X-Requested-With" value="XMLHttpRequest" />
@@ -463,6 +700,8 @@
 	<service>
 		<interface>org.iplass.mtp.impl.webapi.EntityWebApiService</interface>
 		<property name="maxLimit" value="1000" />
+		<!-- Entity CRUD WebAPIのCSVダウンロードのフッター文言 -->
+		<property name="csvDownloadFooter" value=""/>
 		<!-- Date format when returning CSV results in Query search of Entity CRUD API. If not specified, the runtime LocaleFormat  is set -->
 		<!-- 
 		<property name="csvDateTimeFormat" value="yyyy/MM/dd HH:mm:ss" />
@@ -473,6 +712,14 @@
 
 	<service>
 		<interface>org.iplass.mtp.impl.cache.CacheService</interface>
+
+		<!-- WebAuthn FIDO Metadata Statementのキャッシュ -->
+		<property name="metadataStatementStore" class="org.iplass.mtp.impl.cache.store.builtin.SimpleCacheStoreFactory">
+			<property name="namespace" value="mtp.auth.webauthn.metadataStatementStore" />
+			<!-- 24時間有効 -->
+			<property name="timeToLive" value="86400000" />
+			<property name="evictionInterval" value="3600000" />
+		</property>
 		
 		<!-- OAuth AuthorizationCodeのキャッシュ -->
 		<!-- TODO 本番利用時はRedisCacheStoreFactoryなど利用するように設定変更が必要 -->
@@ -506,10 +753,6 @@
 	</service>
 
 	<service final="true">
-		<interface>org.iplass.mtp.impl.web.template.TemplateService</interface>
-		<class>org.iplass.mtp.impl.web.template.TemplateService</class>
-	</service>
-	<service final="true">
 		<interface>org.iplass.mtp.impl.web.staticresource.StaticResourceService</interface>
 		<class>org.iplass.mtp.impl.web.staticresource.StaticResourceService</class>
 	</service>
@@ -519,28 +762,102 @@
 	</service>
 	<service>
 		<interface>org.iplass.mtp.impl.web.actionmapping.ActionMappingService</interface>
-		<property name="interceptor" class="org.iplass.mtp.impl.web.interceptors.InitialInterceptor" />
-		<property name="interceptor" class="org.iplass.mtp.impl.web.interceptors.AuthInterceptor" />
-		<property name="interceptor" class="org.iplass.mtp.impl.web.interceptors.ExceptionInterceptor">
+		
+		<bean name="exceptionInterceptor" class="org.iplass.mtp.impl.web.interceptors.ExceptionInterceptor">
 			<property name="noHande" value="org.iplass.mtp.auth.NeedTrustedAuthenticationException" />
 			<property name="noHande" value="org.iplass.mtp.impl.web.RequestBodyTooLargeException" />
 			<property name="eliminate" value="org.apache.catalina.connector.ClientAbortException" />
 			<property name="eliminate" value="org.iplass.mtp.impl.web.WebProcessRuntimeException:org.apache.catalina.connector.ClientAbortException" />
-		</property>
-		<property name="interceptor" class="org.iplass.mtp.impl.web.interceptors.LoggingInterceptor">
+		</bean>
+		<bean name="loggingInterceptor" class="org.iplass.mtp.impl.web.interceptors.LoggingInterceptor">
 			<property name="partsTrace" value="true" />
 			<property name="paramName" value="defName" />
 			<property name="noStackTrace" value="org.apache.catalina.connector.ClientAbortException" />
 			<property name="noStackTrace" value="org.iplass.mtp.impl.web.WebProcessRuntimeException:org.apache.catalina.connector.ClientAbortException" />
-		</property>
+		</bean>
+		
+		<property name="interceptor" class="org.iplass.mtp.impl.web.interceptors.InitialInterceptor" />
+		<property name="interceptor" class="org.iplass.mtp.impl.web.interceptors.AuthInterceptor" />
+		<property name="interceptor" ref="exceptionInterceptor" />
+		<property name="interceptor" ref="loggingInterceptor" />
 		<property name="interceptor" class="org.iplass.mtp.impl.web.interceptors.ActionCacheInterceptor" />
 	</service>
 
-	<service final="true">
-		<interface>org.iplass.mtp.impl.csv.CsvUploadService</interface>
-		<class>org.iplass.mtp.impl.csv.CsvUploadService</class>
-		<!-- CSVアップロードエラー表示件数上限値 (-1は無制限)  -->
+	<service>
+		<interface>org.iplass.mtp.impl.fileport.EntityFileUploadService</interface>
+		<class>org.iplass.mtp.impl.fileport.EntityFileUploadService</class>
+		<!-- アップロードエラー表示件数上限値 (-1は無制限)  -->
+		<!--
 		<property name="showErrorLimitCount" value="100"/>
+		-->
+		<!--
+		 アップロードのバージョン管理Entity以外の場合の更新時のデフォルトTargetVersion。
+		 デフォルトはCURRENT_VALID。  
+		-->
+		<!--
+		<property name="defaultUpdateTargetVersionForNoneVersionedEntity" value="SPECIFIC"/>
+		-->
+		<!--
+		 ダウンロード時にLimitが指定されている場合にOrderByを必ず指定するか。
+		 SQLServerの場合はtrueを指定すること。  
+		-->
+		<!--
+		<property name="mustOrderByWithLimit" value="false"/>
+		-->
+		<!--
+		 アップロードでEntity定義に存在しないプロパティを無視するかのデフォルト値。
+		 デフォルトはfalse。  
+		-->
+		<!--
+		<property name="defaultIgnoreNotExistsProperty" value="false"/>
+		-->
+	</service>
+
+	<service>
+		<interface>org.iplass.mtp.impl.fileport.CsvUploadService</interface>
+		<class>org.iplass.mtp.impl.fileport.CsvUploadService</class>
+		<!-- CSVアップロードエラー表示件数上限値 (-1は無制限)  -->
+		<!--
+		<property name="showErrorLimitCount" value="100"/>
+		-->
+		<!--
+		 CSVアップロードのバージョン管理Entity以外の場合の更新時のデフォルトTargetVersion。
+		 デフォルトはCURRENT_VALID。  
+		-->
+		<!--
+		<property name="defaultUpdateTargetVersionForNoneVersionedEntity" value="SPECIFIC"/>
+		-->
+		<!--
+		 CSVダウンロード時にLimitが指定されている場合にOrderByを必ず指定するか。
+		 SQLServerの場合はtrueを指定すること。  
+		-->
+		<!--
+		<property name="mustOrderByWithLimit" value="false"/>
+		-->
+	</service>
+
+	<service>
+		<interface>org.iplass.mtp.impl.fileport.EntityCsvImportService</interface>
+		<class>org.iplass.mtp.impl.fileport.EntityCsvImportService</class>
+		<!-- UserエンティティのInsert時にパスワード指定を許可するか -->
+		<!--
+		<property name="canCreateUserWithSpecificPassword" value="false" />
+		-->
+	</service>
+	
+	<!-- OpenAPI service -->
+	<service>
+		<interface>org.iplass.mtp.impl.webapi.openapi.OpenApiService</interface>
+		<class>org.iplass.mtp.impl.webapi.openapi.OpenApiService</class>
+
+		<property name="infoTitleOfExport" value="iPLAss WebAPI, EntityCRUDApi OpenAPI Spec" />
+		<property name="infoVersionOfExport" value="1.0.0" />
+		<property name="infoDescriptionOfExport" value="iPLAss WebAPI and EntityCRUDApi OpenAPI Specification" />
+		<property name="propertySchema" class="org.iplass.mtp.impl.webapi.openapi.schema.PropertySchema">
+			<property name="propertyName" value="@class" />
+			<property name="schemaType" value="STRING" />
+			<property name="description" value="Fully qualified class name is set as the value. This property is used to identify the concrete class when the type of parameter or response is an interface or abstract class." />
+		</property>
 	</service>
 
 </serviceDefinition>

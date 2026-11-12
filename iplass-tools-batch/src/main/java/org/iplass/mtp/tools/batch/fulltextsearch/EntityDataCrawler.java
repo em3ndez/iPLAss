@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright 2012 DENTSU SOKEN INC. All Rights Reserved.
  */
 
 package org.iplass.mtp.tools.batch.fulltextsearch;
@@ -14,6 +14,7 @@ import org.iplass.mtp.impl.core.ExecuteContext;
 import org.iplass.mtp.impl.core.TenantContextService;
 import org.iplass.mtp.impl.tools.tenant.TenantInfo;
 import org.iplass.mtp.spi.ServiceRegistry;
+import org.iplass.mtp.tools.batch.MtpBatchResourceDisposer;
 import org.iplass.mtp.tools.batch.MtpSilentBatch;
 import org.iplass.mtp.transaction.Transaction;
 import org.slf4j.Logger;
@@ -27,14 +28,15 @@ public class EntityDataCrawler extends MtpSilentBatch {
 
 	/** 実行モード */
 	enum Mode {
-		RECRAWL
-		,CRAWL
+		RECRAWL, CRAWL
 	};
 
 	private static final Logger logger = LoggerFactory.getLogger(EntityDataCrawler.class);
 
-	private TenantContextService tenantContextService = ServiceRegistry.getRegistry().getService(TenantContextService.class);
-	private FulltextSearchManager fsm = ManagerLocator.getInstance().getManager(FulltextSearchManager.class);
+	private TenantContextService tenantContextService = ServiceRegistry.getRegistry()
+			.getService(TenantContextService.class);
+	private FulltextSearchManager fsm = ManagerLocator.getInstance()
+			.getManager(FulltextSearchManager.class);
 
 	private Mode mode;
 	private int tenantId;
@@ -57,9 +59,11 @@ public class EntityDataCrawler extends MtpSilentBatch {
 
 		if (args != null && args.length > 0) {
 			Mode mode = null;
-			if (Mode.CRAWL.name().equalsIgnoreCase(args[0])) {
+			if (Mode.CRAWL.name()
+					.equalsIgnoreCase(args[0])) {
 				mode = Mode.CRAWL;
-			} else if (Mode.RECRAWL.name().equalsIgnoreCase(args[0])) {
+			} else if (Mode.RECRAWL.name()
+					.equalsIgnoreCase(args[0])) {
 				mode = Mode.RECRAWL;
 			}
 			if (mode != null) {
@@ -69,20 +73,26 @@ public class EntityDataCrawler extends MtpSilentBatch {
 					tenantId = Integer.parseInt(args[1]);
 				}
 				if (args.length > 2) {
-					if (args[2] != null && !args[2].trim().isEmpty()) {
+					if (args[2] != null && !args[2].trim()
+							.isEmpty()) {
 						ename = args[2];
 					}
 				}
 
-				if (tenantId >= 0) {
-					(new EntityDataCrawler(mode, tenantId, ename)).execute();
-				} else {
-					List<TenantInfo> tenants = getValidTenantInfoList();
-					if (tenants != null) {
-						for (TenantInfo t: tenants) {
-							(new EntityDataCrawler(mode, t.getId(), ename)).execute();
+				try {
+					if (tenantId >= 0) {
+						(new EntityDataCrawler(mode, tenantId, ename)).execute();
+					} else {
+						List<TenantInfo> tenants = getValidTenantInfoList();
+						if (tenants != null) {
+							for (TenantInfo t : tenants) {
+								(new EntityDataCrawler(mode, t.getId(), ename)).execute();
+							}
 						}
 					}
+				} finally {
+					// リソース破棄
+					MtpBatchResourceDisposer.disposeResource();
 				}
 			}
 		}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -58,7 +58,9 @@ public class MappingErrorSerializer extends StdSerializer<MappingError> {
 	@Override
 	public void serialize(MappingError value, JsonGenerator gen, SerializerProvider provider) throws IOException {
 		gen.writeStartObject(value);
-		boolean writeNull = provider.getConfig().getDefaultPropertyInclusion().getValueInclusion() == Include.ALWAYS;
+		boolean writeNull = provider.getConfig()
+				.getDefaultPropertyInclusion()
+				.getValueInclusion() == Include.ALWAYS;
 		if (writeNull || value.getPropertyPath() != null) {
 			gen.writeStringField(PROP_PROP_PATH, value.getPropertyPath());
 		}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2020 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,6 +29,7 @@ import org.iplass.mtp.impl.tools.tenant.TenantToolService;
 import org.iplass.mtp.impl.tools.tenant.log.LogHandler;
 import org.iplass.mtp.impl.tools.tenant.rdb.TenantRdbConstants;
 import org.iplass.mtp.spi.ServiceRegistry;
+import org.iplass.mtp.tools.batch.MtpBatchResourceDisposer;
 import org.iplass.mtp.tools.batch.MtpCuiBase;
 import org.iplass.mtp.tools.gui.partition.MySQLPartitionManagerApp;
 import org.iplass.mtp.util.StringUtil;
@@ -40,12 +41,15 @@ public class PostgreSQLPartitionBatch extends MtpCuiBase implements PartitionBat
 	private static Logger logger = LoggerFactory.getLogger(PostgreSQLPartitionBatch.class);
 
 	/** 実行モード */
-	public enum PostgreSQLPartitionBatchExecMode {GUI, CREATE};
+	public enum PostgreSQLPartitionBatchExecMode {
+		GUI, CREATE
+	};
 
 	// 実行モード
 	private PostgreSQLPartitionBatchExecMode execMode = PostgreSQLPartitionBatchExecMode.GUI;
 
-	private TenantToolService toolService = ServiceRegistry.getRegistry().getService(TenantToolService.class);
+	private TenantToolService toolService = ServiceRegistry.getRegistry()
+			.getService(TenantToolService.class);
 
 	/**
 	 * args[0]・・・execMode
@@ -57,6 +61,14 @@ public class PostgreSQLPartitionBatch extends MtpCuiBase implements PartitionBat
 			instance.execute();
 		} catch (Throwable e) {
 			e.printStackTrace();
+		} finally {
+			if (instance.getExecMode() == PostgreSQLPartitionBatchExecMode.GUI) {
+				MtpBatchResourceDisposer.addShutdownHookForDisposeResource(() -> {
+					// NOTE 個別の破棄処理が必要な場合は、ここに実装する。
+				});
+			} else {
+				MtpBatchResourceDisposer.disposeResource();
+			}
 		}
 	}
 
@@ -86,22 +98,22 @@ public class PostgreSQLPartitionBatch extends MtpCuiBase implements PartitionBat
 		logEnvironment();
 
 		switch (getExecMode()) {
-		case GUI :
+		case GUI:
 			logInfo("■Start App");
 			logInfo("");
 
 			// Guiの場合はConsole出力を外す
 			switchLog(false, true);
 
-			MySQLPartitionManagerApp.main(new String[]{getLanguage()});
+			MySQLPartitionManagerApp.main(new String[] { getLanguage() });
 			return true;
-		case CREATE :
+		case CREATE:
 			logInfo("■Start Create Wizard");
 			logInfo("");
 
 			// Wizardの実行
 			return startCreateWizard();
-		default :
+		default:
 			logError("unsupport execute mode : " + getExecMode());
 			return false;
 		}

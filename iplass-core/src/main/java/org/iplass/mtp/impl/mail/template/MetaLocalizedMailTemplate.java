@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -66,14 +66,12 @@ public class MetaLocalizedMailTemplate implements MetaData {
 		this.htmlMessage = htmlMessage;
 	}
 
-
 	public MetaLocalizedMailTemplate() {
 	}
 
 	public MetaLocalizedMailTemplate(String localeName, String stringValue) {
 		this.localeName = localeName;
 	}
-
 
 	@Override
 	public MetaLocalizedMailTemplate copy() {
@@ -88,15 +86,18 @@ public class MetaLocalizedMailTemplate implements MetaData {
 
 		if (definition.getPlainMessage() != null) {
 			message = new MetaPlainTextBodyPart();
-			message.setContent(definition.getPlainMessage().getContent());
+			message.setContent(definition.getPlainMessage()
+					.getContent());
 		} else {
 			message = null;
 		}
 
 		if (definition.getHtmlMessage() != null) {
 			htmlMessage = new MetaHtmlBodyPart();
-			htmlMessage.setContent(definition.getHtmlMessage().getContent());
-			htmlMessage.setCharset(definition.getHtmlMessage().getCharset());
+			htmlMessage.setContent(definition.getHtmlMessage()
+					.getContent());
+			htmlMessage.setCharset(definition.getHtmlMessage()
+					.getCharset());
 		} else {
 			htmlMessage = null;
 		}

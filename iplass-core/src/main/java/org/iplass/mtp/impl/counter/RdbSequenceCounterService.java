@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -40,7 +40,8 @@ public class RdbSequenceCounterService implements CounterService {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void init(Config config) {
-		rdb = config.getDependentService(RdbAdapterService.class).getRdbAdapter();
+		rdb = config.getDependentService(RdbAdapterService.class)
+				.getRdbAdapter();
 		sequenceNameMap = config.getValue("sequenceNameMap", Map.class);
 		if (sequenceNameMap == null) {
 			throw new ServiceConfigrationException("sequenceNameMap must specify.");

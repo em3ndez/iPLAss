@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,8 +31,10 @@ public @interface WebApiParamMapping {
 	 * WebApiのパスを除いたサブパスの文字列をマップする場合の定数です。
 	 */
 	public static final String PATHS = WebApiParamMapDefinition.PATHS;
-	
+
 	String name();
+
 	String mapFrom();
+
 	String condition() default "##default";
 }

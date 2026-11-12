@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,12 +27,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.io.FilenameUtils;
 import org.iplass.adminconsole.server.base.i18n.AdminResourceBundleUtil;
 import org.iplass.adminconsole.server.base.io.upload.AdminUploadAction;
+import org.iplass.adminconsole.server.base.io.upload.MultipartRequestParameter;
+import org.iplass.adminconsole.server.base.io.upload.UploadActionException;
 import org.iplass.adminconsole.server.base.io.upload.UploadResponseInfo;
 import org.iplass.adminconsole.server.base.io.upload.UploadRuntimeException;
 import org.iplass.adminconsole.server.base.io.upload.UploadUtil;
@@ -58,21 +57,15 @@ import org.iplass.mtp.web.template.report.definition.ReportType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import gwtupload.server.exceptions.UploadActionException;
+import jakarta.servlet.http.HttpServletRequest;
 
 @SuppressWarnings("serial")
 public class ReportTemplateUploadServiceImpl extends AdminUploadAction {
 
 	private static final Logger logger = LoggerFactory.getLogger(ReportTemplateUploadServiceImpl.class);
 
-	/*
-	 * (非 Javadoc)
-	 * 
-	 * @see gwtupload.server.UploadAction#executeAction(javax.servlet.http.
-	 * HttpServletRequest, java.util.List)
-	 */
 	@Override
-	public String executeAction(final HttpServletRequest request, final List<FileItem> sessionFiles)
+	public String executeAction(final HttpServletRequest request, final List<MultipartRequestParameter> sessionFiles)
 			throws UploadActionException {
 
 		final ReportTemplateUploadResponseInfo result = new ReportTemplateUploadResponseInfo();
@@ -80,9 +73,6 @@ public class ReportTemplateUploadServiceImpl extends AdminUploadAction {
 		try {
 			// リクエスト情報の取得
 			readRequest(request, sessionFiles, args);
-
-			// セッションからファイルを削除
-			super.removeSessionFileItems(request);
 
 			// リクエスト情報の検証
 			validateRequest(args);
@@ -151,14 +141,14 @@ public class ReportTemplateUploadServiceImpl extends AdminUploadAction {
 		}
 	}
 
-	private void readRequest(final HttpServletRequest request, List<FileItem> sessionFiles,
+	private void readRequest(final HttpServletRequest request, List<MultipartRequestParameter> sessionFiles,
 			HashMap<String, Object> args) {
 
 		// リクエスト情報の取得
 		try {
 			Map<String, LocaleInfo> localeMap = new LinkedHashMap<String, LocaleInfo>();
 
-			for (FileItem item : sessionFiles) {
+			for (MultipartRequestParameter item : sessionFiles) {
 				if (item.isFormField()) {
 					// File以外のもの
 					String[] names = splitLocaleFieldName(item.getFieldName());
@@ -257,7 +247,8 @@ public class ReportTemplateUploadServiceImpl extends AdminUploadAction {
 
 	private ReportTemplateDefinition convertDefinition(HashMap<String, Object> args) {
 
-		TemplateDefinitionManager tdm = ManagerLocator.getInstance().getManager(TemplateDefinitionManager.class);
+		TemplateDefinitionManager tdm = ManagerLocator.getInstance()
+				.getManager(TemplateDefinitionManager.class);
 		TemplateDefinition oldTemplate = tdm.get((String) args.get(ReportTemplateUploadProperty.DEF_NAME));
 
 		ReportTemplateDefinition definition;
@@ -307,7 +298,8 @@ public class ReportTemplateUploadServiceImpl extends AdminUploadAction {
 					// 更新
 					if (oldLocaleList != null) {
 						for (LocalizedReportDefinition old : oldLocaleList) {
-							if (old.getLocaleName().equals(value.storedLocale)) {
+							if (old.getLocaleName()
+									.equals(value.storedLocale)) {
 								localeDef = old;
 								break;
 							}
@@ -344,7 +336,8 @@ public class ReportTemplateUploadServiceImpl extends AdminUploadAction {
 
 		String reportType = (String) args.get(ReportTemplateUploadProperty.REPORT_TYPE);
 
-		if (PoiReportType.class.getName().equals(reportType)) {
+		if (PoiReportType.class.getName()
+				.equals(reportType)) {
 			PoiReportType poiTemplate = new PoiReportType();
 			poiTemplate.setOutputFileType((String) args.get(ReportTemplateUploadProperty.OUTPUT_FILE_TYPE));
 
@@ -365,7 +358,8 @@ public class ReportTemplateUploadServiceImpl extends AdminUploadAction {
 			}
 
 			return poiTemplate;
-		} else if (JasperReportType.class.getName().equals(reportType)) {
+		} else if (JasperReportType.class.getName()
+				.equals(reportType)) {
 			JasperReportType jasperTemplate = new JasperReportType();
 			jasperTemplate.setOutputFileType((String) args.get(ReportTemplateUploadProperty.OUTPUT_FILE_TYPE));
 
@@ -390,6 +384,10 @@ public class ReportTemplateUploadServiceImpl extends AdminUploadAction {
 			String passwordAttributeName = (String) args.get(ReportTemplateUploadProperty.JASPER_PASSWORD_ATTRIBUTE_NAME);
 			if (StringUtil.isNotEmpty(passwordAttributeName)) {
 				jasperTemplate.setPasswordAttributeName(passwordAttributeName);
+			}
+			String ownerPasswordAttributeName = (String) args.get(ReportTemplateUploadProperty.JASPER_OWNER_PASSWORD_ATTRIBUTE_NAME);
+			if (StringUtil.isNotEmpty(ownerPasswordAttributeName)) {
+				jasperTemplate.setOwnerPasswordAttributeName(ownerPasswordAttributeName);
 			}
 
 			return jasperTemplate;
@@ -416,6 +414,10 @@ public class ReportTemplateUploadServiceImpl extends AdminUploadAction {
 			if (StringUtil.isNotEmpty(passwordAttributeName)) {
 				jxlsTemplate.setPasswordAttributeName(passwordAttributeName);
 			}
+			String ownerPasswordAttributeName = (String) args.get(ReportTemplateUploadProperty.JXLS_OWNER_PASSWORD_ATTRIBUTE_NAME);
+			if (StringUtil.isNotEmpty(ownerPasswordAttributeName)) {
+				jxlsTemplate.setOwnerPasswordAttributeName(ownerPasswordAttributeName);
+			}
 
 			String logicType = (String) (args.get(ReportTemplateUploadProperty.JXLS_LOGIC_NAME));
 			if (StringUtil.isNotEmpty(logicType)) {
@@ -440,9 +442,11 @@ public class ReportTemplateUploadServiceImpl extends AdminUploadAction {
 	}
 
 	private DefinitionModifyResult update(ReportTemplateDefinition definition) {
-		TemplateDefinitionManager tdm = ManagerLocator.getInstance().getManager(TemplateDefinitionManager.class);
-		MetaDataAuditLogger.getLogger().logMetadata(MetaDataAction.UPDATE, ReportTemplateDefinition.class.getName(),
-				"name:" + definition.getName());
+		TemplateDefinitionManager tdm = ManagerLocator.getInstance()
+				.getManager(TemplateDefinitionManager.class);
+		MetaDataAuditLogger.getLogger()
+				.logMetadata(MetaDataAction.UPDATE, ReportTemplateDefinition.class.getName(),
+						"name:" + definition.getName());
 		return tdm.update(definition);
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -69,22 +69,21 @@ public class CorsAttributePane extends VLayout {
 			@Override
 			public void onClick(com.smartgwt.client.widgets.form.fields.events.ClickEvent event) {
 				MetaDataUtil.showScriptEditDialog(ScriptEditorDialogMode.JSP,
-					SmartGWTUtil.getStringValue(accessControlAllowOriginField),
-					"Access-Control-Allow-Origin Script",
-					null,
-					AdminClientMessageUtil.getString("ui_metadata_webapi_CorsAttributePane_accessControlAllowOriginComment"),
-					new ScriptEditorDialogHandler() {
+						SmartGWTUtil.getStringValue(accessControlAllowOriginField),
+						"Access-Control-Allow-Origin Script",
+						null,
+						AdminClientMessageUtil.getString("ui_metadata_webapi_CorsAttributePane_accessControlAllowOriginComment"),
+						new ScriptEditorDialogHandler() {
 
-						@Override
-						public void onSave(String text) {
-							accessControlAllowOriginField.setValue(text);
-						}
+							@Override
+							public void onSave(String text) {
+								accessControlAllowOriginField.setValue(text);
+							}
 
-						@Override
-						public void onCancel() {
-						}
-					}
-				);
+							@Override
+							public void onCancel() {
+							}
+						});
 			}
 		});
 
@@ -94,11 +93,13 @@ public class CorsAttributePane extends VLayout {
 		accessControlAllowOriginField.setBrowserSpellCheck(false);
 		accessControlAllowOriginField.setColSpan(3);
 		accessControlAllowOriginField.setStartRow(true);
-		accessControlAllowOriginField.setTooltip(SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_metadata_webapi_CorsAttributePane_accessControlAllowOrigin")));
+		accessControlAllowOriginField.setTooltip(
+				SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_metadata_webapi_CorsAttributePane_accessControlAllowOrigin")));
 		SmartGWTUtil.setReadOnlyTextArea(accessControlAllowOriginField);
 
 		accessControlAllowCredentialsField = new CheckboxItem("accessControlAllowCredentialsField", "Access-Control-Allow-Credentials");
-		accessControlAllowCredentialsField.setTooltip(SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_metadata_webapi_CorsAttributePane_accessControlAllowCredentials")));
+		accessControlAllowCredentialsField.setTooltip(
+				SmartGWTUtil.getHoverString(AdminClientMessageUtil.getString("ui_metadata_webapi_CorsAttributePane_accessControlAllowCredentials")));
 
 		form.setItems(editButton, accessControlAllowOriginField, accessControlAllowCredentialsField);
 

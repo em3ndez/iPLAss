@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -34,7 +34,7 @@ package org.iplass.mtp.transaction;
  * <td>readOnly</td><td>false</td><td>このトランザクションをreadOnlyとしてマークします。</td>
  * </tr>
  * <tr>
- * <td>rollbackWhenException</td><td>true</td><td>トランザクション処理中に例外が発生した場合、トランザクションをロールバック（呼び出し元コードとトランザクションを共有する場合は、setRollbackOnly）します。</td>
+ * <td>rollbackWhenException</td><td>true</td><td>トランザクション処理中に例外が発生した場合、トランザクションをロールバックします。ただし呼び出し元コードとトランザクションを共有する場合（既にトランザクションが開始されている中で、Propagation.REQUIRED、SUPPORTSで呼び出された場合）はトランザクションは呼び出し元で制御され、このブロック内ではロールバックされません。</td>
  * </tr>
  * <tr>
  * <td>throwExceptionIfSetRollbackOnly</td><td>false</td><td>trueに設定された場合、トランザクションが当該トランザクション処理用に新規作成され、かつ処理中にsetRoobackOnlyされた場合、かつ明示的に例外がスローされなかった場合、{@link RollbackException}をスローします。</td>
@@ -50,14 +50,14 @@ public class TransactionOption {
 	private boolean readOnly;
 	private boolean rollbackWhenException = true;
 	private boolean throwExceptionIfSetRollbackOnly;
-	
+
 	/**
 	 * デフォルト設定のTransactionOptionを生成します。
 	 * 
 	 */
 	public TransactionOption() {
 	}
-	
+
 	/**
 	 * 指定のpropagationでTransactionOptionを生成します。
 	 * 
@@ -66,7 +66,7 @@ public class TransactionOption {
 	public TransactionOption(Propagation propagation) {
 		this.propagation = propagation;
 	}
-	
+
 	/**
 	 * readOnly=trueに設定します。
 	 * 
@@ -76,7 +76,7 @@ public class TransactionOption {
 		this.readOnly = true;
 		return this;
 	}
-	
+
 	/**
 	 * rollbackWhenException=falseに設定します。
 	 * @return
@@ -85,7 +85,7 @@ public class TransactionOption {
 		this.rollbackWhenException = false;
 		return this;
 	}
-	
+
 	/**
 	 * throwExceptionIfSetRollbackOnly=trueに設定します。
 	 * @return
@@ -94,30 +94,37 @@ public class TransactionOption {
 		this.throwExceptionIfSetRollbackOnly = true;
 		return this;
 	}
-	
+
 	public Propagation getPropagation() {
 		return propagation;
 	}
+
 	public void setPropagation(Propagation propagation) {
 		this.propagation = propagation;
 	}
+
 	public boolean isReadOnly() {
 		return readOnly;
 	}
+
 	public void setReadOnly(boolean readOnly) {
 		this.readOnly = readOnly;
 	}
+
 	public boolean isRollbackWhenException() {
 		return rollbackWhenException;
 	}
+
 	public void setRollbackWhenException(boolean rollbackWhenException) {
 		this.rollbackWhenException = rollbackWhenException;
 	}
+
 	public boolean isThrowExceptionIfSetRollbackOnly() {
 		return throwExceptionIfSetRollbackOnly;
 	}
+
 	public void setThrowExceptionIfSetRollbackOnly(boolean throwExceptionIfSetRollbackOnly) {
 		this.throwExceptionIfSetRollbackOnly = throwExceptionIfSetRollbackOnly;
 	}
-	
+
 }

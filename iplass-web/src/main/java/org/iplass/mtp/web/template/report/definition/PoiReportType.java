@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -39,11 +39,11 @@ public class PoiReportType extends ReportType {
 	private String passwordAttributeName;
 
 	public ReportOutputLogicDefinition getReportOutputLogicDefinition() {
-	    return reportOutputLogicDefinition;
+		return reportOutputLogicDefinition;
 	}
 
 	public void setReportOutputLogicDefinition(ReportOutputLogicDefinition reportOutputLogicDefinition) {
-	    this.reportOutputLogicDefinition = reportOutputLogicDefinition;
+		this.reportOutputLogicDefinition = reportOutputLogicDefinition;
 	}
 
 	public String getPasswordAttributeName() {

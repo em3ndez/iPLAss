@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2021 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -52,7 +52,7 @@ public class ICUTransliteratorAttributePane extends NormalizerAttributePane {
 	@Override
 	public void setDefinition(NormalizerDefinition definition) {
 		if (definition instanceof ICUTransliterator) {
-			txtTransliteratorId.setValue(((ICUTransliterator)definition).getTransliteratorId());
+			txtTransliteratorId.setValue(((ICUTransliterator) definition).getTransliteratorId());
 		} else {
 			form.clearValues();
 		}

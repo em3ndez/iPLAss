@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -31,10 +31,9 @@ public class MetaWebApiTokenCheck implements MetaData {
 	private boolean consume;
 	private boolean exceptionRollback;
 	private boolean useFixedToken;
-	
+
 	public MetaWebApiTokenCheck() {
 	}
-	
 
 	public MetaWebApiTokenCheck(boolean consume, boolean exceptionRollback,
 			boolean useFixedToken) {
@@ -42,7 +41,7 @@ public class MetaWebApiTokenCheck implements MetaData {
 		this.exceptionRollback = exceptionRollback;
 		this.useFixedToken = useFixedToken;
 	}
-	
+
 	public boolean isUseFixedToken() {
 		return useFixedToken;
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -45,7 +45,7 @@ public class SingleNodeManager extends ItemNodeManager {
 		TopViewNode infoList = new TopViewNode("Information List", InformationParts.class.getName(), "", true, false, true);
 
 		// Root直下に表示
-		tree.addList(new TopViewNode[]{infoList, lastLogin}, tree.getRoot());
+		tree.addList(new TopViewNode[] { infoList, lastLogin }, tree.getRoot());
 	}
 
 }

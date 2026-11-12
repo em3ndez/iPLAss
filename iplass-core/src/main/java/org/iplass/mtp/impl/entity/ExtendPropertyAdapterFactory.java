@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,15 +24,15 @@ import org.iplass.mtp.entity.UpdateCondition;
 import org.iplass.mtp.entity.query.Query;
 
 public class ExtendPropertyAdapterFactory {
-	
+
 	public VirtualPropertyAdapter create(Query query, EntityContext ec, EntityHandler eh) {
 		return new VirtualPropertyAdapter(query, ec, eh);
 	}
-	
+
 	public VirtualPropertyAdapter create(UpdateCondition updateCond, EntityContext ec, EntityHandler eh) {
 		return new VirtualPropertyAdapter(updateCond, ec, eh);
 	}
-	
+
 	public VirtualPropertyAdapter create(DeleteCondition deleteCond, EntityContext ec, EntityHandler eh) {
 		return new VirtualPropertyAdapter(deleteCond, ec, eh);
 	}

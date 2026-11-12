@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,7 +23,7 @@ package org.iplass.adminconsole.server.connect;
 import org.iplass.mtp.command.annotation.MetaDataSeeAlso;
 
 @MetaDataSeeAlso({
-	IndexCommand.class,
+		IndexCommand.class,
 })
 public class MetaDataRefs {
 }

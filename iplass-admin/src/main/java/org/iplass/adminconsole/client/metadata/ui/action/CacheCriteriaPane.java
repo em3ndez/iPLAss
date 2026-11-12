@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -76,8 +76,6 @@ public class CacheCriteriaPane extends VLayout {
 	private DynamicForm timeToLiveForm;
 	private TextItem timeToLiveField;
 	private CacheCriteriaTypeEditPane typeEditPane;
-
-
 
 	public CacheCriteriaPane(ActionEditPane actionEditPane) {
 		setMargin(5);
@@ -157,31 +155,34 @@ public class CacheCriteriaPane extends VLayout {
 			@Override
 			public void onClick(ClickEvent event) {
 				SC.ask(AdminClientMessageUtil.getString("ui_metadata_action_cache_CacheCriteriaPane_clearCacheConfirm"),
-						AdminClientMessageUtil.getString("ui_metadata_action_cache_CacheCriteriaPane_clearActionCacheConfirmComment"), new BooleanCallback() {
+						AdminClientMessageUtil.getString("ui_metadata_action_cache_CacheCriteriaPane_clearActionCacheConfirmComment"),
+						new BooleanCallback() {
 
-					@Override
-					public void execute(Boolean value) {
-						if(value) {
-							service.clearActionCache(TenantInfoHolder.getId(), actionEditPane.getActionName(), new AsyncCallback<Void>() {
+							@Override
+							public void execute(Boolean value) {
+								if (value) {
+									service.clearActionCache(TenantInfoHolder.getId(), actionEditPane.getActionName(), new AsyncCallback<Void>() {
 
-								@Override
-								public void onSuccess(Void result) {
-									SC.say(AdminClientMessageUtil.getString("ui_metadata_action_cache_CacheCriteriaPane_completion"),
-											AdminClientMessageUtil.getString("ui_metadata_action_cache_CacheCriteriaPane_clearActionCacheComp"));
+										@Override
+										public void onSuccess(Void result) {
+											SC.say(AdminClientMessageUtil.getString("ui_metadata_action_cache_CacheCriteriaPane_completion"),
+													AdminClientMessageUtil
+															.getString("ui_metadata_action_cache_CacheCriteriaPane_clearActionCacheComp"));
 
-									GWT.log("Content cache of Action has been cleared.");
+											GWT.log("Content cache of Action has been cleared.");
+										}
+
+										@Override
+										public void onFailure(Throwable caught) {
+											SC.warn(AdminClientMessageUtil.getString(
+													"ui_metadata_action_cache_CacheCriteriaPane_clearActionCacheFailed") + caught.getMessage());
+
+											GWT.log(caught.getMessage(), caught);
+										}
+									});
 								}
-
-								@Override
-								public void onFailure(Throwable caught) {
-									SC.warn(AdminClientMessageUtil.getString("ui_metadata_action_cache_CacheCriteriaPane_clearActionCacheFailed") + caught.getMessage());
-
-									GWT.log(caught.getMessage(), caught);
-								}
-							});
-						}
-					}
-				});
+							}
+						});
 			}
 		});
 
@@ -195,31 +196,34 @@ public class CacheCriteriaPane extends VLayout {
 			@Override
 			public void onClick(ClickEvent event) {
 				SC.ask(AdminClientMessageUtil.getString("ui_metadata_action_cache_CacheCriteriaPane_clearCacheConfirm"),
-						AdminClientMessageUtil.getString("ui_metadata_action_cache_CacheCriteriaPane_clearTenantActionCacheConfirmComment"), new BooleanCallback() {
+						AdminClientMessageUtil.getString("ui_metadata_action_cache_CacheCriteriaPane_clearTenantActionCacheConfirmComment"),
+						new BooleanCallback() {
 
-					@Override
-					public void execute(Boolean value) {
-						if(value) {
-							service.clearTenantActionCache(TenantInfoHolder.getId(), new AsyncCallback<Void>() {
+							@Override
+							public void execute(Boolean value) {
+								if (value) {
+									service.clearTenantActionCache(TenantInfoHolder.getId(), new AsyncCallback<Void>() {
 
-								@Override
-								public void onSuccess(Void result) {
-									SC.say(AdminClientMessageUtil.getString("ui_metadata_action_cache_CacheCriteriaPane_completion"),
-											AdminClientMessageUtil.getString("ui_metadata_action_cache_CacheCriteriaPane_clearTenantActionCacheComp"));
+										@Override
+										public void onSuccess(Void result) {
+											SC.say(AdminClientMessageUtil.getString("ui_metadata_action_cache_CacheCriteriaPane_completion"),
+													AdminClientMessageUtil
+															.getString("ui_metadata_action_cache_CacheCriteriaPane_clearTenantActionCacheComp"));
 
-									GWT.log("Content cache of all tenant Action has been cleared.");
+											GWT.log("Content cache of all tenant Action has been cleared.");
+										}
+
+										@Override
+										public void onFailure(Throwable caught) {
+											SC.warn(AdminClientMessageUtil.getString(
+													"ui_metadata_action_cache_CacheCriteriaPane_clearTenantActionCacheFailed") + caught.getMessage());
+
+											GWT.log(caught.getMessage(), caught);
+										}
+									});
 								}
-
-								@Override
-								public void onFailure(Throwable caught) {
-									SC.warn(AdminClientMessageUtil.getString("ui_metadata_action_cache_CacheCriteriaPane_clearTenantActionCacheFailed") + caught.getMessage());
-
-									GWT.log(caught.getMessage(), caught);
-								}
-							});
-						}
-					}
-				});
+							}
+						});
 			}
 		});
 
@@ -236,7 +240,8 @@ public class CacheCriteriaPane extends VLayout {
 
 	public void setCacheCriteria(CacheCriteriaDefinition cacheCriteria) {
 		if (cacheCriteria != null) {
-			serverCacheTypeField.setValue(CacheCriteriaType.valueOf(cacheCriteria).name());
+			serverCacheTypeField.setValue(CacheCriteriaType.valueOf(cacheCriteria)
+					.name());
 			clearForm.setVisible(true);
 		} else {
 			serverCacheTypeField.setValue("");
@@ -317,7 +322,8 @@ public class CacheCriteriaPane extends VLayout {
 			}
 			if (timeToLiveForm != null) {
 				if (SmartGWTUtil.getStringValue(timeToLiveField) != null
-						&& !SmartGWTUtil.getStringValue(timeToLiveField).isEmpty()) {
+						&& !SmartGWTUtil.getStringValue(timeToLiveField)
+								.isEmpty()) {
 
 					newDefinition.setTimeToLive(Integer.parseInt(SmartGWTUtil.getStringValue(timeToLiveField)));
 				}
@@ -337,9 +343,9 @@ public class CacheCriteriaPane extends VLayout {
 		String value = SmartGWTUtil.getStringValue(serverCacheTypeField);
 		if (value != null && !value.isEmpty()) {
 			return resultGridPane.validate()
-				&& relatedEntityGridPane.validate()
-				&& timeToLiveForm.validate()
-				&& typeEditPane.validate();
+					&& relatedEntityGridPane.validate()
+					&& timeToLiveForm.validate()
+					&& typeEditPane.validate();
 		}
 		return true;
 	}
@@ -361,7 +367,8 @@ public class CacheCriteriaPane extends VLayout {
 
 			if (timeToLiveForm != null) {
 				if (SmartGWTUtil.getStringValue(timeToLiveField) != null
-						&& !SmartGWTUtil.getStringValue(timeToLiveField).isEmpty()) {
+						&& !SmartGWTUtil.getStringValue(timeToLiveField)
+								.isEmpty()) {
 
 					newDefinition.setTimeToLive(Integer.parseInt(SmartGWTUtil.getStringValue(timeToLiveField)));
 				}

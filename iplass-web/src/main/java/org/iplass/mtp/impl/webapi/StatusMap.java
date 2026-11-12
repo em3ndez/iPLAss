@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,16 +22,19 @@ package org.iplass.mtp.impl.webapi;
 public class StatusMap {
 	private int status;
 	private Class<? extends Throwable> exception;
-	
+
 	public int getStatus() {
 		return status;
 	}
+
 	public void setStatus(int status) {
 		this.status = status;
 	}
+
 	public Class<? extends Throwable> getException() {
 		return exception;
 	}
+
 	public void setException(Class<? extends Throwable> exception) {
 		this.exception = exception;
 	}

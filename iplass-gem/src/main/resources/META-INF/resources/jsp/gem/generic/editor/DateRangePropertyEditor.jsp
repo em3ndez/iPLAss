@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,8 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 <%@ page import="org.iplass.mtp.ManagerLocator"%>
 <%@ page import="org.iplass.mtp.entity.Entity"%>
@@ -73,6 +74,7 @@ String getObjectName(String prefix, EntityDefinition ed){
 	Boolean nest = (Boolean) request.getAttribute(Constants.EDITOR_REF_NEST);
 	nest = (nest != null) ? nest : false;
 	Entity entity = request.getAttribute(Constants.ENTITY_DATA) instanceof Entity ? (Entity) request.getAttribute(Constants.ENTITY_DATA) : null;
+	String displayLabel = (String)request.getAttribute(Constants.EDITOR_DISPLAY_LABEL);
 
 	String prefix = "";
 	String fromName = editor.getPropertyName();
@@ -104,7 +106,8 @@ String getObjectName(String prefix, EntityDefinition ed){
 	String fromKey = fromEditor.getPropertyName().replaceAll("\\.", "_");
 
 	if (OutputType.SEARCHCONDITION == type) {
-		((DateTimePropertyEditor) editor.getEditor()).setHideSearchConditionTo(true);
+		// 検索条件の場合、単一指定モードに強制的に変更
+		((DateTimePropertyEditor) editor.getEditor()).setSingleDayCondition(true);
 	}
 %>
 <span class="dateRange">
@@ -130,13 +133,11 @@ String getObjectName(String prefix, EntityDefinition ed){
 		request.setAttribute(Constants.EDITOR_EDITOR, toEditor);
 		request.setAttribute(Constants.EDITOR_PROP_VALUE, toPropValue);
 		request.setAttribute(Constants.EDITOR_PROPERTY_DEFINITION, toPd);
+		request.setAttribute(Constants.EDITOR_DISPLAY_LABEL, displayLabel);
 		String toKey = toEditor.getPropertyName().replaceAll("\\.", "_");
-
-		String dash = GemResourceBundleUtil.resourceString("generic.editor.DateRangePropertyEditor.range");
-
 %>
+<span class="range-symbol">&nbsp;${m:rs('mtp-gem-messages', 'generic.editor.common.rangeSymbol')}&nbsp;</span>
 <span id="daterange_<c:out value="<%=toKey%>" />">
-<c:out value="<%=dash %>"></c:out>
 <jsp:include page="<%=path%>" />
 </span>
 <%
@@ -159,4 +160,5 @@ String getObjectName(String prefix, EntityDefinition ed){
 	request.removeAttribute(Constants.EDITOR_EDITOR);
 	request.removeAttribute(Constants.EDITOR_PROP_VALUE);
 	request.removeAttribute(Constants.EDITOR_PROPERTY_DEFINITION);
+	request.removeAttribute(Constants.EDITOR_DISPLAY_LABEL);
 %>

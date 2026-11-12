@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -20,8 +20,6 @@
 
 package org.iplass.mtp.impl.auth.authenticate.builtin;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -46,6 +44,7 @@ import org.iplass.mtp.auth.policy.definition.NotificationType;
 import org.iplass.mtp.entity.Entity;
 import org.iplass.mtp.entity.EntityManager;
 import org.iplass.mtp.entity.SearchResult;
+import org.iplass.mtp.entity.UpdateOption;
 import org.iplass.mtp.entity.definition.EntityDefinition;
 import org.iplass.mtp.entity.query.Query;
 import org.iplass.mtp.entity.query.condition.predicate.Equals;
@@ -85,7 +84,9 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 	private static Logger logger = LoggerFactory.getLogger(BuiltinAuthenticationProvider.class);
 
 	private static class RandomHolder {
-		static final SecureRandomGenerator random = ServiceRegistry.getRegistry().getService(SecureRandomService.class).createGenerator("saltGenerator");
+		static final SecureRandomGenerator random = ServiceRegistry.getRegistry()
+				.getService(SecureRandomService.class)
+				.createGenerator("saltGenerator");
 	}
 
 	private TenantContextService tenantContextService;
@@ -119,13 +120,15 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 	}
 
 	/**
-	 * ログインユーザ共有か否かを取得
-	 * @return boolean 共有テナントのユーザ情報がデータ共有か否かを返却
+	 * ログインユーザー共有か否かを取得
+	 * @return boolean 共有テナントのユーザー情報がデータ共有か否かを返却
 	 */
 //	@Override
 	public boolean isSharedLoginUser() {
 		TenantContext shareTenantContext = tenantContextService.getSharedTenantContext();
-		MetaDataEntry mde = shareTenantContext.getMetaDataContext().getMetaDataEntry(DefinitionService.getInstance().getPath(EntityDefinition.class, User.DEFINITION_NAME));
+		MetaDataEntry mde = shareTenantContext.getMetaDataContext()
+				.getMetaDataEntry(DefinitionService.getInstance()
+						.getPath(EntityDefinition.class, User.DEFINITION_NAME));
 		return mde.isDataSharable();
 	}
 
@@ -149,9 +152,9 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 			int index = saltString.indexOf('$', 1);
 			String ver = saltString.substring(1, index);
 			String salt = saltString.substring(index + 1);
-			return new String[]{ver, salt};
+			return new String[] { ver, salt };
 		} else {
-			return new String[]{null, saltString};
+			return new String[] { null, saltString };
 		}
 	}
 
@@ -193,14 +196,16 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 
 		AuthenticationPolicyRuntime policy = getPolicy(account.getPolicyName());
 		//認証時のPolicyをセット
-		AuthContextHolder.getAuthContext().setPolicy(policy);
+		AuthContextHolder.getAuthContext()
+				.setPolicy(policy);
 
 		//ログイン関連ステータスの初期化
 		boolean needAccountUpdate = policy.initLoginStatus(account);
 
 		//パスワードチェック
 		String[] verAndSalt = divVerAndSalt(account.getSalt());
-		if (!account.getPassword().equals(convertPassword(password, verAndSalt[1], selectSetting(verAndSalt[0])))) {
+		if (!account.getPassword()
+				.equals(convertPassword(password, verAndSalt[1], selectSetting(verAndSalt[0])))) {
 			//ログイン失敗回数の記録
 			loginFail(account, policy);
 			return null;
@@ -210,7 +215,8 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 		account.setPassword(null);
 		account.setSalt(null);
 
-		final BuiltinAccountHandle user = new BuiltinAccountHandle(account, policy.getMetaData().getName());
+		final BuiltinAccountHandle user = new BuiltinAccountHandle(account, policy.getMetaData()
+				.getName());
 
 		//短絡評価されないように、||でなく、|を利用
 		needAccountUpdate = needAccountUpdate | policy.checkLoginPolicy(user, account);
@@ -223,23 +229,26 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 		account.setLastLoginOn(lastLoginOn);
 		return user;
 	}
-	
+
 	@Override
 	public void afterLoginSuccess(AccountHandle account) {
-		Timestamp llo = (Timestamp) account.getAttributeMap().get(AccountHandle.LAST_LOGIN_ON);
+		Timestamp llo = (Timestamp) account.getAttributeMap()
+				.get(AccountHandle.LAST_LOGIN_ON);
 		if (llo == null) {
-			String policyName = (String) account.getAttributeMap().get(User.ACCOUNT_POLICY);
+			String policyName = (String) account.getAttributeMap()
+					.get(User.ACCOUNT_POLICY);
 			AuthenticationPolicyRuntime pol = authPolicyService.getOrDefault(policyName);
-			if (pol != null && pol.getMetaData().isRecordLastLoginDate()) {
+			if (pol != null && pol.getMetaData()
+					.isRecordLastLoginDate()) {
 				//前回ログイン日時を取得
 				BuiltinAccount ba = accountDao.getAccountFromOid(getTenantId(), account.getUnmodifiableUniqueKey());
 				if (ba != null) {
-					account.getAttributeMap().put(AccountHandle.LAST_LOGIN_ON, ba.getLastLoginOn());
+					account.getAttributeMap()
+							.put(AccountHandle.LAST_LOGIN_ON, ba.getLastLoginOn());
 				}
 			}
 		}
 	}
-	
 
 	private void loginFail(final BuiltinAccount account, final AuthenticationPolicyRuntime policy) {
 		if (policy.isCheckLockout()) {
@@ -277,21 +286,19 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 	public void inited(AuthService s, Config config) {
 		super.inited(s, config);
 
-		tenantContextService = ServiceRegistry.getRegistry().getService(TenantContextService.class);
-		authPolicyService = ServiceRegistry.getRegistry().getService(AuthenticationPolicyService.class);
+		tenantContextService = ServiceRegistry.getRegistry()
+				.getService(TenantContextService.class);
+		authPolicyService = ServiceRegistry.getRegistry()
+				.getService(AuthenticationPolicyService.class);
 		accountDao = new RdbAccountStore();
 		accountDao.inited(this, config);
 
 		if (passwordHashSettings == null) {
 			throw new ServiceConfigrationException("passwordHashSettings must specified.");
 		}
-		//check hash alg
-		for (PasswordHashSetting phs: passwordHashSettings) {
-			try {
-				MessageDigest.getInstance(phs.getPasswordHashAlgorithm());
-			} catch (NoSuchAlgorithmException e) {
-				throw new ServiceConfigrationException("invalid PasswordHashAlgorithm", e);
-			}
+		//check hash config is valid
+		for (PasswordHashSetting phs : passwordHashSettings) {
+			phs.checkValidConfiguration();
 		}
 	}
 
@@ -307,7 +314,7 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 	 * @return 変換後の文字列
 	 */
 	private String convertPassword(String password, String salt, PasswordHashSetting setting) {
-			return setting.hash(password, salt);
+		return setting.hash(password, salt);
 	}
 
 	private static String makeSalt() {
@@ -319,18 +326,22 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 		if (isSharedLoginUser()) {
 			tenantId = tenantContextService.getSharedTenantId();
 		} else {
-			tenantId = ExecuteContext.getCurrentContext().getCurrentTenant().getId();
+			tenantId = ExecuteContext.getCurrentContext()
+					.getCurrentTenant()
+					.getId();
 		}
 		return tenantId;
 	}
 
 	private boolean isUserAdminRole(Tenant tenant, AuthContext auth) {
-		if (auth.getUser().isAdmin()) {
+		if (auth.getUser()
+				.isAdmin()) {
 			return true;
 		}
-		List<String> userAdminRoles = tenant.getTenantConfig(TenantAuthInfo.class).getUserAdminRoles();
+		List<String> userAdminRoles = tenant.getTenantConfig(TenantAuthInfo.class)
+				.getUserAdminRoles();
 		if (userAdminRoles != null) {
-			for (String role: userAdminRoles) {
+			for (String role : userAdminRoles) {
 				if (auth.userInRole(role)) {
 					return true;
 				}
@@ -345,40 +356,47 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 		public void create(User user) {
 			if (canCreate()) {
 				AuthContext authContext = AuthContext.getCurrentContext();
-				Tenant tenant = ExecuteContext.getCurrentContext().getCurrentTenant();
+				Tenant tenant = ExecuteContext.getCurrentContext()
+						.getCurrentTenant();
 				AuthenticationPolicyRuntime policy = getPolicy(user.getAccountPolicy());
 
 				// 管理者権限がないにも関わらず、管理者項目を登録しようとしていた場合エラー
 				if (!authContext.isPrivileged()) {
 					//adminフラグはadminのみ設定可能
 					if (user.isAdmin()) {
-						if (!authContext.getUser().isAdmin()) {
-							throw new NoPermissionException(resourceString("impl.auth.authenticate.builtin.BuiltinAuthenticationProvider.registerAdmin"));
+						if (!authContext.getUser()
+								.isAdmin()) {
+							throw new NoPermissionException(
+									resourceString("impl.auth.authenticate.builtin.BuiltinAuthenticationProvider.registerAdmin"));
 						}
 					}
 					//DEFAULT以外のauthPolicyの設定はUserAdminRole、adminのみ可能
 					if (user.getAccountPolicy() != null
-							&& !user.getAccountPolicy().equals(AuthenticationPolicyService.DEFAULT_NAME)) {
+							&& !user.getAccountPolicy()
+									.equals(AuthenticationPolicyService.DEFAULT_NAME)) {
 						if (!isUserAdminRole(tenant, authContext)) {
-							throw new NoPermissionException(resourceString("impl.auth.authenticate.builtin.BuiltinAuthenticationProvider.canNotSetSecuredProperty"));
+							throw new NoPermissionException(
+									resourceString("impl.auth.authenticate.builtin.BuiltinAuthenticationProvider.canNotSetSecuredProperty"));
 						}
 					}
 				}
 
 				//パスワード指定方式
-				if(policy.getMetaData().getPasswordPolicy().isCreateAccountWithSpecificPassword()) {
+				if (policy.getMetaData()
+						.getPasswordPolicy()
+						.isCreateAccountWithSpecificPassword()) {
 					if (user.getPassword() != null) {
 						//パスワードが設定されている場合パスワードパターンチェック
 						policy.checkPasswordPattern(user.getPassword(), user.getAccountId());
 					}
 				}
 
-				//TODO ここの段階で、ユーザ存在チェックは必要か？
+				//TODO ここの段階で、ユーザー存在チェックは必要か？
 				//Userの取得
 				User userEntity = getUserEntity(user.getAccountId(), false);
 				//Userが存在していた場合
 				if (userEntity != null) {
-					// ユーザがすでに存在していた場合はエラーとする。
+					// ユーザーがすでに存在していた場合はエラーとする。
 					throw new UserExistsException(resourceString("impl.auth.authenticate.builtin.BuiltinAuthenticationProvider.alreadyRegistered"));
 				}
 			}
@@ -390,32 +408,36 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 				AuthenticationPolicyRuntime policy = getPolicy(user.getAccountPolicy());
 
 				int tenantId = getTenantId();
-				String registId = ExecuteContext.getCurrentContext().getClientId();
+				String registId = ExecuteContext.getCurrentContext()
+						.getClientId();
 				BuiltinAccount account = accountDao.getAccount(tenantId, user.getAccountId());
 				if (account == null) {
 					account = new BuiltinAccount();
 					account.setTenantId(tenantId);
 					account.setAccountId(user.getAccountId());
 					account.setOid(user.getOid());
-					account.setPolicyName(policy.getMetaData().getName());
+					account.setPolicyName(policy.getMetaData()
+							.getName());
 
 					//パスワード生成
-					boolean isGenPasswoed = true;
+					boolean isGenPassword = true;
 					String newPassword;
-					if (policy.getMetaData().getPasswordPolicy().isCreateAccountWithSpecificPassword()) {
+					if (policy.getMetaData()
+							.getPasswordPolicy()
+							.isCreateAccountWithSpecificPassword()) {
 						//パスワード指定方式の場合
 						if (user.getPassword() != null) {
 							newPassword = user.getPassword();
-							isGenPasswoed = false;
+							isGenPassword = false;
 							account.setLastPasswordChange(new Date(System.currentTimeMillis()));
 						} else {
 							newPassword = policy.makePassword();
-							isGenPasswoed = true;
+							isGenPassword = true;
 						}
 					} else {
 						//仮パスワード発行方式の場合
 						newPassword = policy.makePassword();
-						isGenPasswoed = true;
+						isGenPassword = true;
 					}
 
 					final String salt = makeSalt();
@@ -428,14 +450,27 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 						account.setSalt("$" + newest.getVersion() + "$" + salt);
 					}
 
-					//ユーザパスワードクリア
+					//ユーザーパスワードクリア
 					user.setPassword(null);
 
 					// アカウント情報を登録する
 					accountDao.registAccount(account, registId);
 
+					if (isGenPassword && policy.getMetaData()
+							.getPasswordPolicy()
+							.getMaximumRandomPasswordAge() > 0) {
+						//自動生成パスワードの有効期間を設定する
+						long currentTimeMillis = System.currentTimeMillis();
+						User userEntity = getUserEntity(user.getAccountId(), true);
+						userEntity.setEndDate(new Timestamp(currentTimeMillis + TimeUnit.DAYS
+								.toMillis(policy.getMetaData()
+										.getPasswordPolicy()
+										.getMaximumRandomPasswordAge())));
+						updateUserEndDate(userEntity);
+					}
+
 					//通知
-					policy.notify(new PasswordNotification(NotificationType.CREATED, user.getOid(), newPassword, isGenPasswoed));
+					policy.notify(new PasswordNotification(NotificationType.CREATED, user.getOid(), newPassword, isGenPassword));
 				} else {
 					//存在している場合は、エラー
 					throw new UserExistsException(resourceString("impl.auth.authenticate.builtin.BuiltinAuthenticationProvider.userRemainTrash"));
@@ -447,8 +482,10 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 		public void update(User user, List<String> updateProperties) {
 
 			AuthContext authContext = AuthContext.getCurrentContext();
-			Tenant tenant = ExecuteContext.getCurrentContext().getCurrentTenant();
-			String updateId = ExecuteContext.getCurrentContext().getClientId();
+			Tenant tenant = ExecuteContext.getCurrentContext()
+					.getCurrentTenant();
+			String updateId = ExecuteContext.getCurrentContext()
+					.getClientId();
 
 			AuthenticationPolicyRuntime policy = null;
 
@@ -457,19 +494,22 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 			if (!authContext.isPrivileged()) {
 				//adminフラグはadminのみ設定可能
 				if (updateAdminFlag) {
-					if (!authContext.getUser().isAdmin()) {
-						throw new NoPermissionException(resourceString("impl.auth.authenticate.builtin.BuiltinAuthenticationProvider.canNotSetSecuredProperty"));
+					if (!authContext.getUser()
+							.isAdmin()) {
+						throw new NoPermissionException(
+								resourceString("impl.auth.authenticate.builtin.BuiltinAuthenticationProvider.canNotSetSecuredProperty"));
 					}
 				}
 				//authPolicyの設定はUserAdminRole、adminのみ可能
 				if (updateProperties.contains(User.ACCOUNT_POLICY)) {
 					if (!isUserAdminRole(tenant, authContext)) {
-						throw new NoPermissionException(resourceString("impl.auth.authenticate.builtin.BuiltinAuthenticationProvider.canNotSetSecuredProperty"));
+						throw new NoPermissionException(
+								resourceString("impl.auth.authenticate.builtin.BuiltinAuthenticationProvider.canNotSetSecuredProperty"));
 					}
 				}
 			}
 
-			//ログインユーザ共有でない場合または、テナントIDが共有テナントの場合
+			//ログインユーザー共有でない場合または、テナントIDが共有テナントの場合
 			if (canUpdate()) {
 				int tenantId = getTenantId();
 				BuiltinAccount account = accountDao.getAccountFromOid(tenantId, user.getOid());
@@ -487,7 +527,8 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 							// 最終管理者の確認
 							if (getAdministratorCount() == 1) {
 								// 最終なので削除できない
-								throw new ApplicationException(resourceString("impl.auth.authenticate.builtin.BuiltinAuthenticationProvider.adminLast", user.getName()));
+								throw new ApplicationException(
+										resourceString("impl.auth.authenticate.builtin.BuiltinAuthenticationProvider.adminLast", user.getName()));
 							}
 						}
 					} else {
@@ -499,13 +540,14 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 				// 更新要否の確認
 				boolean updateFlg = false;
 
-				//ユーザIDに変更が発生していた場合
+				//ユーザーIDに変更が発生していた場合
 				if (updateProperties.contains(User.ACCOUNT_ID)) {
 					//Userの取得
 					User userEntity = getUserEntity(user.getAccountId(), false);
 					//Userが存在していた場合
-					if (userEntity != null && !(userEntity.getOid().equals(user.getOid()))) {
-						// ユーザがすでに存在していた場合はエラーとする。
+					if (userEntity != null && !(userEntity.getOid()
+							.equals(user.getOid()))) {
+						// ユーザーがすでに存在していた場合はエラーとする。
 						throw new UserExistsException(resourceString("impl.auth.authenticate.builtin.BuiltinAuthenticationProvider.alreadyRegistered"));
 					}
 
@@ -518,21 +560,23 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 				//アカウントポリシーに変更が発生していた場合
 				if (updateProperties.contains(User.ACCOUNT_POLICY)) {
 					policy = getPolicy(user.getAccountPolicy());
-					account.setPolicyName(policy.getMetaData().getName());
+					account.setPolicyName(policy.getMetaData()
+							.getName());
 					updateFlg = true;
 				}
 
 				//更新要の場合、更新
-				if(updateFlg) {
+				if (updateFlg) {
 					accountDao.updateAccount(account, updateId);
 				}
+			}
+		}
 
-				//通知
-				if (policy == null) {
-					policy = getPolicy(account.getPolicyName());
-				}
-				policy.notify(new PropertyNotification(NotificationType.PROPERTY_UPDATED, account.getOid(), new ArrayList<>(updateProperties)));
-
+		@Override
+		public void afterUpdate(User user, String policyName, List<String> updateProperties) {
+			if (canUpdate()) {
+				AuthenticationPolicyRuntime policy = getPolicy(policyName);
+				policy.notify(new PropertyNotification(NotificationType.PROPERTY_UPDATED, user.getOid(), new ArrayList<>(updateProperties)));
 			}
 		}
 
@@ -542,19 +586,22 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 				AuthContext authContext = AuthContext.getCurrentContext();
 				User loginUser = authContext.getUser();
 
-				if(loginUser.getValue(User.ACCOUNT_ID).equals(user.getValue(User.ACCOUNT_ID))) {
+				if (loginUser.getValue(User.ACCOUNT_ID)
+						.equals(user.getValue(User.ACCOUNT_ID))) {
 					throw new ApplicationException(resourceString("impl.auth.authenticate.builtin.BuiltinAuthenticationProvider.deleteOwnData"));
 				}
 
-				//管理者ではないユーザが管理者を削除するのは不可
-				if (user.isAdmin() && !authContext.getUser().isAdmin() && !authContext.isPrivileged()) {
+				//管理者ではないユーザーが管理者を削除するのは不可
+				if (user.isAdmin() && !authContext.getUser()
+						.isAdmin() && !authContext.isPrivileged()) {
 					throw new NoPermissionException(resourceString("impl.auth.authenticate.builtin.BuiltinAuthenticationProvider.canNotDeleteAdmin"));
 				}
 
 				// 管理者権限を保有しているので最終かいなかチェックする
 				if (user.isAdmin() && getAdministratorCount() == 1) {
 					// 最終なので削除できない
-					throw new ApplicationException(resourceString("impl.auth.authenticate.builtin.BuiltinAuthenticationProvider.canNotdeleted", user.getName()));
+					throw new ApplicationException(
+							resourceString("impl.auth.authenticate.builtin.BuiltinAuthenticationProvider.canNotdeleted", user.getName()));
 				}
 
 				//通知
@@ -573,7 +620,7 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 
 		@Override
 		public void purge(User user) {
-			//ログインユーザ共有でない場合または、テナントIDが共有テナントの場合
+			//ログインユーザー共有でない場合または、テナントIDが共有テナントの場合
 			if (canPurge()) {
 				int tenantId = getTenantId();
 				//アカウント情報削除
@@ -592,7 +639,8 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 				IdPasswordCredential oldIdPass = (IdPasswordCredential) oldCredential;
 				IdPasswordCredential newIdPass = (IdPasswordCredential) newCredential;
 
-				if (oldIdPass.getPassword().equals(newIdPass.getPassword())) {
+				if (oldIdPass.getPassword()
+						.equals(newIdPass.getPassword())) {
 					throw new CredentialUpdateException(resourceString("impl.auth.authenticate.updateCredential.sameErr"));
 				}
 
@@ -609,7 +657,8 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 				try {
 					//パスワードチェック
 					String[] verAndSalt = divVerAndSalt(account.getSalt());
-					if (!account.getPassword().equals(convertPassword(oldIdPass.getPassword(), verAndSalt[1], selectSetting(verAndSalt[0])))) {
+					if (!account.getPassword()
+							.equals(convertPassword(oldIdPass.getPassword(), verAndSalt[1], selectSetting(verAndSalt[0])))) {
 						throw new CredentialUpdateException(resourceString("impl.auth.authenticate.updateCredential.unmatchPasswordErr"));
 					}
 				} catch (CredentialUpdateException e) {
@@ -624,8 +673,12 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 				policy.checkPasswordUpdatePolicy(newIdPass, account);
 				//パスワード履歴の確認
 				List<Password> passList = null;
-				int passwordHistoryCount = policy.getMetaData().getPasswordPolicy().getPasswordHistoryCount();
-				int passwordHistoryPeriod = policy.getMetaData().getPasswordPolicy().getPasswordHistoryPeriod();
+				int passwordHistoryCount = policy.getMetaData()
+						.getPasswordPolicy()
+						.getPasswordHistoryCount();
+				int passwordHistoryPeriod = policy.getMetaData()
+						.getPasswordPolicy()
+						.getPasswordHistoryPeriod();
 				if (passwordHistoryCount > 0 || passwordHistoryPeriod > 0) {
 					passList = accountDao.getPasswordHistory(account.getTenantId(), account.getAccountId());
 					checkPasswordHistory(newIdPass.getPassword(), account, passList, passwordHistoryCount, passwordHistoryPeriod);
@@ -640,31 +693,59 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 					pass = new Password(tenantId, oldCredential.getId(), convertPassword(newIdPass.getPassword(), newSalt, null), newSalt, currentTime);
 				} else {
 					PasswordHashSetting newest = passwordHashSettings.get(passwordHashSettings.size() - 1);
-					pass = new Password(tenantId, oldCredential.getId(), convertPassword(newIdPass.getPassword(), newSalt, newest), "$" + newest.getVersion() + "$" + newSalt, currentTime);
+					pass = new Password(tenantId, oldCredential.getId(), convertPassword(newIdPass.getPassword(), newSalt, newest),
+							"$" + newest.getVersion() + "$" + newSalt, currentTime);
 				}
-				accountDao.updatePassword(pass, ExecuteContext.getCurrentContext().getClientId());
+				accountDao.updatePassword(pass, ExecuteContext.getCurrentContext()
+						.getClientId());
 				if (passwordHistoryCount > 0 || passwordHistoryPeriod > 0) {
 					//前回パスワードを保存
-					accountDao.addPasswordHistory(new Password(tenantId, account.getAccountId(), account.getPassword(), account.getSalt(), currentTime));
+					accountDao
+							.addPasswordHistory(new Password(tenantId, account.getAccountId(), account.getPassword(), account.getSalt(), currentTime));
 				}
-				if (passList != null) {
-					if (passwordHistoryCount <= 0 || passList.size() >=  passwordHistoryCount) {
-						//過去のパスワード履歴の削除（厳密な削除は求めないものとする。タイムスタンプが同一の場合を考慮しない）
-						//パスワード保持個数が設定されている場合はパスワード保持個数から溢れたインデックスを開始インデックスとする。
-						int startIndex = passwordHistoryCount > 0 ? passwordHistoryCount -1 : 0;
-						for (int i = startIndex; i < passList.size(); i++) {
-							Password pwd = passList.get(i);
-							//パスワード保持期間が設定されている場合は更新日時がパスワード保持期間外であるパスワードを削除
-							if (passwordHistoryPeriod <= 0 || pwd.getUpdateDate().getTime() + TimeUnit.DAYS.toMillis(passwordHistoryPeriod) < System.currentTimeMillis()) {
-								accountDao.deletePasswordHistory(pwd.getTenantId(), pwd.getUid(), pwd.getUpdateDate());
-								break;
-							}
-						}
+				trimPassList(passList, passwordHistoryCount, passwordHistoryPeriod);
+
+				if (policy.getMetaData()
+						.getPasswordPolicy()
+						.getMaximumRandomPasswordAge() > 0) {
+					User userEntity = getUserEntity(account.getAccountId(), true);
+					//カスタム終了日が設定されている場合は更新する
+					if (userEntity.getEndDate() != null) {
+						Timestamp endDate = policy.getCustomUserEndDate(userEntity);
+						userEntity.setEndDate(endDate);
+						updateUserEndDate(userEntity);
 					}
 				}
 
 				//通知
 				policy.notify(new PasswordNotification(NotificationType.CREDENTIAL_UPDATED, account.getOid(), newIdPass.getPassword(), false));
+			}
+		}
+
+		/**
+		 * 前提：
+		 * passListには、現在有効なパスワードは含まないリストとなっており、最終的に残す件数はpasswordHistoryCount-1件を残す形に実装。
+		 * passListはupdateDateの降順で並んでいるものとする。
+		 * 
+		 * @param passList
+		 * @param passwordHistoryCount
+		 * @param passwordHistoryPeriod
+		 */
+		private void trimPassList(List<Password> passList, int passwordHistoryCount, int passwordHistoryPeriod) {
+			if (passList != null) {
+				if (passwordHistoryCount <= 0 || passList.size() >= passwordHistoryCount) {
+					//過去のパスワード履歴の削除（厳密な削除は求めないものとする。タイムスタンプが同一の場合を考慮しない）
+					//パスワード保持個数が設定されている場合はパスワード保持個数から溢れたインデックスを開始インデックスとする。
+					int startIndex = passwordHistoryCount > 0 ? passwordHistoryCount - 1 : 0;
+					for (int i = startIndex; i < passList.size(); i++) {
+						Password pwd = passList.get(i);
+						//パスワード保持期間が設定されている場合は更新日時がパスワード保持期間外であるパスワードを削除
+						if (passwordHistoryPeriod <= 0 || pwd.getUpdateDate()
+								.getTime() + TimeUnit.DAYS.toMillis(passwordHistoryPeriod) < System.currentTimeMillis()) {
+							accountDao.deletePasswordHistory(pwd.getTenantId(), pwd.getUid(), pwd.getUpdateDate());
+						}
+					}
+				}
 			}
 		}
 
@@ -718,15 +799,32 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 				AuthenticationPolicyRuntime policy = getPolicy(account.getPolicyName());
 
 				boolean isGenPassword = true;
-				final String newPassword;
-				if (policy.getMetaData().getPasswordPolicy().isResetPasswordWithSpecificPassword()
+				String newPassword = null;
+				List<Password> passList = null;
+				int passwordHistoryCount = policy.getMetaData()
+						.getPasswordPolicy()
+						.getPasswordHistoryCount();
+				int passwordHistoryPeriod = policy.getMetaData()
+						.getPasswordPolicy()
+						.getPasswordHistoryPeriod();
+
+				// If history checks are enabled, prefetch history once
+				if (passwordHistoryCount > 0 || passwordHistoryPeriod > 0) {
+					passList = accountDao.getPasswordHistory(account.getTenantId(), account.getAccountId());
+				}
+
+				if (policy.getMetaData()
+						.getPasswordPolicy()
+						.isResetPasswordWithSpecificPassword()
 						&& ((IdPasswordCredential) credential).getPassword() != null) {
 
 					//管理者もしくは、特権実行のみリセット可能
 					AuthContext authContext = AuthContext.getCurrentContext();
-					Tenant tenant = ExecuteContext.getCurrentContext().getCurrentTenant();
+					Tenant tenant = ExecuteContext.getCurrentContext()
+							.getCurrentTenant();
 					if (!isUserAdminRole(tenant, authContext) && !authContext.isPrivileged()) {
-						throw new NoPermissionException(resourceString("impl.auth.authenticate.builtin.BuiltinAuthenticationProvider.canNotSetSecuredProperty"));
+						throw new NoPermissionException(
+								resourceString("impl.auth.authenticate.builtin.BuiltinAuthenticationProvider.canNotSetSecuredProperty"));
 					}
 
 					newPassword = ((IdPasswordCredential) credential).getPassword();
@@ -734,38 +832,94 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 
 					//パスワードポリシーの確認
 					policy.checkPasswordPattern(newPassword, account.getAccountId());
-					//パスワード履歴の確認
-					List<Password> passList = null;
-					int passwordHistoryCount = policy.getMetaData().getPasswordPolicy().getPasswordHistoryCount();
-					int passwordHistoryPeriod = policy.getMetaData().getPasswordPolicy().getPasswordHistoryPeriod();
-					if (passwordHistoryCount > 0 || passwordHistoryPeriod > 0) {
-						passList = accountDao.getPasswordHistory(account.getTenantId(), account.getAccountId());
+					//パスワード履歴の確認（履歴および現行パスワードと比較）
+					if (passList != null) {
 						checkPasswordHistory(newPassword, account, passList, passwordHistoryCount, passwordHistoryPeriod);
+					}
+					// Also check against current password
+					if (passwordHistoryCount > 0 || passwordHistoryPeriod > 0) {
+						String[] curVerAndSalt = divVerAndSalt(account.getSalt());
+						if (account.getPassword()
+								.equals(convertPassword(newPassword, curVerAndSalt[1], selectSetting(curVerAndSalt[0])))) {
+							throw new CredentialUpdateException(resourceString("impl.auth.authenticate.updateCredential.passHistoryExists"));
+						}
 					}
 				} else {
 					if (((IdPasswordCredential) credential).getPassword() != null) {
 						logger.warn("resetCredential() was called with specific password, but authPolicy not allow specific password...");
 					}
 
-					newPassword = policy.makePassword();
+					// Auto-generate password and ensure it does not collide with current or history when history checks enabled
+					int maxRetries = 100; // safety to avoid infinite loops
+					int attempt = 0;
+					while (true) {
+						newPassword = policy.makePassword();
+						boolean conflict = false;
+						if (passwordHistoryCount > 0 || passwordHistoryPeriod > 0) {
+							// check against current password
+							String[] curVerAndSalt = divVerAndSalt(account.getSalt());
+							if (account.getPassword()
+									.equals(convertPassword(newPassword, curVerAndSalt[1], selectSetting(curVerAndSalt[0])))) {
+								conflict = true;
+							}
+							// check against history
+							if (!conflict && passList != null) {
+								try {
+									checkPasswordHistory(newPassword, account, passList, passwordHistoryCount, passwordHistoryPeriod);
+								} catch (CredentialUpdateException e) {
+									conflict = true;
+								}
+							}
+						}
+						if (!conflict) {
+							break;
+						}
+						attempt++;
+						if (attempt >= maxRetries) {
+							// Safety: if we couldn't find a unique password, throw
+							throw new SystemException("Failed to generate unique password after " + maxRetries + " attempts");
+						}
+					}
 				}
-
-				final String newSalt = makeSalt();
 
 				//パスワード更新
 				Password pass = null;
 				Timestamp updateTime = null;
-				if (!isGenPassword) {
-					updateTime = new Timestamp(System.currentTimeMillis());
+				long currentTimeMillis = System.currentTimeMillis();
+				// Before updating, record previous (current) password into history if history tracking is enabled
+				if ((passwordHistoryCount > 0 || passwordHistoryPeriod > 0) && account.getPassword() != null) {
+					// add current password into history
+					accountDao.addPasswordHistory(
+							new Password(tenantId, account.getAccountId(), account.getPassword(), account.getSalt(), new Timestamp(currentTimeMillis)));
+				}
+				trimPassList(passList, passwordHistoryCount, passwordHistoryPeriod);
+
+				if (isGenPassword) {
+					//自動生成パスワードの有効期間を設定する
+					if (policy.getMetaData()
+							.getPasswordPolicy()
+							.getMaximumRandomPasswordAge() > 0) {
+						User userEntity = getUserEntity(credential.getId(), true);
+						userEntity.setEndDate(new Timestamp(currentTimeMillis + TimeUnit.DAYS
+								.toMillis(policy.getMetaData()
+										.getPasswordPolicy()
+										.getMaximumRandomPasswordAge())));
+						updateUserEndDate(userEntity);
+					}
+				} else {
+					updateTime = new Timestamp(currentTimeMillis);
 				}
 
+				final String newSalt = makeSalt();
 				if (passwordHashSettings == null) {
 					pass = new Password(tenantId, credential.getId(), convertPassword(newPassword, newSalt, null), newSalt, updateTime);
 				} else {
 					PasswordHashSetting newest = passwordHashSettings.get(passwordHashSettings.size() - 1);
-					pass = new Password(tenantId, credential.getId(), convertPassword(newPassword, newSalt, newest), "$" + newest.getVersion() + "$" + newSalt, updateTime);
+					pass = new Password(tenantId, credential.getId(), convertPassword(newPassword, newSalt, newest),
+							"$" + newest.getVersion() + "$" + newSalt, updateTime);
 				}
-				accountDao.updatePassword(pass, ExecuteContext.getCurrentContext().getClientId());
+				accountDao.updatePassword(pass, ExecuteContext.getCurrentContext()
+						.getClientId());
 
 				//通知
 				policy.notify(new PasswordNotification(NotificationType.CREDENTIAL_RESET, account.getOid(), newPassword, isGenPassword));
@@ -776,11 +930,12 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 		private long getAdministratorCount() {
 			return AuthContext.doPrivileged(() -> {
 				Query q = new Query()
-					.select(new Count())
-					.from(User.DEFINITION_NAME)
-					.where(new Equals(User.ADMIN_FLG, true));
+						.select(new Count())
+						.from(User.DEFINITION_NAME)
+						.where(new Equals(User.ADMIN_FLG, true));
 				final Long[] adminCnt = new Long[1];
-				EntityManager em = ManagerLocator.getInstance().getManager(EntityManager.class);
+				EntityManager em = ManagerLocator.getInstance()
+						.getManager(EntityManager.class);
 				em.search(q, new Predicate<Object[]>() {
 					@Override
 					public boolean test(Object[] data) {
@@ -792,53 +947,76 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 			});
 		}
 
-		//ユーザEntity取得
+		//ユーザーEntity取得
 		private User getUserEntity(final String accountId, final boolean withAllProp) {
 			return AuthContext.doPrivileged(() -> {
 				if (withAllProp) {
-					Query query =
-							new Query().selectAll(User.DEFINITION_NAME, true, false)
-								.where(new Equals(User.ACCOUNT_ID, accountId));
-						SearchResult<Entity> user = ManagerLocator.getInstance().getManager(EntityManager.class).searchEntity(query);
-						if(user.getList().size() > 0) {
-							return (User) user.getList().get(0);
-						}
+					Query query = new Query().selectAll(User.DEFINITION_NAME, true, false)
+							.where(new Equals(User.ACCOUNT_ID, accountId));
+					SearchResult<Entity> user = ManagerLocator.getInstance()
+							.getManager(EntityManager.class)
+							.searchEntity(query);
+					if (user.getList()
+							.size() > 0) {
+						return (User) user.getList()
+								.get(0);
+					}
 				} else {
-					Query query =
-							new Query().select(User.OID, User.ACCOUNT_ID)
-								.from(User.DEFINITION_NAME)
-								.where(new Equals(User.ACCOUNT_ID, accountId));
-						SearchResult<Entity> user = ManagerLocator.getInstance().getManager(EntityManager.class).searchEntity(query);
-						if(user.getList().size() > 0) {
-							return (User) user.getList().get(0);
-						}
+					Query query = new Query().select(User.OID, User.ACCOUNT_ID)
+							.from(User.DEFINITION_NAME)
+							.where(new Equals(User.ACCOUNT_ID, accountId));
+					SearchResult<Entity> user = ManagerLocator.getInstance()
+							.getManager(EntityManager.class)
+							.searchEntity(query);
+					if (user.getList()
+							.size() > 0) {
+						return (User) user.getList()
+								.get(0);
+					}
 				}
 				return null;
 			});
 		}
 
-		//oidからユーザEntity取得
+		//oidからユーザーEntity取得
 		private User getUserEntityFromOid(final String oid) {
 			return AuthContext.doPrivileged(() -> {
-				Query query =
-						new Query().selectAll(User.DEFINITION_NAME, true, false)
-							.where(new Equals(Entity.OID, oid));
-					SearchResult<Entity> user = ManagerLocator.getInstance().getManager(EntityManager.class).searchEntity(query);
-					if(user.getList().size() > 0){
-						return (User) user.getList().get(0);
-					}
-					return null;
+				Query query = new Query().selectAll(User.DEFINITION_NAME, true, false)
+						.where(new Equals(Entity.OID, oid));
+				SearchResult<Entity> user = ManagerLocator.getInstance()
+						.getManager(EntityManager.class)
+						.searchEntity(query);
+				if (user.getList()
+						.size() > 0) {
+					return (User) user.getList()
+							.get(0);
+				}
+				return null;
 			});
 		}
 
-		private void checkPasswordHistory(String newPassword, BuiltinAccount account, List<Password> passList, int passwordHistoryCount, int passwordHistoryPeriod) {
+		//ユーザーEntityのEndDate更新
+		private void updateUserEndDate(final User user) {
+			AuthContext.doPrivileged(() -> {
+				UpdateOption option = new UpdateOption();
+				option.setUpdateProperties(Entity.END_DATE);
+				ManagerLocator.getInstance()
+						.getManager(EntityManager.class)
+						.update(user, option);
+			});
+		}
+
+		private void checkPasswordHistory(String newPassword, BuiltinAccount account, List<Password> passList, int passwordHistoryCount,
+				int passwordHistoryPeriod) {
 			if (passList != null) {
 				for (int i = 0; i < passList.size(); i++) {
 					Password pwd = passList.get(i);
 					//パスワード保持個数内またはパスワード保持期間内の場合、そのパスワード履歴をチェック
-					if(passwordHistoryCount > i || (passwordHistoryPeriod > 0 && pwd.getUpdateDate().getTime() + TimeUnit.DAYS.toMillis(passwordHistoryPeriod) >=  System.currentTimeMillis())) {
+					if (passwordHistoryCount > i || (passwordHistoryPeriod > 0 && pwd.getUpdateDate()
+							.getTime() + TimeUnit.DAYS.toMillis(passwordHistoryPeriod) >= System.currentTimeMillis())) {
 						String[] verAndSalt = divVerAndSalt(pwd.getSalt());
-						if (pwd.getConvertedPassword().equals(convertPassword(newPassword, verAndSalt[1], selectSetting(verAndSalt[0])))) {
+						if (pwd.getConvertedPassword()
+								.equals(convertPassword(newPassword, verAndSalt[1], selectSetting(verAndSalt[0])))) {
 							throw new CredentialUpdateException(resourceString("impl.auth.authenticate.updateCredential.passHistoryExists"));
 						}
 					}
@@ -856,9 +1034,11 @@ public class BuiltinAuthenticationProvider extends AuthenticationProviderBase {
 			if (canResetLockoutStatus()) {
 				//管理者もしくは、特権実行のみリセット可能
 				AuthContext authContext = AuthContext.getCurrentContext();
-				Tenant tenant = ExecuteContext.getCurrentContext().getCurrentTenant();
+				Tenant tenant = ExecuteContext.getCurrentContext()
+						.getCurrentTenant();
 				if (!isUserAdminRole(tenant, authContext) && !authContext.isPrivileged()) {
-					throw new NoPermissionException(resourceString("impl.auth.authenticate.builtin.BuiltinAuthenticationProvider.canNotSetSecuredProperty"));
+					throw new NoPermissionException(
+							resourceString("impl.auth.authenticate.builtin.BuiltinAuthenticationProvider.canNotSetSecuredProperty"));
 				}
 
 				int tenantId = getTenantId();

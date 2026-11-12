@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page pageEncoding="utf-8" trimDirectiveWhitespaces="true" %>
 
@@ -57,7 +57,7 @@
 <%@ page import="org.iplass.gem.command.ViewUtil"%>
 <%@ page import="org.iplass.gem.command.auth.LogoutCommand"%>
 <%@ page import="org.iplass.gem.command.auth.RevokeApplicationCommand"%>
-<%@ page import="org.iplass.gem.command.auth.UpdatePasswordCommand"%>
+<%@ page import="org.iplass.gem.command.auth.ViewUserMaintenanceCommand"%>
 <%@ page import="org.iplass.gem.command.fulltext.FullTextSearchViewCommand"%>
 <%@ page import="org.iplass.gem.command.preview.PreviewDateViewCommand"%>
 
@@ -163,7 +163,8 @@
 			}
 		}
 		return entityMap;
-	}%>
+	}
+%>
 <%
 	int tenantId = TemplateUtil.getClientTenantId();
 	Tenant tenant = TemplateUtil.getTenant();
@@ -448,7 +449,7 @@ $(function() {
 <script>
 function changePassword() {
 	clearMenuState();
-	submitForm(contextPath + "/<%=UpdatePasswordCommand.ACTION_VIEW_UPDATE_PASSWORD%>");
+	submitForm(contextPath + "/<%=ViewUserMaintenanceCommand.ACTION_VIEW_UPDATE_PASSWORD%>");
 }
 </script>
 </li>

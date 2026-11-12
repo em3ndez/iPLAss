@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -29,7 +29,7 @@ import org.iplass.mtp.auth.policy.definition.AuthenticationPolicyDefinition;
  *
  */
 public interface AccountNotificationListener {
-	
+
 	/**
 	 * AccountNotificationListener自体の初期化処理を記述可能です。
 	 * AccountNotificationListenerのインスタンスが生成された後、呼び出されます。
@@ -37,9 +37,9 @@ public interface AccountNotificationListener {
 	 */
 	public default void init(AuthenticationPolicyDefinition policy) {
 	}
-	
+
 	/**
-	 * ユーザアカウントが作成された後呼び出されます。
+	 * ユーザーアカウントが作成された後呼び出されます。
 	 *
 	 * @param notification 通知の本体
 	 */
@@ -47,22 +47,21 @@ public interface AccountNotificationListener {
 	}
 
 	/**
-	 * ユーザアカウントのパスワードがリセットされた後呼び出されます。
+	 * ユーザーアカウントのパスワードがリセットされた後呼び出されます。
 	 *
 	 * @param notification 通知の本体
 	 */
 	public default void credentialReset(PasswordNotification notification) {
 	}
-	
+
 	/**
-	 * ユーザアカウントがロックアウトされた後呼び出されます。
+	 * ユーザーアカウントがロックアウトされた後呼び出されます。
 	 * 
 	 * @param notification 通知の本体
 	 */
 	public default void rockedout(AccountNotification notification) {
 	}
-	
-	
+
 	/**
 	 * パスワードが更新された後呼び出されます。
 	 * 
@@ -70,7 +69,7 @@ public interface AccountNotificationListener {
 	 */
 	public default void credentialUpdated(PasswordNotification notification) {
 	}
-	
+
 	/**
 	 * パスワード以外の属性が更新された後呼び出されます。
 	 * 
@@ -78,16 +77,16 @@ public interface AccountNotificationListener {
 	 */
 	public default void propertyUpdated(PropertyNotification notification) {
 	}
-	
+
 	/**
-	 * ユーザアカウントが削除される場合呼び出されます。
+	 * ユーザーアカウントが削除される場合呼び出されます。
 	 * （※他のメソッドと異なり、実際の削除処理前に呼び出されます）
 	 * 
 	 * @param notification
 	 */
 	public default void remove(AccountNotification notification) {
 	}
-	
+
 	/**
 	 * ログインに成功した場合呼び出されます。
 	 * 
@@ -95,7 +94,7 @@ public interface AccountNotificationListener {
 	 */
 	public default void loginSuccess(LoginNotification notification) {
 	}
-	
+
 	/**
 	 * ログインに失敗した場合呼び出されます。
 	 * ログイン失敗時には適用する認証ポリシーが確定できないため、

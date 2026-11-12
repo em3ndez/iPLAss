@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -33,7 +33,8 @@ public class AbstractXsiType implements XsiType {
 	@Override
 	public final List<ExternalRefPath> getExternalRefPaths() {
 		List<ExternalRefPath> list = new ArrayList<ExternalRefPath>();
-		Class<?>[] annotatedPathClass = getClass().getAnnotation(ExternalRefPathClass.class).value();
+		Class<?>[] annotatedPathClass = getClass().getAnnotation(ExternalRefPathClass.class)
+				.value();
 		for (Class<?> ac : annotatedPathClass) {
 			try {
 				list.add((ExternalRefPath) ac.newInstance());

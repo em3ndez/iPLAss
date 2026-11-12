@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,12 +27,16 @@ import org.iplass.mtp.impl.auth.authenticate.AccountHandle;
 
 public interface UserContext extends Serializable {
 	public User getUser();
+
 	public AccountHandle getAccount();
+
 	public String[] getGroupCode();
-	
+
 	public Object getAttribute(String name);
-	
+
 	public String getIdForLog();
+
 	public void resetUserEntity(User userEntity);
+
 	public long getCreationTime();
 }

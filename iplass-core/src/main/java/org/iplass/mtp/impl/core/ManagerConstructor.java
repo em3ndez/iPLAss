@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,7 +22,7 @@ package org.iplass.mtp.impl.core;
 import org.iplass.mtp.Manager;
 
 public interface ManagerConstructor {
-	
+
 	public Manager construct();
 
 }

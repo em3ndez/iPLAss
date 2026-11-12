@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -94,7 +94,8 @@ public class EntityQueryInvocationImpl extends EntityInvocationImpl<Void> implem
 			eh.search(query, (EntityStreamSearchHandler<Object[]>) streamSearchHandler, (Predicate<Object[]>) resultCallback);
 			break;
 		case SEARCH_ENTITY:
-			eh.searchEntity(query, searchOption.isReturnStructuredEntity(), (EntityStreamSearchHandler<Entity>) streamSearchHandler, (Predicate<Entity>) resultCallback);
+			eh.searchEntity(query, searchOption.isReturnStructuredEntity(), (EntityStreamSearchHandler<Entity>) streamSearchHandler,
+					(Predicate<Entity>) resultCallback);
 			break;
 		default:
 			break;

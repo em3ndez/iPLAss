@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,14 +27,14 @@ class RefBinaryDefinition implements BinaryDefinition {
 	private static final long serialVersionUID = -7834580668842468330L;
 
 	private SimpleBinaryMetaData bin;
-	
+
 	RefBinaryDefinition() {
 	}
-	
+
 	RefBinaryDefinition(SimpleBinaryMetaData bin) {
 		this.bin = bin;
 	}
-	
+
 	@Override
 	public long getSize() {
 		return bin.getSize();

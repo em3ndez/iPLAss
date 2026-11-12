@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -38,7 +38,7 @@ public class NoBindHint extends EQLHint {
 
 	public NoBindHint() {
 	}
-	
+
 	@Override
 	public ASTNode accept(ASTTransformer transformer) {
 		return transformer.visit(this);
@@ -64,7 +64,7 @@ public class NoBindHint extends EQLHint {
 			return false;
 		return true;
 	}
-	
+
 	@Override
 	public String toString() {
 		return "no_bind";

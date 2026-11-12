@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,18 +24,18 @@ import org.iplass.mtp.auth.User;
 import org.iplass.mtp.impl.auth.UserContextImpl;
 
 /**
- *  テンポラリユーザコンテキスト
+ *  テンポラリユーザーコンテキスト
  * 
- *  一時的に作成されるユーザ用のコンテキストクラス
+ *  一時的に作成されるユーザー用のコンテキストクラス
  * 
  * @author 藤田 義弘
  *
  */
 public final class TemporaryUserContext extends UserContextImpl {
 	//TODO パッケージ移動->auth直下
-	
+
 	private static final long serialVersionUID = 6545530702359622550L;
-	
+
 	public TemporaryUserContext(AccountHandle account, User userEntity) {
 		super(account, userEntity);
 	}

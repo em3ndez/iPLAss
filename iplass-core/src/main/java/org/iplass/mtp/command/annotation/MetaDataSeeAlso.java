@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,8 +26,8 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-@Target({ElementType.TYPE})
+@Target({ ElementType.TYPE })
 @Retention(RUNTIME)
 public @interface MetaDataSeeAlso {
-    Class<?>[] value();
+	Class<?>[] value();
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -40,15 +40,16 @@ public class InitialInterceptor implements RequestInterceptor {
 			ExecuteContext exec = ExecuteContext.getCurrentContext();
 			lang.selectLangByRequest(invocation.getRequest(), exec);
 			preview.init(invocation.getRequest());
-			
+
 			invocation.proceedRequest();
 		} finally {
 			//transaction resource cleaning
-			TransactionManager tm = ManagerLocator.getInstance().getManager(TransactionManager.class);
+			TransactionManager tm = ManagerLocator.getInstance()
+					.getManager(TransactionManager.class);
 			if (tm instanceof LocalTransactionManager) {
 				((LocalTransactionManager) tm).checkAndClean();
 			}
 		}
 	}
-	
+
 }

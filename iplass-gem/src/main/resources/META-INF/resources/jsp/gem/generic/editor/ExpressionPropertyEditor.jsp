@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 <%@ page import="java.math.BigDecimal" %>
 <%@ page import="java.text.DecimalFormat" %>
@@ -80,7 +80,7 @@ String format(String format, Object value) {
 	String propName = editor.getPropertyName();
 	if (pd == null || !(pd instanceof ExpressionProperty)) {
 		//定義がExpressionPropertyでなければ表示不可
-		throw new EntityViewRuntimeException(propName + " 's editor is unsupport " 
+		throw new EntityViewRuntimeException(propName + " 's editor is unsupport "
 				+ (pd != null ? pd.getClass().getSimpleName() : "(unknown)") + " type." );
 	}
 
@@ -134,7 +134,7 @@ String format(String format, Object value) {
 					customStyle = EntityViewUtil.getCustomStyle(rootDefName, scriptKey, editor.getInputCustomStyleScriptKey(), entity, propValue);
 				}
 			}
-	
+
 			if (isMultiple) {
 %>
 <ul class="data-label" style="<c:out value="<%=customStyle %>"/>">
@@ -194,13 +194,13 @@ String format(String format, Object value) {
 		}
 
 		if (editor.getDisplayType() != ExpressionDisplayType.HIDDEN) {
-		
+
 			String[] _defaultValue = (String[]) defaultValue;
 			String strDefault = "";
 			if (_defaultValue != null && _defaultValue.length > 0) {
 				strDefault = _defaultValue[0];
 			}
-	
+
 			//カスタムスタイル
 			String customStyle = "";
 			if (StringUtil.isNotEmpty(editor.getInputCustomStyle())) {
@@ -288,4 +288,5 @@ $(function() {
 	request.removeAttribute(Constants.EDITOR_EDITOR);
 	request.removeAttribute(Constants.EDITOR_PROP_VALUE);
 	request.removeAttribute(Constants.EDITOR_PROPERTY_DEFINITION);
+	request.removeAttribute(Constants.EDITOR_DISPLAY_LABEL);
 %>

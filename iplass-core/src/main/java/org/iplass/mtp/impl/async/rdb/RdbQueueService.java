@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -21,6 +21,8 @@
 package org.iplass.mtp.impl.async.rdb;
 
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -75,10 +77,11 @@ public class RdbQueueService implements Service {
 			useQueue = Boolean.valueOf(config.getValue("useQueue"));
 		}
 
-		rdb = config.getDependentService(RdbAdapterService.class).getRdbAdapter();
+		rdb = config.getDependentService(RdbAdapterService.class)
+				.getRdbAdapter();
 		taskIdCounter = config.getDependentService("TaskIdCounter");
 		taskIdCounterForGroup = config.getDependentService("TaskIdCounterGrouping");
-		
+
 		if (config.getValue("cleanupHistoryOnInit") != null) {
 			cleanupHistoryOnInit = Boolean.valueOf(config.getValue("cleanupHistoryOnInit"));
 		}
@@ -86,27 +89,30 @@ public class RdbQueueService implements Service {
 		if (config.getValue("historyHoldDay") != null) {
 			historyHoldDay = Integer.parseInt(config.getValue("historyHoldDay"));
 		}
-		
+
 		queue = config.getValues("queue", QueueConfig.class);
+
+		WorkerFactory workerFactory = config.getValue("workerFactory", WorkerFactory.class, new DefaultWorkerFactory());
 
 		queueMap = new HashMap<>();
 		queueIdMap = new HashMap<>();
 		if (queue != null) {
-			for (QueueConfig qc: queue) {
-				Queue q = new Queue(qc, taskIdCounter, taskIdCounterForGroup, rdb);
+			for (QueueConfig qc : queue) {
+				Queue q = new Queue(qc, taskIdCounter, taskIdCounterForGroup, rdb, workerFactory);
 				queueMap.put(q.getName(), q);
 				queueIdMap.put(qc.getId(), q);
-				if (q.getName().equalsIgnoreCase(DEFAULT_QUEUE_NAME)) {
+				if (q.getName()
+						.equalsIgnoreCase(DEFAULT_QUEUE_NAME)) {
 					defaultQueue = q;
 				}
 			}
 		}
-		
+
 		if (useQueue) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("RdbQueueService initialize process started.init queues...");
 			}
-			
+
 			if (defaultQueue == null) {
 				throw new ServiceConfigrationException("default queue(named 'default') is not specified");
 			}
@@ -119,7 +125,7 @@ public class RdbQueueService implements Service {
 				});
 			}
 
-			for (Queue q: queueMap.values()) {
+			for (Queue q : queueMap.values()) {
 				q.startWorker();
 			}
 
@@ -134,18 +140,20 @@ public class RdbQueueService implements Service {
 	public void destroy() {
 		if (useQueue && queueMap != null) {
 			logger.info("stopping queue worker...");
-			for (Map.Entry<String, Queue> e: queueMap.entrySet()) {
-				e.getValue().stopWorker();
-				logger.debug("stopped worker of queue:" + e.getValue().getName());
+			for (Map.Entry<String, Queue> e : queueMap.entrySet()) {
+				e.getValue()
+						.stopWorker();
+				logger.debug("stopped worker of queue:" + e.getValue()
+						.getName());
 			}
 			logger.info("stopping queue worker...done.");
-//			queueMap = null;
+			//			queueMap = null;
 		}
 	}
 
 	public Queue getQueue(String queueName) {
 		if (useQueue == false) {
-			throw new ServiceConfigrationException("RdbQueueService.useQueue=false. set to ture if use RdbQueueService.");
+			throw new ServiceConfigrationException("RdbQueueService.useQueue=false. set to true if use RdbQueueService.");
 		}
 		if (queueName == null) {
 			return defaultQueue;
@@ -156,7 +164,7 @@ public class RdbQueueService implements Service {
 
 	public Queue getQueueById(int id) {
 		if (useQueue == false) {
-			throw new ServiceConfigrationException("RdbQueueService.useQueue=false. set to ture if use RdbQueueService.");
+			throw new ServiceConfigrationException("RdbQueueService.useQueue=false. set to true if use RdbQueueService.");
 		}
 		return queueIdMap.get(id);
 	}
@@ -180,7 +188,9 @@ public class RdbQueueService implements Service {
 
 	public void deleteHistoryByDate(Timestamp date, boolean isDirectTenant) {
 		if (date == null) {
-			date = new Timestamp(System.currentTimeMillis() - historyHoldDay * 24 * 60 * 60 * 1000);
+			Instant cutoffInstant = Instant.now()
+					.minus(historyHoldDay, ChronoUnit.DAYS);
+			date = Timestamp.from(cutoffInstant);
 		}
 
 		new TaskDao(rdb).deleteHistoryByDate(date, isDirectTenant);
@@ -189,11 +199,10 @@ public class RdbQueueService implements Service {
 	public void moveNoGetResultTaskToHistory() {
 
 		if (queueMap != null) {
-			for (Queue e: queueMap.values()) {
+			for (Queue e : queueMap.values()) {
 				e.moveNoGetResultTaskToHistory();
 			}
 		}
 	}
-
 
 }

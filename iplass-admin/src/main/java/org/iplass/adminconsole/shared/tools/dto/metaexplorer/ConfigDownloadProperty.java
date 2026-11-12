@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -22,7 +22,7 @@ package org.iplass.adminconsole.shared.tools.dto.metaexplorer;
 
 import org.iplass.adminconsole.shared.base.dto.io.download.DownloadProperty;
 
-public interface ConfigDownloadProperty extends DownloadProperty{
+public interface ConfigDownloadProperty extends DownloadProperty {
 
 	public static final String ACTION_URL = "service/metaconfigdownload";
 

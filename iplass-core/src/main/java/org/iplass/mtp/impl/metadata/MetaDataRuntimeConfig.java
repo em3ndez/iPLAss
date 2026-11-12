@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,15 +23,16 @@ package org.iplass.mtp.impl.metadata;
 public class MetaDataRuntimeConfig {
 	private int tenantId;
 	private MetaDataConfig metaDataConfig;
-	
+
 	public MetaDataRuntimeConfig(int tenantId, MetaDataConfig metaDataConfig) {
 		this.tenantId = tenantId;
 		this.metaDataConfig = metaDataConfig;
 	}
-	
+
 	public MetaDataConfig getMetaDataConfig() {
 		return metaDataConfig;
 	}
+
 	public int getTenantId() {
 		return tenantId;
 	}

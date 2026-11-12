@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2015 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,6 +26,7 @@ import org.iplass.mtp.ManagerLocator;
 import org.iplass.mtp.definition.TypedDefinitionManager;
 import org.iplass.mtp.impl.definition.AbstractTypedMetaDataService;
 import org.iplass.mtp.impl.definition.DefinitionMetaDataTypeMap;
+import org.iplass.mtp.impl.definition.DefinitionNameChecker;
 import org.iplass.mtp.impl.sms.template.MetaSmsMailTemplate;
 import org.iplass.mtp.impl.sms.template.MetaSmsMailTemplate.SmsMailTemplateRuntime;
 import org.iplass.mtp.sms.SendSmsMailListener;
@@ -51,9 +52,16 @@ public class SmsServiceBaseImpl extends AbstractTypedMetaDataService<MetaSmsMail
 		public TypeMap() {
 			super(getFixedPath(), MetaSmsMailTemplate.class, SmsMailTemplateDefinition.class);
 		}
+
 		@Override
 		public TypedDefinitionManager<SmsMailTemplateDefinition> typedDefinitionManager() {
-			return ManagerLocator.getInstance().getManager(SmsMailTemplateDefinitionManager.class);
+			return ManagerLocator.getInstance()
+					.getManager(SmsMailTemplateDefinitionManager.class);
+		}
+
+		@Override
+		protected DefinitionNameChecker createDefinitionNameChecker() {
+			return DefinitionNameChecker.getPathSlashDefinitionNameChecker();
 		}
 	}
 
@@ -96,7 +104,7 @@ public class SmsServiceBaseImpl extends AbstractTypedMetaDataService<MetaSmsMail
 
 	protected boolean fireOnSendMail(final SmsMail mail) {
 		if (listener != null) {
-			for (SendSmsMailListener l: listener) {
+			for (SendSmsMailListener l : listener) {
 				if (!l.beforeSend(mail)) {
 					logger.info("send mail canceled by Listener:" + l);
 					return false;
@@ -108,7 +116,7 @@ public class SmsServiceBaseImpl extends AbstractTypedMetaDataService<MetaSmsMail
 
 	protected void fireOnSuccess(SmsMail mail) {
 		if (listener != null) {
-			for (SendSmsMailListener l: listener) {
+			for (SendSmsMailListener l : listener) {
 				l.onSuccess(mail);
 			}
 		}
@@ -116,7 +124,7 @@ public class SmsServiceBaseImpl extends AbstractTypedMetaDataService<MetaSmsMail
 
 	protected void handleException(SmsMail mail, Exception e) {
 		if (listener != null) {
-			for (SendSmsMailListener l: listener) {
+			for (SendSmsMailListener l : listener) {
 				if (!l.onFailure(mail, e)) {
 					return;
 				}
@@ -131,7 +139,8 @@ public class SmsServiceBaseImpl extends AbstractTypedMetaDataService<MetaSmsMail
 
 	protected void sendSmsMailImpl(Tenant tenant, SmsMail sms) {
 		//noope
-		logger.warn("can't send sms, use TwilioSmsService or own implementation of SmsService.To:" + sms.getTo() + ", From:" + sms.getFrom() + ", Message:" + sms.getMessage());
+		logger.warn("can't send sms, use TwilioSmsService or own implementation of SmsService.To:" + sms.getTo() + ", From:" + sms.getFrom()
+				+ ", Message:" + sms.getMessage());
 	}
 
 	@Override

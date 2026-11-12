@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -28,32 +28,32 @@ import org.iplass.mtp.spi.Config;
 import org.iplass.mtp.spi.Service;
 
 public class SyntaxService implements Service {
-	
+
 	//TODO 設定ファイルなどから設定値を取得する
-	
-	
+
 	private Map<String, SyntaxContext> contexts;
-	
+
 	public SyntaxService() {
 	}
-	
+
 	public SyntaxContext getSyntaxContext(String contextName) {
 		return contexts.get(contextName);
 	}
 
 	public void destroy() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	public void init(Config config) {
 		contexts = new HashMap<String, SyntaxContext>();
-		
+
 		List<String> registList = config.getValues("syntaxRegister");
-		for (String r: registList) {
+		for (String r : registList) {
 			SyntaxRegister sr;
 			try {
-				sr = (SyntaxRegister) Class.forName(r).newInstance();
+				sr = (SyntaxRegister) Class.forName(r)
+						.newInstance();
 			} catch (ClassNotFoundException e) {
 				throw new RuntimeException("SyntaxRegister not found.", e);
 			} catch (InstantiationException e) {

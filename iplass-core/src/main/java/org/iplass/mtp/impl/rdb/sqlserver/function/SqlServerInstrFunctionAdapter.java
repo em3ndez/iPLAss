@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,7 +27,7 @@ import org.iplass.mtp.entity.query.value.primary.Function;
 import org.iplass.mtp.impl.rdb.adapter.RdbAdapter;
 import org.iplass.mtp.impl.rdb.adapter.function.FunctionAdapter;
 
-public class SqlServerInstrFunctionAdapter implements FunctionAdapter {
+public class SqlServerInstrFunctionAdapter implements FunctionAdapter<Function> {
 
 	private String field;
 
@@ -37,13 +37,16 @@ public class SqlServerInstrFunctionAdapter implements FunctionAdapter {
 
 	@Override
 	public void toSQL(FunctionContext context, Function function, RdbAdapter rdb) {
-		if (function.getArguments() == null || function.getArguments().size() != 2) {
+		if (function.getArguments() == null || function.getArguments()
+				.size() != 2) {
 			throw new QueryException(function.getName() + " must have two arguments.");
 		}
 		context.append("CHARINDEX(");
-		context.appendArgument(function.getArguments().get(1));
+		context.appendArgument(function.getArguments()
+				.get(1));
 		context.append(", ");
-		context.appendArgument(function.getArguments().get(0));
+		context.appendArgument(function.getArguments()
+				.get(0));
 		context.append(")");
 	}
 

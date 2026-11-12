@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -53,8 +53,12 @@ public interface TenantService extends XsrfProtectedService {
 	 * @param tenant {@link Tenant}
 	 * @return 更新結果
 	 */
-	public boolean updateTenant(int tenantId, final Tenant tenant, final int currentVersion, final boolean checkVersion) throws MetaVersionCheckException;
-	public boolean updateTenant(int tenantId, final Tenant tenant, final int currentVersion, final boolean checkVersion, final boolean forceUpdate) throws MetaVersionCheckException;
+	public boolean updateTenant(int tenantId, final Tenant tenant, final int currentVersion, final boolean checkVersion)
+			throws MetaVersionCheckException;
+
+	public boolean updateTenant(int tenantId, final Tenant tenant, final int currentVersion, final boolean checkVersion, final boolean forceUpdate)
+			throws MetaVersionCheckException;
+
 	public AdminPlatformInfo getPlatformInformation(int tenantId);
 
 	public TenantEnv getTenantEnv(int tenantId) throws TenantNotFoundException;

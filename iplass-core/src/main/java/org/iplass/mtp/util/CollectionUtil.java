@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,7 +25,6 @@ import java.util.Map;
 
 public class CollectionUtil {
 	//FIXME CollectionUtilsのメソッドを呼ぶ。位置づけ的にCollectionUtilsのThinWrapperとして。
-	
 
 	/**
 	 * Collectionが空かを判定します。

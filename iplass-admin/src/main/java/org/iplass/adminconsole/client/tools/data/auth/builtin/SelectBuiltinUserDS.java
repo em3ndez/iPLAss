@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -74,7 +74,8 @@ public class SelectBuiltinUserDS extends BuiltinUserDS {
 		DataSourceField startDateField = new DataSourceTextField(START_DATE, "Start Date");
 		DataSourceField endDateField = new DataSourceTextField(END_DATE, "End Date");
 
-		setFields(accountIdField, nameField, mailField, adminField, loginErrorCntField, lastPasswordChangeField, passwordRemainDaysField, lastLoginField, startDateField, endDateField);
+		setFields(accountIdField, nameField, mailField, adminField, loginErrorCntField, lastPasswordChangeField, passwordRemainDaysField,
+				lastLoginField, startDateField, endDateField);
 	}
 
 	@Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,8 +23,10 @@ import java.io.File;
 
 import org.iplass.mtp.impl.metadata.MetaDataRepository;
 
-public interface XmlExternalRefHandler { 
+public interface XmlExternalRefHandler {
 	void putOutExtcontent(File xml);
+
 	byte[] readRestoringExtContent(File xml);
+
 	void inited(MetaDataRepository service, XmlFileMetaDataStore xmlfileMetaDataStore);
 }

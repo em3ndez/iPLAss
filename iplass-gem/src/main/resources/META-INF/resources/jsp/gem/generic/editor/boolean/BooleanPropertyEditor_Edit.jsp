@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 <%@page import="org.iplass.mtp.auth.AuthContext"%>
 <%@page import="org.iplass.mtp.entity.permission.EntityPropertyPermission"%>
@@ -165,7 +165,7 @@
 						}
 %>
 <ul class="<c:out value="<%=cls %>"/>">
-<li><input type="checkbox" name="<c:out value="<%=propName + i %>"/>" style="<c:out value="<%=customStyle%>"/>" value="true" <c:out value="<%=checked %>"/> /></li>
+<li <c:if test="<%=editor.isItemDirectionColumn() %>">style="display: block;"</c:if>><input type="checkbox" name="<c:out value="<%=propName + i %>"/>" style="<c:out value="<%=customStyle%>"/>" value="true" <c:out value="<%=checked %>"/> /></li>
 </ul>
 <%
 					} else if (editor.getDisplayType() == BooleanDisplayType.RADIO) {
@@ -181,10 +181,10 @@
 						String cssTogglable = required ? "" : "radio-togglable";
 %>
 <ul class="<c:out value="<%=cls %>"/>">
-<li><label style="<c:out value="<%=customStyle%>"/>" title="<c:out value="<%=trueLabel %>" />">
+<li <c:if test="<%=editor.isItemDirectionColumn() %>">style="display: block;"</c:if>><label style="<c:out value="<%=customStyle%>"/>" title="<c:out value="<%=trueLabel %>" />">
 	<input type="radio" name="<c:out value="<%=propName + i %>"/>" value="true" class="<%=cssTogglable%>" <c:out value="<%=checkedTrue %>"/> /><c:out value="<%=trueLabel %>"/>
 </label></li>
-<li><label style="<c:out value="<%=customStyle%>"/>" title="<c:out value="<%=falseLabel %>" />">
+<li <c:if test="<%=editor.isItemDirectionColumn() %>">style="display: block;"</c:if>><label style="<c:out value="<%=customStyle%>"/>" title="<c:out value="<%=falseLabel %>" />">
 	<input type="radio" name="<c:out value="<%=propName + i %>"/>" value="false" class="<%=cssTogglable%>" <c:out value="<%=checkedFalse %>"/> /><c:out value="<%=falseLabel %>"/>
 </label></li>
 </ul>
@@ -206,7 +206,7 @@
 				String checked = b != null ? b ? "checked" : "" : "";
 %>
 <ul class="list-check-01">
-<li><input type="checkbox" name="<c:out value="<%=propName %>"/>" style="<c:out value="<%=customStyle%>"/>" value="true" <c:out value="<%=checked %>"/> /></li>
+<li <c:if test="<%=editor.isItemDirectionColumn() %>">style="display: block;"</c:if>><input type="checkbox" name="<c:out value="<%=propName %>"/>" style="<c:out value="<%=customStyle%>"/>" value="true" <c:out value="<%=checked %>"/> /></li>
 </ul>
 <%
 			} else if (editor.getDisplayType() == BooleanDisplayType.RADIO && updatable) {
@@ -218,7 +218,7 @@
 				String cssTogglable = required ? "" : "radio-togglable";
 %>
 <ul class="list-radio-01">
-<li><label style="<c:out value="<%=customStyle%>"/>" title="<c:out value="<%=trueLabel %>" />">
+<li <c:if test="<%=editor.isItemDirectionColumn() %>">style="display: block;"</c:if>><label style="<c:out value="<%=customStyle%>"/>" title="<c:out value="<%=trueLabel %>" />">
 	<input type="radio" name="<c:out value="<%=propName %>"/>" value="true" class="<%=cssTogglable%>" <c:out value="<%=checkedTrue %>"/> />
 	<c:out value="<%=trueLabel %>"/>
 </label></li>

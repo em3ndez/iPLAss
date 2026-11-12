@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -32,6 +32,7 @@ import org.iplass.adminconsole.client.base.ui.widget.MessageTabSet;
 import org.iplass.adminconsole.shared.base.dto.io.upload.UploadProperty;
 import org.iplass.adminconsole.shared.tools.dto.metaexplorer.ConfigUploadProperty;
 
+import com.google.gwt.json.client.JSONValue;
 import com.google.gwt.user.client.ui.Hidden;
 import com.smartgwt.client.types.VerticalAlignment;
 import com.smartgwt.client.util.SC;
@@ -41,8 +42,6 @@ import com.smartgwt.client.widgets.events.ClickEvent;
 import com.smartgwt.client.widgets.events.ClickHandler;
 import com.smartgwt.client.widgets.layout.HLayout;
 import com.smartgwt.client.widgets.layout.VLayout;
-
-import gwtupload.client.IUploadStatus.Status;
 
 /**
  * MetaData XMLファイルをアップロードするダイアログ
@@ -94,24 +93,27 @@ public class MetaDataXMLUploadDialog extends AbstractWindow {
 		final AdminSingleUploader uploader = new AdminSingleUploader(UPLOAD_SERVICE);
 		uploader.setValidExtensions("xml");
 		uploader.addOnStartUploadHandler((result) -> {
-			uploader.debugUploader("onStart");
-			startUpload();
-		});
-		uploader.addOnStatusChangedHandler((result) -> {
-			uploader.debugUploader("onStatusChanged");
+			if (!result.isCanceled()) {
+				uploader.debugUploader("onStart");
+				startUpload();
+			} else {
+				uploader.removeHidden();
+			}
 		});
 		uploader.addOnFinishUploadHandler((result) -> {
 			uploader.debugUploader("onFinish");
-			if (uploader.getStatus() == Status.SUCCESS) {
-				finishUpload(uploader.getMessage());
+			if (uploader.getLastUploadState()
+					.isSuccess()) {
+				finishUpload(uploader.getLastUploadState()
+						.getData());
 			} else {
-				errorUpload(uploader.getErrorMessage());
+				errorUpload(uploader.getLastUploadState()
+						.getErrorMessage());
 			}
 
 			//Hidden項目の削除
 			uploader.removeHidden();
 		});
-
 
 		fileComposit.addMember(uploader);
 
@@ -122,7 +124,8 @@ public class MetaDataXMLUploadDialog extends AbstractWindow {
 		upload.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				if (uploader.getFileName() == null || uploader.getFileName().isEmpty()) {
+				if (uploader.getFileName() == null || uploader.getFileName()
+						.isEmpty()) {
 					SC.warn(AdminClientMessageUtil.getString("ui_tools_metaexplorer_MetaDataXMLUploadDialog_selectImportFile"));
 					return;
 				}
@@ -132,6 +135,7 @@ public class MetaDataXMLUploadDialog extends AbstractWindow {
 		});
 		cancel = new IButton("Cancel");
 		cancel.addClickHandler(new ClickHandler() {
+			@Override
 			public void onClick(ClickEvent event) {
 				destroy();
 			}
@@ -180,7 +184,7 @@ public class MetaDataXMLUploadDialog extends AbstractWindow {
 		messageTabSet.setTabTitleProgress();
 	}
 
-	private void finishUpload(String message) {
+	private void finishUpload(JSONValue message) {
 		//JSON->Result
 		XMLUploadResultInfo result = new XMLUploadResultInfo(message);
 
@@ -222,11 +226,11 @@ public class MetaDataXMLUploadDialog extends AbstractWindow {
 		cancel.setDisabled(disabled);
 	}
 
-	private class XMLUploadResultInfo extends UploadResultInfo{
+	private class XMLUploadResultInfo extends UploadResultInfo {
 
 		String fileOid;
 
-		public XMLUploadResultInfo(String json) {
+		public XMLUploadResultInfo(JSONValue json) {
 			super(json);
 
 			fileOid = getFileUploadFileOid();
@@ -252,11 +256,14 @@ public class MetaDataXMLUploadDialog extends AbstractWindow {
 		}
 
 		private String getFileUploadStatusMessage(String status) {
-			if (ConfigUploadProperty.Status.SUCCESS.name().equals(status)) {
+			if (ConfigUploadProperty.Status.SUCCESS.name()
+					.equals(status)) {
 				return AdminClientMessageUtil.getString("ui_tools_metaexplorer_MetaDataXMLUploadDialog_uploadSuccessful");
-			} else if (ConfigUploadProperty.Status.WARN.name().equals(status)) {
+			} else if (ConfigUploadProperty.Status.WARN.name()
+					.equals(status)) {
 				return AdminClientMessageUtil.getString("ui_tools_metaexplorer_MetaDataXMLUploadDialog_uploadWarn");
-			} else if (ConfigUploadProperty.Status.ERROR.name().equals(status)) {
+			} else if (ConfigUploadProperty.Status.ERROR.name()
+					.equals(status)) {
 				return AdminClientMessageUtil.getString("ui_tools_metaexplorer_MetaDataXMLUploadDialog_uploadErr");
 			} else {
 				return AdminClientMessageUtil.getString("ui_tools_metaexplorer_MetaDataXMLUploadDialog_notGetUploadResult");

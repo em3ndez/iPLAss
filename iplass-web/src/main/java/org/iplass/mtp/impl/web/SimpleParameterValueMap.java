@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,13 +24,12 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
+import jakarta.servlet.http.HttpServletRequest;
 
 public class SimpleParameterValueMap implements ParameterValueMap {
-	
+
 	private HttpServletRequest req;
-	
+
 	public SimpleParameterValueMap(HttpServletRequest req) {
 		this.req = req;
 	}
@@ -54,10 +53,12 @@ public class SimpleParameterValueMap implements ParameterValueMap {
 			public boolean hasNext() {
 				return names.hasMoreElements();
 			}
+
 			@Override
 			public String next() {
 				return names.nextElement();
 			}
+
 			@Override
 			public void remove() {
 				throw new UnsupportedOperationException();

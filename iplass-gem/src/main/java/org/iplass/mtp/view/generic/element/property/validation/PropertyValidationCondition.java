@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2016 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -36,15 +36,15 @@ public class PropertyValidationCondition implements Refrectable {
 
 	/** プロパティ名 */
 	@MetaFieldInfo(
-			displayName="プロパティ名",
-			displayNameKey="generic_element_property_validation_PropertyValidationCondition_propertyNameDisplaNameKey",
-			inputType=InputType.PROPERTY,
-			required=true,
-			description="入力チェック対象のプロパティ名を設定してください",
-			descriptionKey="generic_element_property_validation_PropertyValidationCondition_propertyNameDescriptionKey"
+			displayName = "プロパティ名",
+			displayNameKey = "generic_element_property_validation_PropertyValidationCondition_propertyNameDisplaNameKey",
+			inputType = InputType.PROPERTY,
+			required = true,
+			description = "入力チェック対象のプロパティ名を設定してください",
+			descriptionKey = "generic_element_property_validation_PropertyValidationCondition_propertyNameDescriptionKey"
 	)
 	@EntityViewField(
-			referenceTypes={FieldReferenceType.SEARCHCONDITION}
+			referenceTypes = { FieldReferenceType.SEARCHCONDITION }
 	)
 	private String propertyName;
 
@@ -53,7 +53,7 @@ public class PropertyValidationCondition implements Refrectable {
 	 * @return プロパティ名
 	 */
 	public String getPropertyName() {
-	    return propertyName;
+		return propertyName;
 	}
 
 	/**
@@ -61,7 +61,7 @@ public class PropertyValidationCondition implements Refrectable {
 	 * @param propertyName プロパティ名
 	 */
 	public void setPropertyName(String propertyName) {
-	    this.propertyName = propertyName;
+		this.propertyName = propertyName;
 	}
 
 }

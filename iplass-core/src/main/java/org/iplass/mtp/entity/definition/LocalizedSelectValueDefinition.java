@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,16 +30,16 @@ public class LocalizedSelectValueDefinition implements Serializable {
 	private static final long serialVersionUID = -4998288776358261822L;
 	private String localeName;
 	private List<SelectValue> selectValueList;
-	
+
 	public LocalizedSelectValueDefinition() {
 	}
-	
+
 	public LocalizedSelectValueDefinition(String localeName,
 			List<SelectValue> selectValueList) {
 		this.localeName = localeName;
 		this.selectValueList = selectValueList;
 	}
-	
+
 	/**
 	 * 指定のvalueのSelectValue定義を返却
 	 * 
@@ -48,7 +48,7 @@ public class LocalizedSelectValueDefinition implements Serializable {
 	 */
 	public SelectValue getSelectValue(String value) {
 		if (selectValueList != null) {
-			for (SelectValue s: selectValueList) {
+			for (SelectValue s : selectValueList) {
 				if (value.equals(s.getValue())) {
 					return s;
 				}
@@ -60,12 +60,15 @@ public class LocalizedSelectValueDefinition implements Serializable {
 	public String getLocaleName() {
 		return localeName;
 	}
+
 	public void setLocaleName(String localeName) {
 		this.localeName = localeName;
 	}
+
 	public List<SelectValue> getSelectValueList() {
 		return selectValueList;
 	}
+
 	public void setSelectValueList(List<SelectValue> selectValueList) {
 		this.selectValueList = selectValueList;
 	}

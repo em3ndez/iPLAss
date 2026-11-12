@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -29,11 +29,13 @@
 <%@ page import="org.iplass.gem.command.generic.detail.DetailViewCommand"%>
 <%@ page import="org.iplass.gem.command.treeview.GetTreeViewListDataCommand"%>
 <%@ page import="org.iplass.mtp.view.top.parts.TreeViewParts"%>
+<%@ page import="org.iplass.gem.command.ViewUtil"%>
 
 <%
 	//設定情報取得
 	TreeViewParts parts = (TreeViewParts) request.getAttribute("treeViewParts");
 
+	String styleAttr = ViewUtil.buildHeightStyleAttr(parts.getMaxHeight());
 
 	String treeViewName = (String) request.getAttribute("treeViewName");
 	if (treeViewName == null) return;
@@ -56,7 +58,7 @@
 <div class="lyt-shortcut-01">
 ${treeViewParts.iconTag}
 <p class="title"><c:out value="<%=displayName %>" /></p>
-<div class="widget-contents">
+<div class="widget-contents" style="<%= styleAttr %>">
 <div class="treeViewList" data-defName="${m:esc(treeViewName)}"
  data-viewAction="<%=DetailViewCommand.VIEW_ACTION_NAME %>"
  data-webapiName="<%=GetTreeViewListDataCommand.WEBAPI_NAME%>">

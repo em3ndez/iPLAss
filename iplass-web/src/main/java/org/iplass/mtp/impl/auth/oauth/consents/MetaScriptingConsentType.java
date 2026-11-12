@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -19,9 +19,9 @@
  */
 package org.iplass.mtp.impl.auth.oauth.consents;
 
+import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.collections4.list.UnmodifiableList;
 import org.iplass.mtp.auth.AuthContext;
 import org.iplass.mtp.auth.oauth.definition.ClientType;
 import org.iplass.mtp.auth.oauth.definition.ConsentTypeDefinition;
@@ -53,9 +53,9 @@ public class MetaScriptingConsentType extends MetaConsentType {
 	private static final String SESSION_BINDING_NAME = "session";
 	private static final String REQUIRED_SCOPES_BINDING_NAME = "requiredScopes";
 	private static final String GRANTED_SCOPES_BINDING_NAME = "grantedScopes";
-	
+
 	private String script;
-	
+
 	public String getScript() {
 		return script;
 	}
@@ -68,35 +68,37 @@ public class MetaScriptingConsentType extends MetaConsentType {
 	public ScriptingConsentTypeRuntime createRuntime(String metaId, ClientType ct) {
 		return new ScriptingConsentTypeRuntime(metaId, ct);
 	}
-	
+
 	public class ScriptingConsentTypeRuntime extends ConsentTypeRuntime {
-		
-		
+
 		private static final String SCRIPT_PREFIX = "ScriptingConsentType_script";
 
 		private Script scriptRuntime;
 
 		public ScriptingConsentTypeRuntime(String metaId, ClientType ct) {
-			TenantContext tc = ExecuteContext.getCurrentContext().getTenantContext();
-			scriptRuntime = tc.getScriptEngine().createScript(script, SCRIPT_PREFIX + "_" + metaId + "_" + ct);
+			TenantContext tc = ExecuteContext.getCurrentContext()
+					.getTenantContext();
+			scriptRuntime = tc.getScriptEngine()
+					.createScript(script, SCRIPT_PREFIX + "_" + metaId + "_" + ct);
 		}
 
 		@Override
 		public boolean needConsent(RequestContext request, List<String> scopes, AccessToken currentToken) {
-			
+
 			ExecuteContext ex = ExecuteContext.getCurrentContext();
 			TenantContext tc = ex.getTenantContext();
 			ScriptEngine scriptEngine = tc.getScriptEngine();
 			ScriptContext sc = scriptEngine.newScriptContext();
 			sc.setAttribute(REQUEST_BINDING_NAME, RequestContextBinding.newRequestContextBinding());
 			sc.setAttribute(SESSION_BINDING_NAME, SessionBinding.newSessionBinding());
-			sc.setAttribute(USER_BINDING_NAME, AuthContextHolder.getAuthContext().newUserBinding());
+			sc.setAttribute(USER_BINDING_NAME, AuthContextHolder.getAuthContext()
+					.newUserBinding());
 			sc.setAttribute(AUTH_CONTEXT_BINDING_NAME, AuthContext.getCurrentContext());
-			sc.setAttribute(REQUIRED_SCOPES_BINDING_NAME, new UnmodifiableList<>(scopes));
+			sc.setAttribute(REQUIRED_SCOPES_BINDING_NAME, Collections.unmodifiableList(scopes));
 			if (currentToken != null) {
-				sc.setAttribute(GRANTED_SCOPES_BINDING_NAME, new UnmodifiableList<>(currentToken.getGrantedScopes()));
+				sc.setAttribute(GRANTED_SCOPES_BINDING_NAME, Collections.unmodifiableList(currentToken.getGrantedScopes()));
 			}
-			
+
 			Boolean ret = (Boolean) scriptRuntime.eval(sc);
 			if (ret != null && ret.booleanValue()) {
 				return true;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -99,12 +99,15 @@ public class LengthValidation extends ValidationDefinition {
 	public Integer getMax() {
 		return max;
 	}
+
 	public void setMax(Integer max) {
 		this.max = max;
 	}
+
 	public Integer getMin() {
 		return min;
 	}
+
 	public void setMin(Integer min) {
 		this.min = min;
 	}

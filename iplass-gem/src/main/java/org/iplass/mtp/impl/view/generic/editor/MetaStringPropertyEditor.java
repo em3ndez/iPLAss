@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,8 +23,6 @@ package org.iplass.mtp.impl.view.generic.editor;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
-
 import org.iplass.mtp.entity.definition.PropertyDefinition;
 import org.iplass.mtp.entity.definition.PropertyDefinitionType;
 import org.iplass.mtp.entity.definition.properties.ExpressionProperty;
@@ -41,13 +39,16 @@ import org.iplass.mtp.view.generic.editor.EditorValue;
 import org.iplass.mtp.view.generic.editor.LongTextPropertyEditor;
 import org.iplass.mtp.view.generic.editor.PropertyEditor;
 import org.iplass.mtp.view.generic.editor.StringPropertyEditor;
+import org.iplass.mtp.view.generic.editor.StringPropertyEditor.RichTextLibrary;
 import org.iplass.mtp.view.generic.editor.StringPropertyEditor.StringDisplayType;
+
+import jakarta.xml.bind.annotation.XmlSeeAlso;
 
 /**
  * 文字列型プロパティエディタのメタデータ
  * @author lis3wg
  */
-@XmlSeeAlso({MetaLongTextPropertyEditor.class})
+@XmlSeeAlso({ MetaLongTextPropertyEditor.class })
 public class MetaStringPropertyEditor extends MetaPrimitivePropertyEditor {
 
 	/** シリアルバージョンUID */
@@ -63,8 +64,23 @@ public class MetaStringPropertyEditor extends MetaPrimitivePropertyEditor {
 	/** 表示タイプ */
 	private StringDisplayType displayType;
 
+	/** RichTextライブラリ */
+	private RichTextLibrary richTextLibrary;
+
 	/** RichText表示タグ許可設定 */
 	private boolean allowedContent = false;
+
+	/** RickTextで表示モードの場合、リンク動作許可 */
+	private boolean allowRichTextEditorLinkAction;
+
+	/** 入力タイプ */
+	private String inputType;
+
+	/** 入力パターン */
+	private String inputPattern;
+
+	/** HTML入力エラーメッセージ */
+	private MetaHtmlValidationMessage htmlValidationMessage;
 
 	/** 最大文字数 */
 	private int maxlength;
@@ -74,6 +90,18 @@ public class MetaStringPropertyEditor extends MetaPrimitivePropertyEditor {
 
 	/** 検索条件完全一致設定有無 */
 	private boolean searchExactMatchCondition;
+
+	/** 範囲で検索するか */
+	private boolean searchInRange;
+
+	/** 検索条件From非表示設定 */
+	private boolean hideSearchConditionFrom;
+
+	/** 検索条件To非表示設定 */
+	private boolean hideSearchConditionTo;
+
+	/** 検索条件範囲記号非表示設定 */
+	private boolean hideSearchConditionRangeSymbol;
 
 	/** RickTextで表示モードの場合、ツールバーなどを表示しないか */
 	private boolean hideRichtextEditorToolBar;
@@ -86,6 +114,9 @@ public class MetaStringPropertyEditor extends MetaPrimitivePropertyEditor {
 
 	/** Label形式の場合の更新制御 */
 	private boolean updateWithLabelValue = false;
+
+	/** 「値なし」を検索条件の選択肢に追加するか */
+	private boolean isNullSearchEnabled;
 
 	/**
 	 * 表示タイプを取得します。
@@ -104,21 +135,105 @@ public class MetaStringPropertyEditor extends MetaPrimitivePropertyEditor {
 	}
 
 	/**
-	 * RichText表示タグ許可を設定します。
+	 * RichTextライブラリを取得します。
 	 *
-	 * @return allowedContent RichText表示タグ許可設定
+	 * @return RichTextライブラリ
+	 */
+	public RichTextLibrary getRichTextLibrary() {
+		return richTextLibrary;
+	}
+
+	/**
+	 * RichTextライブラリを設定します。
+	 *
+	 * @param richTextLibrary RichTextライブラリ
+	 */
+	public void setRichTextLibrary(RichTextLibrary richTextLibrary) {
+		this.richTextLibrary = richTextLibrary;
+	}
+
+	/**
+	 * RichText表示タグ許可を取得します。
+	 *
+	 * @return RichText表示タグ許可設定
 	 */
 	public boolean isAllowedContent() {
 		return allowedContent;
 	}
 
 	/**
-	 * RichText表示タグ許可設定を取得します。
+	 * RichText表示タグ許可設定を設定します。
 	 *
-	 * @param RichText表示タグ許可設定
+	 * @param allowedContent RichText表示タグ許可設定
 	 */
 	public void setAllowedContent(boolean allowedContent) {
 		this.allowedContent = allowedContent;
+	}
+
+	/**
+	 * RickTextで表示モードの場合、リンク動作許可を取得します。
+	 *
+	 * @return RickTextで表示モードの場合、リンク動作許可
+	 */
+	public boolean isAllowRichTextEditorLinkAction() {
+		return allowRichTextEditorLinkAction;
+	}
+
+	/**
+	 * RickTextで表示モードの場合、リンク動作許可を設定します。
+	 *
+	 * @param allowRichTextEditorLinkAction RickTextで表示モードの場合、リンク動作許可
+	 */
+	public void setAllowRichTextEditorLinkAction(boolean allowRichTextEditorLinkAction) {
+		this.allowRichTextEditorLinkAction = allowRichTextEditorLinkAction;
+	}
+
+	/**
+	 * 入力タイプを取得します。
+	 * @return 入力タイプ
+	 */
+	public String getInputType() {
+		return inputType;
+	}
+
+	/**
+	 * 入力タイプを設定します。
+	 * @param inputType 入力タイプ
+	 */
+	public void setInputType(String inputType) {
+		this.inputType = inputType;
+	}
+
+	/**
+	 * 入力パターンを取得します。
+	 * @return 入力パターン
+	 */
+	public String getInputPattern() {
+		return inputPattern;
+	}
+
+	/**
+	 * 入力パターンを設定します。
+	 * @param inputPattern 入力パターン
+	 */
+	public void setInputPattern(String inputPattern) {
+		this.inputPattern = inputPattern;
+	}
+
+	/**
+	 * HTML入力エラーメッセージを取得します。
+	 * @return HTML入力エラーメッセージ
+	 */
+	public MetaHtmlValidationMessage getHtmlValidationMessage() {
+		return htmlValidationMessage;
+	}
+
+	/**
+	 * HTML入力エラーメッセージを設定します。
+	 * @param htmlValidationMessage HTML入力エラーメッセージ
+	 */
+	public void setHtmlValidationMessage(MetaHtmlValidationMessage htmlValidationMessage) {
+		this.htmlValidationMessage = htmlValidationMessage;
 	}
 
 	/**
@@ -142,7 +257,9 @@ public class MetaStringPropertyEditor extends MetaPrimitivePropertyEditor {
 	 * @return セレクトボックスの値
 	 */
 	public List<EditorValue> getValues() {
-		if (this.values == null) this.values = new ArrayList<>();
+		if (this.values == null) {
+			this.values = new ArrayList<>();
+		}
 		return values;
 	}
 
@@ -154,10 +271,73 @@ public class MetaStringPropertyEditor extends MetaPrimitivePropertyEditor {
 		this.values = values;
 	}
 
+	/**
+	 * 範囲で検索するかを取得します。
+	 * @return 範囲で検索するか
+	 */
+	public boolean isSearchInRange() {
+		return searchInRange;
+	}
+
+	/**
+	 * 範囲で検索するかを設定します。
+	 * @param searchInRange 範囲で検索するか
+	 */
+	public void setSearchInRange(boolean searchInRange) {
+		this.searchInRange = searchInRange;
+	}
+
+	/**
+	 * 検索条件From非表示設定を取得します。
+	 * @return 検索条件From非表示設定
+	 */
+	public boolean isHideSearchConditionFrom() {
+		return hideSearchConditionFrom;
+	}
+
+	/**
+	 * 検索条件From非表示設定を設定します。
+	 * @param hideSearchConditionFrom 検索条件From非表示設定
+	 */
+	public void setHideSearchConditionFrom(boolean hideSearchConditionFrom) {
+		this.hideSearchConditionFrom = hideSearchConditionFrom;
+	}
+
+	/**
+	 * 検索条件To非表示設定を取得します。
+	 * @return 検索条件To非表示設定
+	 */
+	public boolean isHideSearchConditionTo() {
+		return hideSearchConditionTo;
+	}
+
+	/**
+	 * 検索条件To非表示設定を設定します。
+	 * @param hideSearchConditionTo 検索条件To非表示設定
+	 */
+	public void setHideSearchConditionTo(boolean hideSearchConditionTo) {
+		this.hideSearchConditionTo = hideSearchConditionTo;
+	}
+
+	/**
+	 * 検索条件範囲記号非表示設定を取得します。
+	 * @return 検索条件範囲記号非表示設定
+	 */
+	public boolean isHideSearchConditionRangeSymbol() {
+		return hideSearchConditionRangeSymbol;
+	}
+
+	/**
+	 * 検索条件範囲記号非表示設定を設定します。
+	 * @param hideSearchConditionRangeSymbol 検索条件範囲記号非表示設定
+	 */
+	public void setHideSearchConditionRangeSymbol(boolean hideSearchConditionRangeSymbol) {
+		this.hideSearchConditionRangeSymbol = hideSearchConditionRangeSymbol;
+	}
+
 	public boolean isSearchExactMatchCondition() {
 		return searchExactMatchCondition;
 	}
-
 
 	public void setSearchExactMatchCondition(boolean searchExactMatchCondition) {
 		this.searchExactMatchCondition = searchExactMatchCondition;
@@ -176,7 +356,7 @@ public class MetaStringPropertyEditor extends MetaPrimitivePropertyEditor {
 	 * @return リッチテキストエディタオプション
 	 */
 	public String getRichtextEditorOption() {
-	    return richtextEditorOption;
+		return richtextEditorOption;
 	}
 
 	/**
@@ -184,7 +364,7 @@ public class MetaStringPropertyEditor extends MetaPrimitivePropertyEditor {
 	 * @param richtextEditorOption リッチテキストエディタオプション
 	 */
 	public void setRichtextEditorOption(String richtextEditorOption) {
-	    this.richtextEditorOption = richtextEditorOption;
+		this.richtextEditorOption = richtextEditorOption;
 	}
 
 	/**
@@ -223,13 +403,41 @@ public class MetaStringPropertyEditor extends MetaPrimitivePropertyEditor {
 		this.updateWithLabelValue = updateWithLabelValue;
 	}
 
+	/**
+	 * 「値なし」を検索条件の選択肢に追加するかを取得します。
+	 * @return 「値なし」を検索条件の選択肢に追加するか
+	 */
+	public boolean isIsNullSearchEnabled() {
+		return isNullSearchEnabled;
+	}
+
+	/**
+	 * 「値なし」を検索条件の選択肢に追加するかを設定します。
+	 * @param isNullSearchEnabled 「値なし」を検索条件の選択肢に追加するか
+	 */
+	public void setIsNullSearchEnabled(boolean isNullSearchEnabled) {
+		this.isNullSearchEnabled = isNullSearchEnabled;
+	}
+
 	@Override
 	public void applyConfig(PropertyEditor editor) {
 		super.fillFrom(editor);
 
 		StringPropertyEditor e = (StringPropertyEditor) editor;
 		displayType = e.getDisplayType();
+		richTextLibrary = e.getRichTextLibrary();
 		allowedContent = e.isAllowedContent();
+		allowRichTextEditorLinkAction = e.isAllowRichTextEditorLinkAction();
+
+		inputType = e.getInputType();
+		inputPattern = e.getInputPattern();
+		if (e.getHtmlValidationMessage() != null) {
+			htmlValidationMessage = new MetaHtmlValidationMessage();
+			htmlValidationMessage.applyConfig(e.getHtmlValidationMessage());
+		} else {
+			htmlValidationMessage = null;
+		}
+
 		maxlength = e.getMaxlength();
 		values = e.getValues();
 		searchExactMatchCondition = e.isSearchExactMatchCondition();
@@ -237,6 +445,11 @@ public class MetaStringPropertyEditor extends MetaPrimitivePropertyEditor {
 		richtextEditorOption = e.getRichtextEditorOption();
 		insertWithLabelValue = e.isInsertWithLabelValue();
 		updateWithLabelValue = e.isUpdateWithLabelValue();
+		isNullSearchEnabled = e.isIsNullSearchEnabled();
+		searchInRange = e.isSearchInRange();
+		hideSearchConditionFrom = e.isHideSearchConditionFrom();
+		hideSearchConditionTo = e.isHideSearchConditionTo();
+		hideSearchConditionRangeSymbol = e.isHideSearchConditionRangeSymbol();
 	}
 
 	@Override
@@ -245,7 +458,19 @@ public class MetaStringPropertyEditor extends MetaPrimitivePropertyEditor {
 
 		StringPropertyEditor e = (StringPropertyEditor) editor;
 		displayType = e.getDisplayType();
+		richTextLibrary = e.getRichTextLibrary();
 		allowedContent = e.isAllowedContent();
+		allowRichTextEditorLinkAction = e.isAllowRichTextEditorLinkAction();
+
+		inputType = e.getInputType();
+		inputPattern = e.getInputPattern();
+		if (e.getHtmlValidationMessage() != null) {
+			htmlValidationMessage = new MetaHtmlValidationMessage();
+			htmlValidationMessage.applyConfig(e.getHtmlValidationMessage());
+		} else {
+			htmlValidationMessage = null;
+		}
+
 		maxlength = e.getMaxlength();
 		values = e.getValues();
 		searchExactMatchCondition = e.isSearchExactMatchCondition();
@@ -253,6 +478,11 @@ public class MetaStringPropertyEditor extends MetaPrimitivePropertyEditor {
 		richtextEditorOption = e.getRichtextEditorOption();
 		insertWithLabelValue = e.isInsertWithLabelValue();
 		updateWithLabelValue = e.isUpdateWithLabelValue();
+		isNullSearchEnabled = e.isIsNullSearchEnabled();
+		searchInRange = e.isSearchInRange();
+		hideSearchConditionFrom = e.isHideSearchConditionFrom();
+		hideSearchConditionTo = e.isHideSearchConditionTo();
+		hideSearchConditionRangeSymbol = e.isHideSearchConditionRangeSymbol();
 	}
 
 	@Override
@@ -261,7 +491,16 @@ public class MetaStringPropertyEditor extends MetaPrimitivePropertyEditor {
 		super.fillTo(editor);
 
 		editor.setDisplayType(displayType);
+		editor.setRichTextLibrary(richTextLibrary);
 		editor.setAllowedContent(allowedContent);
+		editor.setAllowRichTextEditorLinkAction(allowRichTextEditorLinkAction);
+
+		editor.setInputType(inputType);
+		editor.setInputPattern(inputPattern);
+		if (htmlValidationMessage != null) {
+			editor.setHtmlValidationMessage(htmlValidationMessage.currentConfig());
+		}
+
 		editor.setMaxlength(maxlength);
 		editor.setValues(values);
 		editor.setSearchExactMatchCondition(searchExactMatchCondition);
@@ -269,6 +508,11 @@ public class MetaStringPropertyEditor extends MetaPrimitivePropertyEditor {
 		editor.setRichtextEditorOption(richtextEditorOption);
 		editor.setInsertWithLabelValue(insertWithLabelValue);
 		editor.setUpdateWithLabelValue(updateWithLabelValue);
+		editor.setIsNullSearchEnabled(isNullSearchEnabled);
+		editor.setSearchInRange(searchInRange);
+		editor.setHideSearchConditionFrom(hideSearchConditionFrom);
+		editor.setHideSearchConditionTo(hideSearchConditionTo);
+		editor.setHideSearchConditionRangeSymbol(hideSearchConditionRangeSymbol);
 		return editor;
 	}
 
@@ -278,7 +522,18 @@ public class MetaStringPropertyEditor extends MetaPrimitivePropertyEditor {
 		super.fillTo(editor);
 
 		e.setDisplayType(displayType);
+		e.setRichTextLibrary(richTextLibrary);
 		e.setAllowedContent(allowedContent);
+		e.setAllowRichTextEditorLinkAction(allowRichTextEditorLinkAction);
+
+		e.setInputType(inputType);
+		e.setInputPattern(inputPattern);
+		if (htmlValidationMessage != null) {
+			e.setHtmlValidationMessage(htmlValidationMessage.currentConfig());
+		} else {
+			e.setHtmlValidationMessage(null);
+		}
+
 		e.setMaxlength(maxlength);
 		e.setValues(values);
 		e.setSearchExactMatchCondition(searchExactMatchCondition);
@@ -286,6 +541,11 @@ public class MetaStringPropertyEditor extends MetaPrimitivePropertyEditor {
 		e.setRichtextEditorOption(richtextEditorOption);
 		e.setInsertWithLabelValue(insertWithLabelValue);
 		e.setUpdateWithLabelValue(updateWithLabelValue);
+		e.setIsNullSearchEnabled(isNullSearchEnabled);
+		e.setSearchInRange(searchInRange);
+		e.setHideSearchConditionFrom(hideSearchConditionFrom);
+		e.setHideSearchConditionTo(hideSearchConditionTo);
+		e.setHideSearchConditionRangeSymbol(hideSearchConditionRangeSymbol);
 	}
 
 	@Override
@@ -307,7 +567,7 @@ public class MetaStringPropertyEditor extends MetaPrimitivePropertyEditor {
 					return true;
 				}
 				if (pd instanceof ExpressionProperty) {
-					ExpressionProperty ep = (ExpressionProperty)pd;
+					ExpressionProperty ep = (ExpressionProperty) pd;
 					if (ep.getResultType() == PropertyDefinitionType.STRING) {
 						return true;
 					}

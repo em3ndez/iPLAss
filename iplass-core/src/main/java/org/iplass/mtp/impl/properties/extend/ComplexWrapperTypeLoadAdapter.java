@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -24,17 +24,16 @@ import java.util.List;
 
 import org.iplass.mtp.impl.entity.EntityContext;
 
-
 public interface ComplexWrapperTypeLoadAdapter {
-	
+
 	public void setContext(EntityContext context);
-	
+
 	public void nextCalled(List<Object> values);
-	
+
 	public Object toComplexWrapperTypeValue(Object value);
-	
+
 	public Object[] newComplexWrapperTypeArray(int size);
 
 	public void close();
-	
+
 }

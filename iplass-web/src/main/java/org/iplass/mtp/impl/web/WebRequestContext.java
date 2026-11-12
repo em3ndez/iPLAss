@@ -1,19 +1,19 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
- * 
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
+ *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
@@ -27,10 +27,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.fileupload2.jakarta.servlet6.JakartaServletFileUpload;
 import org.iplass.mtp.command.RequestContext;
 import org.iplass.mtp.command.SessionContext;
 import org.iplass.mtp.command.UploadFileHandle;
@@ -41,6 +38,8 @@ import org.iplass.mtp.impl.web.fileupload.MultiPartParameterValueMap;
 import org.iplass.mtp.spi.ServiceRegistry;
 import org.iplass.mtp.web.WebRequestConstants;
 
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class WebRequestContext implements RequestContext {
 	public static final String MARK_USE_OUTPUT_STREAM = "org.iplass.mtp.markUseOutputStream";
@@ -58,7 +57,8 @@ public class WebRequestContext implements RequestContext {
 
 	public WebRequestContext(ServletContext servletContext, HttpServletRequest servletRequest) {
 		this.servletRequest = servletRequest;
-		if (ServletFileUpload.isMultipartContent(servletRequest)) {
+		// TODO util クラスを作った方が良いかも
+		if (JakartaServletFileUpload.isMultipartContent(servletRequest)) {
 			setValueMap(new MultiPartParameterValueMap(servletContext, servletRequest));
 		} else {
 			setValueMap(new SimpleParameterValueMap(servletRequest));
@@ -82,16 +82,16 @@ public class WebRequestContext implements RequestContext {
 
 				ArrayList<String> buf = new ArrayList<String>();
 				while (headerNames.hasMoreElements()) {
-				    String name = (String) headerNames.nextElement();
-				    Enumeration<?> headerValues = servletRequest.getHeaders(name);
-				    while (headerValues.hasMoreElements()) {
-				    	buf.add((String) headerValues.nextElement());
-				    }
-				    if (buf.size() == 1) {
-				    	header.put(name, buf.get(0));
-				    } else if (buf.size() > 1) {
-				    	header.put(name, buf.toArray(new String[buf.size()]));
-				    }
+					String name = (String) headerNames.nextElement();
+					Enumeration<?> headerValues = servletRequest.getHeaders(name);
+					while (headerValues.hasMoreElements()) {
+						buf.add((String) headerValues.nextElement());
+					}
+					if (buf.size() == 1) {
+						header.put(name, buf.get(0));
+					} else if (buf.size() > 1) {
+						header.put(name, buf.toArray(new String[buf.size()]));
+					}
 					buf.clear();
 				}
 				httpHeader = Collections.unmodifiableMap(header);
@@ -99,10 +99,10 @@ public class WebRequestContext implements RequestContext {
 				httpHeader = Collections.emptyMap();
 			}
 		}
-		
+
 		return httpHeader;
 	}
-	
+
 	public void setValueMap(ParameterValueMap valueMap) {
 		this.valueMap = valueMap;
 		paramMap = null;
@@ -120,6 +120,7 @@ public class WebRequestContext implements RequestContext {
 			public boolean hasNext() {
 				return e.hasMoreElements();
 			}
+
 			@Override
 			public String next() {
 				return e.nextElement();
@@ -131,17 +132,20 @@ public class WebRequestContext implements RequestContext {
 		if (valueMap != null) {
 			valueMap.cleanTempResource();
 		}
-		
+
 		//セッションの保存
 		if (session != null && session.isUpdate()) {
-			int tenantId = ExecuteContext.getCurrentContext().getClientTenantId();
-			SessionService ss = ServiceRegistry.getRegistry().getService(SessionService.class);
+			int tenantId = ExecuteContext.getCurrentContext()
+					.getClientTenantId();
+			SessionService ss = ServiceRegistry.getRegistry()
+					.getService(SessionService.class);
 			Session s = ss.getSession(true);
 			session.resetUpdateFlag();
 			s.setAttribute(SimpleSessionContext.KEY_FOR_HTTP_SERVLET_REQUEST + "." + tenantId, session);
 		}
 	}
-	
+
+	@Override
 	public Object getAttribute(String name) {
 		switch (name) {
 		case WebRequestConstants.HTTP_HEADER:
@@ -158,19 +162,22 @@ public class WebRequestContext implements RequestContext {
 		case WebRequestConstants.COMMAND_RESULT:
 		case WebRequestConstants.EXECUTED_COMMAND:
 		case WebRequestConstants.EXCEPTION:
-			return WebRequestStack.getCurrent().getAttribute(name);
+			return WebRequestStack.getCurrent()
+					.getAttribute(name);
 		case WebRequestConstants.SUB_PATH:
 			WebRequestStack stack = WebRequestStack.getCurrent();
 			String actName = (String) stack.getAttribute(WebRequestConstants.ACTION_NAME);
 			if (actName == null) {
 				return null;
 			}
-			return stack.getRequestPath().getTargetSubPath(actName, true);
+			return stack.getRequestPath()
+					.getTargetSubPath(actName, true);
 		default:
 			return servletRequest.getAttribute(name);
 		}
 	}
-	
+
+	@Override
 	public void setAttribute(String name, Object value) {
 		switch (name) {
 		case WebRequestConstants.HTTP_HEADER:
@@ -183,21 +190,23 @@ public class WebRequestContext implements RequestContext {
 			throw new IllegalArgumentException(name + " is ReadOnly attribute.");
 		case WebRequestConstants.COMMAND_RESULT:
 		case WebRequestConstants.EXCEPTION:
-			WebRequestStack.getCurrent().setAttribute(name, value);
+			WebRequestStack.getCurrent()
+					.setAttribute(name, value);
 		default:
 			servletRequest.setAttribute(name, value);
 		}
 	}
-	
+
 	protected void setAttributeDirect(String name, Object value) {
 		servletRequest.setAttribute(name, value);
 	}
-	
+
 	@Override
 	public void removeAttribute(String name) {
 		servletRequest.removeAttribute(name);
 	}
 
+	@Override
 	public Map<String, Object> getParamMap() {
 		if (paramMap == null) {
 			if (valueMap != null) {
@@ -289,10 +298,12 @@ public class WebRequestContext implements RequestContext {
 	@Override
 	public SessionContext getSession(boolean create) {
 		if (session == null) {
-			SessionService ss = ServiceRegistry.getRegistry().getService(SessionService.class);
+			SessionService ss = ServiceRegistry.getRegistry()
+					.getService(SessionService.class);
 			Session s = ss.getSession(create);
 			if (s != null) {
-				int tenantId = ExecuteContext.getCurrentContext().getClientTenantId();
+				int tenantId = ExecuteContext.getCurrentContext()
+						.getClientTenantId();
 				session = (SimpleSessionContext) s.getAttribute(SimpleSessionContext.KEY_FOR_HTTP_SERVLET_REQUEST + "." + tenantId);
 
 				if (session == null) {

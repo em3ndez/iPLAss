@@ -1,24 +1,24 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
- 
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
+
  Unless you have purchased a commercial license,
  the following license terms apply:
- 
+
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU Affero General Public License as
  published by the Free Software Foundation, either version 3 of the
  License, or (at your option) any later version.
- 
+
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU Affero General Public License for more details.
- 
+
  You should have received a copy of the GNU Affero General Public License
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -90,7 +90,66 @@
 			}
 		}
 		return ret;
-	}%>
+	}
+	/**
+	 * 文字列をサニタイズする
+	 *
+	 * @param value 対象文字列
+	 * @return サニタイズ後の文字列
+	 */
+	String sanitize(String value) {
+		return StringUtil.escapeHtml(StringUtil.escapeJavaScript(value));
+	}
+	/**
+	 * ノードに設定する属性キー・バリューを取得する。
+	 * バリューの値はサニタイズする。
+	 *
+	 * @param key 属性キー
+	 * @param configValue 設定値
+	 * @return 属性文字列 （${key}="${configValue}"）。設定値が空の場合は空文字を返却。
+	 */
+	String getAttribute(String key, String configValue) {
+		if (null == configValue || "".equals(configValue)) {
+			return "";
+		}
+		return key + "=\"" + sanitize(configValue) + "\"";
+	}
+	/**
+	 * 入力フィールドの属性情報を取得する。
+	 * 設定対象の属性値は以下の通り。
+	 * <ul>
+	 * <li>リスト説明 ⇒ 属性キー: 属性値の内容説明
+	 * <li>data-min-date: TimestampPropertyEditor#getMinDate() の設定値</li>
+	 * <li>data-min-date-function: TimestampPropertyEditor#isMinDateFunction() で判断。 data-min-date の値が function として実行される場合 true が設定される</li>
+	 * <li>data-max-date: TimestampPropertyEditor#getMaxDate() の設定値</li>
+	 * <li>data-max-date-function: TimestampPropertyEditor#isMaxDateFunction() で判断。data-max-date の値が function として実行される場合 true が設定される</li>
+	 * <li>readonly: TimestampPropertyEditor#isRestrictDirectEditing() が true の場合にキーを指定</li>
+	 * </ul>
+	 *
+	 * @param editor TimestampPropertyEditor インスタンス
+	 * @return 入力フィールドの属性情報
+	 */
+	String getInputAttrs(TimestampPropertyEditor editor) {
+		StringBuilder attrs = new StringBuilder("");
+		attrs
+			// getMinDate() で設定が存在していれば data-min-date 属性を設定する
+			.append(getAttribute("data-min-date", editor.getMinDate()))
+			.append(" ")
+			// isMinDateFunction が true の場合は、 data-min-date-function="true" を付与する
+			.append(editor.isMinDateFunction() ? "data-min-date-function=\"true\"" : "")
+			.append(" ")
+			// getMaxDate() で設定が存在していれば data-max-date 属性を設定する
+			.append(getAttribute("data-max-date", editor.getMaxDate()))
+			.append(" ")
+			// isMaxDateFunction が true の場合は、 data-max-date-function="true" を付与する
+			.append(editor.isMaxDateFunction() ? "data-max-date-function=\"true\"" : "")
+			.append(" ")
+			// isRestrictDirectEditing が true の場合は、 readonly 属性を付与する
+			.append(editor.isRestrictDirectEditing() ? "readonly" : "");
+		return attrs.toString();
+	}
+
+%>
 
 <%
 	TimestampPropertyEditor editor = (TimestampPropertyEditor) request.getAttribute(Constants.EDITOR_EDITOR);
@@ -119,9 +178,9 @@
 
 		String[] defTmp = split(_defaultValue);
 		String defStrHidden = defTmp[6];
-		
-	    StringBuffer sbValue = new StringBuffer();
-	    StringBuffer sbDefValue = new StringBuffer();
+
+		StringBuffer sbValue = new StringBuffer();
+		StringBuffer sbDefValue = new StringBuffer();
 		sbValue.append(tmp[0]);
 		sbDefValue.append(defTmp[0]);
 		if (TimeDispRange.isDispHour(editor.getDispRange())) {
@@ -129,7 +188,7 @@
 				sbValue.append(" ");
 			}
 			sbValue.append(tmp[1]);
-	
+
 			if (!defTmp[1].isEmpty()) {
 				sbDefValue.append(" ");
 			}
@@ -140,7 +199,7 @@
 				sbValue.append(":");
 			}
 			sbValue.append(tmp[2]);
-	
+
 			if (!defTmp[1].isEmpty()) {
 				sbDefValue.append(":");
 			}
@@ -151,7 +210,7 @@
 				sbValue.append(":");
 			}
 			sbValue.append(tmp[3]);
-	
+
 			if (!defTmp[2].isEmpty()) {
 				sbDefValue.append(":");
 			}
@@ -175,7 +234,7 @@
 		if (defaultMsec == null) {
 			defaultMsec = "000";
 		}
-	
+
 		String timeFormat = null;
 		if (TimeDispRange.isDispSec(editor.getDispRange())) {
 			timeFormat = "HH:mm:ss";
@@ -190,7 +249,7 @@
 			timeFormat = "HH";
 			defaultHour = "";
 		}
-	
+
 		//カスタムスタイル
 		String customStyle = "";
 		if (StringUtil.isNotEmpty(editor.getInputCustomStyle())) {
@@ -204,24 +263,33 @@
 		}
 
 		int minInterval = MinIntereval.toInt(editor.getInterval());
-	
+
 		String onchange = "timestampPickerChange('" + StringUtil.escapeJavaScript(_propName) + "')";
-	
+
 		String range = "SEC";
 		if (editor.getDispRange() != null) {
 			range = editor.getDispRange().toString();
 		}
+		
+		// 入力フィールドの属性値を取得する
+		String inputAttributes = getInputAttrs(editor);
 %>
 <input type="text" class="<c:out value="<%= cls%>"/>" style="<c:out value="<%=customStyle%>"/>" value="" id="datetime_<c:out value="<%=_propName %>"/>"
 	    onchange="<%=onchange%>" data-stepmin="<c:out value="<%=minInterval %>"/>" data-timeformat="<c:out value="<%=timeFormat %>"/>"
-	    data-fixedMin="<c:out value="<%=defaultMin%>"/>" data-fixedSec="<c:out value="<%=defaultSec%>"/>"  data-fixedMSec="<c:out value="<%=defaultMsec%>"/>" data-showWeekday=<%=editor.isShowWeekday()%> />
+	    data-fixedMin="<c:out value="<%=defaultMin%>"/>" data-fixedSec="<c:out value="<%=defaultSec%>"/>"  data-fixedMSec="<c:out value="<%=defaultMsec%>"/>" data-showWeekday=<%=editor.isShowWeekday()%> data-suppress-alert="true" 
+	    <%= inputAttributes %> />
 <input type="hidden" name="<c:out value="<%=propName %>"/>" id="i_<c:out value="<%=_propName %>"/>" value="<c:out value="<%=strHidden %>"/>" />
 <script type="text/javascript">
 $(function() {
 	<%-- common.js --%>
 	addNormalConditionItemResetHandler(function(){
-		$("#datetime_" + es("<%=StringUtil.escapeJavaScript(_propName)%>")).val("<%=sbDefValue.toString() %>");
+		var $datetime = $("#datetime_" + es("<%=StringUtil.escapeJavaScript(_propName)%>"));
+		$datetime.val("<%=sbDefValue.toString() %>");
 		$(":hidden[name='" + es("<%=StringUtil.escapeJavaScript(propName)%>") + "']").val("<%=defStrHidden %>");
+
+		var $parent = $datetime.closest(".property-data");
+		$datetime.removeClass("validate-error");
+		$(".format-error", $parent).remove();
 	});
 	<%-- common.js --%>
 	addCommonValidator(function() {

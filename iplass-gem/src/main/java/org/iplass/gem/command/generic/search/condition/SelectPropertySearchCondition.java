@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -23,7 +23,7 @@ package org.iplass.gem.command.generic.search.condition;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.text.StrTokenizer;
+import org.apache.commons.text.StringTokenizer;
 import org.iplass.gem.command.Constants;
 import org.iplass.gem.command.generic.search.SearchConditionDetail;
 import org.iplass.mtp.entity.SelectValue;
@@ -31,8 +31,11 @@ import org.iplass.mtp.entity.definition.LocalizedSelectValueDefinition;
 import org.iplass.mtp.entity.definition.PropertyDefinition;
 import org.iplass.mtp.entity.definition.properties.SelectProperty;
 import org.iplass.mtp.entity.query.condition.Condition;
+import org.iplass.mtp.entity.query.condition.expr.Or;
+import org.iplass.mtp.entity.query.condition.expr.Paren;
 import org.iplass.mtp.entity.query.condition.predicate.Equals;
 import org.iplass.mtp.entity.query.condition.predicate.In;
+import org.iplass.mtp.entity.query.condition.predicate.IsNull;
 import org.iplass.mtp.impl.core.ExecuteContext;
 import org.iplass.mtp.tenant.TenantI18nInfo;
 import org.iplass.mtp.view.generic.editor.EditorValue;
@@ -65,14 +68,42 @@ public class SelectPropertySearchCondition extends PropertySearchCondition {
 					SelectValue[] array = (SelectValue[]) value;
 					if (array != null) {
 						if (array.length == 1) {
-							conditions.add(new Equals(getPropertyName(), array[0].getValue()));
+							// 「値なし」を検索条件の選択肢に追加するか
+							if (editor.isIsNullSearchEnabled() && Constants.ISNULL_VALUE.equals(array[0].getValue())) {
+								conditions.add(new IsNull(getPropertyName()));
+							} else {
+								conditions.add(new Equals(getPropertyName(), array[0].getValue()));
+							}
 						} else if (array.length > 1) {
 							List<String> valueList = new ArrayList<>();
+							Boolean isIsNullSearchEnabled = Boolean.FALSE;
 							for (SelectValue tmp : array) {
-								valueList.add(tmp.getValue());
+								// 「値なし」を検索条件の選択肢に追加するか
+								if (editor.isIsNullSearchEnabled() &&
+										Constants.ISNULL_VALUE.equals(tmp.getValue())) {
+									isIsNullSearchEnabled = Boolean.TRUE;
+								} else {
+									valueList.add(tmp.getValue());
+								}
 							}
-							conditions.add(new In(getPropertyName(), valueList.toArray()));
+							if (isIsNullSearchEnabled) {
+								// 「値なし」を検索条件の選択肢に追加するの場合、「is null」を追加する
+								conditions.add(new Paren(new Or(
+										new IsNull(getPropertyName()),
+										new In(getPropertyName(), valueList.toArray()))));
+							} else {
+								conditions.add(new In(getPropertyName(), valueList.toArray()));
+							}
 						}
+					}
+				} else if (SelectDisplayType.SELECT == editor.getDisplayType() ||
+						SelectDisplayType.RADIO == editor.getDisplayType()) {
+					SelectValue sv = (SelectValue) value;
+					// 「値なし」を検索条件の選択肢に追加するか
+					if (editor.isIsNullSearchEnabled() && Constants.ISNULL_VALUE.equals(sv.getValue())) {
+						conditions.add(new IsNull(getPropertyName()));
+					} else {
+						conditions.add(new Equals(getPropertyName(), sv.getValue()));
 					}
 				} else {
 					SelectValue sv = (SelectValue) value;
@@ -89,7 +120,7 @@ public class SelectPropertySearchCondition extends PropertySearchCondition {
 				|| Constants.NULL.equals(detail.getPredicate())) {
 			return null;
 		} else if (Constants.IN.equals(detail.getPredicate())) {
-			StrTokenizer st = StrTokenizer.getCSVInstance(detail.getValue());
+			StringTokenizer st = StringTokenizer.getCSVInstance(detail.getValue());
 			String[] values = st.getTokenArray();
 			String[] ret = new String[values.length];
 			for (int i = 0; i < values.length; i++) {
@@ -104,34 +135,50 @@ public class SelectPropertySearchCondition extends PropertySearchCondition {
 	private String string2Value(String str) {
 		//値or表示ラベルが一致する場合に値を返す
 		SelectPropertyEditor editor = (SelectPropertyEditor) getEditor();
-		if (!editor.getValues().isEmpty()) {
+		if (!editor.getValues()
+				.isEmpty()) {
 			for (EditorValue ev : editor.getValues()) {
-				if (ev.getValue().equals(str)) return str;
+				if (ev.getValue()
+						.equals(str))
+					return str;
 
 				String label = TemplateUtil.getMultilingualString(ev.getLabel(), ev.getLocalizedLabelList());
-				if (label.equals(str)) return ev.getValue();
+				if (label.equals(str))
+					return ev.getValue();
 			}
 		}
 
 		//Expressionの可能性あるので念のためチェック
 		if (getDefinition() instanceof SelectProperty) {
 			SelectProperty sp = (SelectProperty) getDefinition();
-			if (sp.getSelectValue(str) != null) return str;
+			if (sp.getSelectValue(str) != null)
+				return str;
 
-			if (ExecuteContext.getCurrentContext().getCurrentTenant().getTenantConfig(TenantI18nInfo.class).isUseMultilingual()
-					&& sp.getLocalizedSelectValueList() != null && !sp.getLocalizedSelectValueList().isEmpty()) {
-				String lang = ExecuteContext.getCurrentContext().getLanguage();
+			if (ExecuteContext.getCurrentContext()
+					.getCurrentTenant()
+					.getTenantConfig(TenantI18nInfo.class)
+					.isUseMultilingual()
+					&& sp.getLocalizedSelectValueList() != null && !sp.getLocalizedSelectValueList()
+							.isEmpty()) {
+				String lang = ExecuteContext.getCurrentContext()
+						.getLanguage();
 				for (LocalizedSelectValueDefinition lsd : sp.getLocalizedSelectValueList()) {
-					if (lsd.getLocaleName().equals(lang)) {
-						if (lsd.getSelectValueList() != null && !lsd.getSelectValueList().isEmpty()) {
+					if (lsd.getLocaleName()
+							.equals(lang)) {
+						if (lsd.getSelectValueList() != null && !lsd.getSelectValueList()
+								.isEmpty()) {
 							//多言語設定あり
 							for (SelectValue sv : lsd.getSelectValueList()) {
-								if (sv.getDisplayName().equals(str)) return sv.getValue();
+								if (sv.getDisplayName()
+										.equals(str))
+									return sv.getValue();
 							}
 						} else {
 							//多言語設定なし
 							for (SelectValue sv : sp.getSelectValueList()) {
-								if (sv.getDisplayName().equals(str)) return sv.getValue();
+								if (sv.getDisplayName()
+										.equals(str))
+									return sv.getValue();
 							}
 						}
 					}
@@ -139,7 +186,9 @@ public class SelectPropertySearchCondition extends PropertySearchCondition {
 			} else {
 				//多言語設定なし
 				for (SelectValue sv : sp.getSelectValueList()) {
-					if (sv.getDisplayName().equals(str)) return sv.getValue();
+					if (sv.getDisplayName()
+							.equals(str))
+						return sv.getValue();
 				}
 			}
 		}

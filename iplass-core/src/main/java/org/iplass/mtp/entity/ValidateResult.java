@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,29 +30,29 @@ import java.util.List;
  *
  */
 public class ValidateResult {
-	
+
 	private List<ValidateError> errors;
-	
+
 	public ValidateResult() {
 	}
-	
+
 	@Deprecated
 	public ValidateResult(ValidateError[] errors) {
 		setError(errors);
 	}
-	
+
 	public ValidateResult(List<ValidateError> errors) {
 		this.errors = errors;
 	}
-	
+
 	public List<ValidateError> getErrors() {
 		return errors;
 	}
-	
+
 	public void setErrors(List<ValidateError> errors) {
 		this.errors = errors;
 	}
-	
+
 	@Deprecated
 	public ValidateError[] getError() {
 		if (errors == null) {
@@ -66,23 +66,23 @@ public class ValidateResult {
 	public void setError(ValidateError[] errors) {
 		if (errors != null) {
 			this.errors = new ArrayList<>(errors.length);
-			for (ValidateError ve: errors) {
+			for (ValidateError ve : errors) {
 				this.errors.add(ve);
 			}
 		} else {
 			this.errors = null;
 		}
 	}
-	
+
 	public boolean hasError() {
 		return (errors != null && errors.size() != 0);
 	}
-	
+
 	public void addError(ValidateError error) {
 		if (errors == null) {
 			errors = new ArrayList<>();
 		}
-		
+
 		errors.add(error);
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -45,7 +45,7 @@ public class EqlSearchPredicate implements Predicate<Object[]> {
 	private static final int MAX_LIMIT = 1000;
 
 	private static final String FAST_DATE_FROMAT = "yyyy-MM-dd";
-	private static final String FAST_DATE_TIME_FROMAT = "yyyy-MM-dd HH:mm:ss.SSSZZ";	//DateFormatでは「XXX」だがFastDateFormatでは「ZZ」と指定
+	private static final String FAST_DATE_TIME_FROMAT = "yyyy-MM-dd HH:mm:ss.SSSZZ"; //DateFormatでは「XXX」だがFastDateFormatでは「ZZ」と指定
 	private static final String FAST_TIME_FROMAT = "HH:mm:ss";
 
 	private SimpleDateFormat dateFormatter;
@@ -58,6 +58,9 @@ public class EqlSearchPredicate implements Predicate<Object[]> {
 	/** Stringに変換された値を利用するCallback */
 	private Predicate<String[]> strCallback;
 
+	/** 検索結果のフェッチ開始時間 */
+	private long startFetchTime = -1;
+
 	public EqlSearchPredicate() {
 		strRecords = new ArrayList<String[]>();
 	}
@@ -68,6 +71,9 @@ public class EqlSearchPredicate implements Predicate<Object[]> {
 
 	@Override
 	public boolean test(Object[] record) {
+		if (startFetchTime < 0) {
+			startFetchTime = System.nanoTime();
+		}
 		String[] strRecord = new String[record.length];
 		for (int i = 0; i < record.length; i++) {
 			//Stringに変換
@@ -101,47 +107,58 @@ public class EqlSearchPredicate implements Predicate<Object[]> {
 		return MAX_LIMIT;
 	}
 
+	/**
+	 * 検索結果のフェッチ開始時間を返します。
+	 * 該当データがない場合は、-1を返します。
+	 * 
+	 * @return フェッチ開始時間
+	 */
+	public long getStartFetchTime() {
+		return startFetchTime;
+	}
+
 	protected String convertValue(Object value) {
 
 		String retValue = null;
 		if (value != null) {
-			if (value.getClass().isArray()) {
+			if (value.getClass()
+					.isArray()) {
 				//多重度対応
-				retValue = convertValue((Object[])value);
+				retValue = convertValue((Object[]) value);
 			} else if (value instanceof SelectValue) {
 				//Select型
-				SelectValue tmp = (SelectValue)value;
+				SelectValue tmp = (SelectValue) value;
 				retValue = tmp.getDisplayName() + "(" + tmp.getValue() + ")";
 			} else if (value instanceof BinaryReference) {
 				//Binary型
-				BinaryReference tmp = (BinaryReference)value;
+				BinaryReference tmp = (BinaryReference) value;
 				retValue = tmp.getName() + "(" + tmp.getLobId() + ")";
 			} else if (value instanceof Timestamp) {
 				//Timestamp型
-				Timestamp tmp = (Timestamp)value;
+				Timestamp tmp = (Timestamp) value;
 				retValue = getDateTimeFormatter().format(tmp);
 			} else if (value instanceof Time) {
 				//Time型
-				Time tmp = (Time)value;
+				Time tmp = (Time) value;
 				retValue = getTimeFormatter().format(tmp);
 			} else if (value instanceof Date) {
 				//Date型
-				Date tmp = (Date)value;
+				Date tmp = (Date) value;
 				retValue = getDateFormatter().format(tmp);
 			} else if (value instanceof BigDecimal) {
 				//BigDecimal型
-				BigDecimal bd = (BigDecimal)value;
+				BigDecimal bd = (BigDecimal) value;
 				retValue = bd.toPlainString();
 			} else if (value instanceof Double) {
 				//Double型
-				BigDecimal bd = BigDecimal.valueOf((Double)value);
+				BigDecimal bd = BigDecimal.valueOf((Double) value);
 				retValue = bd.toPlainString();
 			} else if (value instanceof Float) {
 				//Double型
-				BigDecimal bd = BigDecimal.valueOf((Float)value);
+				BigDecimal bd = BigDecimal.valueOf((Float) value);
 				retValue = bd.toPlainString();
 			} else {
-				retValue =  value.toString();
+				retValue = value.toString();
 			}
 		} else {
 			retValue = "";

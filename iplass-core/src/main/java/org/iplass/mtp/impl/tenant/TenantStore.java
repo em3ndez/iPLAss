@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2019 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,8 +27,12 @@ import org.iplass.mtp.tenant.Tenant;
 
 public interface TenantStore extends ServiceInitListener<TenantService> {
 	public Tenant getTenant(String url);
+
 	public Tenant getTenant(int id);
+
 	public void registTenant(Tenant tenant, String registId);
+
 	public void updateTenant(Tenant tenant, String updateId, boolean forceUpdate);
+
 	public List<Integer> getAllTenantIdList();
 }

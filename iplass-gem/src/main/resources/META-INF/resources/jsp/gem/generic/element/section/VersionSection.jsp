@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2013 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2013 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,19 +18,21 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
 <%@ page import="org.iplass.mtp.entity.definition.*" %>
 <%@ page import="org.iplass.mtp.util.StringUtil" %>
 <%@ page import="org.iplass.mtp.view.generic.element.Element" %>
+<%@ page import="org.iplass.mtp.view.generic.element.section.VersionSection" %>
 <%@ page import="org.iplass.mtp.view.generic.OutputType"%>
 <%@ page import="org.iplass.mtp.web.template.TemplateUtil" %>
 <%@ page import="org.iplass.gem.command.generic.detail.DetailFormViewData"%>
 <%@ page import="org.iplass.gem.command.generic.detail.DetailViewCommand"%>
 <%@ page import="org.iplass.gem.command.generic.detail.GetVersionCommand"%>
 <%@ page import="org.iplass.gem.command.Constants" %>
+<%@ page import="org.iplass.gem.command.GemResourceBundleUtil"%>
 <%@ page import="org.iplass.gem.command.ViewUtil"%>
 
 <%
@@ -52,8 +54,26 @@
 	String defName = ed.getName();
 	String viewName = data.getView().getName();
 	String urlPath = ViewUtil.getParamMappingPath(defName, viewName);
+	
+	VersionSection section = (VersionSection) element;
+	String id = "id=\"version_section\"";
+	if (StringUtil.isNotBlank(section.getId())) {
+		id = "id=\"" + StringUtil.escapeHtml(section.getId()) + "\"";
+	}
+
+	String style = "";
+	if (StringUtil.isNotBlank(section.getStyle())) {
+		style = section.getStyle();
+	}
+
+	String styleAttr = ViewUtil.buildHeightStyleAttr(section.getSectionHeight());
+	
+	String title = GemResourceBundleUtil.resourceString("generic.element.section.VersionSection.anotherVer");
+	if (StringUtil.isNotBlank(section.getTitle())) {
+		title = TemplateUtil.getMultilingualString(section.getTitle(), section.getLocalizedTitleList());
+	}
 %>
-<div id="version_section">
+<div <%=id %> class="version-section <c:out value="<%=style %>"/>" >
 <script type="text/javascript">
 $(function() {
 	$("div.other-version").off("click");
@@ -72,6 +92,8 @@ $(function() {
 							$(":hidden[name='version']").val(version);
 							var urlPath = "<%=StringUtil.escapeJavaScript(urlPath)%>" + "/" + oid;
 							var $form = $("#detailForm");
+							// 特定バージョンの詳細画面であることを示すフラグを設定
+							$form.append("<input type='hidden' name='<%=Constants.VERSION_SPECIFIED%>' value='true' />");
 							$form.attr("action", contextPath + "/<%=DetailViewCommand.VIEW_ACTION_NAME%>" + urlPath);
 							$form.submit();
 						});
@@ -89,10 +111,10 @@ $(function() {
 </script>
 
 <div class="hgroup-03 sechead other-version disclosure-close">
-<h3><span>${m:rs("mtp-gem-messages", "generic.element.section.VersionSection.anotherVer")}</span></h3>
+<h3><span><c:out value="<%=title %>"/></span></h3>
 </div>
 
-<div class="version-block" style="display:none;">
+<div class="version-block" style="display:none;<%= styleAttr %>">
 <table class="tbl-version">
 <tr>
 <td>

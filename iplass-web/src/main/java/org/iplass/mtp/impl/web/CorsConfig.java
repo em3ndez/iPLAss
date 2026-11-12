@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2017 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -26,7 +26,7 @@ import java.util.List;
 public class CorsConfig {
 	private List<String> allowOrigin;
 	private boolean allowCredentials;
-	
+
 	public CorsConfig copy() {
 		CorsConfig copy = new CorsConfig();
 		if (allowOrigin != null) {
@@ -35,16 +35,19 @@ public class CorsConfig {
 		copy.allowCredentials = allowCredentials;
 		return copy;
 	}
-	
+
 	public List<String> getAllowOrigin() {
 		return allowOrigin;
 	}
+
 	public void setAllowOrigin(List<String> allowOrigin) {
 		this.allowOrigin = allowOrigin;
 	}
+
 	public boolean isAllowCredentials() {
 		return allowCredentials;
 	}
+
 	public void setAllowCredentials(boolean allowCredentials) {
 		this.allowCredentials = allowCredentials;
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -27,14 +27,16 @@ import org.iplass.adminconsole.shared.base.rpc.entity.EntityDataTransferService;
 import org.iplass.adminconsole.shared.tools.dto.entityexplorer.CrawlEntityInfo;
 import org.iplass.adminconsole.shared.tools.dto.entityexplorer.DefragEntityInfo;
 import org.iplass.adminconsole.shared.tools.dto.entityexplorer.EntityDataCountResultInfo;
-import org.iplass.adminconsole.shared.tools.dto.entityexplorer.EntityDataDeleteResultInfo;
 import org.iplass.adminconsole.shared.tools.dto.entityexplorer.EntityDataListResultInfo;
-import org.iplass.adminconsole.shared.tools.dto.entityexplorer.EntityUpdateAllCondition;
-import org.iplass.adminconsole.shared.tools.dto.entityexplorer.EntityUpdateAllResultInfo;
+import org.iplass.adminconsole.shared.tools.dto.entityexplorer.EntityViewInfo;
+import org.iplass.adminconsole.shared.tools.dto.entityexplorer.RecycleBinDataInfo;
 import org.iplass.adminconsole.shared.tools.dto.entityexplorer.RecycleBinEntityInfo;
 import org.iplass.adminconsole.shared.tools.dto.entityexplorer.SimpleEntityInfo;
 import org.iplass.adminconsole.shared.tools.dto.entityexplorer.SimpleEntityTreeNode;
 import org.iplass.mtp.entity.Entity;
+import org.iplass.mtp.impl.tools.entity.EntityDataDeleteResultInfo;
+import org.iplass.mtp.impl.tools.entity.EntityUpdateAllCondition;
+import org.iplass.mtp.impl.tools.entity.EntityUpdateAllResultInfo;
 
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 import com.google.gwt.user.client.rpc.XsrfProtectedService;
@@ -43,8 +45,7 @@ import com.google.gwt.user.client.rpc.XsrfProtectedService;
  * Entity用Service
  */
 @RemoteServiceRelativePath("service/entityexplorer")
-public interface EntityExplorerService extends XsrfProtectedService , EntityDataTransferService {
-
+public interface EntityExplorerService extends XsrfProtectedService, EntityDataTransferService {
 
 	/**
 	 * <p>Entityのリストを取得します。</p>
@@ -65,6 +66,15 @@ public interface EntityExplorerService extends XsrfProtectedService , EntityData
 	public SimpleEntityTreeNode getSimpleEntityTree(final int tenantId, final boolean isGetDataCount);
 
 	/**
+	 * <p>Entityの画面定義のリストを取得します。</p>
+	 *
+	 * @param tenantId テナントID
+	 * @param isGetDataCount データ件数取得有無
+	 * @return {@link SimpleEntityInfo}
+	 */
+	public List<EntityViewInfo> getEntityViewList(int tenantId, boolean isGetDataCount);
+
+	/**
 	 * <p>Entityデータを検索します。</p>
 	 *
 	 * @param tenantId テナントID
@@ -76,7 +86,8 @@ public interface EntityExplorerService extends XsrfProtectedService , EntityData
 	 * @param offset Offset
 	 * @return
 	 */
-	public EntityDataListResultInfo search(int tenantId, final String defName, final String whereClause, final String orderByClause, final boolean isSearcgAllVersion, final int limit, final int offset);
+	public EntityDataListResultInfo search(int tenantId, final String defName, final String whereClause, final String orderByClause,
+			final boolean isSearcgAllVersion, final int limit, final int offset);
 
 	/**
 	 * <p>Entityデータの件数を取得します。</p>
@@ -101,7 +112,8 @@ public interface EntityExplorerService extends XsrfProtectedService , EntityData
 	 * @param isSearcgAllVersion 全バージョン検索
 	 * @return
 	 */
-	public EntityDataListResultInfo validateCriteria(int tenantId, final String defName, final String whereClause, final String orderByClause, final boolean isSearcgAllVersion);
+	public EntityDataListResultInfo validateCriteria(int tenantId, final String defName, final String whereClause, final String orderByClause,
+			final boolean isSearcgAllVersion);
 
 	/**
 	 * <p>ReferenceEntityを検索します。</p>
@@ -143,11 +155,13 @@ public interface EntityExplorerService extends XsrfProtectedService , EntityData
 	 * @param tenantId テナントID
 	 * @param defName 検索対象Entity定義名
 	 * @param whereClause 検索条件
+	 * @param deleteSpecificVersion Entityがバージョン管理されている場合に、検索条件に該当するバージョンのデータのみを削除するか
 	 * @param isNotifyListeners Listner通知を行うか
 	 * @param commitLimit Commit単位
 	 * @return
 	 */
-	public EntityDataDeleteResultInfo deleteAll(final int tenantId, final String defName, final String whereClause, final boolean isNotifyListeners, final int commitLimit);
+	public EntityDataDeleteResultInfo deleteAll(final int tenantId, final String defName, final String whereClause, final boolean deleteSpecificVersion,
+			final boolean isNotifyListeners, final int commitLimit);
 
 	/**
 	 * <p>OIDに該当するデータを一括で削除します。</p>
@@ -159,7 +173,22 @@ public interface EntityExplorerService extends XsrfProtectedService , EntityData
 	 * @param commitLimit Commit単位
 	 * @return
 	 */
-	public EntityDataDeleteResultInfo deleteAllByOid(final int tenantId, final String defName, final List<String> oids, final boolean isNotifyListeners, final int commitLimit);
+	public EntityDataDeleteResultInfo deleteAllByOid(final int tenantId, final String defName, final List<String> oids, final boolean isNotifyListeners,
+			final int commitLimit);
+
+	/**
+	 * <p>指定されたEntityデータを一括で削除します。<br/>
+	 * Entityがバージョン管理されている場合は、指定されたバージョンのデータのみ削除されます。</p>
+	 *
+	 * @param tenantId テナントID
+	 * @param defName 検索対象Entity定義名
+	 * @param targets 削除対象のEntityデータのリスト
+	 * @param isNotifyListeners Listner通知を行うか
+	 * @param commitLimit Commit単位
+	 * @return
+	 */
+	public EntityDataDeleteResultInfo deleteAllByEntityData(final int tenantId, final String defName, final List<Entity> targets,
+			final boolean isNotifyListeners, final int commitLimit);
 
 	/**
 	 * <p>Where条件に該当するデータ件数を返します。</p>
@@ -168,9 +197,11 @@ public interface EntityExplorerService extends XsrfProtectedService , EntityData
 	 * @param tenantId テナントID
 	 * @param defName 検索対象Entity定義名
 	 * @param whereClause 検索条件
+	 * @param searchAllVersion 全バージョン検索するか
 	 * @return
 	 */
-	public EntityDataCountResultInfo getConditionDataCount(final int tenantId, final String defName, final String whereClause);
+	public EntityDataCountResultInfo getConditionDataCount(final int tenantId, final String defName, final String whereClause,
+			final boolean searchAllVersion);
 
 	public List<DefragEntityInfo> getDefragEntityList(int tenantId, boolean isGetDataCount);
 
@@ -187,6 +218,12 @@ public interface EntityExplorerService extends XsrfProtectedService , EntityData
 	public boolean isUseFulltextSearch(int tenantId);
 
 	public List<RecycleBinEntityInfo> getRecycleBinInfoList(int tenantId, Timestamp ts, boolean isGetCount);
+
+	public List<RecycleBinDataInfo> getRecycleBinDataList(int tenantId, String defName, Timestamp ts);
+
+	public List<String> purgeRecycleBinData(int tenantId, String defName, List<Long> recycleBinIds);
+
+	public List<String> restoreRecycleBinData(int tenantId, String defName, List<Long> recycleBinIds);
 
 	public List<String> cleanRecycleBin(int tenantId, String defName, Timestamp ts);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.iplass.adminconsole.client.base.event.DataChangedEvent;
 import org.iplass.adminconsole.client.base.event.DataChangedHandler;
+import org.iplass.adminconsole.client.base.i18n.AdminClientMessageUtil;
 import org.iplass.adminconsole.client.base.ui.widget.MetaDataSelectItem;
 import org.iplass.adminconsole.client.base.ui.widget.MtpDialog;
 import org.iplass.adminconsole.client.base.ui.widget.form.MtpForm;
@@ -32,12 +33,11 @@ import org.iplass.adminconsole.client.base.util.SmartGWTUtil;
 import org.iplass.mtp.view.top.parts.TemplateParts;
 import org.iplass.mtp.web.template.definition.TemplateDefinition;
 
-import com.smartgwt.client.types.HeaderControls;
-import com.smartgwt.client.widgets.HeaderControl;
 import com.smartgwt.client.widgets.IButton;
 import com.smartgwt.client.widgets.events.ClickEvent;
 import com.smartgwt.client.widgets.events.ClickHandler;
 import com.smartgwt.client.widgets.form.DynamicForm;
+import com.smartgwt.client.widgets.form.fields.IntegerItem;
 import com.smartgwt.client.widgets.form.fields.SelectItem;
 
 /**
@@ -55,28 +55,25 @@ public class TemplateItem extends PartsItem {
 		this.parts = parts;
 		setTitle("Template(" + parts.getTemplatePath() + ")");
 		setBackgroundColor("#F0F0F0");
-
-		setHeaderControls(HeaderControls.HEADER_LABEL, new HeaderControl(HeaderControl.SETTINGS, new ClickHandler() {
-
-			@Override
-			public void onClick(ClickEvent event) {
-				TemplateItemSettingDialog dialog = new TemplateItemSettingDialog(
-						TemplateItem.this.parts.getTemplatePath());
-				dialog.addDataChangedHandler(new DataChangedHandler() {
-
-					@Override
-					public void onDataChanged(DataChangedEvent event) {
-						setTitle("Template(" + parts.getTemplatePath() + ")");
-					}
-				});
-				dialog.show();
-			}
-		}), HeaderControls.CLOSE_BUTTON);
 	}
 
 	@Override
 	public TemplateParts getParts() {
 		return parts;
+	}
+
+	@Override
+	protected void onOpen() {
+		TemplateItemSettingDialog dialog = new TemplateItemSettingDialog(
+				TemplateItem.this.parts.getTemplatePath());
+		dialog.addDataChangedHandler(new DataChangedHandler() {
+
+			@Override
+			public void onDataChanged(DataChangedEvent event) {
+				setTitle("Template(" + parts.getTemplatePath() + ")");
+			}
+		});
+		dialog.show();
 	}
 
 	@Override
@@ -98,13 +95,15 @@ public class TemplateItem extends PartsItem {
 
 		private List<DataChangedHandler> handlers = new ArrayList<DataChangedHandler>();
 
+		private IntegerItem maxHeightField;
+
 		/**
 		 * コンストラクタ
 		 */
 		public TemplateItemSettingDialog(String path) {
 
 			setTitle("Template");
-			setHeight(130);
+			setHeight(180);
 			centerInPage();
 
 			final DynamicForm form = new MtpForm();
@@ -114,15 +113,25 @@ public class TemplateItem extends PartsItem {
 			SmartGWTUtil.setRequired(templateField);
 			templateField.setValue(path);
 
-			form.setItems(templateField);
+			maxHeightField = new IntegerItem("maxHeight", "Max Height");
+			maxHeightField.setWidth("100%");
+			if (parts.getMaxHeight() != null && parts.getMaxHeight() > 0) {
+				maxHeightField.setValue(parts.getMaxHeight());
+			}
+			SmartGWTUtil.addHoverToFormItem(maxHeightField,
+					AdminClientMessageUtil.getString("ui_metadata_top_item_TopViewContentParts_maxHeightDescriptionKey"));
+
+			form.setItems(templateField, maxHeightField);
 
 			container.addMember(form);
 
 			IButton save = new IButton("OK");
 			save.addClickHandler(new ClickHandler() {
+				@Override
 				public void onClick(ClickEvent event) {
-					if (form.validate()){
+					if (form.validate()) {
 						parts.setTemplatePath(SmartGWTUtil.getStringValue(templateField));
+						parts.setMaxHeight(maxHeightField.getValueAsInteger());
 						fireDataChanged();
 						destroy();
 					}
@@ -131,6 +140,7 @@ public class TemplateItem extends PartsItem {
 
 			IButton cancel = new IButton("Cancel");
 			cancel.addClickHandler(new ClickHandler() {
+				@Override
 				public void onClick(ClickEvent event) {
 					destroy();
 				}

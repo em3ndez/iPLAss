@@ -1,5 +1,5 @@
 <%--
- Copyright (C) 2014 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ Copyright (C) 2014 DENTSU SOKEN INC. All Rights Reserved.
 
  Unless you have purchased a commercial license,
  the following license terms apply:
@@ -18,7 +18,7 @@
  along with this program. If not, see <https://www.gnu.org/licenses/>.
  --%>
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="m" uri="http://iplass.org/tags/mtp"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" trimDirectiveWhitespaces="true"%>
 
@@ -123,7 +123,10 @@
 					String displayLabel = TemplateUtil.getMultilingualString(button.getDisplayLabel(), button.getLocalizedDisplayLabelList());
 %>
 <%-- XSS対応-メタの設定のため対応なし(button.getOnclickEvent) --%>
-<li class="btn"><input type="button" value="<c:out value="<%=displayLabel %>"/>" class="<c:out value="<%=cssClass %>"/>" style="<c:out value="<%=customStyle %>"/>" onclick="<%=button.getOnclickEvent() %>" /></li>
+<li class="btn">
+<input type="button" value="<c:out value="<%=displayLabel %>"/>" class="<c:out value="<%=cssClass %>"/>" 
+	style="<c:out value="<%=customStyle %>"/>" onclick="<%=button.getOnclickEvent() %>" />
+</li>
 <%
 				}
 			}
@@ -131,8 +134,14 @@
 		if (showEditButton) {
 			if (!form.isHideLock()) {
 %>
-<li class="btn lock-btn"><input type="button" value="${m:rs('mtp-gem-messages', 'generic.detail.viewButton.lock')}" class="gr-btn-02" name="lock" style="<c:out value="<%=lockStyle %>"/>" onclick="dataLock()" /></li>
-<li class="btn unlock-btn"><input type="button" value="${m:rs('mtp-gem-messages', 'generic.detail.viewButton.unlock')}" class="gr-btn-02" name="unlock" style="<c:out value="<%=unlockStyle %>"/>" onclick="dataUnlock()" /></li>
+<li class="btn lock-btn">
+<input type="button" value="${m:rs('mtp-gem-messages', 'generic.detail.viewButton.lock')}" class="gr-btn-02" 
+	name="lock" style="<c:out value="<%=lockStyle %>"/>" onclick="dataLock()" />
+</li>
+<li class="btn unlock-btn">
+<input type="button" value="${m:rs('mtp-gem-messages', 'generic.detail.viewButton.unlock')}" class="gr-btn-02" 
+	name="unlock" style="<c:out value="<%=unlockStyle %>"/>" onclick="dataUnlock()" />
+</li>
 <%
 			}
 			if (!form.isHideDetail()) {
@@ -141,13 +150,19 @@
 					dispStyle = "display: none";
 				}
 %>
-<li class="btn edit-btn"><input type="submit" value="<c:out value="<%=editDisplayLabel %>"/>" class="gr-btn" style="<c:out value="<%=dispStyle %>"/>" onclick="onclick_submit()" /></li>
+<li class="btn edit-btn">
+<input type="submit" value="<c:out value="<%=editDisplayLabel %>"/>" class="gr-btn" 
+	style="<c:out value="<%=dispStyle %>"/>" onclick="onclick_submit()" />
+</li>
 <%
 			}
 		}
 		if (showCopyButton && !isNoneDispCopyButton) {
 %>
-<li class="btn copy-btn"><input type="button" value="<c:out value="<%=copyDisplayLabel %>"/>" class="gr-btn" onclick="onclick_copy()" /></li>
+<li class="btn copy-btn">
+<input type="button" value="<c:out value="<%=copyDisplayLabel %>"/>" class="gr-btn" 
+	onclick="onclick_copy()" />
+</li>
 <%
 		}
 		if (showEditButton) {
@@ -157,10 +172,15 @@
 					dispStyle = "display: none";
 				}
 %>
-<li class="btn version-btn"><input type="button" value="<c:out value="<%=versionupDisplayLabel %>"/>" class="gr-btn gr-size-03" style="<c:out value="<%=dispStyle %>"/>" onclick="onclick_newversion()" /></li>
+<li class="btn version-btn">
+<input type="button" value="<c:out value="<%=versionupDisplayLabel %>"/>" class="gr-btn gr-size-03" 
+	style="<c:out value="<%=dispStyle %>"/>" onclick="onclick_newversion()" />
+</li>
 <%
 			}
 		}
 %>
-<li class="mt05 cancel-link"><a href="javascript:void(0)" onclick="cancel();return false;">${m:rs("mtp-gem-messages", "generic.detail.viewButton.back")}</a></li>
+<li class="mt05 cancel-link">
+<a href="javascript:void(0)" onclick="cancel();return false;">${m:rs("mtp-gem-messages", "generic.detail.viewButton.back")}</a>
+</li>
 </ul>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2011 DENTSU SOKEN INC. All Rights Reserved.
  * 
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -30,8 +30,9 @@ public enum MetaDataRepositoryKind {
 	RDB("Rdb"),
 	XMLFILE("XmlFile"),
 	XMLRESOURCE("Xml");
-	
+
 	private String displayName;
+
 	private MetaDataRepositoryKind(String displayName) {
 		this.displayName = displayName;
 	}

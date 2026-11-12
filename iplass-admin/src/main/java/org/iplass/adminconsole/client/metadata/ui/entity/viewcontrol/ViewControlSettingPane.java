@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2018 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -87,7 +87,8 @@ public class ViewControlSettingPane extends VLayout {
 		addMember(buttonPane);
 	}
 
-	public void setDefinition(List<ViewControlSetting> settings, List<String> detailViewNames, List<String> searchViewNames, List<String> bulkViewNames) {
+	public void setDefinition(List<ViewControlSetting> settings, List<String> detailViewNames, List<String> searchViewNames,
+			List<String> bulkViewNames) {
 		grid.setDefinition(settings, detailViewNames, searchViewNames, bulkViewNames);
 	}
 

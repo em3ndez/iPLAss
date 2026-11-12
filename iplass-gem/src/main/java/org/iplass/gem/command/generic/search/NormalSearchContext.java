@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 INFORMATION SERVICES INTERNATIONAL - DENTSU, LTD. All Rights Reserved.
+ * Copyright (C) 2012 DENTSU SOKEN INC. All Rights Reserved.
  *
  * Unless you have purchased a commercial license,
  * the following license terms apply:
@@ -43,7 +43,6 @@ import org.iplass.mtp.entity.SelectValue;
 import org.iplass.mtp.entity.definition.EntityDefinition;
 import org.iplass.mtp.entity.definition.PropertyDefinition;
 import org.iplass.mtp.entity.definition.PropertyDefinitionType;
-import org.iplass.mtp.entity.definition.properties.BooleanProperty;
 import org.iplass.mtp.entity.definition.properties.DateProperty;
 import org.iplass.mtp.entity.definition.properties.DateTimeProperty;
 import org.iplass.mtp.entity.definition.properties.DecimalProperty;
@@ -52,6 +51,7 @@ import org.iplass.mtp.entity.definition.properties.FloatProperty;
 import org.iplass.mtp.entity.definition.properties.IntegerProperty;
 import org.iplass.mtp.entity.definition.properties.ReferenceProperty;
 import org.iplass.mtp.entity.definition.properties.SelectProperty;
+import org.iplass.mtp.entity.definition.properties.StringProperty;
 import org.iplass.mtp.entity.definition.properties.TimeProperty;
 import org.iplass.mtp.entity.query.Where;
 import org.iplass.mtp.entity.query.condition.Condition;
@@ -87,18 +87,21 @@ public class NormalSearchContext extends SearchContextBase {
 		if (propertyConditions != null && !propertyConditions.isEmpty()) {
 			for (PropertySearchCondition condition : propertyConditions.values()) {
 				List<Condition> list = condition.convertNormalCondition();
-				if (list != null && !list.isEmpty()) conditions.addAll(list);
+				if (list != null && !list.isEmpty())
+					conditions.addAll(list);
 			}
 		}
 		if (nestPropertyConditions != null && !nestPropertyConditions.isEmpty()) {
 			for (PropertySearchCondition condition : nestPropertyConditions.values()) {
 				List<Condition> list = condition.convertNormalCondition();
-				if (list != null && !list.isEmpty()) conditions.addAll(list);
+				if (list != null && !list.isEmpty())
+					conditions.addAll(list);
 			}
 		}
 
 		Condition defaultCondition = getDefaultCondition();
-		if (defaultCondition != null) conditions.add(defaultCondition);
+		if (defaultCondition != null)
+			conditions.add(defaultCondition);
 
 		if (conditions.size() > 0) {
 			w.setCondition(new And(conditions));
@@ -110,7 +113,8 @@ public class NormalSearchContext extends SearchContextBase {
 	public boolean checkParameter() {
 		boolean isValid = true;
 		try {
-			if (propertyConditions == null) getPropertyConditions();
+			if (propertyConditions == null)
+				getPropertyConditions();
 		} catch (ApplicationException e) {
 			//パラメータの作成でこける→定義がないのでException
 			isValid = false;
@@ -126,8 +130,9 @@ public class NormalSearchContext extends SearchContextBase {
 							|| property.isHideNormalCondition()) {
 						Object value = condition.getValue(property.getPropertyName());
 						if (value != null) {
-							if (value.getClass().isArray()) {
-								if (((Object[])value).length != 0) {
+							if (value.getClass()
+									.isArray()) {
+								if (((Object[]) value).length != 0) {
 									isValid = false;
 								}
 							} else {
@@ -143,8 +148,9 @@ public class NormalSearchContext extends SearchContextBase {
 					//画面定義に設定されてないのに値があればエラー
 					Object value = condition.getValue(pd.getName());
 					if (value != null) {
-						if (value.getClass().isArray()) {
-							if (((Object[])value).length != 0) {
+						if (value.getClass()
+								.isArray()) {
+							if (((Object[]) value).length != 0) {
 								isValid = false;
 							}
 						} else {
@@ -172,15 +178,17 @@ public class NormalSearchContext extends SearchContextBase {
 			List<PropertyItem> properties = getLayoutProperties();
 			for (PropertyItem property : properties) {
 				//直接拾えるものは上で処理済みなのでスルー
-				if (property.isBlank() || getEntityDefinition().getProperty(property.getPropertyName()) != null) continue;
+				if (property.isBlank() || getEntityDefinition().getProperty(property.getPropertyName()) != null)
+					continue;
 
 				//非表示設定されてるか、通常検索条件にない項目で値があればエラー
 				if (!EntityViewUtil.isDisplayElement(getDefName(), property.getElementRuntimeId(), OutputType.SEARCHCONDITION, null)
 						|| property.isHideNormalCondition()) {
 					Object value = condition.getValue(property.getPropertyName());
 					if (value != null) {
-						if (value.getClass().isArray()) {
-							if (((Object[])value).length != 0) {
+						if (value.getClass()
+								.isArray()) {
+							if (((Object[]) value).length != 0) {
 								isValid = false;
 							}
 						} else {
@@ -220,7 +228,8 @@ public class NormalSearchContext extends SearchContextBase {
 				PropertyDefinition pd = getPropertyDefinition(property.getPropertyName());
 
 				PropertySearchCondition propertyCondition = null;
-				if (property.getPropertyName().indexOf(".") == -1) {
+				if (property.getPropertyName()
+						.indexOf(".") == -1) {
 					propertyCondition = propertyConditions.get(property.getPropertyName());
 				} else {
 					propertyCondition = nestPropertyConditions.get(property.getPropertyName());
@@ -229,7 +238,8 @@ public class NormalSearchContext extends SearchContextBase {
 				if (property.isRequiredNormal() && (propertyCondition == null || propertyCondition.getValue() == null)) {
 					String displayLabel = TemplateUtil.getMultilingualString(property.getDisplayLabel(),
 							property.getLocalizedDisplayLabelList(), pd.getDisplayName(), pd.getLocalizedDisplayNameList());
-					getRequest().setAttribute(Constants.MESSAGE, resourceString("command.generic.search.NormalSearchContext.pleaseInput", displayLabel));
+					getRequest().setAttribute(Constants.MESSAGE,
+							resourceString("command.generic.search.NormalSearchContext.pleaseInput", displayLabel));
 					return false;
 				}
 
@@ -247,7 +257,8 @@ public class NormalSearchContext extends SearchContextBase {
 						if (e.getMessage() == null) {
 							String displayLabel = TemplateUtil.getMultilingualString(property.getDisplayLabel(),
 									property.getLocalizedDisplayLabelList(), pd.getDisplayName(), pd.getLocalizedDisplayNameList());
-							getRequest().setAttribute(Constants.MESSAGE, resourceString("command.generic.search.NormalSearchContext.pleaseInput", displayLabel));
+							getRequest().setAttribute(Constants.MESSAGE,
+									resourceString("command.generic.search.NormalSearchContext.pleaseInput", displayLabel));
 						} else {
 							getRequest().setAttribute(Constants.MESSAGE, e.getMessage());
 						}
@@ -266,9 +277,11 @@ public class NormalSearchContext extends SearchContextBase {
 			propertyConditions = new LinkedHashMap<>();
 			for (PropertyDefinition p : getPropertyList()) {
 				Object value = getConditionValue(p, p.getName());
-				if (value != null && !(value.getClass().isArray() && ((Object[])value).length == 0)) {
+				if (value != null && !(value.getClass()
+						.isArray() && ((Object[]) value).length == 0)) {
 					PropertyItem property = getLayoutProperty(p.getName());
-					if (property == null || property.isHideNormalCondition()) throw new ApplicationException();
+					if (property == null || property.isHideNormalCondition())
+						throw new ApplicationException();
 
 					condition.setValue(property.getPropertyName(), value);
 					propertyConditions.put(property.getPropertyName(),
@@ -281,14 +294,19 @@ public class NormalSearchContext extends SearchContextBase {
 			List<PropertyItem> properties = getLayoutProperties();
 			for (PropertyItem property : properties) {
 				//直接拾えるものは上で処理済みなのでスルー
-				if (property.isBlank() || getEntityDefinition().getProperty(property.getPropertyName()) != null) continue;
+				if (property.isBlank() || getEntityDefinition().getProperty(property.getPropertyName()) != null)
+					continue;
 
 				PropertyDefinition pd = EntityViewUtil.getPropertyDefinition(property.getPropertyName(), getEntityDefinition());
 				Object value = getConditionValue(pd, property.getPropertyName());
-				if (value != null && !(value.getClass().isArray() && ((Object[])value).length == 0)) {
-					int lastIndex = property.getPropertyName().lastIndexOf(".");
-					String parentName = property.getPropertyName().substring(0, lastIndex);
-					if (property == null || property.isHideNormalCondition()) throw new ApplicationException();
+				if (value != null && !(value.getClass()
+						.isArray() && ((Object[]) value).length == 0)) {
+					int lastIndex = property.getPropertyName()
+							.lastIndexOf(".");
+					String parentName = property.getPropertyName()
+							.substring(0, lastIndex);
+					if (property == null || property.isHideNormalCondition())
+						throw new ApplicationException();
 
 					condition.setValue(property.getPropertyName(), value);
 					nestPropertyConditions.put(property.getPropertyName(),
@@ -309,26 +327,37 @@ public class NormalSearchContext extends SearchContextBase {
 		final String conditionPrefix = Constants.SEARCH_COND_PREFIX;
 
 		Object ret = null;
-		//範囲検索のため時間系プロパティはパラメータ二つ取得する
 		if (p instanceof DateProperty) {
+			// 単一検索、範囲検索が判断できないため2つ取得する
 			Date[] date = new Date[2];
-			date[0] = getRequest().getParamAsDate(conditionPrefix + propName + "From", TemplateUtil.getLocaleFormat().getServerDateFormat());
-			date[1] = getRequest().getParamAsDate(conditionPrefix + propName + "To", TemplateUtil.getLocaleFormat().getServerDateFormat());
+			date[0] = getRequest().getParamAsDate(conditionPrefix + propName + "From", TemplateUtil.getLocaleFormat()
+					.getServerDateFormat());
+			date[1] = getRequest().getParamAsDate(conditionPrefix + propName + "To", TemplateUtil.getLocaleFormat()
+					.getServerDateFormat());
 			ret = (date[0] == null && date[1] == null) ? null : date;
 		} else if (p instanceof TimeProperty) {
+			// 単一検索、範囲検索が判断できないため2つ取得する
 			Time[] time = new Time[2];
-			time[0] = getRequest().getParamAsTime(conditionPrefix + propName + "From", TemplateUtil.getLocaleFormat().getServerTimeFormat());
-			time[1] = getRequest().getParamAsTime(conditionPrefix + propName + "To", TemplateUtil.getLocaleFormat().getServerTimeFormat());
+			time[0] = getRequest().getParamAsTime(conditionPrefix + propName + "From", TemplateUtil.getLocaleFormat()
+					.getServerTimeFormat());
+			time[1] = getRequest().getParamAsTime(conditionPrefix + propName + "To", TemplateUtil.getLocaleFormat()
+					.getServerTimeFormat());
 			ret = (time[0] == null && time[1] == null) ? null : time;
 		} else if (p instanceof DateTimeProperty) {
+			// 単一検索、範囲検索が判断できないため2つ取得する
 			Timestamp[] timestamp = new Timestamp[2];
-			timestamp[0] = getRequest().getParamAsTimestamp(conditionPrefix + propName + "From", TemplateUtil.getLocaleFormat().getServerDateTimeFormat());
-			timestamp[1] = getRequest().getParamAsTimestamp(conditionPrefix + propName + "To", TemplateUtil.getLocaleFormat().getServerDateTimeFormat());
+			timestamp[0] = getRequest().getParamAsTimestamp(conditionPrefix + propName + "From",
+					TemplateUtil.getLocaleFormat()
+							.getServerDateTimeFormat());
+			timestamp[1] = getRequest().getParamAsTimestamp(conditionPrefix + propName + "To",
+					TemplateUtil.getLocaleFormat()
+							.getServerDateTimeFormat());
 			ret = (timestamp[0] == null && timestamp[1] == null) ? null : timestamp;
 		} else if (p instanceof SelectProperty) {
 			ret = getSelectValue(conditionPrefix + propName);
 		} else if (p instanceof ReferenceProperty) {
-			if (p.getName().equals(propName)) {
+			if (p.getName()
+					.equals(propName)) {
 				ret = getReferenceValue((ReferenceProperty) p);
 			} else {
 				PropertyItem property = getLayoutProperty(propName);
@@ -345,30 +374,51 @@ public class NormalSearchContext extends SearchContextBase {
 		} else if (p instanceof ExpressionProperty) {
 			ret = getExpressionValue((ExpressionProperty) p, conditionPrefix + propName);
 		} else if (p instanceof DecimalProperty) {
-			BigDecimal[] decimal = new BigDecimal[2];
+			// 単一検索、範囲検索の判断ができないため3つ取得する
+			// DecimalPropertySearchConditionで判定
+			BigDecimal[] decimal = new BigDecimal[3];
 			decimal[0] = getRequest().getParamAsBigDecimal(conditionPrefix + propName);
-			decimal[1] = getRequest().getParamAsBigDecimal(conditionPrefix + propName + "To");
-			ret = (decimal[0] == null && decimal[1] == null) ? null : decimal;
+			decimal[1] = getRequest().getParamAsBigDecimal(conditionPrefix + propName + "From");
+			decimal[2] = getRequest().getParamAsBigDecimal(conditionPrefix + propName + "To");
+			ret = (decimal[0] == null && decimal[1] == null && decimal[2] == null) ? null : decimal;
 		} else if (p instanceof FloatProperty) {
-			Double[] dbl = new Double[2];
-			dbl[0] =  getRequest().getParamAsDouble(conditionPrefix + propName);
-			dbl[1] =  getRequest().getParamAsDouble(conditionPrefix + propName + "To");
-			ret = (dbl[0] == null && dbl[1] == null) ? null : dbl;
+			// 単一検索、範囲検索の判断ができないため3つ取得する
+			// FloatPropertySearchConditionで判定
+			Double[] dbl = new Double[3];
+			dbl[0] = getRequest().getParamAsDouble(conditionPrefix + propName);
+			dbl[1] = getRequest().getParamAsDouble(conditionPrefix + propName + "From");
+			dbl[2] = getRequest().getParamAsDouble(conditionPrefix + propName + "To");
+			ret = (dbl[0] == null && dbl[1] == null && dbl[2] == null) ? null : dbl;
 		} else if (p instanceof IntegerProperty) {
-			Long[] lng = new Long[2];
+			// 単一検索、範囲検索の判断ができないため3つ取得する
+			// IntegerPropertySearchConditionで判定
+			Long[] lng = new Long[3];
 			lng[0] = getRequest().getParamAsLong(conditionPrefix + propName);
-			lng[1] = getRequest().getParamAsLong(conditionPrefix + propName + "To");
-			ret = (lng[0] == null && lng[1] == null) ? null : lng;
+			lng[1] = getRequest().getParamAsLong(conditionPrefix + propName + "From");
+			lng[2] = getRequest().getParamAsLong(conditionPrefix + propName + "To");
+			ret = (lng[0] == null && lng[1] == null && lng[2] == null) ? null : lng;
+		} else if (p instanceof StringProperty) {
+			// 単一検索、範囲検索の判断ができないため3つ取得する
+			// StringPropertySearchConditionで判定
+			String[] str = new String[3];
+			str[0] = getRequest().getParam(conditionPrefix + propName);
+			str[1] = getRequest().getParam(conditionPrefix + propName + "From");
+			str[2] = getRequest().getParam(conditionPrefix + propName + "To");
+			//文字とかそのまま検索できるプロパティは変換しない
+			ret = ((str[0] == null || str[0].trim()
+					.length() == 0) && (str[1] == null
+							|| str[1].trim()
+									.length() == 0)
+					&& (str[2] == null || str[2].trim()
+							.length() == 0)) ? null : str;
 		} else {
 			String value = getRequest().getParam(conditionPrefix + propName);
-			if (value == null || value.trim().length() == 0) return null;
+			if (value == null || value.trim()
+					.length() == 0)
+				return null;
 
-			if (p instanceof BooleanProperty) {
-				ret = Boolean.parseBoolean(value);
-			} else {
-				//文字とかそのまま検索できるプロパティは変換しない
-				ret = value;
-			}
+			//Boolean、AutoNumberとかそのまま検索できるプロパティは変換しない
+			ret = value;
 		}
 		return ret;
 	}
@@ -407,7 +457,8 @@ public class NormalSearchContext extends SearchContextBase {
 						break;
 					}
 				}
-				if (isNull) return null;
+				if (isNull)
+					return null;
 			}
 			return ret;
 		} else if (ep.getResultType() == PropertyDefinitionType.TIME) {
@@ -421,32 +472,53 @@ public class NormalSearchContext extends SearchContextBase {
 			}
 			return ret;
 		} else if (ep.getResultType() == PropertyDefinitionType.DECIMAL) {
-			String[] ret = new String[2];
+			String[] ret = new String[3];
+			// Editor未指定時または単一検索
 			ret[0] = getRequest().getParam(propName);
-			ret[1] = getRequest().getParam(propName + "To");
-			if (StringUtil.isBlank(ret[0]) && StringUtil.isBlank(ret[1]) ) {
+			// 範囲検索
+			ret[1] = getRequest().getParam(propName + "From");
+			ret[2] = getRequest().getParam(propName + "To");
+			if (StringUtil.isBlank(ret[0]) && StringUtil.isBlank(ret[1]) && StringUtil.isBlank(ret[2])) {
 				return null;
 			}
 			return ret;
 		} else if (ep.getResultType() == PropertyDefinitionType.FLOAT) {
-			String[] ret = new String[2];
-			ret[0] = getRequest().getParam(propName);
-			ret[1] = getRequest().getParam(propName + "To");
-			if (StringUtil.isBlank(ret[0]) && StringUtil.isBlank(ret[1]) ) {
+			String[] ret = new String[3];
+			// Editor未指定時または単一検索
+			ret[0] = getRequest().getParam(propName); // Editor未指定時または単一検索
+			// 範囲検索
+			ret[1] = getRequest().getParam(propName + "From");
+			ret[2] = getRequest().getParam(propName + "To");
+			if (StringUtil.isBlank(ret[0]) && StringUtil.isBlank(ret[1]) && StringUtil.isBlank(ret[2])) {
 				return null;
 			}
 			return ret;
 		} else if (ep.getResultType() == PropertyDefinitionType.INTEGER) {
-			String[] ret = new String[2];
+			String[] ret = new String[3];
+			// Editor未指定時または単一検索
 			ret[0] = getRequest().getParam(propName);
-			ret[1] = getRequest().getParam(propName + "To");
-			if (StringUtil.isBlank(ret[0]) && StringUtil.isBlank(ret[1]) ) {
+			// 範囲検索
+			ret[1] = getRequest().getParam(propName + "From");
+			ret[2] = getRequest().getParam(propName + "To");
+			if (StringUtil.isBlank(ret[0]) && StringUtil.isBlank(ret[1]) && StringUtil.isBlank(ret[2])) {
+				return null;
+			}
+			return ret;
+		} else if (ep.getResultType() == PropertyDefinitionType.STRING) {
+			// 単一検索、範囲検索の判断ができないため3つ取得する
+			String[] ret = new String[3];
+			ret[0] = getRequest().getParam(propName);
+			ret[1] = getRequest().getParam(propName + "From");
+			ret[2] = getRequest().getParam(propName + "To");
+			//文字とかそのまま検索できるプロパティは変換しない
+			if (StringUtil.isBlank(ret[0]) && StringUtil.isBlank(ret[1]) && StringUtil.isBlank(ret[2])) {
 				return null;
 			}
 			return ret;
 		} else {
 			String ret = getRequest().getParam(propName);
-			if (StringUtil.isBlank(ret)) return null;
+			if (StringUtil.isBlank(ret))
+				return null;
 			return ret;
 		}
 	}
@@ -460,9 +532,11 @@ public class NormalSearchContext extends SearchContextBase {
 		Object ret = null;
 		List<PropertyItem> properties = getLayoutProperties();
 		for (PropertyItem property : properties) {
-			if (property.isBlank()) continue;
+			if (property.isBlank())
+				continue;
 
-			if (property.getPropertyName().equals(rp.getName())) {
+			if (property.getPropertyName()
+					.equals(rp.getName())) {
 				if (property.getEditor() instanceof ReferencePropertyEditor) {
 					ReferencePropertyEditor editor = (ReferencePropertyEditor) property.getEditor();
 					editor.setPropertyName(rp.getName());
@@ -482,7 +556,8 @@ public class NormalSearchContext extends SearchContextBase {
 		ReferenceNormalConditionValue ret = null;
 		boolean showNest = false;
 		String propName = null;
-		if (rp.getName().equals(editor.getPropertyName())) {
+		if (rp.getName()
+				.equals(editor.getPropertyName())) {
 			propName = rp.getName();
 		} else {
 			propName = editor.getPropertyName();
@@ -518,13 +593,14 @@ public class NormalSearchContext extends SearchContextBase {
 				}
 			}
 		} else if ((editor.getDisplayType() == ReferenceDisplayType.LINK && editor.isUseSearchDialog())
-				 || (editor.getDisplayType() == ReferenceDisplayType.LABEL)){
+				|| (editor.getDisplayType() == ReferenceDisplayType.LABEL)) {
 			//リンクOrラベルならoid
 			List<Entity> list = new ArrayList<>();
 			String[] oid_ver = getRequest().getParams(Constants.SEARCH_COND_PREFIX + propName, String.class);
 			if (oid_ver != null && oid_ver.length > 0) {
 				for (String tmp : oid_ver) {
-					if (tmp == null) continue;
+					if (tmp == null)
+						continue;
 					int lastIndex = tmp.lastIndexOf("_");
 					String oid = tmp.substring(0, lastIndex);
 					list.add(new GenericEntity(rp.getObjectDefinitionName(), oid, null));
@@ -537,7 +613,8 @@ public class NormalSearchContext extends SearchContextBase {
 			String[] oid_ver = getRequest().getParams(Constants.SEARCH_COND_PREFIX + propName, String.class);
 			if (oid_ver != null && oid_ver.length > 0) {
 				for (String tmp : oid_ver) {
-					if (tmp == null) continue;
+					if (tmp == null)
+						continue;
 					int lastIndex = tmp.lastIndexOf("_");
 					String oid = tmp.substring(0, lastIndex);
 					list.add(new GenericEntity(rp.getObjectDefinitionName(), oid, null));
@@ -550,7 +627,8 @@ public class NormalSearchContext extends SearchContextBase {
 			String[] oid_ver = getRequest().getParams(Constants.SEARCH_COND_PREFIX + propName, String.class);
 			if (oid_ver != null && oid_ver.length > 0) {
 				for (String tmp : oid_ver) {
-					if (tmp == null || tmp.length() == 0) continue;
+					if (tmp == null || tmp.length() == 0)
+						continue;
 					int lastIndex = tmp.lastIndexOf("_");
 					String oid = tmp.substring(0, lastIndex);
 					list.add(new GenericEntity(rp.getObjectDefinitionName(), oid, null));
@@ -563,7 +641,8 @@ public class NormalSearchContext extends SearchContextBase {
 			String[] oid_ver = getRequest().getParams(Constants.SEARCH_COND_PREFIX + propName, String.class);
 			if (oid_ver != null && oid_ver.length > 0) {
 				for (String tmp : oid_ver) {
-					if (tmp == null) continue;
+					if (tmp == null)
+						continue;
 					int lastIndex = tmp.lastIndexOf("_");
 					String oid = tmp.substring(0, lastIndex);
 					String version = tmp.substring(lastIndex + 1);
@@ -573,14 +652,28 @@ public class NormalSearchContext extends SearchContextBase {
 				}
 				ret = new ReferenceNormalConditionValue(list.toArray(new Entity[list.size()]));
 			}
+		} else if (editor.getDisplayType() == ReferenceDisplayType.SELECTFILTER) {
+			// 選択フィルターならoid
+			List<Entity> list = new ArrayList<>();
+			String[] oids = getRequest().getParams(Constants.SEARCH_COND_PREFIX + propName, String.class);
+			if (oids != null && oids.length > 0) {
+				for (String tmp : oids) {
+					if (tmp == null || tmp.length() == 0)
+						continue;
+					list.add(new GenericEntity(rp.getObjectDefinitionName(), tmp, null));
+				}
+				ret = new ReferenceNormalConditionValue(list.toArray(new Entity[list.size()]));
+			}
 		} else {
 			boolean searchName = false;
-			if (editor.getNestProperties().isEmpty()) {
+			if (editor.getNestProperties()
+					.isEmpty()) {
 				//ネストがないので名前で検索
 				searchName = true;
 			} else {
 				//ネストと一緒に名前で検索
-				if (editor.isUseNestConditionWithProperty()) searchName = true;
+				if (editor.isUseNestConditionWithProperty())
+					searchName = true;
 				showNest = true;
 			}
 			if (searchName) {
@@ -599,10 +692,11 @@ public class NormalSearchContext extends SearchContextBase {
 			EntityDefinition ed = getReferenceEntityDefinition(rp);
 			Entity nest = null;
 			for (NestProperty np : editor.getNestProperties()) {
-				PropertyDefinition pd = ed.getProperty(np.getPropertyName());
+				PropertyDefinition pd = EntityViewUtil.getNestTablePropertyDefinition(np, ed);
 				Object value = getConditionValue(pd, propName + "." + pd.getName());
 				if (value != null) {
-					if (nest == null) nest = new GenericEntity(rp.getObjectDefinitionName());
+					if (nest == null)
+						nest = new GenericEntity(rp.getObjectDefinitionName());
 					nest.setValue(pd.getName(), value);
 				}
 				if (np.getEditor() instanceof RangePropertyEditor) {
@@ -610,13 +704,15 @@ public class NormalSearchContext extends SearchContextBase {
 					pd = ed.getProperty(rangep.getToPropertyName());
 					value = getConditionValue(pd, propName + "." + pd.getName());
 					if (value != null) {
-						if (nest == null) nest = new GenericEntity(rp.getObjectDefinitionName());
+						if (nest == null)
+							nest = new GenericEntity(rp.getObjectDefinitionName());
 						nest.setValue(pd.getName(), value);
 					}
 				}
 			}
 			if (nest != null) {
-				if (ret == null) ret = new ReferenceNormalConditionValue(null);
+				if (ret == null)
+					ret = new ReferenceNormalConditionValue(null);
 				ret.setNest(nest);
 			}
 		}
@@ -638,7 +734,8 @@ public class NormalSearchContext extends SearchContextBase {
 		String[] _propName = propName.split("\\.");
 		List<PropertyItem> properties = getLayoutProperties();
 		for (PropertyItem property : properties) {
-			if (!property.isBlank() && property.getPropertyName().equals(_propName[0])) {
+			if (!property.isBlank() && property.getPropertyName()
+					.equals(_propName[0])) {
 				if (property.getEditor() instanceof ReferencePropertyEditor) {
 					ReferencePropertyEditor editor = (ReferencePropertyEditor) property.getEditor();
 					ReferencePropertyEditor ret = getNestReferencePropertyEditor(editor, _propName, 1);
@@ -651,14 +748,17 @@ public class NormalSearchContext extends SearchContextBase {
 	}
 
 	private ReferencePropertyEditor getNestReferencePropertyEditor(ReferencePropertyEditor editor, String[] propName, int index) {
-		if (editor.getNestProperties().size() == 0 && propName.length < index) return null;
+		if (editor.getNestProperties()
+				.size() == 0 && propName.length < index)
+			return null;
 
 		if (propName.length == index) {
 			//最後のプロパティ
 			return editor;
 		} else {
 			for (NestProperty property : editor.getNestProperties()) {
-				if (property.getPropertyName().equals(propName[index])) {
+				if (property.getPropertyName()
+						.equals(propName[index])) {
 					if (property.getEditor() instanceof ReferencePropertyEditor) {
 						return getNestReferencePropertyEditor((ReferencePropertyEditor) property.getEditor(), propName, ++index);
 					} else {
@@ -670,7 +770,6 @@ public class NormalSearchContext extends SearchContextBase {
 
 		return null;
 	}
-
 
 	private Object getSelectValue(String propName) {
 		Object ret = null;
